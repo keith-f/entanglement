@@ -1,0 +1,61 @@
+/*
+ * Copyright 2012 Keith Flanagan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * File created: 27-Nov-2012, 11:42:11
+ */
+
+package uk.ac.ncl.aries.entanglement.player.spi;
+
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+/**
+ *
+ * @author Keith Flanagan
+ */
+public class LogItemPlayerProvider
+{
+  private final DbObjectMarshaller marshaller;
+  private final ServiceLoader<LogItemPlayer> logItemPlayerLoader;
+  private final Map<String, LogItemPlayer> typeToProvider;
+  
+  public LogItemPlayerProvider(DbObjectMarshaller marshaller)
+  {
+    this.marshaller = marshaller;
+    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class);
+    typeToProvider = new HashMap<>();
+  }
+
+  public LogItemPlayer getPlayerFor(String itemType)
+      throws LogItemPlayerProviderException
+  {
+    if (typeToProvider.containsKey(itemType)) {
+      return typeToProvider.get(itemType);
+    }
+    
+    for (LogItemPlayer impl : logItemPlayerLoader) {
+      if (impl.getSupportedLogItemType().equals(itemType)) {
+        impl.setMarshaller(marshaller);
+        typeToProvider.put(itemType, impl);
+        return impl;
+      }
+    }
+    
+    throw new LogItemPlayerProviderException(
+        "No item player implementation could be found for log item type: "+itemType);
+  }
+}

@@ -1,0 +1,13 @@
+uk.ac.ncl.aries.mongodb.player.spi.CreateEdgeBetweenNamedNodesPlayer
+uk.ac.ncl.aries.mongodb.player.spi.CreateEdgeFromObjBetweenNamedNodesPlayer
+uk.ac.ncl.aries.mongodb.player.spi.CreateEdgePlayer
+uk.ac.ncl.aries.mongodb.player.spi.CreateNodeFromObjIfNotExistsByNamePlayer
+uk.ac.ncl.aries.mongodb.player.spi.CreateNodeIfNotExistsByNamePlayer
+uk.ac.ncl.aries.mongodb.player.spi.CreateNodePlayer
+uk.ac.ncl.aries.mongodb.player.spi.DeleteNodeByUidPlayer
+uk.ac.ncl.aries.mongodb.player.spi.DeleteEdgeByUidPlayer
+uk.ac.ncl.aries.mongodb.player.spi.SetNamedNodePropertyPlayer
+uk.ac.ncl.aries.mongodb.player.spi.SetNodePropertyPlayer
+uk.ac.ncl.aries.mongodb.player.spi.TransactionBeginPlayer
+uk.ac.ncl.aries.mongodb.player.spi.TransactionCommitPlayer
+uk.ac.ncl.aries.mongodb.player.spi.TransactionRollbackPlayer
