@@ -198,6 +198,77 @@ public class EdgeDAOSeparateDocImpl
     }
   }
   
+  
+  @Override
+  public Long countEdgesFromNode(String fromNodeUid)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    } 
+  }
+  
+  @Override
+  public Long countEdgesOfTypeFromNode(String edgeType, String fromNodeUid)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_FROM_NODE_TYPE, edgeType);
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public Long countEdgesToNode(String toNodeUid)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TO_NODE_TYPE, toNodeUid);
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TO_NODE_TYPE, edgeType);
+      query.put(FIELD_TO_NODE_UID, toNodeUid);
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
   @Override
   public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
           throws LogPlayerException
@@ -210,10 +281,10 @@ public class EdgeDAOSeparateDocImpl
       List<String> types = (List<String>) col.distinct(FIELD_TYPE, query);
       Map<String, Long> edgeTypeToCount = new HashMap<>();
       for (String edgeType : types) {
-        
+        long count = countEdgesOfTypeFromNode(edgeType, fromNodeUid);
+        edgeTypeToCount.put(edgeType, count);
       }
       
-      col.find().
       return edgeTypeToCount;
     }
     catch(Exception e) {
