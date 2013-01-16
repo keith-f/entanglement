@@ -21,7 +21,6 @@ package uk.ac.ncl.aries.entanglement.graph;
 import com.mongodb.*;
 import java.util.List;
 import java.util.Map;
-import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
@@ -49,29 +48,29 @@ public interface EdgeDAO
    * @param fromNodeUid the ID of the 'from' node.
    * @param toNodeUid the ID of the 'to' node.
    * @return an iterable list of edge instances.
-   * @throws LogPlayerException 
+   * @throws GraphModelException 
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
           String fromNodeUid, String toNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   /**
    * Given a node , returns an Iterable over all the outgoing edges of that node.
    * @param fromNodeUid the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
-   * @throws LogPlayerException 
+   * @throws GraphModelException 
    */
   public Iterable<DBObject> iterateEdgesFromNode(String fromNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   /**
    * Given a node, returns an Iterable over all the incoming edges to that node.
    * @param toNodeUid the node whose incoming edges are to be iterated.
    * @return an Iterable of edges.
-   * @throws LogPlayerException 
+   * @throws GraphModelException 
    */
   public Iterable<DBObject> iterateEdgesToNode(String toNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   /**
    * Returns true if there exists at least one edge between the specified node, 
@@ -80,25 +79,25 @@ public interface EdgeDAO
    * @param toNodeType the type of node that we're interested in as a destination
    * @return true if there is an edge between <code>fromNodeUid</code> and any
    * other node of type <code>toNodeType</code>.
-   * @throws LogPlayerException 
+   * @throws GraphModelException 
    */
   public boolean existsEdgeToNodeOfType(String fromNodeUid, String toNodeType)
-          throws LogPlayerException;
+          throws GraphModelException;
   
 
   
   
   public Long countEdgesFromNode(String fromNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   public Long countEdgesOfTypeFromNode(String edgeType, String fromNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   public Long countEdgesToNode(String toNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
   
   
   
@@ -111,9 +110,9 @@ public interface EdgeDAO
    * that the specified node has of that type. Only edge type counts where the
    * count is greater than 0 are returned.
    * 
-   * @throws LogPlayerException 
+   * @throws GraphModelException 
    */
   public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
-          throws LogPlayerException;
+          throws GraphModelException;
 
 }

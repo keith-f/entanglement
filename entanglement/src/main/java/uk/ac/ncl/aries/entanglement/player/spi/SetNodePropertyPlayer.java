@@ -42,10 +42,13 @@ public class SetNodePropertyPlayer
   public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
       throws LogPlayerException
   {
-    SetNodeProperty op = (SetNodeProperty) item.getOp();
-    
-    nodeDao.setPropertyByUid(op.getnUid(), op.getpName(), op.getpVal());
-    
+    try {
+      SetNodeProperty op = (SetNodeProperty) item.getOp();
+
+      nodeDao.setPropertyByUid(op.getnUid(), op.getpName(), op.getpVal());
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to play command", e);
+    }
   }
 
 }

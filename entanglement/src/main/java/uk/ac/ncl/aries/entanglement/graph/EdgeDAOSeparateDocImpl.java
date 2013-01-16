@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
@@ -61,13 +60,13 @@ public class EdgeDAOSeparateDocImpl
   
 //  @Override
 //  public void store(Edge edge)
-//      throws LogPlayerException
+//      throws GraphModelException
 //  {
 //    try {
 ////      logger.log(Level.INFO, "Storing edge: {0}", edge);
 //      if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
 //        if (existsByUniqueId(edge.getUid())) {
-//          throw new LogPlayerException(
+//          throw new GraphModelException(
 //              "Failed to store an edge - an edge with this unique ID already exists: "+edge.getUid());
 //        }
 //      }
@@ -103,7 +102,7 @@ public class EdgeDAOSeparateDocImpl
 //    }
 //    catch(Exception e)
 //    {
-//      throw new LogPlayerException("Failed to store item: "+edge, e);
+//      throw new GraphModelException("Failed to store item: "+edge, e);
 //    }
 //  }
   
@@ -112,7 +111,7 @@ public class EdgeDAOSeparateDocImpl
   
   @Override
   public Iterable<DBObject> iterateEdgesBetweenNodes(String fromNodeUid, String toNodeUid)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -129,14 +128,14 @@ public class EdgeDAOSeparateDocImpl
       return cursor;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
 
   @Override
   public Iterable<DBObject> iterateEdgesFromNode(String fromNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -151,14 +150,14 @@ public class EdgeDAOSeparateDocImpl
       return cursor;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public Iterable<DBObject> iterateEdgesToNode(String toNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -172,14 +171,14 @@ public class EdgeDAOSeparateDocImpl
       return cursor;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
 
   @Override
   public boolean existsEdgeToNodeOfType(String fromNodeUid, String toNodeType)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -194,7 +193,7 @@ public class EdgeDAOSeparateDocImpl
       return count > 0;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
@@ -202,7 +201,7 @@ public class EdgeDAOSeparateDocImpl
   
   @Override
   public Long countEdgesFromNode(String fromNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -212,14 +211,14 @@ public class EdgeDAOSeparateDocImpl
       return count;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     } 
   }
   
   @Override
   public Long countEdgesOfTypeFromNode(String edgeType, String fromNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -230,14 +229,14 @@ public class EdgeDAOSeparateDocImpl
       return count;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public Long countEdgesToNode(String toNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -247,14 +246,14 @@ public class EdgeDAOSeparateDocImpl
       return count;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -265,14 +264,14 @@ public class EdgeDAOSeparateDocImpl
       return count;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
-          throws LogPlayerException
+          throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -289,7 +288,7 @@ public class EdgeDAOSeparateDocImpl
       return edgeTypeToCount;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }   
   }

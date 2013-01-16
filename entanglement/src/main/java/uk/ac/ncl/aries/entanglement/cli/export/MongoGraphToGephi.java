@@ -45,6 +45,7 @@ import uk.ac.ncl.aries.entanglement.player.GraphCheckoutNamingScheme;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.graph.GraphDAOFactory;
+import uk.ac.ncl.aries.entanglement.graph.GraphModelException;
 import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 import uk.ac.ncl.aries.entanglement.graph.data.Node;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
@@ -73,7 +74,7 @@ public class MongoGraphToGephi {
 
     public static void main ( String[] args ) throws UnknownHostException,
             RevisionLogException, IOException,
-            LogPlayerException {
+            GraphModelException {
         CommandLineParser parser = new PosixParser();
         Options options = new Options();
 
@@ -170,7 +171,7 @@ public class MongoGraphToGephi {
 
     private static void exportGexf ( Mongo m, DB db,
             String graphName, String graphBranch, File outputFile )
-            throws IOException, LogPlayerException, RevisionLogException {
+            throws IOException, GraphModelException, RevisionLogException {
         /*
          * Database access
          */

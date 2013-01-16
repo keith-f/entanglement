@@ -41,8 +41,12 @@ public class DeleteNodeByUidPlayer
   public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
       throws LogPlayerException
   {
-    DeleteNodeByUid op = (DeleteNodeByUid) item.getOp();
-    nodeDao.deleteByUid(op.getUid());
+    try {
+      DeleteNodeByUid op = (DeleteNodeByUid) item.getOp();
+      nodeDao.deleteByUid(op.getUid());
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to play command", e);
+    }
   }
 
 }

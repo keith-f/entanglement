@@ -46,7 +46,7 @@ public interface GraphEntityDAO
   
   
   public void store(BasicDBObject entity)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   /**
    * Given a node's UID, sets the named property to the given value. Note that
@@ -60,13 +60,13 @@ public interface GraphEntityDAO
    * @throws LogPlayerException 
    */
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public String lookupUniqueIdForName(String entityType, String entityName)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   /**
    * Returns an instance by its unique ID. If no entity with the specified ID
@@ -76,40 +76,40 @@ public interface GraphEntityDAO
    * @throws LogPlayerException 
    */
   public DBObject getByUid(String uid)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public DBObject getByName(String entityType, String entityName)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public boolean existsByUid(String uniqueId)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public boolean existsByName(String entityType, String entityName)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public DBObject deleteByUid(String uid)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   
   
   public DBCursor iterateAll()
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public List<String> listTypes()
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public Iterable<DBObject> iterateByType(String typeName)
-      throws LogPlayerException;
+      throws GraphModelException;
   
 
   public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
-      throws LogPlayerException;
+      throws GraphModelException;
   
   public long countByType(String typeName)
-      throws LogPlayerException;
+      throws GraphModelException;
   public long count()
-      throws LogPlayerException;
+      throws GraphModelException;
 }

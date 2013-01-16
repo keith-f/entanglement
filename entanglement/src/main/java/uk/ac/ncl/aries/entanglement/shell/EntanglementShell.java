@@ -44,10 +44,11 @@ import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.GraphCheckoutNamingScheme;
 import uk.ac.ncl.aries.entanglement.graph.InsertMode;
 import uk.ac.ncl.aries.entanglement.player.LogPlayer;
-import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.graph.GraphDAOFactory;
+import uk.ac.ncl.aries.entanglement.graph.GraphModelException;
+import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
@@ -250,14 +251,14 @@ public class EntanglementShell
 
   @Command
   public void exportGraphAsGdf(File outputFile)
-           throws IOException, LogPlayerException, RevisionLogException
+           throws IOException, GraphModelException, RevisionLogException
   {
     exportGraphAsGdf(outputFile, null);
   }
   
   @Command
   public void exportGraphAsGdf(File outputFile, File colorPropsFile)
-           throws IOException, LogPlayerException, RevisionLogException
+           throws IOException, GraphModelException, RevisionLogException
   {
     GraphToGDFExporter exporter = new GraphToGDFExporter(marshaller, revLog, nodeDao, edgeDao);
     exporter.setColorPropsFile(colorPropsFile);
@@ -268,7 +269,7 @@ public class EntanglementShell
   
   @Command
   public void exportGraphAsGdf()
-          throws IOException, LogPlayerException, RevisionLogException
+          throws IOException, GraphModelException, RevisionLogException
   {
     GraphToGDFExporter exporter = new GraphToGDFExporter(marshaller, revLog, nodeDao, edgeDao);
     System.out.println(exporter.writeToString());
@@ -277,7 +278,7 @@ public class EntanglementShell
   
   @Command
   public void playAllRevisions()
-      throws RevisionLogException, LogPlayerException {
+      throws RevisionLogException, GraphModelException, LogPlayerException {
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
     
@@ -301,7 +302,7 @@ public class EntanglementShell
   
   @Command
   public void findGraphNodeByUid(String uid)
-      throws RevisionLogException, LogPlayerException {
+      throws RevisionLogException, GraphModelException {
     DBObject node = nodeDao.getByUid(uid);
     if (node == null) {
       System.out.println("No node with UID: "+uid);
@@ -313,7 +314,7 @@ public class EntanglementShell
   
   @Command
   public void findGraphNodeByName(String nodeType, String wellKnownName)
-      throws RevisionLogException, LogPlayerException {
+      throws RevisionLogException, GraphModelException {
     DBObject node = nodeDao.getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
@@ -325,7 +326,7 @@ public class EntanglementShell
   
   @Command
   public void printPropertiesOfNamedNode(String nodeType, String wellKnownName)
-      throws RevisionLogException, LogPlayerException {
+      throws RevisionLogException, GraphModelException {
     DBObject node = nodeDao.getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
@@ -342,7 +343,7 @@ public class EntanglementShell
   }
   
   @Command
-  public void listNodeTypes() throws LogPlayerException
+  public void listNodeTypes() throws GraphModelException
   {
     List<String> types = nodeDao.listTypes();
     System.out.println(types.size()+" node types are present:");
@@ -352,7 +353,7 @@ public class EntanglementShell
   }
   
   @Command
-  public void listNodeUids(String type, int offset, int limit) throws LogPlayerException
+  public void listNodeUids(String type, int offset, int limit) throws GraphModelException
   {
     Iterable<String> uidItr = nodeDao.iterateIdsByType(type, offset, limit);
     System.out.println("UIDs of nodes with type: "+type);
@@ -361,7 +362,7 @@ public class EntanglementShell
     }
   }
   @Command
-  public void listNodeNames(String type, int offset, int limit) throws LogPlayerException
+  public void listNodeNames(String type, int offset, int limit) throws GraphModelException
   {
     Iterable<String> nameItr = nodeDao.iterateNamesByType(type, offset, limit);
     System.out.println("Names of nodes with type: "+type);
@@ -371,14 +372,14 @@ public class EntanglementShell
   }
   
   @Command
-  public void countNodes() throws LogPlayerException
+  public void countNodes() throws GraphModelException
   {
     long count = nodeDao.count();
     System.out.println("Total nodes: "+count);
   }
   
   @Command
-  public void countNodes(String type) throws LogPlayerException
+  public void countNodes(String type) throws GraphModelException
   {
     long count = nodeDao.countByType(type);
     System.out.println("Total nodes of type: "+type+": "+count);

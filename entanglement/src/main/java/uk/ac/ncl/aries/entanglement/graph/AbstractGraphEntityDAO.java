@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 
 /**
  *
@@ -101,7 +100,7 @@ abstract public class AbstractGraphEntityDAO
 
   @Override
   public void store(BasicDBObject item)
-      throws LogPlayerException
+      throws GraphModelException
   {
     try {
 //      logger.log(Level.INFO, "Storing node: {0}", node);
@@ -111,11 +110,11 @@ abstract public class AbstractGraphEntityDAO
         String type = item.getString(FIELD_TYPE);
 //        logger.info("Running in consistency mode");
         if (existsByUid(uid)) {
-          throw new LogPlayerException(
+          throw new GraphModelException(
               "Failed to store item - an entity with this unique ID already exists: "+uid);
         }
         if (name != null && existsByName(type, name)) {
-          throw new LogPlayerException(
+          throw new GraphModelException(
               "Failed to store item - an entity with the same 'well known' name already exists: "+name);        
         }
       }
@@ -149,14 +148,14 @@ abstract public class AbstractGraphEntityDAO
     }
     catch(Exception e)
     {
-      throw new LogPlayerException("Failed to store item: "+item, e);
+      throw new GraphModelException("Failed to store item: "+item, e);
     }
   }
   
 
   @Override
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue)
-      throws LogPlayerException
+      throws GraphModelException
   {
 //    logger.log(Level.INFO, "Storing edge: {0}", edge);
     
@@ -184,7 +183,7 @@ abstract public class AbstractGraphEntityDAO
     }
     catch(Exception e)
     {
-      throw new LogPlayerException("Failed to store item: "+propertyName 
+      throw new GraphModelException("Failed to store item: "+propertyName 
               + " on: "+uid, e);
     }
   
@@ -192,7 +191,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
-      throws LogPlayerException
+      throws GraphModelException
   {
 //    logger.log(Level.INFO, "Storing edge: {0}", edge);
     
@@ -220,7 +219,7 @@ abstract public class AbstractGraphEntityDAO
     }
     catch(Exception e)
     {
-      throw new LogPlayerException("Failed to store item: "+propertyName 
+      throw new GraphModelException("Failed to store item: "+propertyName 
               + " on entity with type: "+entityType+", name: "+entityType, e);
     }
   }
@@ -228,7 +227,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public String lookupUniqueIdForName(String type, String name)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     DBObject fields = null;
@@ -250,7 +249,7 @@ abstract public class AbstractGraphEntityDAO
       return nodeUniqueId;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
@@ -258,7 +257,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public DBObject getByUid(String nodeUid)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -274,14 +273,14 @@ abstract public class AbstractGraphEntityDAO
       return obj;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public DBObject getByName(String type, String name)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -296,7 +295,7 @@ abstract public class AbstractGraphEntityDAO
       return nodeObj;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
   }
@@ -304,7 +303,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public boolean existsByUid(String uniqueId)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -313,21 +312,21 @@ abstract public class AbstractGraphEntityDAO
 
       long count = col.count(query);
       if (count > 1) {
-        throw new LogPlayerException(
+        throw new GraphModelException(
                 "Unique ID: "+uniqueId+" should be unique, but we found: "
                 + count + " instances with that name!");
       }
       return count == 1;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public boolean existsByName(String entityType, String entityName)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -337,7 +336,7 @@ abstract public class AbstractGraphEntityDAO
 
       long count = col.count(query);
       if (count > 1) {
-        throw new LogPlayerException(
+        throw new GraphModelException(
             "Type: "+entityType+", Name: "+entityName 
             +" should be unique, but we found: "+count
             + " instances with that name!");
@@ -345,21 +344,21 @@ abstract public class AbstractGraphEntityDAO
       return count == 1;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation:\n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public DBObject deleteByUid(String uid)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
 //      logger.log(Level.INFO, "Deleting node by UID: {0}", nodeUid);
       DBObject toDelete = getByUid(uid);
       if (toDelete == null) {
-        throw new LogPlayerException(
+        throw new GraphModelException(
             "Attempted a delete operation, but no such entity exists: "+uid);
       }
 
@@ -370,7 +369,7 @@ abstract public class AbstractGraphEntityDAO
       // Check that this node doesn't connect to any others
 //      if (!toDelete.getOutgoingEdges().isEmpty())
 //      {
-//        throw new LogPlayerException(
+//        throw new GraphModelException(
 //            "Attempted to delete node: "+nodeUid
 //            + ". However, the node contains outgoing edges to other nodes."
 //            + " Delete these first before attempting to remote this node.");
@@ -379,7 +378,7 @@ abstract public class AbstractGraphEntityDAO
       // Check that this node is not connected to by others
 //      if (!toDelete.getIncomingEdgeIds().isEmpty())
 //      {
-//        throw new LogPlayerException(
+//        throw new GraphModelException(
 //            "Attempted to delete node: "+nodeUid
 //            + ". However, the node contains incoming edges from other nodes."
 //            + " Delete these first before attempting to remote this node.");
@@ -395,7 +394,7 @@ abstract public class AbstractGraphEntityDAO
       return toDelete;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }    
   }
@@ -404,7 +403,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public DBCursor iterateAll()
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -415,28 +414,28 @@ abstract public class AbstractGraphEntityDAO
       return cursor;
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
   }
   
   @Override
   public List<String> listTypes()
-      throws LogPlayerException
+      throws GraphModelException
   {
     try {
       List<String> types = (List<String>) col.distinct(FIELD_TYPE);
       return types;
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation\n", e);
     }    
   }
   
   @Override
   public Iterable<DBObject> iterateByType(String typeName)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -450,7 +449,7 @@ abstract public class AbstractGraphEntityDAO
       return cursor;
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation to find nodes of type: "+typeName+"\n"
           + "Query was: "+query, e);
     }    
@@ -458,7 +457,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -470,7 +469,7 @@ abstract public class AbstractGraphEntityDAO
       return new KeyExtractingIterable<>(cursor, FIELD_UID, String.class);
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation. Type was: "+typeName+"\n"
           + "Query was: "+query, e);
     }
@@ -478,7 +477,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -490,7 +489,7 @@ abstract public class AbstractGraphEntityDAO
       return new KeyExtractingIterable<>(cursor, FIELD_NAME, String.class);
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation. Type was: "+typeName+"\n"
           + "Query was: "+query, e);
     }
@@ -498,7 +497,7 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public long countByType(String typeName)
-      throws LogPlayerException
+      throws GraphModelException
   {
     DBObject query = null;
     try {
@@ -507,7 +506,7 @@ abstract public class AbstractGraphEntityDAO
       return col.count(query);
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation\n"
           + "Query was: "+query, e);
     }  
@@ -515,13 +514,13 @@ abstract public class AbstractGraphEntityDAO
   
   @Override
   public long count()
-      throws LogPlayerException
+      throws GraphModelException
   {
     try {
       return col.count();
     }
     catch(Exception e) {
-      throw new LogPlayerException(
+      throw new GraphModelException(
           "Failed to perform database operation", e);
     }  
   }

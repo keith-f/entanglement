@@ -45,27 +45,31 @@ public class CreateNodePlayer
   public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
       throws LogPlayerException
   {
-    CreateNode cn = (CreateNode) item.getOp();
+    try {
+      CreateNode cn = (CreateNode) item.getOp();
 
-    BasicDBObject serializedNode = cn.getNode();
-    
-    // Node type is a required property
-    if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
-      throw new LogPlayerException("Can't play operation: "+item.getOp()
-              + ". Property " + NodeDAO.FIELD_TYPE + " was not set.");
-    }
+      BasicDBObject serializedNode = cn.getNode();
 
-    
-    /*
-     * If we get here, then the node does not currently exist.
-     */
-    
-    // Generate a UID for this node, if one does not already exist
-    if (!serializedNode.containsField(NodeDAO.FIELD_UID)) {
-      serializedNode.put(NodeDAO.FIELD_UID, UidGenerator.generateUid());
+      // Node type is a required property
+      if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
+        throw new LogPlayerException("Can't play operation: "+item.getOp()
+                + ". Property " + NodeDAO.FIELD_TYPE + " was not set.");
+      }
+
+
+      /*
+       * If we get here, then the node does not currently exist.
+       */
+
+      // Generate a UID for this node, if one does not already exist
+      if (!serializedNode.containsField(NodeDAO.FIELD_UID)) {
+        serializedNode.put(NodeDAO.FIELD_UID, UidGenerator.generateUid());
+      }
+
+      nodeDao.store(serializedNode);
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to play command", e);
     }
-    
-    nodeDao.store(serializedNode);
   }
 
 }

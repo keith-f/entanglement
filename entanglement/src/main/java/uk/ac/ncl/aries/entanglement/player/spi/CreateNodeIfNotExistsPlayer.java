@@ -44,67 +44,70 @@ public class CreateNodeIfNotExistsPlayer
   public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
       throws LogPlayerException
   {
-    /******************
-     * TODO: instead of just returning if the node already exists, we might 
-     *       want to update its contents.
-     */
-    
-    /*
-     * Nodes MUST have a UID, and a type. A 'well known name' may also optionally
-     * be set. 
-     * 
-     * However, the DBObject that we receive in the <code>RevisionItem<code>
-     * here may not have one or more of these required items set. For example,
-     * if the process that created the RevisionItem only cares about the 
-     * 'well known name', then it may not have specified a UID. In this case,
-     * we need to generate a UID here.
-     * 
-     * Here, we need to set any required values that don't currently have values
-     * specified for them by the incoming RevisionItem and check that others
-     * exist.
-     */
-    CreateNodeIfNotExists cn = (CreateNodeIfNotExists) item.getOp();
+    try {
+      /******************
+       * TODO: instead of just returning if the node already exists, we might 
+       *       want to update its contents.
+       */
 
-    BasicDBObject serializedNode = cn.getNode();
-    
-    // Find out whether this node already exists by UID
-    String nodeUid = null;
-    boolean exists;
-    if (serializedNode.containsField(NodeDAO.FIELD_UID)) {
-      nodeUid = serializedNode.getString(NodeDAO.FIELD_UID);
-      exists = nodeDao.existsByUid(nodeUid);
-      if (exists) {
-        return; // For now, do nothing if a node with the same UID already exists
+      /*
+       * Nodes MUST have a UID, and a type. A 'well known name' may also optionally
+       * be set. 
+       * 
+       * However, the DBObject that we receive in the <code>RevisionItem<code>
+       * here may not have one or more of these required items set. For example,
+       * if the process that created the RevisionItem only cares about the 
+       * 'well known name', then it may not have specified a UID. In this case,
+       * we need to generate a UID here.
+       * 
+       * Here, we need to set any required values that don't currently have values
+       * specified for them by the incoming RevisionItem and check that others
+       * exist.
+       */
+      CreateNodeIfNotExists cn = (CreateNodeIfNotExists) item.getOp();
+
+      BasicDBObject serializedNode = cn.getNode();
+
+      // Find out whether this node already exists by UID
+      String nodeUid = null;
+      boolean exists;
+      if (serializedNode.containsField(NodeDAO.FIELD_UID)) {
+        nodeUid = serializedNode.getString(NodeDAO.FIELD_UID);
+        exists = nodeDao.existsByUid(nodeUid);
+        if (exists) {
+          return; // For now, do nothing if a node with the same UID already exists
+        }
       }
-    }
-    
-    // Node type is a required property
-    if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
-      throw new LogPlayerException("Can't play operation: "+item.getOp()
-              + ". Property " + NodeDAO.FIELD_TYPE + " was not set.");
-    }
-    
-    // Find out whether this node already exists by type|name
-    String nodeType = serializedNode.getString(NodeDAO.FIELD_TYPE);
-    String nodeName = serializedNode.getString(NodeDAO.FIELD_NAME);
-    if (serializedNode.containsField(NodeDAO.FIELD_NAME)) {
-      exists = nodeDao.existsByName(nodeType, nodeName);
-      if (exists) {
-        return; // For now, do nothing if a node with the same type and name combo already exists
+
+      // Node type is a required property
+      if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
+        throw new LogPlayerException("Can't play operation: "+item.getOp()
+                + ". Property " + NodeDAO.FIELD_TYPE + " was not set.");
       }
+
+      // Find out whether this node already exists by type|name
+      String nodeType = serializedNode.getString(NodeDAO.FIELD_TYPE);
+      String nodeName = serializedNode.getString(NodeDAO.FIELD_NAME);
+      if (serializedNode.containsField(NodeDAO.FIELD_NAME)) {
+        exists = nodeDao.existsByName(nodeType, nodeName);
+        if (exists) {
+          return; // For now, do nothing if a node with the same type and name combo already exists
+        }
+      }
+
+
+      /*
+       * If we get here, then the node does not currently exist.
+       */
+
+      // Generate a UID for this node, if one does not already exist
+      if (!serializedNode.containsField(NodeDAO.FIELD_UID)) {
+        serializedNode.put(NodeDAO.FIELD_UID, UidGenerator.generateUid());
+      }
+
+      nodeDao.store(serializedNode);
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to play command", e);
     }
-    
-    
-    /*
-     * If we get here, then the node does not currently exist.
-     */
-    
-    // Generate a UID for this node, if one does not already exist
-    if (!serializedNode.containsField(NodeDAO.FIELD_UID)) {
-      serializedNode.put(NodeDAO.FIELD_UID, UidGenerator.generateUid());
-    }
-    
-    nodeDao.store(serializedNode);
   }
-
 }

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.GraphModelException;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.graph.data.Edge;
@@ -65,7 +66,7 @@ public class GraphToGDFExporter
     this.revLog = revLog;
   }
   
-  public void writeToFile() throws IOException, LogPlayerException, RevisionLogException
+  public void writeToFile() throws IOException, GraphModelException, RevisionLogException
   {
     Map<String, Color> nodeColorMappings = new HashMap<>();
     if (colorPropsFile != null) {
@@ -77,7 +78,7 @@ public class GraphToGDFExporter
   }
 
   
-  public String writeToString() throws IOException, LogPlayerException, RevisionLogException
+  public String writeToString() throws IOException, GraphModelException, RevisionLogException
   {
     Map<String, Color> nodeColorMappings = new HashMap<>();
     if (colorPropsFile != null) {
@@ -91,7 +92,7 @@ public class GraphToGDFExporter
   }
   
   private void exportToGdf(Map<String, Color> nodeColorMappings, BufferedWriter bw)
-      throws IOException, LogPlayerException, RevisionLogException
+      throws IOException, GraphModelException, RevisionLogException
   {    
     try (GdfWriter writer = new GdfWriter(bw)) {
       writer.writeNodeDef();

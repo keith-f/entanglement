@@ -41,17 +41,21 @@ public class SetNamedNodePropertyPlayer
   public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
       throws LogPlayerException
   {
-    SetNamedNodeProperty op = (SetNamedNodeProperty) item.getOp();
-    
-    String nodeUniqueId = nodeDao.lookupUniqueIdForName(op.getnType(), op.getnName());
-    
-    if (nodeUniqueId == null) {
-      throw new LogPlayerException("Failed to find named node: "+op.getnName()
-              +" while attempting to add a property: "+op.getpName()
-              +", with value: "+op.getpVal());
+    try {
+      SetNamedNodeProperty op = (SetNamedNodeProperty) item.getOp();
+
+      String nodeUniqueId = nodeDao.lookupUniqueIdForName(op.getnType(), op.getnName());
+
+      if (nodeUniqueId == null) {
+        throw new LogPlayerException("Failed to find named node: "+op.getnName()
+                +" while attempting to add a property: "+op.getpName()
+                +", with value: "+op.getpVal());
+      }
+
+      nodeDao.setPropertyByName(op.getnType(), op.getnName(), op.getpName(), op.getpVal());
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to play command", e);
     }
-    
-    nodeDao.setPropertyByName(op.getnType(), op.getnName(), op.getpName(), op.getpVal());
   }
 
 }

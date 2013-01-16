@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Keith Flanagan
+ * Copyright 2013 Keith Flanagan
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * File created: 15-Nov-2012, 15:30:12
  */
 
 package uk.ac.ncl.aries.entanglement.graph;
-
-import com.mongodb.*;
-import java.util.List;
-import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *
  * @author Keith Flanagan
  */
-public interface NodeDAO
-    extends GraphEntityDAO
+public class GraphModelException
+    extends Exception
 {
-  /**
-   * Attempts to add a Node instance to an existing graph.
-   * @param node
-   * @throws GraphModelException if a node with the same unique ID already
-   * exists in the data structure.
-   * @deprecated 
-   */
-//  public void store(Node node)
-//      throws GraphModelException;
-  
+  public GraphModelException() {
+  }
+
+  public GraphModelException(String message) {
+    super(message);
+  }
+
+  public GraphModelException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public GraphModelException(Throwable cause) {
+    super(cause);
+  }
 }
