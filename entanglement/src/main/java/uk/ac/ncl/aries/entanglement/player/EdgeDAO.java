@@ -20,6 +20,7 @@ package uk.ac.ncl.aries.entanglement.player;
 
 import com.mongodb.*;
 import java.util.List;
+import java.util.Map;
 import uk.ac.ncl.aries.entanglement.player.data.Edge;
 
 /**
@@ -41,18 +42,77 @@ public interface EdgeDAO
   public DBCollection getNodeCol();
   
   
-  
+  /**
+   * Given a 'from' node and a 'to' node, returns an iterator over all the 
+   * edges between these nodes.
+   * @param fromNodeUid the ID of the 'from' node.
+   * @param toNodeUid the ID of the 'to' node.
+   * @return an iterable list of edge instances.
+   * @throws LogPlayerException 
+   */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
           String fromNodeUid, String toNodeUid)
           throws LogPlayerException;
   
-  
+  /**
+   * Given a node , returns an Iterable over all the outgoing edges of that node.
+   * @param fromNodeUid the node whose outgoing edges are to be iterated
+   * @return an Iterable of edges.
+   * @throws LogPlayerException 
+   */
   public Iterable<DBObject> iterateEdgesFromNode(String fromNodeUid)
           throws LogPlayerException;
   
-  public Iterable<DBObject> iterateEdgesToNode(String fromNodeUid)
+  /**
+   * Given a node, returns an Iterable over all the incoming edges to that node.
+   * @param toNodeUid the node whose incoming edges are to be iterated.
+   * @return an Iterable of edges.
+   * @throws LogPlayerException 
+   */
+  public Iterable<DBObject> iterateEdgesToNode(String toNodeUid)
+          throws LogPlayerException;
+  
+  /**
+   * Returns true if there exists at least one edge between the specified node, 
+   * and any node of type <code>toNodeType</code>.
+   * @param fromNodeUid the node ID from which an edge should start
+   * @param toNodeType the type of node that we're interested in as a destination
+   * @return true if there is an edge between <code>fromNodeUid</code> and any
+   * other node of type <code>toNodeType</code>.
+   * @throws LogPlayerException 
+   */
+  public boolean existsEdgeToNodeOfType(String fromNodeUid, String toNodeType)
+          throws LogPlayerException;
+  
+
+  
+  
+  public Long countEdgesFromNode(String fromNodeUid)
+          throws LogPlayerException;
+  
+  public Long countEdgesOfTypeFromNode(String edgeType, String fromNodeUid)
+          throws LogPlayerException;
+  
+  public Long countEdgesToNode(String toNodeUid)
+          throws LogPlayerException;
+  
+  public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
           throws LogPlayerException;
   
   
+  
+  /**
+   * Given a node UID, returns a count of each distinct outgoing edge types for 
+   * that node.
+   * 
+   * @param fromNodeUid the node whose outgoing edges are to be counted.
+   * @return a Map of 'edge type name' to a count of the number of outgoing edges
+   * that the specified node has of that type. Only edge type counts where the
+   * count is greater than 0 are returned.
+   * 
+   * @throws LogPlayerException 
+   */
+  public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
+          throws LogPlayerException;
 
 }

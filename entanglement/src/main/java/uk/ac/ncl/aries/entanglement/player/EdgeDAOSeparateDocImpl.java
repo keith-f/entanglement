@@ -21,6 +21,9 @@ package uk.ac.ncl.aries.entanglement.player;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
@@ -153,16 +156,16 @@ public class EdgeDAOSeparateDocImpl
   }
   
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(String fromNodeUid)
+  public Iterable<DBObject> iterateEdgesToNode(String toNodeUid)
           throws LogPlayerException
   {
     DBObject query = null;
     try {
       logger.log(Level.INFO, "Iterating edges ending at node: {0}", 
-              new Object[]{fromNodeUid});
+              new Object[]{toNodeUid});
       //Empty 'query' selects all documents (nodes in this case)
       query = new BasicDBObject();
-      query.put(FIELD_TO_NODE_UID, fromNodeUid);
+      query.put(FIELD_TO_NODE_UID, toNodeUid);
 
       final DBCursor cursor = col.find(query);
       return cursor;
@@ -173,5 +176,50 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
+  @Override
+  public boolean existsEdgeToNodeOfType(String fromNodeUid, String toNodeType)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}", 
+              new Object[]{fromNodeUid, toNodeType});
+      //Empty 'query' selects all documents (nodes in this case)
+      query = new BasicDBObject();
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
+      query.put(FIELD_TO_NODE_TYPE, toNodeType);
 
+      long count = col.count(query);
+      return count > 0;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
+          throws LogPlayerException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
+      
+      List<String> types = (List<String>) col.distinct(FIELD_TYPE, query);
+      Map<String, Long> edgeTypeToCount = new HashMap<>();
+      for (String edgeType : types) {
+        
+      }
+      
+      col.find().
+      return edgeTypeToCount;
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }   
+  }
+  
 }
