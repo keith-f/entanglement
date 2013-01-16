@@ -20,8 +20,8 @@ package uk.ac.ncl.aries.entanglement.shell;
 import com.torrenttamer.util.UidGenerator;
 import java.util.HashMap;
 import java.util.Map;
-import uk.ac.ncl.aries.entanglement.player.InsertMode;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.InsertMode;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 
 /**
  *

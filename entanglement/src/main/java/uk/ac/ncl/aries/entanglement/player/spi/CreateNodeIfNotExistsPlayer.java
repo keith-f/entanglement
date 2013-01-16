@@ -20,9 +20,9 @@ package uk.ac.ncl.aries.entanglement.player.spi;
 
 import com.mongodb.BasicDBObject;
 import com.torrenttamer.util.UidGenerator;
-import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeIfNotExists;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 

@@ -40,13 +40,13 @@ import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.GraphCheckoutNamingScheme;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
-import uk.ac.ncl.aries.entanglement.player.PlayerDAOFactory;
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.GraphDAOFactory;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
@@ -178,8 +178,8 @@ public class MongoGraphToGephi {
         DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName() );
         DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName() );
 
-        NodeDAO nodeDao = PlayerDAOFactory.createDefaultNodeDAO(m, db, nodeCol, edgeCol);
-        EdgeDAO edgeDao = PlayerDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
+        NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(m, db, nodeCol, edgeCol);
+        EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
 
         RevisionLog log = new RevisionLogDirectToMongoDbImpl( m, db );
 

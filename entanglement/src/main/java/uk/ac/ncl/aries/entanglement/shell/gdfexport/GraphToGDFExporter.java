@@ -32,11 +32,11 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
 

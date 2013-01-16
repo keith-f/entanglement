@@ -16,12 +16,13 @@
  * File created: 15-Nov-2012, 16:43:38
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.*;
 import java.util.List;
 import java.util.Map;
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
+import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
  *

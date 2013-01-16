@@ -15,16 +15,18 @@
  * 
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import java.util.List;
+import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 
 /**
- *
+ * Query methods that are common to both Nodes and Edges.
+ * 
  * @author Keith Flanagan
  */
 public interface GraphEntityDAO 
@@ -43,7 +45,7 @@ public interface GraphEntityDAO
   
   
   
-  public void store(BasicDBObject node)
+  public void store(BasicDBObject entity)
       throws LogPlayerException;
   
   /**

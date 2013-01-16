@@ -15,7 +15,7 @@
  * 
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *

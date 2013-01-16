@@ -16,7 +16,7 @@
  * File created: 15-Nov-2012, 16:43:38
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
@@ -27,7 +27,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
+import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
  *

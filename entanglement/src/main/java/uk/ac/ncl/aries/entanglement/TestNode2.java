@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *

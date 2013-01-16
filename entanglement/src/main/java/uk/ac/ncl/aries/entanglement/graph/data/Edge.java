@@ -15,7 +15,7 @@
  * 
  */
 
-package uk.ac.ncl.aries.entanglement.player.data;
+package uk.ac.ncl.aries.entanglement.graph.data;
 
 import java.io.Serializable;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;

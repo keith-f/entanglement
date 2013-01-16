@@ -23,8 +23,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *

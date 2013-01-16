@@ -13,16 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
+ * File created: 15-Nov-2012, 15:30:12
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
+
+import com.mongodb.*;
+import java.util.List;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *
  * @author Keith Flanagan
  */
-public enum InsertMode
+public interface NodeDAO
+    extends GraphEntityDAO
 {
-    INSERT_CONSISTENCY,
-    INSERT_PERFORMANCE;
+  /**
+   * Attempts to add a Node instance to an existing graph.
+   * @param node
+   * @throws LogPlayerException if a node with the same unique ID already
+   * exists in the data structure.
+   * @deprecated 
+   */
+//  public void store(Node node)
+//      throws LogPlayerException;
+  
 }

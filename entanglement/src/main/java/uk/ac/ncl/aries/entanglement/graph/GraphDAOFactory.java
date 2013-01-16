@@ -15,7 +15,7 @@
  * 
  */
 
-package uk.ac.ncl.aries.entanglement.player;
+package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -25,7 +25,7 @@ import com.mongodb.Mongo;
  *
  * @author Keith Flanagan
  */
-public class PlayerDAOFactory
+public class GraphDAOFactory
 {
   public static NodeDAO createDefaultNodeDAO(Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
   {

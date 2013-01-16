@@ -17,7 +17,7 @@
 
 package uk.ac.ncl.aries.entanglement;
 
-import uk.ac.ncl.aries.entanglement.player.data.Edge;
+import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
  *

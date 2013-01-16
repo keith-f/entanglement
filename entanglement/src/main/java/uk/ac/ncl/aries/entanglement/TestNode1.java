@@ -19,7 +19,7 @@ package uk.ac.ncl.aries.entanglement;
 
 import java.util.ArrayList;
 import java.util.List;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
+import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
 /**
  *

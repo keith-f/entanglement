@@ -40,14 +40,14 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.GraphCheckoutNamingScheme;
-import uk.ac.ncl.aries.entanglement.player.InsertMode;
+import uk.ac.ncl.aries.entanglement.graph.InsertMode;
 import uk.ac.ncl.aries.entanglement.player.LogPlayer;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerMongoDbImpl;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
-import uk.ac.ncl.aries.entanglement.player.PlayerDAOFactory;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.GraphDAOFactory;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
@@ -158,8 +158,8 @@ public class EntanglementShell
     GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, branchName);
     DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
     DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    nodeDao = PlayerDAOFactory.createDefaultNodeDAO(mongo, db, nodeCol, edgeCol);
-    edgeDao = PlayerDAOFactory.createDefaultEdgeDAO(mongo, db, nodeCol, edgeCol);
+    nodeDao = GraphDAOFactory.createDefaultNodeDAO(mongo, db, nodeCol, edgeCol);
+    edgeDao = GraphDAOFactory.createDefaultEdgeDAO(mongo, db, nodeCol, edgeCol);
     
     if (insertMode != null && insertMode.equals(InsertMode.INSERT_CONSISTENCY.name())) {
       System.out.println("Setting DAO insert mode to: "+insertMode);

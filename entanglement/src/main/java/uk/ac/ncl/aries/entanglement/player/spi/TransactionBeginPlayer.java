@@ -18,9 +18,9 @@
 package uk.ac.ncl.aries.entanglement.player.spi;
 
 import java.util.logging.Logger;
-import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
-import uk.ac.ncl.aries.entanglement.player.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionBegin;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 

@@ -18,6 +18,8 @@
 
 package uk.ac.ncl.aries.entanglement.player;
 
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
+import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
