@@ -24,27 +24,27 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class CreateNodeFromObjIfNotExistsByName
+public class CreateNodeIfNotExists
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(CreateNodeFromObjIfNotExistsByName.class.getName());
+      Logger.getLogger(CreateNodeIfNotExists.class.getName());
   
   //private Node2 node;
   private BasicDBObject node;
   
-  public CreateNodeFromObjIfNotExistsByName()
+  public CreateNodeIfNotExists()
   {
   }
 
-  public CreateNodeFromObjIfNotExistsByName(BasicDBObject node)
+  public CreateNodeIfNotExists(BasicDBObject node)
   {
     this.node = node;
   }
 
   @Override
   public String toString() {
-    return "CreateNode2IfNotExistsByName{" + "node=" + node + '}';
+    return "CreateNodeIfNotExists{" + "node=" + node + '}';
   }
 
   public BasicDBObject getNode() {

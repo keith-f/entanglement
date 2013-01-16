@@ -18,16 +18,18 @@
 
 package uk.ac.ncl.aries.entanglement.player.spi;
 
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.mongodb.BasicDBObject;
+import com.torrenttamer.util.UidGenerator;
 import uk.ac.ncl.aries.entanglement.player.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.player.NodeDAO;
-import uk.ac.ncl.aries.entanglement.player.data.Node;
 import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 
 /**
- *
+ * Creates a node without performing any checks regarding whether it already
+ * exists. 
+ * 
  * @author Keith Flanagan
  */
 public class CreateNodePlayer 
@@ -44,20 +46,26 @@ public class CreateNodePlayer
       throws LogPlayerException
   {
     CreateNode cn = (CreateNode) item.getOp();
+
+    BasicDBObject serializedNode = cn.getNode();
     
-    Node node = new Node();
-    node.setType(cn.getType());
-    node.setUid(cn.getUid());
-    node.setName(cn.getName());
+    // Node type is a required property
+    if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
+      throw new LogPlayerException("Can't play operation: "+item.getOp()
+              + ". Property " + NodeDAO.FIELD_TYPE + " was not set.");
+    }
+
     
-    try 
-    {
-      nodeDao.store(marshaller.serialize(node));
+    /*
+     * If we get here, then the node does not currently exist.
+     */
+    
+    // Generate a UID for this node, if one does not already exist
+    if (!serializedNode.containsField(NodeDAO.FIELD_UID)) {
+      serializedNode.put(NodeDAO.FIELD_UID, UidGenerator.generateUid());
     }
-    catch (DbObjectMarshallerException ex) 
-    {
-      throw new LogPlayerException("Failed to store item", ex);
-    }
+    
+    nodeDao.store(serializedNode);
   }
 
 }

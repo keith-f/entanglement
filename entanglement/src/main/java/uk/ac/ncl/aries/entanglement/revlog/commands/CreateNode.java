@@ -18,6 +18,7 @@
 
 package uk.ac.ncl.aries.entanglement.revlog.commands;
 
+import com.mongodb.BasicDBObject;
 import java.util.logging.Logger;
 
 /**
@@ -32,86 +33,28 @@ public class CreateNode
   private static final Logger logger = 
       Logger.getLogger(CreateNode.class.getName());
   
-  /*
-   * Parent graph info
-   */
-//  private String graphUniqueId;
-//  private String graphBranchId;
+  private BasicDBObject node;
   
-  /*
-   * Node ID
-   */
-  private String uid;
-  
-  /*
-   * Node info
-   */
-  private String name; //An optional but unique string for named concepts
-  private String type;
-  private String dsName;
-  private String etName;  
-  
-
   public CreateNode()
   {
   }
 
-  public CreateNode(String typeUid, String uniqueId, 
-      String dataSourceUid, String evidenceTypeUid)
+  public CreateNode(BasicDBObject node)
   {
-    this.uid = uniqueId;
-    this.type = typeUid;
-    this.dsName = dataSourceUid;
-    this.etName = evidenceTypeUid;
+    this.node = node;
   }
-  
-  
+
   @Override
-  public String toString()
-  {
-    return "CreateNode{" + ", uniqueId=" + uid 
-        + ", wellKnownName=" + name + ", typeUid=" + type 
-        + ", dataSourceUid=" + dsName + ", evidenceTypeUid=" + etName + '}';
+  public String toString() {
+    return "CreateNode{" + "node=" + node + '}';
   }
 
-  public String getUid() {
-    return uid;
+  public BasicDBObject getNode() {
+    return node;
   }
 
-  public void setUid(String uid) {
-    this.uid = uid;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getDsName() {
-    return dsName;
-  }
-
-  public void setDsName(String dsName) {
-    this.dsName = dsName;
-  }
-
-  public String getEtName() {
-    return etName;
-  }
-
-  public void setEtName(String etName) {
-    this.etName = etName;
+  public void setNode(BasicDBObject node) {
+    this.node = node;
   }
 
 }

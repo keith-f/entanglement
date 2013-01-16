@@ -77,19 +77,19 @@ public class AsciiArtPrinter
   private static String _printItem(CreateNode node)
   {
     StringBuilder sb = new StringBuilder();
-    sb.append(node.getType()).append(", ");
-    sb.append(node.getUid());
+//    sb.append(node.getType()).append(", ");
+//    sb.append(node.getUid());
     return sb.toString();
   }
   
   private static String _printItem(CreateEdge edge)
   {
     StringBuilder sb = new StringBuilder();
-    sb.append(edge.getFromUid());
-    sb.append(" --- ").append(edge.getType()).append(" ---> ");
-    sb.append(edge.getToUid());
-    
-    sb.append(" (").append(edge.getUid()).append(")");
+//    sb.append(edge.getFromUid());
+//    sb.append(" --- ").append(edge.getType()).append(" ---> ");
+//    sb.append(edge.getToUid());
+//    
+//    sb.append(" (").append(edge.getUid()).append(")");
     return sb.toString();
   }  
 }

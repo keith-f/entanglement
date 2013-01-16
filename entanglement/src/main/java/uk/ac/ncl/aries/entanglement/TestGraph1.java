@@ -32,9 +32,7 @@ import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
 import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdge;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdgeBetweenNamedNodes;
 import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeIfNotExistsByName;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.commands.SetNamedNodeProperty;
 import uk.ac.ncl.aries.entanglement.revlog.commands.SetNodeProperty;
@@ -95,28 +93,28 @@ public class TestGraph1
     {
 //      String uid = UidGenerator.generateUid();
 //      String uid = i+"a";
-      CreateNodeIfNotExistsByName n1 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"a", ds, et);
-      SetNamedNodeProperty p1a = new SetNamedNodeProperty(i+"a", "some-string", "foo");
-      SetNamedNodeProperty p1b = new SetNamedNodeProperty(i+"a", "some-string", "bar");
-      SetNamedNodeProperty p2 = new SetNamedNodeProperty(i+"a", "some-integer", 23);
-      
-      CreateNodeIfNotExistsByName n2 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"b", ds, et);
-      CreateEdgeBetweenNamedNodes e1 = new CreateEdgeBetweenNamedNodes("has-part", UidGenerator.generateUid(), n1.getName(), n2.getName());
+//      CreateNodeIfNotExists n1 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"a", ds, et);
+//      SetNamedNodeProperty p1a = new SetNamedNodeProperty(i+"a", "some-string", "foo");
+//      SetNamedNodeProperty p1b = new SetNamedNodeProperty(i+"a", "some-string", "bar");
+//      SetNamedNodeProperty p2 = new SetNamedNodeProperty(i+"a", "some-integer", 23);
+//      
+//      CreateNodeIfNotExistsByName n2 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"b", ds, et);
+//      CreateEdgeBetweenNamedNodes e1 = new CreateEdgeBetweenNamedNodes("has-part", UidGenerator.generateUid(), n1.getName(), n2.getName());
       
       
       
       //Examples of individual submissions
       
       
-      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, n1);
-      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1a);
-      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1b);
+//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, n1);
+//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1a);
+//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1b);
       
       //Example of submitting several revisions at the same time.
       List<GraphOperation> opList = new LinkedList<>();
-      opList.add(p2);
-      opList.add(n2);
-      opList.add(e1);
+//      opList.add(p2);
+//      opList.add(n2);
+//      opList.add(e1);
       log.submitRevisions(graphName, graphBranchName, txnId, txnSubmitId++, opList);
       
     }

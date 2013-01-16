@@ -29,6 +29,11 @@ import java.util.List;
  */
 public interface GraphEntityDAO 
 {
+  public static final String FIELD_UID = "uid";
+  public static final String FIELD_NAME = "name";
+  public static final String FIELD_TYPE = "type";
+  
+  
   public InsertMode getInsertModeHint();
   public void setInsertModeHint(InsertMode mode);
   public DBCollection getCollection();
@@ -55,10 +60,10 @@ public interface GraphEntityDAO
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue)
       throws LogPlayerException;
   
-  public void setPropertyByName(String nodeName, String propertyName, Object propertyValue)
+  public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
       throws LogPlayerException;
   
-  public String lookupUniqueIdForName(String name)
+  public String lookupUniqueIdForName(String entityType, String entityName)
       throws LogPlayerException;
   
   /**
@@ -71,13 +76,13 @@ public interface GraphEntityDAO
   public DBObject getByUid(String uid)
       throws LogPlayerException;
   
-  public DBObject getByName(String name)
+  public DBObject getByName(String entityType, String entityName)
       throws LogPlayerException;
   
   public boolean existsByUid(String uniqueId)
       throws LogPlayerException;
   
-  public boolean existsByName(String uniqueId)
+  public boolean existsByName(String entityType, String entityName)
       throws LogPlayerException;
   
   public DBObject deleteByUid(String uid)

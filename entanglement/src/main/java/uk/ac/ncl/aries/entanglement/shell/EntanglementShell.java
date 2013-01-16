@@ -51,8 +51,6 @@ import uk.ac.ncl.aries.entanglement.player.PlayerDAOFactory;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdgeBetweenNamedNodes;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeIfNotExistsByName;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.commands.SetNamedNodeProperty;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionBegin;
@@ -314,9 +312,9 @@ public class EntanglementShell
   }
   
   @Command
-  public void findGraphNodeByName(String wellKnownName)
+  public void findGraphNodeByName(String nodeType, String wellKnownName)
       throws RevisionLogException, LogPlayerException {
-    DBObject node = nodeDao.getByName(wellKnownName);
+    DBObject node = nodeDao.getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
     } else {
@@ -326,9 +324,9 @@ public class EntanglementShell
   }
   
   @Command
-  public void printPropertiesOfNamedNode(String wellKnownName)
+  public void printPropertiesOfNamedNode(String nodeType, String wellKnownName)
       throws RevisionLogException, LogPlayerException {
-    DBObject node = nodeDao.getByName(wellKnownName);
+    DBObject node = nodeDao.getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
       return;
@@ -402,48 +400,48 @@ public class EntanglementShell
   }
   
   
-  @Command
-  public void createEdgeBetweenNamedNodes(String edgeType, String fromNodeName, String toNodeName)
-      throws RevisionLogException
-  {
-    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-    String txnId = state.getProperties().get(PROP_TXN_UID);
-    int txnSubmitId = getTxnSubmitIdAndIncrement();
-    
-    String edgeUniqueId = UidGenerator.generateUid();
-    
-    CreateEdgeBetweenNamedNodes op = new CreateEdgeBetweenNamedNodes(
-        edgeType, edgeUniqueId, fromNodeName, toNodeName);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
-  }
+//  @Command
+//  public void createEdgeBetweenNamedNodes(String edgeType, String fromNodeName, String toNodeName)
+//      throws RevisionLogException
+//  {
+//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
+//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
+//    String txnId = state.getProperties().get(PROP_TXN_UID);
+//    int txnSubmitId = getTxnSubmitIdAndIncrement();
+//    
+//    String edgeUniqueId = UidGenerator.generateUid();
+//    
+//    CreateEdgeBetweenNamedNodes op = new CreateEdgeBetweenNamedNodes(
+//        edgeType, edgeUniqueId, fromNodeName, toNodeName);
+//    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
+//  }
   
   
-  @Command
-  public void createNodeIfNotExistsByName(String nodeType, String wellKnownName, String dataSourceUid, String evidenceTypeUid)
-      throws RevisionLogException
-  {
-    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-    String txnId = state.getProperties().get(PROP_TXN_UID);
-    int txnSubmitId = getTxnSubmitIdAndIncrement();
-    
-    String nodeUniqueId = UidGenerator.generateUid();
-    
-    CreateNodeIfNotExistsByName op = new CreateNodeIfNotExistsByName(
-        nodeType, nodeUniqueId, wellKnownName, dataSourceUid, evidenceTypeUid);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
-  }
+//  @Command
+//  public void createNodeIfNotExistsByName(String nodeType, String wellKnownName, String dataSourceUid, String evidenceTypeUid)
+//      throws RevisionLogException
+//  {
+//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
+//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
+//    String txnId = state.getProperties().get(PROP_TXN_UID);
+//    int txnSubmitId = getTxnSubmitIdAndIncrement();
+//    
+//    String nodeUniqueId = UidGenerator.generateUid();
+//    
+//    CreateNodeIfNotExistsByName op = new CreateNodeIfNotExistsByName(
+//        nodeType, nodeUniqueId, wellKnownName, dataSourceUid, evidenceTypeUid);
+//    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
+//  }
   
   
-  @Command
-  public void createNodeIfNotExistsByName(String nodeType, String wellKnownName)
-      throws RevisionLogException
-  {
-    String dataSourceUid = state.getProperties().get(PROP_DEFAULT_DATASOURCE_NAME);
-    String evidenceTypeUid = state.getProperties().get(PROP_DEFAULT_EVIDENCETYPE_NAME);
-    createNodeIfNotExistsByName(nodeType, wellKnownName, dataSourceUid, evidenceTypeUid);
-  }
+//  @Command
+//  public void createNodeIfNotExistsByName(String nodeType, String wellKnownName)
+//      throws RevisionLogException
+//  {
+//    String dataSourceUid = state.getProperties().get(PROP_DEFAULT_DATASOURCE_NAME);
+//    String evidenceTypeUid = state.getProperties().get(PROP_DEFAULT_EVIDENCETYPE_NAME);
+//    createNodeIfNotExistsByName(nodeType, wellKnownName, dataSourceUid, evidenceTypeUid);
+//  }
 
 //  @Command
 //  public void deleteEdgeByUid(String edgeUniqueId)
@@ -471,20 +469,20 @@ public class EntanglementShell
 //    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
 //  }
   
-  @Command
-  public void setNamedNodeProperty(String nodeWellKnownName, String propertyName, 
-      String propertyValue)
-      throws RevisionLogException
-  {
-    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-    String txnId = state.getProperties().get(PROP_TXN_UID);
-    int txnSubmitId = getTxnSubmitIdAndIncrement();
-    
-    SetNamedNodeProperty op = new SetNamedNodeProperty(
-        nodeWellKnownName, propertyName, propertyValue);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
-  }
+//  @Command
+//  public void setNamedNodeProperty(String nodeWellKnownName, String propertyName, 
+//      String propertyValue)
+//      throws RevisionLogException
+//  {
+//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
+//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
+//    String txnId = state.getProperties().get(PROP_TXN_UID);
+//    int txnSubmitId = getTxnSubmitIdAndIncrement();
+//    
+//    SetNamedNodeProperty op = new SetNamedNodeProperty(
+//        nodeWellKnownName, propertyName, propertyValue);
+//    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, op);
+//  }
   
 //  @Command
 //  public void setNodeProperty(String nodeUniqueId, String propertyName, 

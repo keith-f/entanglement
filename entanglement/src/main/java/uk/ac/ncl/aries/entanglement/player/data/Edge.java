@@ -29,10 +29,11 @@ public class Edge
        implements Serializable
 { 
   protected String uid;
-  
   protected String type;
   protected String fromUid;
+  protected String fromType;
   protected String toUid;
+  protected String toType;
   
   /*
    * Optional - we can specify named nodes here as well IN ADDITION TO UIDs.
@@ -97,4 +98,21 @@ public class Edge
   public void setToName(String toName) {
     this.toName = toName;
   }
+
+  public String getFromType() {
+    return fromType;
+  }
+
+  public void setFromType(String fromType) {
+    this.fromType = fromType;
+  }
+
+  public String getToType() {
+    return toType;
+  }
+
+  public void setToType(String toType) {
+    this.toType = toType;
+  }
+  
 }

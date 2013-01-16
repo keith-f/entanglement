@@ -41,10 +41,6 @@ abstract public class AbstractGraphEntityDAO
   private static final Logger logger =
       Logger.getLogger(AbstractGraphEntityDAO.class.getName());
   
-  public static final String FIELD_UID = "uid";
-  public static final String FIELD_NAME = "name";
-  public static final String FIELD_TYPE = "type";
-  
   protected final Mongo m;
   protected final DB db;
   
@@ -111,12 +107,13 @@ abstract public class AbstractGraphEntityDAO
       if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
         String uid = item.getString(FIELD_UID);
         String name = item.getString(FIELD_NAME);
+        String type = item.getString(FIELD_TYPE);
 //        logger.info("Running in consistency mode");
         if (existsByUid(uid)) {
           throw new LogPlayerException(
               "Failed to store item - an entity with this unique ID already exists: "+uid);
         }
-        if (name != null && existsByName(name)) {
+        if (name != null && existsByName(type, name)) {
           throw new LogPlayerException(
               "Failed to store item - an entity with the same 'well known' name already exists: "+name);        
         }
@@ -193,7 +190,7 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public void setPropertyByName(String name, String propertyName, Object propertyValue)
+  public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
       throws LogPlayerException
   {
 //    logger.log(Level.INFO, "Storing edge: {0}", edge);
@@ -207,7 +204,7 @@ abstract public class AbstractGraphEntityDAO
     boolean upsert = false;
     
     try {
-      criteria = new BasicDBObject(FIELD_NAME, name);
+      criteria = new BasicDBObject(FIELD_TYPE, entityType).append(FIELD_NAME, entityName);
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -223,19 +220,20 @@ abstract public class AbstractGraphEntityDAO
     catch(Exception e)
     {
       throw new LogPlayerException("Failed to store item: "+propertyName 
-              + " on entity with name: "+name, e);
+              + " on entity with type: "+entityType+", name: "+entityType, e);
     }
   }
   
   
   @Override
-  public String lookupUniqueIdForName(String name)
+  public String lookupUniqueIdForName(String type, String name)
       throws LogPlayerException
   {
     DBObject query = null;
     DBObject fields = null;
     try {
       query = new BasicDBObject();
+      query.put(FIELD_TYPE, type);
       query.put(FIELD_NAME, name);
       
       fields = new BasicDBObject();
@@ -281,12 +279,13 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public DBObject getByName(String name)
+  public DBObject getByName(String type, String name)
       throws LogPlayerException
   {
     DBObject query = null;
     try {
       query = new BasicDBObject();
+      query.put(FIELD_TYPE, type);
       query.put(FIELD_NAME, name);
 
       DBObject nodeObj = col.findOne(query);
@@ -326,19 +325,21 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public boolean existsByName(String nodeName)
+  public boolean existsByName(String entityType, String entityName)
       throws LogPlayerException
   {
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_NAME, nodeName);
+      query.put(FIELD_TYPE, entityType);
+      query.put(FIELD_NAME, entityName);
 
       long count = col.count(query);
       if (count > 1) {
         throw new LogPlayerException(
-                "Name: "+nodeName+" should be unique, but we found: "+count
-                + " instances with that name!");
+            "Type: "+entityType+", Name: "+entityName 
+            +" should be unique, but we found: "+count
+            + " instances with that name!");
       }
       return count == 1;
     }

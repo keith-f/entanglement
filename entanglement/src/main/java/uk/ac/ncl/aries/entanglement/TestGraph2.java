@@ -31,8 +31,8 @@ import java.util.Set;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdgeFromObjBetweenNamedNodes;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeFromObjIfNotExistsByName;
+import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdge;
+import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeIfNotExists;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionBegin;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionCommit;
@@ -118,6 +118,8 @@ public class TestGraph2
       
       TestEdge1 edgeType1 = new TestEdge1();
       edgeType1.setSomeProperty("Some edge string: "+1);
+      edgeType1.setFromName(nodeType1.getName());
+      edgeType1.setToName(nodeType2.getName());
       
       
       //Example of submitting several revisions at the same time.
@@ -129,9 +131,9 @@ public class TestGraph2
 //          JsonSerializer.serializeToString(nodeType2));
   
       
-      opList.add(new CreateNodeFromObjIfNotExistsByName(objUtil.serialize(nodeType1)));
-      opList.add(new CreateNodeFromObjIfNotExistsByName(objUtil.serialize(nodeType2)));
-      opList.add(new CreateEdgeFromObjBetweenNamedNodes(objUtil.serialize(edgeType1), nodeType1.getName(), nodeType2.getName()));
+      opList.add(new CreateNodeIfNotExists(objUtil.serialize(nodeType1)));
+      opList.add(new CreateNodeIfNotExists(objUtil.serialize(nodeType2)));
+      opList.add(new CreateEdge(objUtil.serialize(edgeType1)));
 //      opList.add(new CreateNode2IfNotExistsByName(jsonSer, nodeType1));
 //      opList.add(new CreateNode2IfNotExistsByName(jsonSer, nodeType2));
 //      opList.add(new CreateEdge2BetweenNamedNodes(jsonSer, edgeType1, nodeType1.getName(), nodeType2.getName()));

@@ -30,8 +30,9 @@ public class SetNamedNodeProperty
       Logger.getLogger(SetNamedNodeProperty.class.getName());
   
   /*
-   * Node ID
+   * Node identification by type/name pair
    */
+  private String nType;
   private String nName;
   
   /*
@@ -45,9 +46,10 @@ public class SetNamedNodeProperty
   {
   }
 
-  public SetNamedNodeProperty(
-      String nodeWellKnownName, String propertyName, Object propertyValue)
+  public SetNamedNodeProperty(String nodeType, String nodeWellKnownName, 
+          String propertyName, Object propertyValue)
   {
+    this.nType = nodeType;
     this.nName = nodeWellKnownName;
     this.pName = propertyName;
     this.pVal = propertyValue;
@@ -56,7 +58,8 @@ public class SetNamedNodeProperty
   @Override
   public String toString()
   {
-    return "SetNamedNodeProperty{" + "nodeWellKnownName=" + nName 
+    return "SetNamedNodeProperty{" + "nodeType=" + nType 
+        + "nodeWellKnownName=" + nName 
         + ", propertyName=" + pName + ", propertyValue=" + pVal + '}';
   }
 
@@ -82,6 +85,14 @@ public class SetNamedNodeProperty
 
   public void setpVal(Object pVal) {
     this.pVal = pVal;
+  }
+
+  public String getnType() {
+    return nType;
+  }
+
+  public void setnType(String nType) {
+    this.nType = nType;
   }
 
 

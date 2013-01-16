@@ -83,9 +83,6 @@
       <id>microbase-snapshot</id>
       <url>http://keithf.maven.public.s3.amazonaws.com/snapshot</url>
       <!--      <url>http://bio-nexus.ncl.ac.uk:8090/nexus/content/repositories/microbase-snapshot/</url>-->
-      <releases>
-        <enabled>true</enabled>
-      </releases>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>

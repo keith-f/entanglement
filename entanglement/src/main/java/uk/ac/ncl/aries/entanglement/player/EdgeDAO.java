@@ -29,6 +29,14 @@ import uk.ac.ncl.aries.entanglement.player.data.Edge;
 public interface EdgeDAO
     extends GraphEntityDAO
 {
+  public static final String FIELD_FROM_NODE_UID = "fromUid";
+  public static final String FIELD_TO_NODE_UID = "toUid";
+  
+  public static final String FIELD_FROM_NODE_TYPE = "fromType";
+  public static final String FIELD_TO_NODE_TYPE = "toType";
+  
+  public static final String FIELD_FROM_NODE_NAME = "fromName";
+  public static final String FIELD_TO_NODE_NAME = "toName";
   
   public DBCollection getNodeCol();
   

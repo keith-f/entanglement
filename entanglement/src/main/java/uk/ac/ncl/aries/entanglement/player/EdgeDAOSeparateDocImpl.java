@@ -35,10 +35,7 @@ public class EdgeDAOSeparateDocImpl
     implements EdgeDAO
 {
   private static final Logger logger =
-      Logger.getLogger(EdgeDAOSeparateDocImpl.class.getName());
-
-  private static final String FIELD_FROM_NODE_UID = "fromUid";
-  private static final String FIELD_TO_NODE_UID = "toUid";
+      Logger.getLogger(EdgeDAOSeparateDocImpl.class.getName()); 
   
   private final DBCollection nodeCol;
   

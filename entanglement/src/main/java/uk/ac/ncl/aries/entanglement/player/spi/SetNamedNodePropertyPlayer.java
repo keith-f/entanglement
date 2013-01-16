@@ -43,7 +43,7 @@ public class SetNamedNodePropertyPlayer
   {
     SetNamedNodeProperty op = (SetNamedNodeProperty) item.getOp();
     
-    String nodeUniqueId = nodeDao.lookupUniqueIdForName(op.getnName());
+    String nodeUniqueId = nodeDao.lookupUniqueIdForName(op.getnType(), op.getnName());
     
     if (nodeUniqueId == null) {
       throw new LogPlayerException("Failed to find named node: "+op.getnName()
@@ -51,7 +51,7 @@ public class SetNamedNodePropertyPlayer
               +", with value: "+op.getpVal());
     }
     
-    nodeDao.setPropertyByName(op.getnName(), op.getpName(), op.getpVal());
+    nodeDao.setPropertyByName(op.getnType(), op.getnName(), op.getpName(), op.getpVal());
   }
 
 }

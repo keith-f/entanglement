@@ -19,44 +19,44 @@
 package uk.ac.ncl.aries.entanglement.revlog.commands;
 
 import com.mongodb.BasicDBObject;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import java.util.logging.Logger;
 
 /**
  *
  * @author Keith Flanagan
  */
-public class CreateEdgeFromObjBetweenNamedNodes
+public class CreateEdgeIfNotExists
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(CreateEdgeFromObjBetweenNamedNodes.class.getName());
+      Logger.getLogger(CreateEdgeIfNotExists.class.getName());
   
   
   private BasicDBObject edge;
   
-  
-  /*
-   * IDs of connected nodes
-   */
-  private String fromName;
-  private String toName;
+ 
 
-  public CreateEdgeFromObjBetweenNamedNodes()
+  public CreateEdgeIfNotExists()
   {
   }
   
-  public CreateEdgeFromObjBetweenNamedNodes(BasicDBObject edge,
-          String fromNodeName, String toNodeName)
+  public CreateEdgeIfNotExists(BasicDBObject edge)
   {
     this.edge = edge;
-    this.fromName = fromNodeName;
-    this.toName = toNodeName;
   }
-
+  
+  public CreateEdgeIfNotExists(DbObjectMarshaller marshaller,
+          String edgeUid, String fromNodeUid, String toNodeUid,
+          String fromNodeName, String toNodeName)
+  {
+    
+  }
+  
+  
   @Override
   public String toString() {
-    return "CreateEdge2BetweenNamedNodes{" + "edge=" + edge 
-            + ", fromName=" + fromName + ", toName=" + toName + '}';
+    return "CreateEdgeIfNotExists{" + "edge=" + edge + '}';
   }
 
   public BasicDBObject getEdge() {
@@ -65,22 +65,6 @@ public class CreateEdgeFromObjBetweenNamedNodes
 
   public void setEdge(BasicDBObject edge) {
     this.edge = edge;
-  }
-
-  public String getFromName() {
-    return fromName;
-  }
-
-  public void setFromName(String fromName) {
-    this.fromName = fromName;
-  }
-
-  public String getToName() {
-    return toName;
-  }
-
-  public void setToName(String toName) {
-    this.toName = toName;
   }
 
 }
