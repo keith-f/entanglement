@@ -29,12 +29,12 @@ public interface RevisionLogListener
   public void notifyRevisionsSubmitted(String graphId, String graphBranchId,
       String txnId, int txnSubmitId, int numRevisions);
   
-  public void notifyCommitStart(TransactionCommit op);
-  public void notifyCommitCompleted(TransactionCommit op);
+  public void notifyPreCommit(TransactionCommit op);
+  public void notifyPostCommit(TransactionCommit op);
   public void notifyCommitFailed(TransactionCommit op);
   
-  public void notifyRollbackStart(TransactionRollback op);
-  public void notifyRollbackCompleted(TransactionRollback op);
+  public void notifyPreRollback(TransactionRollback op);
+  public void notifyPostRollback(TransactionRollback op);
   public void notifyRollbackFailed(TransactionRollback op);
   
   

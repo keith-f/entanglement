@@ -38,6 +38,9 @@ public interface LogPlayer
   public void replayAllRevisions()
       throws LogPlayerException;
   
+  public void playRevisionsForTransaction(String transactionUid)
+      throws LogPlayerException;
+  
   /**
    * Replays log items for a particular graph/branch up to the specified 
    * revision ID.

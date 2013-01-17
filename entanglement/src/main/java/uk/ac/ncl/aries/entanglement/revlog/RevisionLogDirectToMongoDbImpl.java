@@ -29,8 +29,10 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -59,6 +61,8 @@ public class RevisionLogDirectToMongoDbImpl
 //  private static final String REV_COUNTER_NAME = "revision_count";
   private static final String DEFAULT_COL_REVLOG = "revisions";
   
+  private final Set<RevisionLogListener> listeners;
+  
 //  private final HazelcastInstance hz;
   private final Mongo m;
   private final DB db;
@@ -75,6 +79,7 @@ public class RevisionLogDirectToMongoDbImpl
   public RevisionLogDirectToMongoDbImpl(Mongo m, DB db)
       throws RevisionLogException
   {
+    this.listeners = new HashSet<>();
     this.revLogColName = DEFAULT_COL_REVLOG;
     
     
@@ -90,6 +95,25 @@ public class RevisionLogDirectToMongoDbImpl
     StringBuilder sb = new StringBuilder();
     sb.append(graphId).append(".").append(graphBranchId).append(".").append(entityId);
     return sb.toString();
+  }
+  
+  @Override
+  public void addListener(RevisionLogListener listener)
+  {
+    listeners.add(listener);
+  }
+  
+  @Override
+  public void removeListener(RevisionLogListener listener)
+  {
+    listeners.remove(listener);
+  }
+  
+  private void notifyPostCommit(TransactionCommit op)
+  {
+    for (RevisionLogListener listener : listeners) {
+      listener.notifyPostCommit(op);
+    }
   }
   
   @Override
@@ -202,7 +226,9 @@ public class RevisionLogDirectToMongoDbImpl
 
       WriteResult result = revLogCol.updateMulti(query, update);
 
-      logger.info("************* COMMIT COMPLETED: "+transactionUid);
+      logger.info("************* COMMIT COMPLETED: "+transactionUid+". Notify listeners...");
+      notifyPostCommit(op);
+      logger.info("************* ALL LISTENERS NOTIFIED: "+transactionUid);
     }
     catch(Exception e) {
       logger.info("************* COMMIT FAILED: "+transactionUid);
@@ -247,7 +273,13 @@ public class RevisionLogDirectToMongoDbImpl
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
   
-
+  @Override
+  public Iterable<RevisionItemContainer> iterateRevisionsForTransaction(String transactionUid)
+  {
+    DBObject query = new BasicDBObject("transactionUid", transactionUid);
+    final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_TXN_SUBMIT_ID);
+    return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
+  }
   
   
 

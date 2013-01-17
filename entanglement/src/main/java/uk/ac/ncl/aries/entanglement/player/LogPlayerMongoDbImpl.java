@@ -118,6 +118,28 @@ public class LogPlayerMongoDbImpl
     }
   }
   
+  @Override
+  public void playRevisionsForTransaction(String transactionUid)
+      throws LogPlayerException
+  {
+    try {
+      logger.info("Going to play revision items for txn: "+transactionUid);
+      Iterable<RevisionItemContainer> containers = 
+              revLog.iterateRevisionsForTransaction(transactionUid);
+      for (RevisionItemContainer container : containers)
+      {
+        for (RevisionItem item : container.getItems()) {
+          LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
+          itemPlayer.playItem(nodeDao, edgeDao, item);
+        }
+      }
+    }
+    catch(Exception e) {
+      throw new LogPlayerException(
+          "Failed to replay log items for transaction: "+transactionUid
+              +" to a working copy: "+graphId+"/"+graphBranch, e);
+    }
+  }
 //  @Override
 //  public void replayToRevision(long toRevId)
 //      throws LogPlayerException

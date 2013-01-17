@@ -41,6 +41,9 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItemContainer;
  */
 public interface RevisionLog
 {
+  public void addListener(RevisionLogListener listener);
+  public void removeListener(RevisionLogListener listener);
+  
   /**
    * Submits a single revision to the revision history.
    * 
@@ -101,6 +104,8 @@ public interface RevisionLog
    */
   public Iterable<RevisionItemContainer> iterateUncommittedRevisions(String transactionUid);
   
+  
+  public Iterable<RevisionItemContainer> iterateRevisionsForTransaction(String transactionUid);
   
   
 //  public Iterable<RevisionItem> iterateCommittedRevisions();
