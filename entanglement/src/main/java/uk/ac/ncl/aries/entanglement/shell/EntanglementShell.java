@@ -59,6 +59,7 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionCommit;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionRollback;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItemContainer;
 import uk.ac.ncl.aries.entanglement.shell.gdfexport.GraphToGDFExporter;
+import uk.ac.ncl.aries.entanglement.shell.navigator.NavigatorShell;
 
 /**
  * A simple interactive command line shell for MongoGraph. This program may be
@@ -175,7 +176,21 @@ public class EntanglementShell
     logger.info("Connected!");
   }
   
- @Command
+  @Command
+  public void startNavigator(String nodeUid)
+          throws IOException, GraphModelException {
+    NavigatorShell navShell = new NavigatorShell(revLog, nodeDao, edgeDao, nodeUid);
+    NavigatorShell.startSubShell(navShell);
+  }
+  @Command
+  public void startNavigator(String nodeType, String nodeName) 
+          throws IOException, GraphModelException {
+    String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
+    NavigatorShell navShell = new NavigatorShell(revLog, nodeDao, edgeDao, nodeUid);
+    NavigatorShell.startSubShell(navShell);
+  }
+  
+  @Command
   public void listGraphOperations() throws IntrospectionException {
     ServiceLoader<GraphOperation> loader = ServiceLoader.load(GraphOperation.class);
     
