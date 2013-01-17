@@ -34,11 +34,12 @@ public class Node
   
   public Node()
   {
+    this.type = getClass().getSimpleName();
   }
 
   @Override
   public String toString() {
-    return "Node2{" + "uid=" + uid + ", name=" + name + ", type=" + type + '}';
+    return "Node{" + "uid=" + uid + ", name=" + name + ", type=" + type + '}';
   }
 
   public String getUid() {

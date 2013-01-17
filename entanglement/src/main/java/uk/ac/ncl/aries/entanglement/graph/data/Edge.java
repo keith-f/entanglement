@@ -43,6 +43,34 @@ public class Edge
   
   public Edge()
   {
+    this.type = getClass().getSimpleName();
+  }
+  
+  public Edge(String fromUid, String toUid)
+  {
+    this.type = getClass().getSimpleName();
+    this.fromUid = fromUid;
+    this.toUid = toUid;
+  }
+          
+  public Edge(Node from, Node to) 
+  {
+    this.type = getClass().getSimpleName();
+    this.fromUid = from.getUid();
+    this.fromType = from.getType();
+    this.fromName = from.getName();
+    this.toUid = to.getUid();
+    this.toType = to.getType();
+    this.toName = to.getName();
+  }
+  
+  public Edge(String fromType, String fromName, String toType, String toName) 
+  {
+    this.type = getClass().getSimpleName();
+    this.fromType = fromType;
+    this.fromName = fromName;
+    this.toType = toType;
+    this.toName = toName;
   }
 
   @Override
