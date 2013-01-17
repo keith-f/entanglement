@@ -290,7 +290,31 @@ public class EdgeDAOSeparateDocImpl
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
-    }   
+    }
+  }
+  
+  @Override
+  public Map<String, Long> countEdgesByTypeToNode(String toNodeUid)
+          throws GraphModelException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TO_NODE_UID, toNodeUid);
+      
+      List<String> types = (List<String>) col.distinct(FIELD_TYPE, query);
+      Map<String, Long> edgeTypeToCount = new HashMap<>();
+      for (String edgeType : types) {
+        long count = countEdgesOfTypeFromNode(edgeType, toNodeUid);
+        edgeTypeToCount.put(edgeType, count);
+      }
+      
+      return edgeTypeToCount;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
   }
   
 }

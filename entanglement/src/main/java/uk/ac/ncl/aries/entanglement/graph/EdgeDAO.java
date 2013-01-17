@@ -102,7 +102,7 @@ public interface EdgeDAO
   
   
   /**
-   * Given a node UID, returns a count of each distinct outgoing edge types for 
+   * Given a node UID, returns a count of each distinct outgoing edge type for 
    * that node.
    * 
    * @param fromNodeUid the node whose outgoing edges are to be counted.
@@ -113,6 +113,20 @@ public interface EdgeDAO
    * @throws GraphModelException 
    */
   public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
+          throws GraphModelException;
+  
+  /**
+   * Given a node UID, returns a count of each distinct incoming edge type for 
+   * that node.
+   * 
+   * @param toNodeUid the node whose incoming edges are to be counted.
+   * @return a Map of 'edge type name' to a count of the number of incoming edges
+   * that the specified node has of that type. Only edge type counts where the
+   * count is greater than 0 are returned.
+   * 
+   * @throws GraphModelException 
+   */
+  public Map<String, Long> countEdgesByTypeToNode(String toNodeUid)
           throws GraphModelException;
 
 }
