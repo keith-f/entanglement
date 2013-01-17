@@ -49,6 +49,7 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
  */
 public class MongoGraphToAscii
 {
+  private static final ClassLoader classLoader = MongoGraphToAscii.class.getClassLoader();
   private static void printHelpExit(Options options)
   {
     HelpFormatter formatter = new HelpFormatter();
@@ -178,10 +179,10 @@ public class MongoGraphToAscii
     DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
     DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
     
-    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(m, db, nodeCol, edgeCol);
-    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
+    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
+    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
     
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(m, db);
+    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
     
     
     /*

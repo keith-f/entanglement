@@ -22,6 +22,7 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.logging.Logger;
 
 /**
  *
@@ -29,14 +30,18 @@ import java.util.ServiceLoader;
  */
 public class LogItemPlayerProvider
 {
+  private static final Logger logger = 
+          Logger.getLogger(LogItemPlayerProvider.class.getName());
+  
   private final DbObjectMarshaller marshaller;
   private final ServiceLoader<LogItemPlayer> logItemPlayerLoader;
   private final Map<String, LogItemPlayer> typeToProvider;
   
-  public LogItemPlayerProvider(DbObjectMarshaller marshaller)
+  public LogItemPlayerProvider(ClassLoader cl, DbObjectMarshaller marshaller)
   {
     this.marshaller = marshaller;
-    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class);
+    logger.info("Using classloader: "+cl);
+    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class, cl);
     typeToProvider = new HashMap<>();
   }
 

@@ -75,7 +75,7 @@ public class WriteTestObjects
     subMap.put(2, "two");
     subMap.put(3, "three");
 //    node.getProperties().put("A map", subMap);
-    DbObjectMarshaller marshaller = ObjectMarshallerFactory.create();
+    DbObjectMarshaller marshaller = ObjectMarshallerFactory.create(WriteTestObjects.class.getClassLoader());
     DBObject dbObject = marshaller.serialize(node);
     testCol.insert(dbObject);
  

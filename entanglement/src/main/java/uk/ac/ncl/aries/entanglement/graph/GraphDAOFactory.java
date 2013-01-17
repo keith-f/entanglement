@@ -27,15 +27,17 @@ import com.mongodb.Mongo;
  */
 public class GraphDAOFactory
 {
-  public static NodeDAO createDefaultNodeDAO(Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
+  public static NodeDAO createDefaultNodeDAO(ClassLoader classLoader, Mongo m, DB db, 
+          DBCollection nodeCol, DBCollection edgeCol)
   {
-    NodeDAO nodeDao = new NodeDAONodePerDocImpl(m, db, nodeCol);
+    NodeDAO nodeDao = new NodeDAONodePerDocImpl(classLoader, m, db, nodeCol);
     return nodeDao;
   }
   
-  public static EdgeDAO createDefaultEdgeDAO(Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
+  public static EdgeDAO createDefaultEdgeDAO(ClassLoader classLoader, 
+          Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
   {
-    return createSeparateDocImplEdgeDAO(m, db, nodeCol, edgeCol);
+    return createSeparateDocImplEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
   }
   
 //  public static EdgeDAO createAttachementImplEdgeDAO(Mongo m, DB db, DBCollection edgeCol)
@@ -45,9 +47,10 @@ public class GraphDAOFactory
 //  }
   
   
-  public static EdgeDAO createSeparateDocImplEdgeDAO(Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
+  public static EdgeDAO createSeparateDocImplEdgeDAO(ClassLoader classLoader, 
+          Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
   {
-    EdgeDAO edgeDao = new EdgeDAOSeparateDocImpl(m, db, nodeCol, edgeCol);
+    EdgeDAO edgeDao = new EdgeDAOSeparateDocImpl(classLoader, m, db, nodeCol, edgeCol);
     return edgeDao;
   }
 }

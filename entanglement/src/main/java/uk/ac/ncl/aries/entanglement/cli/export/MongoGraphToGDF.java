@@ -57,9 +57,10 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
  */
 public class MongoGraphToGDF
 {
+  private static final ClassLoader classLoader = MongoGraphToGDF.class.getClassLoader();
   private static final Color DEFAULT_COLOR = Color.BLACK;
   
-  private static final DbObjectMarshaller marshaller = ObjectMarshallerFactory.create();
+  private static final DbObjectMarshaller marshaller = ObjectMarshallerFactory.create(MongoGraphToGDF.class.getClassLoader());
   
   private static void printHelpExit(Options options)
   {
@@ -265,10 +266,10 @@ public class MongoGraphToGDF
     DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
     DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
     
-    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(m, db, nodeCol, edgeCol);
-    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
+    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
+    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
     
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(m, db);
+    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
     
     
     /*

@@ -68,11 +68,12 @@ public class RevisionItemDeserializer
   // A cache of typename -> graph operation type to avoid loader lookps.
   private final Map<String, Class<? extends GraphOperation>> opTypeCache;
   
-  public RevisionItemDeserializer()
+  public RevisionItemDeserializer(ClassLoader classLoader)
   {
-    loader = new GenericServiceLoader<>(GraphOperation.class);
+    loader = new GenericServiceLoader<>(classLoader, GraphOperation.class);
     opTypeCache = new HashMap<>();
   }
+  
   
   @Override
   public RevisionItem deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)

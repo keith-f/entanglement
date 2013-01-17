@@ -45,6 +45,7 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionCommit;
  */
 public class TestGraph1
 {
+  private static final ClassLoader classLoader = TestGraph1.class.getClassLoader();
   public static void main(String[] args) throws UnknownHostException, RevisionLogException
   {
     if (args.length != 3) {
@@ -78,7 +79,7 @@ public class TestGraph1
 //    boolean auth = db.authenticate(myUserName, myPassword);
     
     
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(m, db);
+    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
     
     String type = "cds";
     String ds = "default";

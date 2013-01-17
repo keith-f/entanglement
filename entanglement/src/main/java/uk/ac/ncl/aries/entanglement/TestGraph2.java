@@ -43,6 +43,7 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionCommit;
  */
 public class TestGraph2
 {
+  private static final ClassLoader classLoader = TestGraph2.class.getClassLoader();
   public static void main(String[] args) throws UnknownHostException, RevisionLogException, JsonSerializerException, DbObjectMarshallerException
   {
     if (args.length != 3) {
@@ -76,12 +77,12 @@ public class TestGraph2
 //    boolean auth = db.authenticate(myUserName, myPassword);
     
     
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(m, db);
+    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
     
 //    JsonUtils jsonSer = new JsonUtils();
 //    jsonSer.setExcludeNullAndEmptyValues(true);
 //    jsonSer.setIgnoreUnknownProperties(true);
-    DbObjectMarshaller objUtil = ObjectMarshallerFactory.create();
+    DbObjectMarshaller objUtil = ObjectMarshallerFactory.create(TestGraph2.class.getClassLoader());
     
     String type = "cds";
     String ds = "default";

@@ -32,18 +32,24 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
  */
 public class ObjectMarshallerFactory
 {
-  public static DbObjectMarshaller create()
+//  public static DbObjectMarshaller create()
+//  {
+//    ClassLoader defaultCl = ObjectMarshallerFactory.class.getClassLoader();
+//    return create(defaultCl);
+//  }
+  
+  public static DbObjectMarshaller create(ClassLoader classLoader)
   {
 //    DbObjectMarshaller marshaller = new JacksonDBObjectMarshaller();
 //    return marshaller;
     
 //    GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller();
 //    return marshaller;
-    ClassLoader defaultCl = ObjectMarshallerFactory.class.getClassLoader();
+    
     Map<Type, Object> adapters = new HashMap<>();
 //    adapters.put(GraphOperation.class, new GraphOperationDeserializer(defaultCl));
     adapters.put(RevisionItem.class, new RevisionItemSerializer());
-    adapters.put(RevisionItem.class, new RevisionItemDeserializer());
+    adapters.put(RevisionItem.class, new RevisionItemDeserializer(classLoader));
 //    adapters.put(byte[].class, new ByteArraySerializer());
 //    adapters.put(RevisionItem.class, new RevisionItemDeserializer(defaultCl));
     GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller(adapters);

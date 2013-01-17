@@ -18,11 +18,13 @@
 
 package uk.ac.ncl.aries.entanglement.shell.gdfexport;
 
+import com.mongodb.DBObject;
 import java.awt.Color;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
 import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 import uk.ac.ncl.aries.entanglement.graph.data.Node;
 
@@ -49,6 +51,21 @@ public class GdfWriter
     sb.append("type VARCHAR,");
 //    sb.append("incoming_edges INTEGER,");
     sb.append("color VARCHAR");
+    
+    delegate.write(sb.toString());
+    delegate.newLine();
+  }
+  
+  
+  public void writeNode(DBObject node, Color c) throws IOException
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append(node.get(NodeDAO.FIELD_UID));
+    sb.append(",").append(node.get(NodeDAO.FIELD_TYPE));
+//    sb.append(",").append(node.getIncomingEdgeIds().size());
+    
+    //Color
+    sb.append(",'").append(c.getRed()).append(",").append(c.getGreen()).append(",").append(c.getBlue()).append("'");
     
     delegate.write(sb.toString());
     delegate.newLine();

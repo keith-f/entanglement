@@ -66,12 +66,12 @@ abstract public class AbstractGraphEntityDAO
    */
   protected final DBCollection col;
   
-   public AbstractGraphEntityDAO(Mongo m, DB db, DBCollection col)
+   public AbstractGraphEntityDAO(ClassLoader classLoader, Mongo m, DB db, DBCollection col)
   {
     this.m = m;
     this.db = db;
     this.col = col;
-    marshaller = ObjectMarshallerFactory.create();
+    marshaller = ObjectMarshallerFactory.create(classLoader);
 //    this.json = new JsonUtils();
 //    json.setExcludeNullAndEmptyValues(true);
 //    json.setIgnoreUnknownProperties(true);

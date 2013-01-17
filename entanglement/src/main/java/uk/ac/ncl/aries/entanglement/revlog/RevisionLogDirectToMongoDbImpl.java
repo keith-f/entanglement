@@ -76,7 +76,7 @@ public class RevisionLogDirectToMongoDbImpl
 //  private final JsonUtils serializer;
   private final DbObjectMarshaller marshaller;
   
-  public RevisionLogDirectToMongoDbImpl(Mongo m, DB db)
+  public RevisionLogDirectToMongoDbImpl(ClassLoader classLoader, Mongo m, DB db)
       throws RevisionLogException
   {
     this.listeners = new HashSet<>();
@@ -87,7 +87,7 @@ public class RevisionLogDirectToMongoDbImpl
     this.db = db;
     this.revLogCol = db.getCollection(revLogColName);
     
-    marshaller = ObjectMarshallerFactory.create();
+    marshaller = ObjectMarshallerFactory.create(classLoader);
   }
 
   private String _getLockName(String graphId, String graphBranchId, String entityId)

@@ -44,9 +44,10 @@ public class EdgeDAOSeparateDocImpl
   
   ////////// DEBUG / TEST - Performance info stuff (end)
   
-  public EdgeDAOSeparateDocImpl(Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
+  public EdgeDAOSeparateDocImpl(ClassLoader classLoader, Mongo m, DB db, 
+          DBCollection nodeCol, DBCollection edgeCol)
   {
-    super(m, db, edgeCol);
+    super(classLoader, m, db, edgeCol);
     
     this.nodeCol = nodeCol;
   }

@@ -46,9 +46,9 @@ public class NodeDAONodePerDocImpl
       Logger.getLogger(NodeDAO.class.getName());
 
   
-  public NodeDAONodePerDocImpl(Mongo m, DB db, DBCollection col)
+  public NodeDAONodePerDocImpl(ClassLoader classLoader, Mongo m, DB db, DBCollection col)
   {
-    super(m, db, col);
+    super(classLoader, m, db, col);
   }
   
   

@@ -41,8 +41,8 @@ public class LogPlayerMongoDbImpl
   private static final Logger logger =
       Logger.getLogger(LogPlayerMongoDbImpl.class.getName());
   
-  private final Mongo m;
-  private final DB db;
+//  private final Mongo m;
+//  private final DB db;
   
   private final String graphId;
   private final String graphBranch;
@@ -56,17 +56,22 @@ public class LogPlayerMongoDbImpl
   
   private final LogItemPlayerProvider playerProvider;
   
-  public LogPlayerMongoDbImpl(Mongo m, DB db, String graphName, String graphBranch, 
-          DbObjectMarshaller marshaller,
+//  public LogPlayerMongoDbImpl(Mongo m, DB db, String graphName, String graphBranch, 
+//          DbObjectMarshaller marshaller,
+//          RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao)
+//      throws RevisionLogException
+//  {
+  public LogPlayerMongoDbImpl(ClassLoader cl, DbObjectMarshaller marshaller,
+          String graphName, String graphBranch, 
           RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao)
       throws RevisionLogException
   {
-    this.m = m;
-    this.db = db;
+//    this.m = m;
+//    this.db = db;
     this.graphId = graphName;
     this.graphBranch = graphBranch;
     
-    playerProvider = new LogItemPlayerProvider(marshaller);
+    playerProvider = new LogItemPlayerProvider(cl, marshaller);
     
     this.revLog = revLog;
     this.nodeDao = nodeDao;
@@ -135,6 +140,16 @@ public class LogPlayerMongoDbImpl
       }
     }
     catch(Exception e) {
+      throw new LogPlayerException(
+          "Failed to replay log items for transaction: "+transactionUid
+              +" to a working copy: "+graphId+"/"+graphBranch, e);
+    }
+    catch(Error e) {
+      /*
+       * /Make sure we pick up on ServiceConfigurationError and the like for
+       * cases where something isn't quite right with the SPI definition file
+       * or classpath.
+       */
       throw new LogPlayerException(
           "Failed to replay log items for transaction: "+transactionUid
               +" to a working copy: "+graphId+"/"+graphBranch, e);

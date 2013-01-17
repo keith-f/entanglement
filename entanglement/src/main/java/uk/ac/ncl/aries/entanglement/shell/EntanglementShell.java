@@ -40,6 +40,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
+import uk.ac.ncl.aries.entanglement.cli.export.MongoGraphToGephi;
 import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.GraphCheckoutNamingScheme;
 import uk.ac.ncl.aries.entanglement.graph.InsertMode;
@@ -80,7 +81,8 @@ public class EntanglementShell
   private static NodeDAO nodeDao;
   private static EdgeDAO edgeDao;
 
-  private final DbObjectMarshaller marshaller = ObjectMarshallerFactory.create();
+  private final ClassLoader classLoader;
+  private final DbObjectMarshaller marshaller;
   
 
   public static void main(String[] args) throws IOException
@@ -93,6 +95,13 @@ public class EntanglementShell
     shell.setDisplayTime(true);
     shell.commandLoop();
   }
+
+  public EntanglementShell() {
+    classLoader = EntanglementShell.class.getClassLoader();
+    marshaller = ObjectMarshallerFactory.create(classLoader);
+  }
+  
+  
 
   @Command
   public String save() throws IOException {
@@ -155,13 +164,13 @@ public class EntanglementShell
     mongo = dbFactory.createMongoConnection();
     db = mongo.getDB(database);
     
-    revLog = new RevisionLogDirectToMongoDbImpl(mongo, db);
+    revLog = new RevisionLogDirectToMongoDbImpl(classLoader, mongo, db);
     
     GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, branchName);
     DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
     DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    nodeDao = GraphDAOFactory.createDefaultNodeDAO(mongo, db, nodeCol, edgeCol);
-    edgeDao = GraphDAOFactory.createDefaultEdgeDAO(mongo, db, nodeCol, edgeCol);
+    nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol, edgeCol);
+    edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, nodeCol, edgeCol);
     
     if (insertMode != null && insertMode.equals(InsertMode.INSERT_CONSISTENCY.name())) {
       System.out.println("Setting DAO insert mode to: "+insertMode);
@@ -292,6 +301,15 @@ public class EntanglementShell
   }
   
   @Command
+  public void exportGraphAsGexf(File outputFile) //, File colorPropsFile)
+           throws IOException, GraphModelException, RevisionLogException
+  {
+    MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    exporter.exportGexf(outputFile);
+    System.out.println("Done.");
+  }
+  
+  @Command
   public void playAllRevisions()
       throws RevisionLogException, GraphModelException, LogPlayerException {
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
@@ -300,8 +318,8 @@ public class EntanglementShell
     System.out.println("Playing all committed revisions from the revision history "
             + "list into a graph structure: "+graphName+"/"+branchName);
     
-    LogPlayer player = new LogPlayerMongoDbImpl(mongo, db, 
-            graphName, branchName, marshaller, revLog, nodeDao, edgeDao);
+    LogPlayer player = new LogPlayerMongoDbImpl(classLoader, marshaller,
+            graphName, branchName, revLog, nodeDao, edgeDao);
     player.replayAllRevisions();
     
     System.out.println("Done.");

@@ -24,6 +24,9 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 import javax.xml.bind.DatatypeConverter;
 import org.apache.commons.cli.*;
 import org.gephi.data.attributes.api.AttributeColumn;
@@ -57,9 +60,18 @@ import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
  * @author Allyson Lister
  */
 public class MongoGraphToGephi {
-
-    private static final DbObjectMarshaller marshaller = ObjectMarshallerFactory.create();
+    private static final Logger logger = Logger.getLogger(MongoGraphToGephi.class.getName());
+    private static final ClassLoader classLoader = MongoGraphToGephi.class.getClassLoader();
+    private static final DbObjectMarshaller marshaller = ObjectMarshallerFactory.create(MongoGraphToGephi.class.getClassLoader());
     private static final Color DEFAULT_COLOR = Color.BLACK;
+    
+    private final NodeDAO nodeDao;
+    private final EdgeDAO edgeDao;
+    public MongoGraphToGephi(NodeDAO nodeDao, EdgeDAO edgeDao)
+    {
+      this.nodeDao = nodeDao;
+      this.edgeDao = edgeDao;
+    }
 
     private static void printHelpExit ( Options options ) {
         HelpFormatter formatter = new HelpFormatter();
@@ -163,26 +175,21 @@ public class MongoGraphToGephi {
         Mongo m = new Mongo();
         m.setWriteConcern( WriteConcern.SAFE );
         DB db = m.getDB( mongoDatabaseName );
-
-        exportGexf( m, db, graphName, graphBranch, new File(
-                outputFilename ) );
-        System.out.println( "\n\nDone." );
-    }
-
-    private static void exportGexf ( Mongo m, DB db,
-            String graphName, String graphBranch, File outputFile )
-            throws IOException, GraphModelException, RevisionLogException {
-        /*
-         * Database access
-         */
+        
         GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme( graphName, graphBranch );
         DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName() );
         DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName() );
+        NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
+        EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
+        RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db );
 
-        NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(m, db, nodeCol, edgeCol);
-        EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
+        MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+        exporter.exportGexf(new File( outputFilename ) );
+        System.out.println( "\n\nDone." );
+    }
 
-        RevisionLog log = new RevisionLogDirectToMongoDbImpl( m, db );
+    public void exportGexf ( File outputFile )
+            throws IOException, GraphModelException, RevisionLogException {
 
         // Init a gephi project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(
@@ -200,33 +207,61 @@ public class MongoGraphToGephi {
         AttributeController ac = Lookup.getDefault().
                 lookup( AttributeController.class );
         AttributeModel attributeModel = ac.getModel();
-        AttributeColumn nodeTypeCol = attributeModel.getNodeTable().addColumn(
-                "nodeType",
-                AttributeType.STRING );
+        
+
+//        AttributeColumn nodeTypeCol = attributeModel.getNodeTable().addColumn(
+//                "nodeType",
+//                AttributeType.STRING );
+        
+        Map<String, AttributeColumn> nodeAttrNameToAttributeCol = new HashMap<>();
 
         // Create Gephi nodes
-        Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
-        for (Node node : nodeItr) {
-            String uidStr = node.getUid();
+//        Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
+//        for (Node node : nodeItr) {
+        for (DBObject node : nodeDao.iterateAll()) {
+            String uidStr = (String) node.get(NodeDAO.FIELD_UID);
+            String name =  (String) node.get(NodeDAO.FIELD_NAME);
+            String type =  (String) node.get(NodeDAO.FIELD_TYPE);
             Color nodeColour = DEFAULT_COLOR;
-            org.gephi.graph.api.Node gephiNode = graphModel.factory().
-                    newNode( uidStr );
-            if ( node.getName() == null || node.getName().
-                    isEmpty() ) {
+            org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode( uidStr );
+            if ( name == null || name.isEmpty() ) {
                 gephiNode.getNodeData().setLabel( uidStr );
             } else {
-                gephiNode.getNodeData().setLabel( node.getName() );
+                gephiNode.getNodeData().setLabel( type+"|"+name );
             }
             gephiNode.getNodeData().setColor( nodeColour.getRed(), nodeColour.
                     getGreen(), nodeColour.getBlue() );
-            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.
-                    getIndex(), node.getType() );
+//            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.getIndex(), node.getType() );
+            
+            for (String nodeAttrName : node.keySet()) {
+              Object val = node.get(nodeAttrName);
+              if (nodeAttrName.equals("_id")) {
+                continue;
+              }
+              if (val instanceof BasicDBList) {
+                val = val.toString();
+              }
+              if (val == null) {
+                continue;
+              }
+              AttributeColumn attrCol = nodeAttrNameToAttributeCol.get(nodeAttrName);
+              if (attrCol == null) {
+                attrCol = attributeModel.getNodeTable().addColumn(
+                            nodeAttrName, AttributeType.parse(val) );
+                nodeAttrNameToAttributeCol.put(nodeAttrName, attrCol);
+              }
+              logger.info("nodeAttrName: "+nodeAttrName+", val: "+val+", type: "+val.getClass().getName());
+              logger.info("attrCol: "+attrCol);
+              gephiNode.getNodeData().getAttributes().setValue( attrCol.getIndex(), val );
+            }
+            
             directedGraph.addNode( gephiNode );
         }
 
         // Create Gephi edges; currently with a standard weight of 1
         // and no set color
-        Iterable<Edge> edgeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Edge.class);
+        Iterable<Edge> edgeItr = new DeserialisingIterable<>(
+                edgeDao.iterateAll(), marshaller, Edge.class);
         for (Edge edge : edgeItr) {
             String fromUidStr = edge.getFromUid();
             String toUidStr = edge.getToUid();
