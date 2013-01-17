@@ -242,7 +242,7 @@ public class EntanglementShell
     for (RevisionItemContainer container : revLog.iterateCommittedRevisionsForGraph(graphName, branchName))
     {
       StringBuilder txt = new StringBuilder("  Rev: ");
-      txt.append(container.getTransactionUid()).append(container.getTxnSubmitId()).append(", ");
+      txt.append(container.getTransactionUid()).append(", ").append(container.getTxnSubmitId()).append(", ");
       txt.append(container.getTimestamp()).append(", ");
       txt.append("RevisionItems: ").append(container.getItems().size());
 //      txt.append(container.getOperation().getClass().getSimpleName()).append(", ");
