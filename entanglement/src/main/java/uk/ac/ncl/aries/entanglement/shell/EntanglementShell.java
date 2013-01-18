@@ -21,6 +21,7 @@ package uk.ac.ncl.aries.entanglement.shell;
 import com.torrenttamer.mongodb.MongoDbFactory;
 import static uk.ac.ncl.aries.entanglement.shell.EntanglementStatePropertyNames.*;
 import asg.cliche.Command;
+import asg.cliche.Param;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
 import com.mongodb.DB;
@@ -301,10 +302,24 @@ public class EntanglementShell
   }
   
   @Command
-  public void exportGraphAsGexf(File outputFile) //, File colorPropsFile)
+  public void exportGraphAsGexf(File outputFile)
            throws IOException, GraphModelException, RevisionLogException
   {
     MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    exporter.exportGexf(outputFile);
+    System.out.println("Done.");
+  }
+  
+  @Command
+  public void exportGraphAsGexf(
+          @Param(name="outputFile")
+          File outputFile, 
+          @Param(name="nodeToColorMapping")
+          File nodeToColorMapping) 
+           throws IOException, GraphModelException, RevisionLogException
+  {
+    MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    exporter.setColorPropsFile(nodeToColorMapping);
     exporter.exportGexf(outputFile);
     System.out.println("Done.");
   }
