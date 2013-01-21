@@ -96,7 +96,7 @@
     <repository>
       <id>gephi-releases</id>
       <name>Gephi Releases</name>
-      <url>http://nexus.gephi.org/nexus/content/repositories/snapshots/</url>
+      <url>http://nexus.gephi.org/nexus/content/repositories/releases/</url>
     </repository>
         
     <!-- Repository information required for Cliche -->
@@ -155,7 +155,7 @@
     <dependency>
       <groupId>org.gephi</groupId>
       <artifactId>gephi-toolkit</artifactId>
-      <version>0.8.2-SNAPSHOT</version>
+      <version>0.8.2</version>
       <scope>compile</scope>
     </dependency>
         
