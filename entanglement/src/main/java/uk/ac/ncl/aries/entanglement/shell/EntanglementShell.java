@@ -74,7 +74,7 @@ public class EntanglementShell
   private static final Logger logger =
           Logger.getLogger(EntanglementShell.class.getName());
 
-  private static ShellState state;
+  private ShellState state;
   
   private static Mongo mongo;
   private static DB db;
@@ -88,16 +88,26 @@ public class EntanglementShell
 
   public static void main(String[] args) throws IOException
   {    
-    StateUtils stateUtils = new StateUtils();
-    state = stateUtils.loadStateIfExists();
-
-    Shell shell = ShellFactory.createConsoleShell(
-            "entanglement", "\n\nWelcome to Entanglement - let the hairballs commence!\n", new EntanglementShell());
-    shell.setDisplayTime(true);
+    Shell shell = create(null);
     shell.commandLoop();
   }
+  
+  public static Shell create(Map<String, String> additionalProps) throws IOException
+  {
+    StateUtils stateUtils = new StateUtils();
+    ShellState state = stateUtils.loadStateIfExists();
+    if (additionalProps != null) {
+      state.getProperties().putAll(additionalProps);
+    }
 
-  public EntanglementShell() {
+    Shell shell = ShellFactory.createConsoleShell(
+            "entanglement", "\n\nWelcome to Entanglement - let the hairballs commence!\n", new EntanglementShell(state));
+    shell.setDisplayTime(true);
+    return shell;
+  }
+
+  public EntanglementShell(ShellState state) {
+    this.state = state;
     classLoader = EntanglementShell.class.getClassLoader();
     marshaller = ObjectMarshallerFactory.create(classLoader);
   }
