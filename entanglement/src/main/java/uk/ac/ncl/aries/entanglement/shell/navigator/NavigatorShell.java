@@ -17,6 +17,7 @@
 
 package uk.ac.ncl.aries.entanglement.shell.navigator;
 
+import asg.cliche.Command;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
 import java.io.IOException;
@@ -43,5 +44,19 @@ public class NavigatorShell
           throws GraphModelException
   {
     Navigator nav = new Navigator(nodeDao, edgeDao, startNodeUid);
+  }
+  
+  @Command()
+  public void describe()
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append("You are currently at a node of type: ").append("id: ");
+    System.out.println(sb.toString());
+  }
+  
+  @Command
+  public void step()
+  {
+    
   }
 }

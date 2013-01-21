@@ -64,25 +64,24 @@
   <!--Destination for Maven deployment of artifacts to S3 -->
   <distributionManagement>
     <site>
-      <id>keithf.maven.public</id>
-      <url>s3://keithf.maven.public/site</url>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/site</url>
     </site>
     <repository>
-      <id>keithf.maven.public</id>
-      <url>s3://keithf.maven.public/release/</url>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/release/</url>
     </repository>
     <snapshotRepository>
-      <id>keithf.maven.public</id>
-      <url>s3://keithf.maven.public/snapshot/</url>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/snapshot/</url>
     </snapshotRepository>
   </distributionManagement>
 
   <!-- Remote repository info -->
   <repositories>
     <repository>
-      <id>microbase-snapshot</id>
-      <url>http://keithf.maven.public.s3.amazonaws.com/snapshot</url>
-      <!--      <url>http://bio-nexus.ncl.ac.uk:8090/nexus/content/repositories/microbase-snapshot/</url>-->
+      <id>intbio-snapshot</id>
+      <url>http://intbio.maven.s3.amazonaws.com/snapshot</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
