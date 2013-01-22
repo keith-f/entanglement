@@ -268,8 +268,8 @@ public class MongoGraphToGephi {
                   nodeAttrName, AttributeType.parse(val));
           nodeAttrNameToAttributeCol.put(nodeAttrName, attrCol);
         }
-        logger.info("nodeAttrName: " + nodeAttrName + ", val: " + val + ", type: " + val.getClass().getName());
-        logger.info("attrCol: " + attrCol);
+//        logger.info("nodeAttrName: " + nodeAttrName + ", val: " + val + ", type: " + val.getClass().getName());
+//        logger.info("attrCol: " + attrCol);
         gephiNode.getNodeData().getAttributes().setValue(attrCol.getIndex(), val);
       }
 
