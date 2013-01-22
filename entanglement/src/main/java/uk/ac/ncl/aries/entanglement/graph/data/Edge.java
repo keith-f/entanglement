@@ -25,7 +25,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * @author Keith Flanagan
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Edge
+public class Edge<F extends Node, T extends Node>
        implements Serializable
 { 
   protected String uid;
@@ -53,7 +53,7 @@ public class Edge
     this.toUid = toUid;
   }
           
-  public Edge(Node from, Node to) 
+  public Edge(F from, T to) 
   {
     this.type = getClass().getSimpleName();
     this.fromUid = from.getUid();
