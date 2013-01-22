@@ -90,6 +90,40 @@ public class TxnUtils
     }
   }
   
+  /**
+   * Same as <code>rollbackTransaction</code>, except that no exception is 
+   * thrown here if the rollback operation failed. This is useful in cases where
+   * we need to roll back in a <code>catch</code> block - so something has
+   * already failed - and additionally, the rollback has failed. In these cases,
+   * since we're already going to throw an application-level exception, having
+   * to deal with a secondary failure is a big inconvenience. 
+   * 
+   * By catching any exceptions that occur during rollback here, code elsewhere
+   * can be much tidier. In addition, there's nothing bad about NOT rolling 
+   * back a transaction successfully; since it's not committed, it won't 
+   * affect the graph structure at all. The worst that can happen is that the
+   * uncommitted revisions will consume unnecessary disk space. This could be
+   * solved by (manually) removing these rare cases, if it became a problem.
+   * 
+   * @param revLog
+   * @param graphId
+   * @param branchId
+   * @param txnId
+   * @throws RevisionLogException 
+   */
+  public static void silentRollbackTransaction(RevisionLog revLog, 
+          String graphId, String branchId, String txnId)
+  {
+    try {
+      rollbackTransaction(revLog, graphId, branchId, txnId);
+    }
+    catch(Exception e) {
+      logger.info("An exception occurred while attempting to roll back transaction: "+txnId
+              + ". We're going to silently ignore this, apart from printing a stack trace (follows)");
+      e.printStackTrace();
+    }
+  }
+  
   private static void printDuration(long startMs, long endMs)
   {
     double durationSec = (endMs - startMs) / 1000d;
