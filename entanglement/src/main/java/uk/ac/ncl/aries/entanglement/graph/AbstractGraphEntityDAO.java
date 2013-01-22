@@ -41,6 +41,16 @@ abstract public class AbstractGraphEntityDAO
   private static final Logger logger =
       Logger.getLogger(AbstractGraphEntityDAO.class.getName());
   
+  /*
+   * Indexes UID
+   */
+  private static final DBObject IDX_UID = new BasicDBObject(FIELD_UID, 1);
+  /*
+   * Indexes entity type, followed by entity name
+   */
+  private static final DBObject IDX_TYPE_AND_NAME = 
+          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_NAME, 1);
+  
   protected final Mongo m;
   protected final DB db;
   
@@ -87,6 +97,10 @@ abstract public class AbstractGraphEntityDAO
     printPeriodicPerformanceInfo = true;
     insertCount = 0;
     insertModeHint = InsertMode.INSERT_CONSISTENCY;
+    
+    //Make sure indexes exist
+    col.ensureIndex(IDX_UID);
+    col.ensureIndex(IDX_TYPE_AND_NAME);
   }
   
   @Override

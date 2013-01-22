@@ -18,25 +18,16 @@
 
 package uk.ac.ncl.aries.entanglement.revlog;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.*;
-import com.mongodb.util.JSON;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 import com.torrenttamer.util.UidGenerator;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionBegin;
@@ -55,8 +46,30 @@ public class RevisionLogDirectToMongoDbImpl
   private static final Logger logger =
       Logger.getLogger(RevisionLogDirectToMongoDbImpl.class.getName());
   
-  private static final DBObject SORT_BY_DATE_COMMITTED = new BasicDBObject("dateCommitted", 1);
-  private static final DBObject SORT_BY_TXN_SUBMIT_ID = new BasicDBObject("txnSubmitId", 1); 
+  /*
+   * Document fields
+   */
+  public static final String FIELD_GRPH_UID = "graphUniqueId";
+  public static final String FIELD_GRPH_BRANCH = "graphBranchId";
+  public static final String FIELD_TXN_UID = "transactionUid";
+  public static final String FIELD_TXN_SUBMIT_ID = "txnSubmitId";
+  public static final String FIELD_COMMITTED = "committed";
+  public static final String FIELD_DATE_COMMITTED = "dateCommitted";
+  
+  /*
+   * Pre-defined index definitions
+   */
+  private static final DBObject IDX__TXN_UID__COMMITTED = 
+          new BasicDBObject(FIELD_TXN_UID, 1).append(FIELD_COMMITTED, 1);
+  
+  private static final DBObject IDX__GRPH_UID__GRPH_BRANCH__COMMITTED = 
+          new BasicDBObject(FIELD_GRPH_UID, 1).append(FIELD_GRPH_BRANCH, 1).append(FIELD_COMMITTED, 1);
+  
+  /*
+   * Pre-defined sort orders
+   */
+  private static final DBObject SORT_BY_DATE_COMMITTED = new BasicDBObject(FIELD_DATE_COMMITTED, 1);
+  private static final DBObject SORT_BY_TXN_SUBMIT_ID = new BasicDBObject(FIELD_TXN_SUBMIT_ID, 1); 
   
 //  private static final String REV_COUNTER_NAME = "revision_count";
   private static final String DEFAULT_COL_REVLOG = "revisions";
@@ -88,6 +101,10 @@ public class RevisionLogDirectToMongoDbImpl
     this.revLogCol = db.getCollection(revLogColName);
     
     marshaller = ObjectMarshallerFactory.create(classLoader);
+    
+    //Create indexes
+    revLogCol.ensureIndex(IDX__TXN_UID__COMMITTED);
+    revLogCol.ensureIndex(IDX__GRPH_UID__GRPH_BRANCH__COMMITTED);
   }
 
   private String _getLockName(String graphId, String graphBranchId, String entityId)
@@ -219,10 +236,10 @@ public class RevisionLogDirectToMongoDbImpl
       System.out.println("++++++++++++++++++++++++: "+marshaller.serializeToString(now));
   //    DBObject nowObj = (DBObject) JSON.parse(JsonSerializer.serializeToString(now));
 
-      DBObject query = new BasicDBObject("transactionUid", transactionUid);
+      DBObject query = new BasicDBObject(FIELD_TXN_UID, transactionUid);
       DBObject update = new BasicDBObject("$set", 
-              new BasicDBObject("committed", true)
-              .append("dateCommitted", marshaller.serializeToString(now)));
+              new BasicDBObject(FIELD_COMMITTED, true)
+              .append(FIELD_DATE_COMMITTED, marshaller.serializeToString(now)));
   //            .append("dateCommitted", nowStr));
       logger.info("Generated query: "+query);
       logger.info("Generated update: "+update);
@@ -245,7 +262,7 @@ public class RevisionLogDirectToMongoDbImpl
     String transactionUid = op.getUid();
     try {
       logger.info("************* ROLLING BACK TRANSACTION: "+transactionUid);
-      DBObject query = new BasicDBObject("transactionUid", transactionUid);
+      DBObject query = new BasicDBObject(FIELD_TXN_UID, transactionUid);
       WriteResult result = revLogCol.remove(query);
       logger.info(result.toString());
       logger.info("************* ROLLING COMPLETED: "+transactionUid);
@@ -268,8 +285,8 @@ public class RevisionLogDirectToMongoDbImpl
   public Iterable<RevisionItemContainer> iterateUncommittedRevisions(String transactionUid)
   {
     DBObject[] andArgs = new BasicDBObject[] {
-        new BasicDBObject("transactionUid", transactionUid),
-        new BasicDBObject("committed", false)
+        new BasicDBObject(FIELD_TXN_UID, transactionUid),
+        new BasicDBObject(FIELD_COMMITTED, false)
     };
     DBObject query = new BasicDBObject("$and", Arrays.asList(andArgs));
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_TXN_SUBMIT_ID);
@@ -279,7 +296,7 @@ public class RevisionLogDirectToMongoDbImpl
   @Override
   public Iterable<RevisionItemContainer> iterateRevisionsForTransaction(String transactionUid)
   {
-    DBObject query = new BasicDBObject("transactionUid", transactionUid);
+    DBObject query = new BasicDBObject(FIELD_TXN_UID, transactionUid);
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_TXN_SUBMIT_ID);
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
@@ -307,9 +324,9 @@ public class RevisionLogDirectToMongoDbImpl
       String graphId, String branchId)
   {    
     DBObject[] andArgs = new BasicDBObject[] {
-        new BasicDBObject("graphUniqueId", graphId),
-        new BasicDBObject("graphBranchId", branchId),
-        new BasicDBObject("committed", true)
+        new BasicDBObject(FIELD_GRPH_UID, graphId),
+        new BasicDBObject(FIELD_GRPH_BRANCH, branchId),
+        new BasicDBObject(FIELD_COMMITTED, true)
     };
     DBObject query = new BasicDBObject("$and", Arrays.asList(andArgs));
 //    logger.info("Generated query: "+query);

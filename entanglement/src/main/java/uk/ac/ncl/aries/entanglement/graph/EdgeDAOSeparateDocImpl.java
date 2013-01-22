@@ -19,15 +19,11 @@
 package uk.ac.ncl.aries.entanglement.graph;
 
 import com.mongodb.*;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
-import uk.ac.ncl.aries.entanglement.graph.data.Edge;
 
 /**
  *
@@ -40,6 +36,25 @@ public class EdgeDAOSeparateDocImpl
   private static final Logger logger =
       Logger.getLogger(EdgeDAOSeparateDocImpl.class.getName()); 
   
+  /*
+   * Indexes
+   */
+  private static final DBObject IDX_FROM_UID_TO_UID = 
+          new BasicDBObject(FIELD_FROM_NODE_UID, 1).append(FIELD_TO_NODE_UID, 1);
+  private static final DBObject IDX_TO_UID = new BasicDBObject(FIELD_TO_NODE_UID, 1);
+
+  private static final DBObject IDX_FROM_UID_TO_NODE_TYPE = 
+          new BasicDBObject(FIELD_FROM_NODE_UID, 1).append(FIELD_TO_NODE_TYPE, 1);
+  
+  private static final DBObject IDX_TYPE_FROM_NODE_UID = 
+          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_FROM_NODE_UID, 1);
+  private static final DBObject IDX_TYPE_TO_NODE_UID = 
+          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_TO_NODE_UID, 1);
+  
+  private static final DBObject IDX_FROM_NODE_UID = new BasicDBObject(FIELD_FROM_NODE_UID, 1);
+  private static final DBObject IDX_TO_NODE_UID = new BasicDBObject(FIELD_TO_NODE_UID, 1);
+  
+  
   private final DBCollection nodeCol;
   
   ////////// DEBUG / TEST - Performance info stuff (end)
@@ -50,6 +65,16 @@ public class EdgeDAOSeparateDocImpl
     super(classLoader, m, db, edgeCol);
     
     this.nodeCol = nodeCol;
+    
+    //Create indexes
+    edgeCol.ensureIndex(IDX_FROM_UID_TO_UID);
+    edgeCol.ensureIndex(IDX_TO_UID);
+    edgeCol.ensureIndex(IDX_FROM_UID_TO_NODE_TYPE);
+    edgeCol.ensureIndex(IDX_TYPE_FROM_NODE_UID);
+    edgeCol.ensureIndex(IDX_TYPE_TO_NODE_UID);
+    
+    edgeCol.ensureIndex(IDX_FROM_NODE_UID);
+    edgeCol.ensureIndex(IDX_TO_NODE_UID);
   }
 
   
@@ -224,7 +249,7 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_FROM_NODE_TYPE, edgeType);
+      query.put(FIELD_TYPE, edgeType);
       query.put(FIELD_FROM_NODE_UID, fromNodeUid);
       long count = col.count(query);
       return count;
@@ -259,7 +284,7 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_TO_NODE_TYPE, edgeType);
+      query.put(FIELD_TYPE, edgeType);
       query.put(FIELD_TO_NODE_UID, toNodeUid);
       long count = col.count(query);
       return count;
