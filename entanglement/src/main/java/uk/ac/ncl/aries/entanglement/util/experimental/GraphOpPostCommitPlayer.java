@@ -17,6 +17,8 @@
 
 package uk.ac.ncl.aries.entanglement.util.experimental;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openide.util.Exceptions;
 import uk.ac.ncl.aries.entanglement.player.LogPlayer;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
@@ -35,6 +37,9 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionRollback;
 public class GraphOpPostCommitPlayer
     implements RevisionLogListener
 {
+  private static final Logger logger =
+          Logger.getLogger(GraphOpPostCommitPlayer.class.getName());
+  
   private final LogPlayer player;
   
   public GraphOpPostCommitPlayer(LogPlayer player)
@@ -54,7 +59,9 @@ public class GraphOpPostCommitPlayer
   @Override
   public void notifyPostCommit(TransactionCommit op) {
     try {
+      logger.log(Level.INFO, "Received notification of transaction commit: {0}", op.getUid());
       player.playRevisionsForTransaction(op.getUid());
+      logger.info("Playback of this transaction is now complete");
     } catch (LogPlayerException ex) {
       Exceptions.printStackTrace(ex);
     }
