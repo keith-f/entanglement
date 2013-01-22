@@ -61,6 +61,7 @@ public class RevisionLogDirectToMongoDbImpl
    */
   private static final DBObject IDX__TXN_UID__COMMITTED = 
           new BasicDBObject(FIELD_TXN_UID, 1).append(FIELD_COMMITTED, 1);
+  private static final DBObject IDX__TXN_SUBMIT_ID = new BasicDBObject(FIELD_TXN_SUBMIT_ID, 1);
   
   private static final DBObject IDX__GRPH_UID__GRPH_BRANCH__COMMITTED = 
           new BasicDBObject(FIELD_GRPH_UID, 1).append(FIELD_GRPH_BRANCH, 1).append(FIELD_COMMITTED, 1);
@@ -104,6 +105,7 @@ public class RevisionLogDirectToMongoDbImpl
     
     //Create indexes
     revLogCol.ensureIndex(IDX__TXN_UID__COMMITTED);
+    revLogCol.ensureIndex(IDX__TXN_SUBMIT_ID);
     revLogCol.ensureIndex(IDX__GRPH_UID__GRPH_BRANCH__COMMITTED);
   }
 
