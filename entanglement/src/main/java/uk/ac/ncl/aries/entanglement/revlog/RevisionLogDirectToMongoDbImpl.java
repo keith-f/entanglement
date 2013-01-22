@@ -159,7 +159,10 @@ public class RevisionLogDirectToMongoDbImpl
   public void submitRevisions(String graphId, String graphBranchId,
       String txnId, int txnSubmitId, List<GraphOperation> ops)
       throws RevisionLogException
-  {    
+  {
+    if (ops.isEmpty()) {
+      return;
+    }
     try
     {
 //      List<DBObject> dbObjects = new LinkedList<>();

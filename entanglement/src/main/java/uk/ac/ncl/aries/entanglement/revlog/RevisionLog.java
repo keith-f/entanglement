@@ -75,6 +75,8 @@ public interface RevisionLog
    * All operations submitted as part of a call to this method should be
    * associated with the same transaction to the same graph/branch.
    * 
+   * If <code>ops</code> is empty, then this method has no effect.
+   * 
    * @param graphId the ID of of the graph to submit the revision to.
    * @param graphBranchId the branch of the graph to submit the revision to.
    * @param txnId a unique ID of the transaction for which this revision is
