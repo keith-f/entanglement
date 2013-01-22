@@ -66,15 +66,23 @@ abstract public class AbstractGraphEntityDAO
    */
   protected final DBCollection col;
   
-   public AbstractGraphEntityDAO(ClassLoader classLoader, Mongo m, DB db, DBCollection col)
+  /**
+   * 
+   * @param classLoader a custom classloader may be required here in order for
+   * a <code>DbObjectMarshaller</code> to correctly deserialize objects. 
+   * 
+   * TODO If we we only use the marshaller for serialization, then we probably 
+   * don't need this parameter.
+   * @param m
+   * @param db
+   * @param col 
+   */
+  public AbstractGraphEntityDAO(ClassLoader classLoader, Mongo m, DB db, DBCollection col)
   {
     this.m = m;
     this.db = db;
     this.col = col;
     marshaller = ObjectMarshallerFactory.create(classLoader);
-//    this.json = new JsonUtils();
-//    json.setExcludeNullAndEmptyValues(true);
-//    json.setIgnoreUnknownProperties(true);
     
     printPeriodicPerformanceInfo = true;
     insertCount = 0;
