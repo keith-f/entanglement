@@ -42,7 +42,7 @@ public class EntanglementStatePropertyNames
   public static String PROP_DEFAULT_DATASOURCE_NAME = "default_datasource";
   public static String PROP_DEFAULT_EVIDENCETYPE_NAME = "default_evidencetype";
   
-  public static String PROP_INSERT_MODE = "biggraph.insert_mode";
+  public static String PROP_INSERT_MODE = "graph.insert_mode";
   
   
   
