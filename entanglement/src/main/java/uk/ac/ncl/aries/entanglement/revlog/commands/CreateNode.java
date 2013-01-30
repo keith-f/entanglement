@@ -33,6 +33,9 @@ public class CreateNode
   private static final Logger logger = 
       Logger.getLogger(CreateNode.class.getName());
   
+  private ModificationPolicy modPol;
+  private MergePolicy mergePol;
+  
   private BasicDBObject node;
   
   public CreateNode()
@@ -57,4 +60,19 @@ public class CreateNode
     this.node = node;
   }
 
+  public ModificationPolicy getModPol() {
+    return modPol;
+  }
+
+  public void setModPol(ModificationPolicy modPol) {
+    this.modPol = modPol;
+  }
+
+  public MergePolicy getMergePol() {
+    return mergePol;
+  }
+
+  public void setMergePol(MergePolicy mergePol) {
+    this.mergePol = mergePol;
+  } 
 }
