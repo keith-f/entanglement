@@ -243,7 +243,7 @@ public class MongoGraphToGephi {
       if (name == null || name.isEmpty()) {
         gephiNode.getNodeData().setLabel(uidStr);
       } else {
-        gephiNode.getNodeData().setLabel(type + "|" + name);
+        gephiNode.getNodeData().setLabel(name);
       }
       float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
       gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1], rgbColorComp[2]);
