@@ -42,7 +42,7 @@ public enum MergePolicy
    * properties are they are, but add new properties present in this command but
    * currently absent from the current graph entity.
    */
-  ADD_NEW,
+  APPEND_NEW__LEAVE_EXISTING,
   
   /**
    * If the UID or type/name matches an existing entity, then:
@@ -54,7 +54,7 @@ public enum MergePolicy
    * this graph modification command will be left untouched.</li>
    * </ul>
    */
-  OVERWRITE,
+  APPEND_NEW__OVERWRITE_EXSITING,
   
   /**
    * If the UID or type/name matches an existing entity, then:
@@ -64,5 +64,5 @@ public enum MergePolicy
    * set on the graph entity.</li>
    * </ul>
    */
-  CLEAR;
+  OVERWRITE_ALL;
 }
