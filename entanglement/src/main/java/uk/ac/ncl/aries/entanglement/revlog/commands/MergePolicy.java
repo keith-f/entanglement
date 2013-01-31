@@ -32,7 +32,8 @@ public enum MergePolicy
    */
   NONE,
   /**
-   * In case of a UID or name clash clash, report an error.
+   * In case of a UID or name clash, take no action in the database and report
+   * an error.
    */
   ERR,
 
