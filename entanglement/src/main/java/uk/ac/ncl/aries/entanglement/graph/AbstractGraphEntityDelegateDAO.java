@@ -64,6 +64,11 @@ abstract public class AbstractGraphEntityDelegateDAO
   public void store(BasicDBObject entity) throws GraphModelException {
     delegate.store(entity);
   }
+  
+  @Override
+  public void update(BasicDBObject updated) throws GraphModelException {
+    delegate.update(updated);
+  }
 
   @Override
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue) throws GraphModelException {
