@@ -44,8 +44,37 @@ public interface GraphEntityDAO
   
   
   
-  
+  /**
+   * Stores a new graph entity to the database. If the <code>InsertMode</code>
+   * hint is set to <code>INSERT_CONSISTENCY</code> then additional consistency
+   * checks are performed to ensure that no entity currently exists with the 
+   * same UID or type/name as the entity that you are attempting to insert.
+   * 
+   * If the <code>InsertMode</code> is set to <code>PERFORMANCE</code>, then
+   * no ID checks are performed and we assume that you not attempting to
+   * insert objects that would ID- or name-clash with an existing entity.
+   * 
+   * @param entity
+   * @throws GraphModelException 
+   */
   public void store(BasicDBObject entity)
+      throws GraphModelException;
+  
+  /**
+   * Updates (actually, replaces) an existing graph entity. The <code>UID</code> 
+   * field is used to find the document that should be replaced.
+   * 
+   * Replacing large documents may be expensive when only a tiny proportion of
+   * the document has changed. You may wish to use one of the 'setProperty' 
+   * methods if you only need to update a couple of fields.
+   * 
+   * @param updated the complete MongoDB document that is to replace an existing
+   * MongoDB document of the same UID. Note that if the existing MongoDB document
+   * contains a 'name' field, then you must ensure that the new document also
+   * contains the same value for the 'name' field.
+   * @throws GraphModelException 
+   */
+  public void update(BasicDBObject updated)
       throws GraphModelException;
   
   /**
@@ -75,10 +104,10 @@ public interface GraphEntityDAO
    * @return the entity with the unique ID, or null if no such entity exists.
    * @throws LogPlayerException 
    */
-  public DBObject getByUid(String uid)
+  public BasicDBObject getByUid(String uid)
       throws GraphModelException;
   
-  public DBObject getByName(String entityType, String entityName)
+  public BasicDBObject getByName(String entityType, String entityName)
       throws GraphModelException;
   
   public boolean existsByUid(String uniqueId)
@@ -87,7 +116,7 @@ public interface GraphEntityDAO
   public boolean existsByName(String entityType, String entityName)
       throws GraphModelException;
   
-  public DBObject deleteByUid(String uid)
+  public BasicDBObject deleteByUid(String uid)
       throws GraphModelException;
   
   

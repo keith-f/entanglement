@@ -131,13 +131,13 @@ abstract public class AbstractGraphEntityDAO
         String name = item.getString(FIELD_NAME);
         String type = item.getString(FIELD_TYPE);
 //        logger.info("Running in consistency mode");
-        if (existsByUid(uid)) {
-          throw new GraphModelException(
-              "Failed to store item - an entity with this unique ID already exists: "+uid);
-        }
+
         if (name != null && existsByName(type, name)) {
           throw new GraphModelException(
               "Failed to store item - an entity with the same 'well known' name already exists: "+name);        
+        } else if (existsByUid(uid)) {
+          throw new GraphModelException(
+              "Failed to store item - an entity with this unique ID already exists: "+uid);
         }
       }
 
@@ -174,17 +174,33 @@ abstract public class AbstractGraphEntityDAO
     }
   }
   
+  @Override
+  public void update(BasicDBObject updated)
+      throws GraphModelException
+  {
+    DBObject criteria;
+    
+    try {
+      criteria = new BasicDBObject(FIELD_UID, updated.getString(FIELD_UID));
+      
+      //Perform atomic update of a single document
+      col.findAndModify(criteria, updated);
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to update item: "
+              +updated.getString(FIELD_UID)+", "+updated.getString(FIELD_TYPE)
+              +", "+updated.getString(FIELD_NAME), e);
+    }
+  }
 
   @Override
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue)
       throws GraphModelException
   {
-//    logger.log(Level.INFO, "Storing edge: {0}", edge);
-    
-    DBObject criteria = null;
-    DBObject fieldsToReturn = null;
-    DBObject sort = null;
-    DBObject update = null;
+    DBObject criteria;
+    DBObject fieldsToReturn;
+    DBObject sort;
+    DBObject update;
     boolean remove = false;
     boolean returnNew = false;
     boolean upsert = false;
