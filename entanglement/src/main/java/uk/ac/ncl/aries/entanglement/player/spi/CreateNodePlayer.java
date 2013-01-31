@@ -26,6 +26,9 @@ import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NA
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.torrenttamer.util.UidGenerator;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO;
@@ -49,6 +52,11 @@ public class CreateNodePlayer
 {
   private static final Logger logger =
           Logger.getLogger(CreateNodePlayer.class.getName());
+  
+  private static final Set<String> NODE_SPECIAL_FIELDS = 
+    new HashSet<>(Arrays.asList(new String[]{ FIELD_UID, FIELD_TYPE, FIELD_NAME}));
+ 
+  
   
   /*
    * These are set for every time <code>playItem</code> is called.
@@ -231,48 +239,6 @@ public class CreateNodePlayer
     nodeDao.store(serializedNode);
   }
   
-  private void _checkTypesEqual(BasicDBObject existing)
-          throws GraphModelException
-  {
-    if (serializedNode.containsField(FIELD_TYPE)) {
-      String existingType = existing.getString(FIELD_TYPE);
-      String newType = serializedNode.getString(FIELD_TYPE);
-      if (!existingType.equals(newType)) {
-        throw new GraphModelException(
-                "You cannot update the type of an existing graph entity: "
-                +existingType+" != "+newType);
-      }
-    }
-  }
-  
-  private void _checkNamesEqual(BasicDBObject existing)
-          throws GraphModelException
-  {
-    if (serializedNode.containsField(FIELD_NAME)) {
-      String existingName = existing.getString(FIELD_NAME);
-      String newName = serializedNode.getString(FIELD_NAME);
-      if (!existingName.equals(newName)) {
-        throw new GraphModelException(
-                "You cannot update the name of an existing graph entity: "
-                +existingName+" != "+newName);
-      }
-    }
-  }
-  
-  private void _checkUidsEqual(BasicDBObject existing)
-          throws GraphModelException
-  {
-    if (serializedNode.containsField(FIELD_UID)) {
-      String existingUid = existing.getString(FIELD_UID);
-      String newUid = serializedNode.getString(FIELD_UID);
-      if (!existingUid.equals(newUid)) {
-        throw new GraphModelException(
-                "You cannot update the UID of an existing graph entity: "
-                +existingUid+" != "+newUid);
-      }
-    }
-  }
-  
   /**
    * This method adds new properties to an existing node. Where there are
    * properties on the existing node with the same name as the ones specified
@@ -283,12 +249,10 @@ public class CreateNodePlayer
           throws GraphModelException
   {
 //    BasicDBObject existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
-    _checkUidsEqual(existing);
-    _checkTypesEqual(existing);
-    _checkNamesEqual(existing);
+    _checkAllImmutableFieldsAreEqual(existing);
 
     for (String key : serializedNode.keySet()) {
-      if (key.equals(FIELD_UID) || key.equals(FIELD_TYPE) || key.equals(FIELD_NAME)) {
+      if (NODE_SPECIAL_FIELDS.contains(key)) {
         continue; //Skip immutable identity/type fields
       }
       if (existing.containsField(key)) {
@@ -307,12 +271,10 @@ public class CreateNodePlayer
   private void doAppendNewOverwriteExisting(BasicDBObject existing)
           throws GraphModelException
   {
-    _checkUidsEqual(existing);
-    _checkTypesEqual(existing);
-    _checkNamesEqual(existing);
+    _checkAllImmutableFieldsAreEqual(existing);
 
     for (String key : serializedNode.keySet()) {
-      if (key.equals(FIELD_UID) || key.equals(FIELD_TYPE) || key.equals(FIELD_NAME)) {
+      if (NODE_SPECIAL_FIELDS.contains(key)) {
         continue; //Skip immutable identity/type fields
       }
       existing.append(key, serializedNode.get(key));
@@ -328,20 +290,42 @@ public class CreateNodePlayer
   private void doOverwriteAll(BasicDBObject existing)
           throws GraphModelException
   {
-    _checkUidsEqual(existing);
-    _checkTypesEqual(existing);
-    _checkNamesEqual(existing);
+    _checkAllImmutableFieldsAreEqual(existing);
     
     /*
      * In this case, we can simply use the new DBObject from the command.
      * We just need to ensure that the UID/type/name properties are carried 
      * over from the existing object.
      */
-    serializedNode.put(FIELD_UID, existing.getString(FIELD_UID));
-    serializedNode.put(FIELD_TYPE, existing.getString(FIELD_TYPE));
-    serializedNode.put(FIELD_NAME, existing.getString(FIELD_NAME));
+//    serializedNode.put(FIELD_UID, existing.getString(FIELD_UID));
+//    serializedNode.put(FIELD_TYPE, existing.getString(FIELD_TYPE));
+//    serializedNode.put(FIELD_NAME, existing.getString(FIELD_NAME));
+    for (String fieldName : NODE_SPECIAL_FIELDS) {
+      serializedNode.put(fieldName, existing.getString(fieldName));
+    }
 
     nodeDao.update(serializedNode);
   }
 
+  private void _checkAllImmutableFieldsAreEqual(BasicDBObject existing) throws GraphModelException
+  {
+    for (String fieldName : NODE_SPECIAL_FIELDS) {
+      _checkImmutableFieldIsEqual(fieldName, existing);
+    }
+  }
+  
+  private void _checkImmutableFieldIsEqual(String fieldName, BasicDBObject existing)
+          throws GraphModelException
+  {
+    if (serializedNode.containsField(fieldName)) {
+      String existingFieldVal = existing.getString(fieldName);
+      String newFieldVal = serializedNode.getString(fieldName);
+      if (!existingFieldVal.equals(newFieldVal)) {
+        throw new GraphModelException(
+                "You cannot update the immutbable field: "+fieldName+": "
+                +existingFieldVal+" != "+newFieldVal);
+      }
+    }
+  }
+  
 }

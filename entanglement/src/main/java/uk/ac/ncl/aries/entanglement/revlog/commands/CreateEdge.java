@@ -32,9 +32,11 @@ public class CreateEdge
   private static final Logger logger = 
       Logger.getLogger(CreateEdge.class.getName());
   
-  
+  private ModificationPolicy modPol;
+  private MergePolicy mergePol;
   private BasicDBObject edge;
   
+  private boolean allowDangling;
  
 
   public CreateEdge()
@@ -46,12 +48,12 @@ public class CreateEdge
     this.edge = edge;
   }
   
-  public CreateEdge(DbObjectMarshaller marshaller,
-          String edgeUid, String fromNodeUid, String toNodeUid,
-          String fromNodeName, String toNodeName)
-  {
-    
-  }
+//  public CreateEdge(DbObjectMarshaller marshaller,
+//          String edgeUid, String fromNodeUid, String toNodeUid,
+//          String fromNodeName, String toNodeName)
+//  {
+//    
+//  }
   
   
   @Override
@@ -67,4 +69,27 @@ public class CreateEdge
     this.edge = edge;
   }
 
+  public ModificationPolicy getModPol() {
+    return modPol;
+  }
+
+  public void setModPol(ModificationPolicy modPol) {
+    this.modPol = modPol;
+  }
+
+  public MergePolicy getMergePol() {
+    return mergePol;
+  }
+
+  public void setMergePol(MergePolicy mergePol) {
+    this.mergePol = mergePol;
+  }
+
+  public boolean isAllowDangling() {
+    return allowDangling;
+  }
+
+  public void setAllowDangling(boolean allowDangling) {
+    this.allowDangling = allowDangling;
+  }
 }
