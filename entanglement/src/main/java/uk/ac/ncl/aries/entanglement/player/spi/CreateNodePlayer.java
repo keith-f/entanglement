@@ -75,6 +75,8 @@ public class CreateNodePlayer
       throws LogPlayerException
   {
     try {
+      this.nodeDao = nodeDao;
+      this.edgeDao = edgeDao;
       command = (CreateNode) item.getOp();
       serializedNode = command.getNode();
 
@@ -89,20 +91,6 @@ public class CreateNodePlayer
           throw new LogPlayerException("Unsupported "
                   + ModificationPolicy.class.getName() + " type: " + command.getModPol());
       }
-
-
-
-
-      /*
-       * If we get here, then the node does not currently exist.
-       */
-
-      // Generate a UID for this node, if one does not already exist
-      if (!serializedNode.containsField(FIELD_UID)) {
-        serializedNode.put(FIELD_UID, UidGenerator.generateUid());
-      }
-
-      nodeDao.store(serializedNode);
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
     }
@@ -229,7 +217,7 @@ public class CreateNodePlayer
   private void createNewNode() throws GraphModelException, LogPlayerException
   {
     // Node type is a required property
-    if (!serializedNode.containsField(NodeDAO.FIELD_TYPE)) {
+    if (!serializedNode.containsField(FIELD_TYPE)) {
       throw new LogPlayerException("Can't play operation: "+item.getOp()
               + ". Property " + FIELD_TYPE + " was not set.");
     }
@@ -295,6 +283,7 @@ public class CreateNodePlayer
           throws GraphModelException
   {
 //    BasicDBObject existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
+    _checkUidsEqual(existing);
     _checkTypesEqual(existing);
     _checkNamesEqual(existing);
 
@@ -318,7 +307,7 @@ public class CreateNodePlayer
   private void doAppendNewOverwriteExisting(BasicDBObject existing)
           throws GraphModelException
   {
-//    BasicDBObject existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
+    _checkUidsEqual(existing);
     _checkTypesEqual(existing);
     _checkNamesEqual(existing);
 
@@ -339,7 +328,7 @@ public class CreateNodePlayer
   private void doOverwriteAll(BasicDBObject existing)
           throws GraphModelException
   {
-//    BasicDBObject existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
+    _checkUidsEqual(existing);
     _checkTypesEqual(existing);
     _checkNamesEqual(existing);
     
