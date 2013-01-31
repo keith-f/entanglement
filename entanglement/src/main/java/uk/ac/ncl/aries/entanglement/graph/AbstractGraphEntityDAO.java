@@ -278,7 +278,7 @@ abstract public class AbstractGraphEntityDAO
   
   
   @Override
-  public DBObject getByUid(String nodeUid)
+  public BasicDBObject getByUid(String nodeUid)
       throws GraphModelException
   {
     DBObject query = null;
@@ -288,20 +288,20 @@ abstract public class AbstractGraphEntityDAO
       query.put(FIELD_UID, nodeUid);
 
 
-      DBObject obj = col.findOne(query);
+      BasicDBObject obj = (BasicDBObject) col.findOne(query);
       if (obj == null) {
         return null;
       }
       return obj;
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
   
   @Override
-  public DBObject getByName(String type, String name)
+  public BasicDBObject getByName(String type, String name)
       throws GraphModelException
   {
     DBObject query = null;
@@ -310,14 +310,14 @@ abstract public class AbstractGraphEntityDAO
       query.put(FIELD_TYPE, type);
       query.put(FIELD_NAME, name);
 
-      DBObject nodeObj = col.findOne(query);
-      if (nodeObj == null) {
+      BasicDBObject obj = (BasicDBObject)  col.findOne(query);
+      if (obj == null) {
         return null;
       }
-      return nodeObj;
+      return obj;
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation: \n"
+      throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
@@ -372,13 +372,13 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public DBObject deleteByUid(String uid)
+  public BasicDBObject deleteByUid(String uid)
       throws GraphModelException
   {
     DBObject query = null;
     try {
 //      logger.log(Level.INFO, "Deleting node by UID: {0}", nodeUid);
-      DBObject toDelete = getByUid(uid);
+      BasicDBObject toDelete = (BasicDBObject) getByUid(uid);
       if (toDelete == null) {
         throw new GraphModelException(
             "Attempted a delete operation, but no such entity exists: "+uid);
