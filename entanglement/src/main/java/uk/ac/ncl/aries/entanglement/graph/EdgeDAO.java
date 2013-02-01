@@ -99,6 +99,10 @@ public interface EdgeDAO
   public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
           throws GraphModelException;
   
+  public Long countEdgesOfTypeBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
+          throws GraphModelException;
+  
   
   
   /**

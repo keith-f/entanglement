@@ -53,7 +53,10 @@ public class EdgeDAOSeparateDocImpl
   
   private static final DBObject IDX_FROM_NODE_UID = new BasicDBObject(FIELD_FROM_NODE_UID, 1);
   private static final DBObject IDX_TO_NODE_UID = new BasicDBObject(FIELD_TO_NODE_UID, 1);
+
   
+  private static final DBObject IDX_TYPE__FROM_NODE_UID__TO_NODE_UID = 
+          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_FROM_NODE_UID, 1).append(FIELD_TO_NODE_UID, 1);
   
   private final DBCollection nodeCol;
   
@@ -75,6 +78,8 @@ public class EdgeDAOSeparateDocImpl
     
     edgeCol.ensureIndex(IDX_FROM_NODE_UID);
     edgeCol.ensureIndex(IDX_TO_NODE_UID);
+    
+    edgeCol.ensureIndex(IDX_TYPE__FROM_NODE_UID__TO_NODE_UID);
   }
 
   
@@ -82,59 +87,7 @@ public class EdgeDAOSeparateDocImpl
   public DBCollection getNodeCol() {
     return nodeCol;
   }
-  
-  
-//  @Override
-//  public void store(Edge edge)
-//      throws GraphModelException
-//  {
-//    try {
-////      logger.log(Level.INFO, "Storing edge: {0}", edge);
-//      if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
-//        if (existsByUniqueId(edge.getUid())) {
-//          throw new GraphModelException(
-//              "Failed to store an edge - an edge with this unique ID already exists: "+edge.getUid());
-//        }
-//      }
-//
-//      DBObject dbObject = marshaller.serialize(edge);
-//      edgeCol.insert(dbObject);
-//      
-//      
-//      /////// DEBUG (Performance info)
-//      if (printPeriodicPerformanceInfo) {        
-//        insertCount++;
-//        if (timestampOfLastPerformanceMessage < 0) {
-//          //First ever insert
-//          long now = System.currentTimeMillis();
-//          timestampOfLastPerformanceMessage = now;
-//          timestampOfFirstInsert = now;
-//          return;
-//        }
-//        if (insertCount % PRINT_PERF_INFO_EVERY == 0) {
-//          long now = System.currentTimeMillis();
-//          double secondsPerBlock = (now - timestampOfLastPerformanceMessage);
-//          secondsPerBlock = secondsPerBlock / 1000;
-//          double totalSeconds = (now - timestampOfFirstInsert);
-//          totalSeconds = totalSeconds / 1000;
-//          logger.log(Level.INFO,
-//                  "Inserted a total of\t{0}\tEdge documents. "
-//                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
-//                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
-//          timestampOfLastPerformanceMessage = now;
-//        }
-//      }
-//      /////// DEBUG (Performance info) (end)
-//    }
-//    catch(Exception e)
-//    {
-//      throw new GraphModelException("Failed to store item: "+edge, e);
-//    }
-//  }
-  
-
-  
-  
+    
   @Override
   public Iterable<DBObject> iterateEdgesBetweenNodes(String fromNodeUid, String toNodeUid)
       throws GraphModelException
@@ -285,6 +238,26 @@ public class EdgeDAOSeparateDocImpl
     try {
       query = new BasicDBObject();
       query.put(FIELD_TYPE, edgeType);
+      query.put(FIELD_TO_NODE_UID, toNodeUid);
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public Long countEdgesOfTypeBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
+          throws GraphModelException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TYPE, edgeType);
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
       query.put(FIELD_TO_NODE_UID, toNodeUid);
       long count = col.count(query);
       return count;
