@@ -26,7 +26,7 @@ import com.torrenttamer.util.GenericServiceLoader;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
+import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 

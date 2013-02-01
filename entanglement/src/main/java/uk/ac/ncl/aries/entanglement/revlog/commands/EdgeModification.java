@@ -26,39 +26,36 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class CreateEdge
+public class EdgeModification
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(CreateEdge.class.getName());
+      Logger.getLogger(EdgeModification.class.getName());
   
-  private ModificationPolicy modPol;
+  private IdentificationType idType;
   private MergePolicy mergePol;
   private BasicDBObject edge;
   
   private boolean allowDangling;
  
 
-  public CreateEdge()
+  public EdgeModification()
   {
   }
   
-  public CreateEdge(BasicDBObject edge)
+  public EdgeModification(IdentificationType idType, MergePolicy mergePol, BasicDBObject edge)
   {
+    this.idType = idType;
+    this.mergePol = mergePol;
     this.edge = edge;
+    this.allowDangling = false;
   }
   
-//  public CreateEdge(DbObjectMarshaller marshaller,
-//          String edgeUid, String fromNodeUid, String toNodeUid,
-//          String fromNodeName, String toNodeName)
-//  {
-//    
-//  }
   
   
   @Override
   public String toString() {
-    return "CreateEdge{" + "edge=" + edge + '}';
+    return "EdgeModification{" + "edge=" + edge + '}';
   }
 
   public BasicDBObject getEdge() {
@@ -69,12 +66,12 @@ public class CreateEdge
     this.edge = edge;
   }
 
-  public ModificationPolicy getModPol() {
-    return modPol;
+  public IdentificationType getIdType() {
+    return idType;
   }
 
-  public void setModPol(ModificationPolicy modPol) {
-    this.modPol = modPol;
+  public void setIdType(IdentificationType idType) {
+    this.idType = idType;
   }
 
   public MergePolicy getMergePol() {

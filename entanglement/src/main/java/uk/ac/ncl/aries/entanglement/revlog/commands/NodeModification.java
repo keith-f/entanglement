@@ -27,29 +27,31 @@ import java.util.logging.Logger;
  * 
  * @author Keith Flanagan
  */
-public class CreateNode
+public class NodeModification
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(CreateNode.class.getName());
+      Logger.getLogger(NodeModification.class.getName());
   
-  private ModificationPolicy modPol;
+  private IdentificationType idType;
   private MergePolicy mergePol;
   
   private BasicDBObject node;
   
-  public CreateNode()
+  public NodeModification()
   {
   }
 
-  public CreateNode(BasicDBObject node)
+  public NodeModification(IdentificationType idType, MergePolicy mergePol, BasicDBObject node)
   {
+    this.idType = idType;
+    this.mergePol = mergePol;
     this.node = node;
   }
 
   @Override
   public String toString() {
-    return "CreateNode{" + "node=" + node + '}';
+    return "NodeModification{" + "node=" + node + '}';
   }
 
   public BasicDBObject getNode() {
@@ -60,12 +62,12 @@ public class CreateNode
     this.node = node;
   }
 
-  public ModificationPolicy getModPol() {
-    return modPol;
+  public IdentificationType getIdType() {
+    return idType;
   }
 
-  public void setModPol(ModificationPolicy modPol) {
-    this.modPol = modPol;
+  public void setIdType(IdentificationType idType) {
+    this.idType = idType;
   }
 
   public MergePolicy getMergePol() {

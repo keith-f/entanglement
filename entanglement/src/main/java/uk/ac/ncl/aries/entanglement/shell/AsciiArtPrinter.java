@@ -19,8 +19,8 @@
 package uk.ac.ncl.aries.entanglement.shell;
 
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdge;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
+import uk.ac.ncl.aries.entanglement.revlog.commands.EdgeModification;
+import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItemContainer;
@@ -48,10 +48,10 @@ public class AsciiArtPrinter
 
         GraphOperation op = item.getOp();
 
-        if (op instanceof CreateNode) {
-          sb.append(_printItem((CreateNode) item.getOp()));
-        } else if (op instanceof CreateEdge) {
-          sb.append(_printItem((CreateEdge) item.getOp()));
+        if (op instanceof NodeModification) {
+          sb.append(_printItem((NodeModification) item.getOp()));
+        } else if (op instanceof EdgeModification) {
+          sb.append(_printItem((EdgeModification) item.getOp()));
         } else {
           sb.append("Unsupported type: ").append(item.getType());
         }
@@ -74,7 +74,7 @@ public class AsciiArtPrinter
     return spaceStr;
   }
   
-  private static String _printItem(CreateNode node)
+  private static String _printItem(NodeModification node)
   {
     StringBuilder sb = new StringBuilder();
 //    sb.append(node.getType()).append(", ");
@@ -82,7 +82,7 @@ public class AsciiArtPrinter
     return sb.toString();
   }
   
-  private static String _printItem(CreateEdge edge)
+  private static String _printItem(EdgeModification edge)
   {
     StringBuilder sb = new StringBuilder();
 //    sb.append(edge.getFromUid());

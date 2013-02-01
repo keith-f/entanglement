@@ -36,9 +36,9 @@ import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.graph.GraphModelException;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
+import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.MergePolicy;
-import uk.ac.ncl.aries.entanglement.revlog.commands.ModificationPolicy;
+import uk.ac.ncl.aries.entanglement.revlog.commands.IdentificationType;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 
 /**
@@ -47,11 +47,11 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
  * 
  * @author Keith Flanagan
  */
-public class CreateNodePlayer 
+public class NodeModificationPlayer 
     extends AbstractLogItemPlayer
 {
   private static final Logger logger =
-          Logger.getLogger(CreateNodePlayer.class.getName());
+          Logger.getLogger(NodeModificationPlayer.class.getName());
   
   private static final Set<String> NODE_SPECIAL_FIELDS = 
     new HashSet<>(Arrays.asList(new String[]{ FIELD_UID, FIELD_TYPE, FIELD_NAME}));
@@ -66,7 +66,7 @@ public class CreateNodePlayer
   // The currently playing revision item
   private RevisionItem item;
   // The command wrapped by the RevisionItem
-  private CreateNode command;
+  private NodeModification command;
   // A MongoDB document embedded within the command that represents the graph entity being updated.
   private BasicDBObject serializedNode;
   
@@ -75,7 +75,7 @@ public class CreateNodePlayer
   @Override
   public String getSupportedLogItemType()
   {
-    return CreateNode.class.getSimpleName();
+    return NodeModification.class.getSimpleName();
   }
 
   @Override
@@ -85,19 +85,19 @@ public class CreateNodePlayer
     try {
       this.nodeDao = nodeDao;
       this.edgeDao = edgeDao;
-      command = (CreateNode) item.getOp();
+      command = (NodeModification) item.getOp();
       serializedNode = command.getNode();
 
-      switch(command.getModPol()) {
-        case CREATE_OR_MODIFY_BY_UID:
+      switch(command.getIdType()) {
+        case UID:
           createOrModifyByUid();
           break;
-        case CREATE_OR_MODIFY_BY_NAME:
+        case NAME:
           createOrModifyByName();
           break;
         default:
           throw new LogPlayerException("Unsupported "
-                  + ModificationPolicy.class.getName() + " type: " + command.getModPol());
+            + IdentificationType.class.getName() + " type: " + command.getIdType());
       }
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
@@ -155,7 +155,7 @@ public class CreateNodePlayer
     }
     catch(Exception e) {
       throw new LogPlayerException("Failed to play back command using "
-              +ModificationPolicy.class.getName()+": "+command.getModPol()
+              +IdentificationType.class.getName()+": "+command.getIdType()
               + ". Command was: "+command.toString(), e);
     }
   }
@@ -213,7 +213,7 @@ public class CreateNodePlayer
     }
     catch(Exception e) {
       throw new LogPlayerException("Failed to play back command using "
-              +ModificationPolicy.class.getName()+": "+command.getModPol()
+              +IdentificationType.class.getName()+": "+command.getIdType()
               + ". Command was: "+command.toString(), e);
     }
   }

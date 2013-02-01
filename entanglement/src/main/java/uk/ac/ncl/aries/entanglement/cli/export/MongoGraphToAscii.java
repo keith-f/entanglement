@@ -38,8 +38,8 @@ import uk.ac.ncl.aries.entanglement.graph.data.Node;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdge;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
+import uk.ac.ncl.aries.entanglement.revlog.commands.EdgeModification;
+import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 
