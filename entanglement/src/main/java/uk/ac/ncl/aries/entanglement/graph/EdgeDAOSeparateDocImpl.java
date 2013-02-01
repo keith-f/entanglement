@@ -96,7 +96,6 @@ public class EdgeDAOSeparateDocImpl
     try {
       logger.log(Level.INFO, "Iterating edges between nodes: {0} --> {1}", 
               new Object[]{fromNodeUid, toNodeUid});
-      //Empty 'query' selects all documents (nodes in this case)
       query = new BasicDBObject();
       query.put(FIELD_FROM_NODE_UID, fromNodeUid);
       query.put(FIELD_TO_NODE_UID, toNodeUid);
@@ -104,6 +103,30 @@ public class EdgeDAOSeparateDocImpl
       final DBCursor cursor = col.find(query);
 
 //      return new DeserialisingIterable<>(cursor, marshaller, Edge.class);
+      return cursor;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public Iterable<DBObject> iterateEdgesBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
+          throws GraphModelException
+  {
+    DBObject query = null;
+    try {
+      logger.log(Level.INFO, "Iterating edges of type {0} between nodes: {1} --> {2}", 
+              new Object[]{edgeType, fromNodeUid, toNodeUid});
+      query = new BasicDBObject();
+      query.put(FIELD_TYPE, edgeType);
+      query.put(FIELD_FROM_NODE_UID, fromNodeUid);
+      query.put(FIELD_TO_NODE_UID, toNodeUid);
+
+      final DBCursor cursor = col.find(query);
+
       return cursor;
     }
     catch(Exception e) {
@@ -120,12 +143,10 @@ public class EdgeDAOSeparateDocImpl
     try {
       logger.log(Level.INFO, "Iterating edges starting from node: {0}", 
               new Object[]{fromNodeUid});
-      //Empty 'query' selects all documents (nodes in this case)
       query = new BasicDBObject();
       query.put(FIELD_FROM_NODE_UID, fromNodeUid);
 
       final DBCursor cursor = col.find(query);
-//      return new DeserialisingIterable<>(cursor, marshaller, Edge.class);
       return cursor;
     }
     catch(Exception e) {
@@ -142,7 +163,6 @@ public class EdgeDAOSeparateDocImpl
     try {
       logger.log(Level.INFO, "Iterating edges ending at node: {0}", 
               new Object[]{toNodeUid});
-      //Empty 'query' selects all documents (nodes in this case)
       query = new BasicDBObject();
       query.put(FIELD_TO_NODE_UID, toNodeUid);
 
@@ -163,7 +183,6 @@ public class EdgeDAOSeparateDocImpl
     try {
       logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}", 
               new Object[]{fromNodeUid, toNodeType});
-      //Empty 'query' selects all documents (nodes in this case)
       query = new BasicDBObject();
       query.put(FIELD_FROM_NODE_UID, fromNodeUid);
       query.put(FIELD_TO_NODE_TYPE, toNodeType);

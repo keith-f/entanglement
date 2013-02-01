@@ -55,6 +55,20 @@ public interface EdgeDAO
           throws GraphModelException;
   
   /**
+   * Given a 'from' node and a 'to' node, returns an iterator over all the 
+   * edges of type <code>edgeType<code> between those nodes.
+   * @param edgeType the type of edge to return
+   * @param fromNodeUid the UID of the 'from' node.
+   * @param toNodeUid the UID of the 'to' node.
+   * @return an iterable set of edge instances with the specifed type that
+   * link the two specified nodes.
+   * @throws GraphModelException 
+   */
+  public Iterable<DBObject> iterateEdgesBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
+          throws GraphModelException;
+  
+  /**
    * Given a node , returns an Iterable over all the outgoing edges of that node.
    * @param fromNodeUid the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
