@@ -32,7 +32,7 @@ public class EdgeModification
   private static final Logger logger = 
       Logger.getLogger(EdgeModification.class.getName());
   
-  private IdentificationType idType;
+  private EdgeIdentificationType idType;
   private MergePolicy mergePol;
   private BasicDBObject edge;
   
@@ -43,7 +43,7 @@ public class EdgeModification
   {
   }
   
-  public EdgeModification(IdentificationType idType, MergePolicy mergePol, BasicDBObject edge)
+  public EdgeModification(EdgeIdentificationType idType, MergePolicy mergePol, BasicDBObject edge)
   {
     this.idType = idType;
     this.mergePol = mergePol;
@@ -66,11 +66,11 @@ public class EdgeModification
     this.edge = edge;
   }
 
-  public IdentificationType getIdType() {
+  public EdgeIdentificationType getIdType() {
     return idType;
   }
 
-  public void setIdType(IdentificationType idType) {
+  public void setIdType(EdgeIdentificationType idType) {
     this.idType = idType;
   }
 

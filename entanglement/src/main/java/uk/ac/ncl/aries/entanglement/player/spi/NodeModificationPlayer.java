@@ -24,7 +24,9 @@ import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_TY
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAME;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import com.torrenttamer.util.UidGenerator;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -70,7 +72,10 @@ public class NodeModificationPlayer
   // A MongoDB document embedded within the command that represents the graph entity being updated.
   private BasicDBObject serializedNode;
   
-  
+  @Override
+  public void initialise(ClassLoader cl, Mongo mongo, DB db)
+  {
+  }
   
   @Override
   public String getSupportedLogItemType()

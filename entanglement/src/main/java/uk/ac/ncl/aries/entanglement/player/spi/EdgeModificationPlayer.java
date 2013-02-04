@@ -23,6 +23,8 @@ import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_TY
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAME;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 import com.torrenttamer.util.UidGenerator;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -68,6 +70,11 @@ public class EdgeModificationPlayer
   private BasicDBObject serializedEdge;
   
   @Override
+  public void initialise(ClassLoader cl, Mongo mongo, DB db)
+  {
+  }
+  
+  @Override
   public String getSupportedLogItemType()
   {
     return EdgeModification.class.getSimpleName();
@@ -89,6 +96,12 @@ public class EdgeModificationPlayer
           break;
         case NAME:
           createOrModifyByName();
+          break;
+        case EDGE_TYPE_CONNECTED_VIA_NODE_UIDS:
+          createOrModifyByEdgeTypeToNodeUids();
+          break;
+        case EDGE_TYPE_CONNECTED_VIA_NODE_NAMES:
+          createOrModigyByEdgeTypeToNodeNames();
           break;
         default:
           throw new LogPlayerException("Unsupported "
@@ -208,6 +221,76 @@ public class EdgeModificationPlayer
     }
   }
   
+  
+  
+  private void createOrModifyByEdgeTypeToNodeUids() throws LogPlayerException
+  {
+    try {
+      String entityType = serializedEdge.getString(FIELD_TYPE);
+      String fromNodeUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
+      String toNodeUid = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_UID);
+      
+      if (entityType == null) {
+        throw new LogPlayerException(RevisionItem.class.getName()
+                + " had no entity type set. Item was: " + item);
+      }
+      if (fromNodeUid == null) {
+        throw new LogPlayerException(RevisionItem.class.getName()
+                + " had no fromNodeUid set. Item was: " + item);
+      }
+      if (toNodeUid == null) {
+        throw new LogPlayerException(RevisionItem.class.getName()
+                + " had no toNodeUid set. Item was: " + item);
+      }
+
+      long edgeCount = edgeDao.countEdgesOfTypeBetweenNodes(
+              entityType, fromNodeUid, toNodeUid);
+      if (edgeCount == 0) {
+        // Create a new edge
+        createNewEdge();
+      } else {
+        // Edit of existing edge - need to perform a merge
+        BasicDBObject existing;
+        switch(command.getMergePol()) {
+          case NONE:
+            logger.log(Level.INFO, 
+                "Ignoring existing edge of type: {0}, between node UIDs {1} and {2}", 
+                new Object[]{entityType, fromNodeUid, toNodeUid});
+            break;
+          case ERR:
+            throw new LogPlayerException(
+                "Ignoring existing edge of type: "+entityType
+                +", between node UIDs "+fromNodeUid+"and "+toNodeUid);
+          case APPEND_NEW__LEAVE_EXISTING:
+            existing = edgeDao.getByName(
+                    serializedEdge.getString(FIELD_TYPE), 
+                    serializedEdge.getString(FIELD_NAME));
+            doAppendNewLeaveExisting(existing);
+            break;
+          case APPEND_NEW__OVERWRITE_EXSITING:
+            existing = edgeDao.getByName(
+                    serializedEdge.getString(FIELD_TYPE), 
+                    serializedEdge.getString(FIELD_NAME));
+            doAppendNewOverwriteExisting(existing);
+            break;
+          case OVERWRITE_ALL:
+            existing = edgeDao.getByName(
+                    serializedEdge.getString(FIELD_TYPE), 
+                    serializedEdge.getString(FIELD_NAME));
+            doOverwriteAll(existing);
+            break;
+          default:
+            throw new LogPlayerException(
+                    "Unsupported merge policy type: "+command.getMergePol());
+        }
+      }
+    }
+    catch(Exception e) {
+      throw new LogPlayerException("Failed to play back command using "
+              +IdentificationType.class.getName()+": "+command.getIdType()
+              + ". Command was: "+command.toString(), e);
+    }
+  }
   
   /**
    * Called when an edge is found to not exist already - we need to create it.

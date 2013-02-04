@@ -17,6 +17,8 @@
 
 package uk.ac.ncl.aries.entanglement.player.spi;
 
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
@@ -33,6 +35,11 @@ public class TransactionBeginPlayer
 {
   private static final Logger logger =
           Logger.getLogger(TransactionBeginPlayer.class.getName());
+  
+  @Override
+  public void initialise(ClassLoader cl, Mongo mongo, DB db)
+  {
+  }
   
   @Override
   public String getSupportedLogItemType()

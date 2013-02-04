@@ -18,6 +18,8 @@
 
 package uk.ac.ncl.aries.entanglement.player.spi;
 
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
@@ -30,6 +32,8 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
  */
 public interface LogItemPlayer
 {
+  public void initialise(ClassLoader cl, Mongo mongo, DB db);
+  
   public void setMarshaller(DbObjectMarshaller marshaller);
   
   public String getSupportedLogItemType();
