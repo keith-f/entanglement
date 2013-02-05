@@ -36,11 +36,19 @@ public class EdgeModification
   private MergePolicy mergePol;
   private BasicDBObject edge;
   
-  private boolean allowDangling;
+  private boolean allowHanging;
  
 
   public EdgeModification()
   {
+  }
+  
+  public EdgeModification(BasicDBObject edge)
+  {
+    this.idType = EdgeIdentificationType.UID;
+    this.mergePol = MergePolicy.NONE;
+    this.edge = edge;
+    this.allowHanging = false;
   }
   
   public EdgeModification(EdgeIdentificationType idType, MergePolicy mergePol, BasicDBObject edge)
@@ -48,7 +56,7 @@ public class EdgeModification
     this.idType = idType;
     this.mergePol = mergePol;
     this.edge = edge;
-    this.allowDangling = false;
+    this.allowHanging = false;
   }
   
   
@@ -82,11 +90,12 @@ public class EdgeModification
     this.mergePol = mergePol;
   }
 
-  public boolean isAllowDangling() {
-    return allowDangling;
+  public boolean isAllowHanging() {
+    return allowHanging;
   }
 
-  public void setAllowDangling(boolean allowDangling) {
-    this.allowDangling = allowDangling;
+  public void setAllowHanging(boolean allowHanging) {
+    this.allowHanging = allowHanging;
   }
+
 }

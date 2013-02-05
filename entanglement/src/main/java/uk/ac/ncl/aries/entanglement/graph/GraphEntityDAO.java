@@ -94,6 +94,16 @@ public interface GraphEntityDAO
   public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
       throws GraphModelException;
   
+  /**
+   * Given a graph entity's type and name (together these form a 
+   * uniquely-identifying key), returns the entity's UID.
+   * 
+   * @param entityType
+   * @param entityName
+   * @return the UID for the graph entity, or <code>null</code> if no graph
+   * entity has the type <code>entityType</code> and name <code>entityName</code>.
+   * @throws GraphModelException 
+   */
   public String lookupUniqueIdForName(String entityType, String entityName)
       throws GraphModelException;
   

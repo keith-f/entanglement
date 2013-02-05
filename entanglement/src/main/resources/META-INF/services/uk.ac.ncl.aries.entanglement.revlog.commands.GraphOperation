@@ -1,6 +1,8 @@
+uk.ac.ncl.aries.entanglement.revlog.commands.BranchImport
 uk.ac.ncl.aries.entanglement.revlog.commands.DeleteEdgeByUid
 uk.ac.ncl.aries.entanglement.revlog.commands.DeleteNodeByUid
 uk.ac.ncl.aries.entanglement.revlog.commands.EdgeModification
+uk.ac.ncl.aries.entanglement.revlog.commands.FixHangingEdge
 uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification
 uk.ac.ncl.aries.entanglement.revlog.commands.SetNamedNodeProperty
 uk.ac.ncl.aries.entanglement.revlog.commands.SetNodeProperty

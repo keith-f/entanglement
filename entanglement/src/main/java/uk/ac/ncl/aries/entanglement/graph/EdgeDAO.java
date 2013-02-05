@@ -39,6 +39,8 @@ public interface EdgeDAO
   public static final String FIELD_FROM_NODE_NAME = "fromName";
   public static final String FIELD_TO_NODE_NAME = "toName";
   
+  public static final String FIELD_HANGING = "hanging";
+  
   public DBCollection getNodeCol();
   
   

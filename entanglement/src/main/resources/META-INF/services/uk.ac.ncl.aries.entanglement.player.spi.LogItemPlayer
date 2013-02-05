@@ -1,6 +1,8 @@
+uk.ac.ncl.aries.entanglement.player.spi.BranchImportPlayer
 uk.ac.ncl.aries.entanglement.player.spi.DeleteNodeByUidPlayer
 uk.ac.ncl.aries.entanglement.player.spi.DeleteEdgeByUidPlayer
 uk.ac.ncl.aries.entanglement.player.spi.EdgeModificationPlayer
+uk.ac.ncl.aries.entanglement.player.spi.FixHangingEdgePlayer
 uk.ac.ncl.aries.entanglement.player.spi.NodeModificationPlayer
 uk.ac.ncl.aries.entanglement.player.spi.SetNamedNodePropertyPlayer
 uk.ac.ncl.aries.entanglement.player.spi.SetNodePropertyPlayer

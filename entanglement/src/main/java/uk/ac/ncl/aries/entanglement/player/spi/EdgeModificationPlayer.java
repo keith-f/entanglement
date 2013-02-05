@@ -97,12 +97,12 @@ public class EdgeModificationPlayer
         case NAME:
           createOrModifyByName();
           break;
-        case EDGE_TYPE_CONNECTED_VIA_NODE_UIDS:
-          createOrModifyByEdgeTypeToNodeUids();
-          break;
-        case EDGE_TYPE_CONNECTED_VIA_NODE_NAMES:
-          createOrModigyByEdgeTypeToNodeNames();
-          break;
+//        case EDGE_TYPE_CONNECTED_VIA_NODE_UIDS:
+//          createOrModifyByEdgeTypeToNodeUids();
+//          break;
+//        case EDGE_TYPE_CONNECTED_VIA_NODE_NAMES:
+//          createOrModigyByEdgeTypeToNodeNames();
+//          break;
         default:
           throw new LogPlayerException("Unsupported "
             + IdentificationType.class.getName() + " type: " + command.getIdType());
@@ -221,77 +221,6 @@ public class EdgeModificationPlayer
     }
   }
   
-  
-  
-  private void createOrModifyByEdgeTypeToNodeUids() throws LogPlayerException
-  {
-    try {
-      String entityType = serializedEdge.getString(FIELD_TYPE);
-      String fromNodeUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
-      String toNodeUid = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_UID);
-      
-      if (entityType == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no entity type set. Item was: " + item);
-      }
-      if (fromNodeUid == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no fromNodeUid set. Item was: " + item);
-      }
-      if (toNodeUid == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no toNodeUid set. Item was: " + item);
-      }
-
-      long edgeCount = edgeDao.countEdgesOfTypeBetweenNodes(
-              entityType, fromNodeUid, toNodeUid);
-      if (edgeCount == 0) {
-        // Create a new edge
-        createNewEdge();
-      } else {
-        // Edit of existing edge - need to perform a merge
-        BasicDBObject existing;
-        switch(command.getMergePol()) {
-          case NONE:
-            logger.log(Level.INFO, 
-                "Ignoring existing edge of type: {0}, between node UIDs {1} and {2}", 
-                new Object[]{entityType, fromNodeUid, toNodeUid});
-            break;
-          case ERR:
-            throw new LogPlayerException(
-                "Ignoring existing edge of type: "+entityType
-                +", between node UIDs "+fromNodeUid+"and "+toNodeUid);
-          case APPEND_NEW__LEAVE_EXISTING:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
-            doAppendNewLeaveExisting(existing);
-            break;
-          case APPEND_NEW__OVERWRITE_EXSITING:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
-            doAppendNewOverwriteExisting(existing);
-            break;
-          case OVERWRITE_ALL:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
-            doOverwriteAll(existing);
-            break;
-          default:
-            throw new LogPlayerException(
-                    "Unsupported merge policy type: "+command.getMergePol());
-        }
-      }
-    }
-    catch(Exception e) {
-      throw new LogPlayerException("Failed to play back command using "
-              +IdentificationType.class.getName()+": "+command.getIdType()
-              + ". Command was: "+command.toString(), e);
-    }
-  }
-  
   /**
    * Called when an edge is found to not exist already - we need to create it.
    */
@@ -311,10 +240,11 @@ public class EdgeModificationPlayer
     }
     
     /*
-     * Edges MUST have a UID, a type, a 'from node uid', and a 'to node uid', as
-     * well as a 'from node type' and a 'to node type'.
-     * Edges may optionally have from/to node names, if those nodes have well
-     * known names. 
+     * Edges MUST have a UID, and a type.
+     * If the edge is not allowed to be 'hanging', then a 'from node uid', and a 
+     * 'to node uid', as well as a 'from node type' and a 'to node type' are
+     * required. Edges may optionally have from/to node names, if those nodes 
+     * have well known names. 
      * 
      * However, the DBObject that we receive in the <code>RevisionItem<code>
      * here may not have one or more of these required items set. For example,
@@ -328,57 +258,86 @@ public class EdgeModificationPlayer
      * specified for them by the incoming RevisionItem.
      */
     
-    //Check that both node's type names are set
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_TYPE) ||
-        !serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_TYPE)) {
-      throw new LogPlayerException("Can't play operation: "+item.getOp()
-              + ". Either " + EdgeDAO.FIELD_FROM_NODE_TYPE +" or "
-              + EdgeDAO.FIELD_TO_NODE_TYPE + " were not set.");
-    }
-
-    //If no 'from' node UID is specified, then locate it from the name field
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_UID)) {
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_NAME)) {
-        throw new LogPlayerException("Can't play operation: "+item.getOp()
-                + ". You must set at least at least one of these: " 
-                + EdgeDAO.FIELD_FROM_NODE_UID +", " + EdgeDAO.FIELD_FROM_NODE_NAME);
-      }
-      String nodeType = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_TYPE);
-      String nodeName = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_NAME);
-      String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-      serializedEdge.put(EdgeDAO.FIELD_FROM_NODE_UID, nodeUid);
-    }
-
-    //If no 'to' node UID is specified, then locate it from the name field
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_UID)) {
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_NAME)) {
-        throw new LogPlayerException("Can't play operation: "+item.getOp()
-                + ". You must set at least at least one of these: " 
-                + EdgeDAO.FIELD_TO_NODE_UID +", " + EdgeDAO.FIELD_TO_NODE_NAME);
-      }
-      String nodeType = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_TYPE);
-      String nodeName = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_NAME);
-      String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-      serializedEdge.put(EdgeDAO.FIELD_TO_NODE_UID, nodeUid);
-    }
+    if (command.isAllowHanging()) {
+      serializedEdge.put(EdgeDAO.FIELD_HANGING, true);  
+    } 
+    else 
+    {
+      serializedEdge.put(EdgeDAO.FIELD_HANGING, false);
     
-    /*
-     * If necessary, check that the linked nodes exist before creating the edge
-     */
-    if (!command.isAllowDangling()) {
+      //Check that both node's type names are set
+      if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_TYPE) ||
+          !serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_TYPE)) {
+        throw new LogPlayerException("Can't play operation: "+item.getOp()
+                + ". Either " + EdgeDAO.FIELD_FROM_NODE_TYPE +" or "
+                + EdgeDAO.FIELD_TO_NODE_TYPE + " were not set.");
+      }
+
+      //If no 'from' node UID is specified, then locate it from the name field
+      boolean verifiedFromExists = false;
+      if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_UID)) {
+        if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_NAME)) {
+          throw new LogPlayerException("Can't play operation: "+item.getOp()
+                  + ". You must set at least at least one of these: " 
+                  + EdgeDAO.FIELD_FROM_NODE_UID +", " + EdgeDAO.FIELD_FROM_NODE_NAME);
+        }
+        String nodeType = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_TYPE);
+        String nodeName = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_NAME);
+        String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
+        if (nodeUid == null) {
+          throw new LogPlayerException(
+            "While creating an edge, allowHanging was set to "+command.isAllowHanging()
+            + ", and the 'from' node: "+nodeUid+" doesn't exist!");
+        }
+        verifiedFromExists = true;
+        serializedEdge.put(EdgeDAO.FIELD_FROM_NODE_UID, nodeUid);
+      }
+
+      //If no 'to' node UID is specified, then locate it from the name field
+      boolean verifiedToExists = false;
+      if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_UID)) {
+        if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_NAME)) {
+          throw new LogPlayerException("Can't play operation: "+item.getOp()
+                  + ". You must set at least at least one of these: " 
+                  + EdgeDAO.FIELD_TO_NODE_UID +", " + EdgeDAO.FIELD_TO_NODE_NAME);
+        }
+        String nodeType = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_TYPE);
+        String nodeName = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_NAME);
+        String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
+        if (nodeUid == null) {
+          throw new LogPlayerException(
+            "While creating an edge, allowHanging was set to "+command.isAllowHanging()
+            + ", and the 'from' node: "+nodeUid+" doesn't exist!");
+        }
+        verifiedToExists = true;
+        serializedEdge.put(EdgeDAO.FIELD_TO_NODE_UID, nodeUid);
+      }
+    
+      /*
+       * Check that the linked nodes exist before creating the edge (if we 
+       * haven't already verified that the node(s) exist in the code above)
+       */
       String fromUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
       String toUid = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_UID);
-      if (!nodeDao.existsByUid(fromUid)) {
-        throw new LogPlayerException(
-                "While creating an edge, allowDangling was set to "+command.isAllowDangling()
-                + ", and the 'from' node: "+fromUid+" doesn't exist!");
+      
+      if (!verifiedFromExists) {
+        boolean exists = nodeDao.existsByUid(fromUid);
+        if (!exists) {
+          throw new LogPlayerException(
+            "While creating an edge, allowHanging was set to "+command.isAllowHanging()
+            + ", and the 'from' node: "+fromUid+" doesn't exist!");
+        } 
       }
-      if (!nodeDao.existsByUid(toUid)) {
-        throw new LogPlayerException(
-                "While creating an edge, allowDangling was set to "+command.isAllowDangling()
-                + ", and the 'to' node: "+toUid+" doesn't exist!");
+      
+      if (!verifiedToExists) {
+        boolean exists = nodeDao.existsByUid(toUid);
+        if (!exists) {
+          throw new LogPlayerException(
+            "While creating an edge, allowHanging was set to "+command.isAllowHanging()
+            + ", and the 'from' node: "+toUid+" doesn't exist!");
+        } 
       }
-    }
+    } //End !command.isAllowHanging()
     
     /*
      * Finally, store the edge

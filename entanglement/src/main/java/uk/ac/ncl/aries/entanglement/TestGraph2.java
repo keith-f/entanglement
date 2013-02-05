@@ -31,6 +31,7 @@ import java.util.Set;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
+import uk.ac.ncl.aries.entanglement.revlog.commands.EdgeIdentificationType;
 import uk.ac.ncl.aries.entanglement.revlog.commands.EdgeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 import uk.ac.ncl.aries.entanglement.revlog.commands.GraphOperation;
@@ -136,7 +137,7 @@ public class TestGraph2
       
       opList.add(new NodeModification(IdentificationType.NAME, MergePolicy.NONE, objUtil.serialize(nodeType1)));
       opList.add(new NodeModification(IdentificationType.NAME, MergePolicy.NONE, objUtil.serialize(nodeType2)));
-      opList.add(new EdgeModification(IdentificationType.NAME, MergePolicy.NONE, objUtil.serialize(edgeType1)));
+      opList.add(new EdgeModification(objUtil.serialize(edgeType1)));
 //      opList.add(new CreateNode2IfNotExistsByName(jsonSer, nodeType1));
 //      opList.add(new CreateNode2IfNotExistsByName(jsonSer, nodeType2));
 //      opList.add(new CreateEdge2BetweenNamedNodes(jsonSer, edgeType1, nodeType1.getName(), nodeType2.getName()));
