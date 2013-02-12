@@ -17,42 +17,16 @@
 
 package uk.ac.ncl.aries.entanglement.revlog.commands;
 
-import com.mongodb.BasicDBObject;
-import java.util.logging.Logger;
-
 /**
  *
  * @author Keith Flanagan
  */
-public class CreateNodeIfNotExists
-    extends GraphOperation
+public enum EdgeIdentificationType
 {
-  private static final Logger logger = 
-      Logger.getLogger(CreateNodeIfNotExists.class.getName());
+  UID,
+  NAME,
   
-  //private Node2 node;
-  private BasicDBObject node;
-  
-  public CreateNodeIfNotExists()
-  {
-  }
-
-  public CreateNodeIfNotExists(BasicDBObject node)
-  {
-    this.node = node;
-  }
-
-  @Override
-  public String toString() {
-    return "CreateNodeIfNotExists{" + "node=" + node + '}';
-  }
-
-  public BasicDBObject getNode() {
-    return node;
-  }
-
-  public void setNode(BasicDBObject node) {
-    this.node = node;
-  }
-
+//  EDGE_TYPE_CONNECTED_VIA_NODE_UIDS,
+//  EDGE_TYPE_CONNECTED_VIA_NODE_NAMES;
+ 
 }

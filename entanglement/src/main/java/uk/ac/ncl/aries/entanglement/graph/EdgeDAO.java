@@ -39,6 +39,8 @@ public interface EdgeDAO
   public static final String FIELD_FROM_NODE_NAME = "fromName";
   public static final String FIELD_TO_NODE_NAME = "toName";
   
+  public static final String FIELD_HANGING = "hanging";
+  
   public DBCollection getNodeCol();
   
   
@@ -52,6 +54,20 @@ public interface EdgeDAO
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
           String fromNodeUid, String toNodeUid)
+          throws GraphModelException;
+  
+  /**
+   * Given a 'from' node and a 'to' node, returns an iterator over all the 
+   * edges of type <code>edgeType<code> between those nodes.
+   * @param edgeType the type of edge to return
+   * @param fromNodeUid the UID of the 'from' node.
+   * @param toNodeUid the UID of the 'to' node.
+   * @return an iterable set of edge instances with the specifed type that
+   * link the two specified nodes.
+   * @throws GraphModelException 
+   */
+  public Iterable<DBObject> iterateEdgesBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
           throws GraphModelException;
   
   /**
@@ -97,6 +113,10 @@ public interface EdgeDAO
           throws GraphModelException;
   
   public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
+          throws GraphModelException;
+  
+  public Long countEdgesOfTypeBetweenNodes(
+          String edgeType, String fromNodeUid, String toNodeUid)
           throws GraphModelException;
   
   

@@ -35,6 +35,15 @@ public class Edge<F extends Node, T extends Node>
   protected String toUid;
   protected String toType;
   
+  /**
+   * Indicates whether or not this edge might be a hanging edge.
+   * If true, indicates that this edge is <i>possibly</i> hanging (i.e., one or
+   * both of the associated nodes does not exist).
+   * If false, indicates that this edge is <i>definitely not</i> hanging; both
+   * associated nodes exist.
+   */
+  protected boolean hanging;
+  
   /*
    * Optional - we can specify named nodes here as well IN ADDITION TO UIDs.
    */
@@ -142,5 +151,12 @@ public class Edge<F extends Node, T extends Node>
   public void setToType(String toType) {
     this.toType = toType;
   }
-  
+
+  public boolean isHanging() {
+    return hanging;
+  }
+
+  public void setHanging(boolean hanging) {
+    this.hanging = hanging;
+  }
 }

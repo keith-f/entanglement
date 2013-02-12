@@ -26,37 +26,44 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class CreateEdge
+public class EdgeModification
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(CreateEdge.class.getName());
+      Logger.getLogger(EdgeModification.class.getName());
   
-  
+  private EdgeIdentificationType idType;
+  private MergePolicy mergePol;
   private BasicDBObject edge;
   
+  private boolean allowHanging;
  
 
-  public CreateEdge()
+  public EdgeModification()
   {
   }
   
-  public CreateEdge(BasicDBObject edge)
+  public EdgeModification(BasicDBObject edge)
   {
+    this.idType = EdgeIdentificationType.UID;
+    this.mergePol = MergePolicy.NONE;
     this.edge = edge;
+    this.allowHanging = false;
   }
   
-  public CreateEdge(DbObjectMarshaller marshaller,
-          String edgeUid, String fromNodeUid, String toNodeUid,
-          String fromNodeName, String toNodeName)
+  public EdgeModification(EdgeIdentificationType idType, MergePolicy mergePol, BasicDBObject edge)
   {
-    
+    this.idType = idType;
+    this.mergePol = mergePol;
+    this.edge = edge;
+    this.allowHanging = false;
   }
+  
   
   
   @Override
   public String toString() {
-    return "CreateEdge{" + "edge=" + edge + '}';
+    return "EdgeModification{" + "edge=" + edge + '}';
   }
 
   public BasicDBObject getEdge() {
@@ -65,6 +72,30 @@ public class CreateEdge
 
   public void setEdge(BasicDBObject edge) {
     this.edge = edge;
+  }
+
+  public EdgeIdentificationType getIdType() {
+    return idType;
+  }
+
+  public void setIdType(EdgeIdentificationType idType) {
+    this.idType = idType;
+  }
+
+  public MergePolicy getMergePol() {
+    return mergePol;
+  }
+
+  public void setMergePol(MergePolicy mergePol) {
+    this.mergePol = mergePol;
+  }
+
+  public boolean isAllowHanging() {
+    return allowHanging;
+  }
+
+  public void setAllowHanging(boolean allowHanging) {
+    this.allowHanging = allowHanging;
   }
 
 }

@@ -21,7 +21,7 @@ package uk.ac.ncl.aries.entanglement.revlog.commands;
  *
  * @author Keith Flanagan
  */
-public enum ModificationPolicy
+public enum IdentificationType
 {
   /**
    * Causes a new graph entity to be created only if no graph entity with the 
@@ -50,7 +50,7 @@ public enum ModificationPolicy
    * commands relating to a specific graph entity, or specify the same
    * UID/type/name with each command.</b>
    */
-  CREATE_OR_MODIFY_BY_UID,
+  UID,
 
   /**
    * Causes a new graph entity to be created only if no graph entity with the 
@@ -83,6 +83,6 @@ public enum ModificationPolicy
    * relating to a specific graph entity, or specify the same UID/type/name 
    * with each command.</b>
    */
-  CREATE_OR_MODIFY_BY_NAME,
+  NAME,
 
 }

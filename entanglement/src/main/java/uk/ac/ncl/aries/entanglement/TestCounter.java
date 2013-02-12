@@ -30,7 +30,7 @@ import uk.ac.ncl.aries.entanglement.revlog.Counter;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLog;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogDirectToMongoDbImpl;
 import uk.ac.ncl.aries.entanglement.revlog.RevisionLogException;
-import uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode;
+import uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification;
 
 /**
  *

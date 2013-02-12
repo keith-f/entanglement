@@ -18,6 +18,8 @@
 
 package uk.ac.ncl.aries.entanglement.player.spi;
 
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 import uk.ac.ncl.aries.entanglement.graph.EdgeDAO;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 import uk.ac.ncl.aries.entanglement.graph.NodeDAO;
@@ -31,6 +33,11 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 public class SetNamedNodePropertyPlayer
     extends AbstractLogItemPlayer
 {
+  @Override
+  public void initialise(ClassLoader cl, Mongo mongo, DB db)
+  {
+  }
+  
   @Override
   public String getSupportedLogItemType()
   {

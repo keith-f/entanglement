@@ -64,6 +64,11 @@ abstract public class AbstractGraphEntityDelegateDAO
   public void store(BasicDBObject entity) throws GraphModelException {
     delegate.store(entity);
   }
+  
+  @Override
+  public void update(BasicDBObject updated) throws GraphModelException {
+    delegate.update(updated);
+  }
 
   @Override
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue) throws GraphModelException {
@@ -81,12 +86,12 @@ abstract public class AbstractGraphEntityDelegateDAO
   }
 
   @Override
-  public DBObject getByUid(String uid) throws GraphModelException {
+  public BasicDBObject getByUid(String uid) throws GraphModelException {
     return delegate.getByUid(uid);
   }
 
   @Override
-  public DBObject getByName(String entityType, String entityName) throws GraphModelException {
+  public BasicDBObject getByName(String entityType, String entityName) throws GraphModelException {
     return delegate.getByName(entityType, entityName);
   }
 
@@ -101,7 +106,7 @@ abstract public class AbstractGraphEntityDelegateDAO
   }
 
   @Override
-  public DBObject deleteByUid(String uid) throws GraphModelException {
+  public BasicDBObject deleteByUid(String uid) throws GraphModelException {
     return delegate.deleteByUid(uid);
   }
 

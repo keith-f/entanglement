@@ -1,9 +1,9 @@
-uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdge
-uk.ac.ncl.aries.entanglement.revlog.commands.CreateEdgeIfNotExists
-uk.ac.ncl.aries.entanglement.revlog.commands.CreateNode
-uk.ac.ncl.aries.entanglement.revlog.commands.CreateNodeIfNotExists
+uk.ac.ncl.aries.entanglement.revlog.commands.BranchImport
 uk.ac.ncl.aries.entanglement.revlog.commands.DeleteEdgeByUid
 uk.ac.ncl.aries.entanglement.revlog.commands.DeleteNodeByUid
+uk.ac.ncl.aries.entanglement.revlog.commands.EdgeModification
+uk.ac.ncl.aries.entanglement.revlog.commands.FixHangingEdge
+uk.ac.ncl.aries.entanglement.revlog.commands.NodeModification
 uk.ac.ncl.aries.entanglement.revlog.commands.SetNamedNodeProperty
 uk.ac.ncl.aries.entanglement.revlog.commands.SetNodeProperty
 uk.ac.ncl.aries.entanglement.revlog.commands.TransactionBegin
