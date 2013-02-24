@@ -62,6 +62,9 @@ import uk.ac.ncl.aries.entanglement.revlog.commands.TransactionRollback;
 import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItemContainer;
 import uk.ac.ncl.aries.entanglement.shell.gdfexport.GraphToGDFExporter;
 import uk.ac.ncl.aries.entanglement.shell.navigator.NavigatorShell;
+import uk.ac.ncl.aries.entanglement.util.GraphConnection;
+import uk.ac.ncl.aries.entanglement.util.GraphConnectionFactory;
+import uk.ac.ncl.aries.entanglement.util.GraphConnectionFactoryException;
 
 /**
  * A simple interactive command line shell for MongoGraph. This program may be
@@ -162,37 +165,25 @@ public class EntanglementShell
   }
   
   @Command
-  public void reconnect() throws RevisionLogException, MongoDbFactoryException {
+  public void reconnect() throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
     String hostname = state.getProperties().get(PROP_HOSTNAME);
     String database = state.getProperties().get(PROP_DB_NAME);
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
     String insertMode = state.getProperties().get(PROP_INSERT_MODE);
-    
-    logger.info("Connecting to: "+hostname+"/"+database+", graph: "+graphName+"/"+branchName);
-    
-    MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
-    mongo = dbFactory.createMongoConnection();
-    db = mongo.getDB(database);
-    
-    revLog = new RevisionLogDirectToMongoDbImpl(classLoader, mongo, db);
-    
-    GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, branchName);
-    DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-    DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol, edgeCol);
-    edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, nodeCol, edgeCol);
-    
-    if (insertMode != null && insertMode.equals(InsertMode.INSERT_CONSISTENCY.name())) {
-      System.out.println("Setting DAO insert mode to: "+insertMode);
-      nodeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
-      edgeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
-    } else if (insertMode != null && insertMode.equals(InsertMode.INSERT_PERFORMANCE.name())) {
-      System.out.println("Setting DAO insert mode to: "+insertMode);
-      nodeDao.setInsertModeHint(InsertMode.INSERT_PERFORMANCE);
-      edgeDao.setInsertModeHint(InsertMode.INSERT_PERFORMANCE);
+
+    GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
+    if (insertMode != null) {
+      factory.setInsertMode(InsertMode.valueOf(insertMode));
     }
-    
+    GraphConnection connection = factory.connect(graphName, branchName);
+
+    mongo = connection.getMongo();
+    db = connection.getDb();
+    revLog = connection.getRevisionLog();
+    nodeDao = connection.getNodeDao();
+    edgeDao = connection.getEdgeDao();
+
     logger.info("Connected!");
   }
   
@@ -419,15 +410,15 @@ public class EntanglementShell
       System.out.println("  * "+uid);
     }
   }
-  @Command
-  public void listNodeNames(String type, int offset, int limit) throws GraphModelException
-  {
-    Iterable<String> nameItr = nodeDao.iterateNamesByType(type, offset, limit);
-    System.out.println("Names of nodes with type: "+type);
-    for (String name : nameItr) {
-      System.out.println("  * "+name);
-    }
-  }
+//  @Command
+//  public void listNodeNames(String type, int offset, int limit) throws GraphModelException
+//  {
+//    Iterable<String> nameItr = nodeDao.iterateNamesByType(type, offset, limit);
+//    System.out.println("Names of nodes with type: "+type);
+//    for (String name : nameItr) {
+//      System.out.println("  * "+name);
+//    }
+//  }
   
   @Command
   public void countNodes() throws GraphModelException
