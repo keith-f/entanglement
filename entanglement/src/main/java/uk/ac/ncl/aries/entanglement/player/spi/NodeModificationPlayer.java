@@ -19,14 +19,16 @@
 package uk.ac.ncl.aries.entanglement.player.spi;
 
 
+import com.mongodb.BasicDBList;
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_UID;
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_TYPE;
-import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAME;
+import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAMES;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.util.Hash;
 import com.torrenttamer.util.UidGenerator;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -56,8 +58,7 @@ public class NodeModificationPlayer
           Logger.getLogger(NodeModificationPlayer.class.getName());
   
   private static final Set<String> NODE_SPECIAL_FIELDS = 
-    new HashSet<>(Arrays.asList(new String[]{ FIELD_UID, FIELD_TYPE, FIELD_NAME}));
- 
+    new HashSet<>(Arrays.asList(new String[]{ FIELD_UID, FIELD_TYPE }));
   
   
   /*
@@ -112,11 +113,7 @@ public class NodeModificationPlayer
   
   /**
    * Called if the graph operation uses the UID field for identification.
-   * 
-   * @param nodeDao
-   * @param edgeDao
-   * @param item
-   * @param cn 
+   *
    */
   private void createOrModifyByUid()
           throws LogPlayerException
@@ -169,17 +166,20 @@ public class NodeModificationPlayer
   {
     try {
       String entityType = serializedNode.getString(FIELD_TYPE);
-      String entityName = serializedNode.getString(FIELD_NAME);
-      if (entityType == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no entity type set. Item was: " + item);
-      }
-      if (entityName == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no entity name set. Item was: " + item);
-      }
+//      String entityName = serializedNode.getString(FIELD_NAME);
+      BasicDBList entityNamesDbList = (BasicDBList) serializedNode.get(FIELD_NAMES);
 
-      if (!nodeDao.existsByName(entityType, entityName)) {
+      if (entityType == null) {
+        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity type set. Item was: " + item);
+      }
+      if (entityNamesDbList == null) {
+        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity name set. Item was: " + item);
+      }
+      
+      Set<String> entityNames = new HashSet(entityNamesDbList);
+
+      //if (!nodeDao.existsByName(entityType, entityName)) {
+      if (!nodeDao.existsByAnyName(entityType, entityNames)) {
         // Create a new node
         createNewNode();
       } else {
@@ -187,32 +187,27 @@ public class NodeModificationPlayer
         BasicDBObject existing;
         switch(command.getMergePol()) {
           case NONE:
-            logger.log(Level.INFO, "Ignoring existing node: {0}, {1}", new Object[]{entityType, entityName});
+            logger.log(Level.INFO, "Ignoring existing node: {0} with name(s) {1}", new Object[]{entityType, entityNames});
             break;
           case ERR:
-            throw new LogPlayerException("A node with Type: "+entityType
-                    +" and Name: "+entityName+" already exists.");
+            throw new LogPlayerException("A node with Type: "+entityType+" and name(s): "+entityNames+" already exists.");
           case APPEND_NEW__LEAVE_EXISTING:
-            existing = nodeDao.getByName(
-                    serializedNode.getString(FIELD_TYPE), 
-                    serializedNode.getString(FIELD_NAME));
+            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
+//                    serializedNode.getString(FIELD_NAME));
             doAppendNewLeaveExisting(existing);
             break;
           case APPEND_NEW__OVERWRITE_EXSITING:
-            existing = nodeDao.getByName(
-                    serializedNode.getString(FIELD_TYPE), 
-                    serializedNode.getString(FIELD_NAME));
+            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
+//                    serializedNode.getString(FIELD_NAME));
             doAppendNewOverwriteExisting(existing);
             break;
           case OVERWRITE_ALL:
-            existing = nodeDao.getByName(
-                    serializedNode.getString(FIELD_TYPE), 
-                    serializedNode.getString(FIELD_NAME));
+            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
+//                    serializedNode.getString(FIELD_NAME));
             doOverwriteAll(existing);
             break;
           default:
-            throw new LogPlayerException(
-                    "Unsupported merge policy type: "+command.getMergePol());
+            throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
         }
       }
     }
@@ -253,8 +248,8 @@ public class NodeModificationPlayer
   private void doAppendNewLeaveExisting(BasicDBObject existing)
           throws GraphModelException
   {
-//    BasicDBObject existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing node
 
     for (String key : serializedNode.keySet()) {
       if (NODE_SPECIAL_FIELDS.contains(key)) {
@@ -277,6 +272,7 @@ public class NodeModificationPlayer
           throws GraphModelException
   {
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing node
 
     for (String key : serializedNode.keySet()) {
       if (NODE_SPECIAL_FIELDS.contains(key)) {
@@ -296,20 +292,36 @@ public class NodeModificationPlayer
           throws GraphModelException
   {
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing node
     
     /*
      * In this case, we can simply use the new DBObject from the command.
      * We just need to ensure that the UID/type/name properties are carried 
      * over from the existing object.
      */
-//    serializedNode.put(FIELD_UID, existing.getString(FIELD_UID));
-//    serializedNode.put(FIELD_TYPE, existing.getString(FIELD_TYPE));
-//    serializedNode.put(FIELD_NAME, existing.getString(FIELD_NAME));
     for (String fieldName : NODE_SPECIAL_FIELDS) {
-      serializedNode.put(fieldName, existing.getString(fieldName));
+      serializedNode.put(fieldName, existing.get(fieldName));
     }
+    serializedNode.put(FIELD_NAMES, existing.get(FIELD_NAMES)); //Copy merged name list
 
     nodeDao.update(serializedNode);
+  }
+
+  private void _mergeNames(BasicDBObject existing) {
+    // A MongoDB list containing the existing (known) names for this entity
+    BasicDBList namesDbList = (BasicDBList) existing.get(FIELD_NAMES);
+    // A list containing (potentially) new names for this entity
+    BasicDBList newEntityNamesDbList = (BasicDBList) serializedNode.get(FIELD_NAMES);
+
+    //Not elegant, but there doesn't appear to be a better way...
+    for (Object newName : newEntityNamesDbList) {
+      if (!namesDbList.contains(newName)) {
+        namesDbList.add(newName);
+      }
+    }
+
+    // Save merged list
+    existing.put(FIELD_NAMES, namesDbList);
   }
 
   private void _checkAllImmutableFieldsAreEqual(BasicDBObject existing) throws GraphModelException
@@ -327,7 +339,7 @@ public class NodeModificationPlayer
       String newFieldVal = serializedNode.getString(fieldName);
       if (!existingFieldVal.equals(newFieldVal)) {
         throw new GraphModelException(
-                "You cannot update the immutbable field: "+fieldName+": "
+                "You cannot update the immutable field: "+fieldName+": "
                 +existingFieldVal+" != "+newFieldVal);
       }
     }

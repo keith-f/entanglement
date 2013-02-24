@@ -18,6 +18,10 @@
 package uk.ac.ncl.aries.entanglement.graph.data;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -29,17 +33,23 @@ public class Node
        implements Serializable
 { 
   protected String uid;
-  protected String name;
+  protected Set<String> names;
   protected String type;
   
   public Node()
   {
+    names = new HashSet<>();
     this.type = getClass().getSimpleName();
   }
 
   @Override
   public String toString() {
-    return "Node{" + "uid=" + uid + ", name=" + name + ", type=" + type + '}';
+    return "Node{" + "uid=" + uid + ", names=" + names + ", type=" + type + '}';
+  }
+
+  public void addNames(String... newNames)
+  {
+    names.addAll(Arrays.asList(newNames));
   }
 
   public String getUid() {
@@ -50,12 +60,12 @@ public class Node
     this.uid = uid;
   }
 
-  public String getName() {
-    return name;
+  public Set<String> getNames() {
+    return names;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setNames(Set<String> names) {
+    this.names = names;
   }
 
   public String getType() {

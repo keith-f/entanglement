@@ -21,7 +21,10 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This is useful if you already have a NodeDAO or EdgeDAO in your application 
@@ -36,7 +39,7 @@ import java.util.List;
  * 
  * @author Keith Flanagan
  */
-abstract public class AbstractGraphEntityDelegateDAO
+ abstract public class AbstractGraphEntityDelegateDAO
     implements GraphEntityDAO
 {
   private final GraphEntityDAO delegate;
@@ -96,6 +99,11 @@ abstract public class AbstractGraphEntityDelegateDAO
   }
 
   @Override
+  public BasicDBObject getByAnyName(String type, Set<String> entityNames) throws GraphModelException {
+    return delegate.getByAnyName(type, entityNames);
+  }
+
+  @Override
   public boolean existsByUid(String uniqueId) throws GraphModelException {
     return delegate.existsByUid(uniqueId);
   }
@@ -103,6 +111,11 @@ abstract public class AbstractGraphEntityDelegateDAO
   @Override
   public boolean existsByName(String entityType, String entityName) throws GraphModelException {
     return delegate.existsByName(entityType, entityName);
+  }
+
+  @Override
+  public boolean existsByAnyName(String entityType, Collection<String> entityNames) throws GraphModelException {
+    return delegate.existsByAnyName(entityType, entityNames);
   }
 
   @Override
@@ -130,10 +143,10 @@ abstract public class AbstractGraphEntityDelegateDAO
     return delegate.iterateIdsByType(typeName, offset, limit);
   }
 
-  @Override
-  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit) throws GraphModelException {
-    return delegate.iterateNamesByType(typeName, offset, limit);
-  }
+//  @Override
+//  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit) throws GraphModelException {
+//    return delegate.iterateNamesByType(typeName, offset, limit);
+//  }
 
   @Override
   public long countByType(String typeName) throws GraphModelException {

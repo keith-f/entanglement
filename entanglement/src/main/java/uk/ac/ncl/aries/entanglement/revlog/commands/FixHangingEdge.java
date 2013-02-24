@@ -47,11 +47,9 @@ public class FixHangingEdge
   
   protected String fromUid;
   protected String fromType;
-  protected String fromName;
   
   protected String toUid;
   protected String toType;
-  protected String toName;
   
   public FixHangingEdge()
   {
@@ -95,22 +93,6 @@ public class FixHangingEdge
 
   public void setToType(String toType) {
     this.toType = toType;
-  }
-
-  public String getFromName() {
-    return fromName;
-  }
-
-  public void setFromName(String fromName) {
-    this.fromName = fromName;
-  }
-
-  public String getToName() {
-    return toName;
-  }
-
-  public void setToName(String toName) {
-    this.toName = toName;
   }
 
   public boolean isErrOnMissingEdge() {

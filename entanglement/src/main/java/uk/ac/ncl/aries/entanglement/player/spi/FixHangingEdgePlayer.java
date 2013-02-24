@@ -19,7 +19,6 @@ package uk.ac.ncl.aries.entanglement.player.spi;
 
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_UID;
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_TYPE;
-import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAME;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -42,15 +41,7 @@ import uk.ac.ncl.aries.entanglement.revlog.data.RevisionItem;
 public class FixHangingEdgePlayer 
     extends AbstractLogItemPlayer
 {
-  private static final Logger logger =
-          Logger.getLogger(FixHangingEdgePlayer.class.getName());
-  
-  private static final Set<String> EDGE_SPECIAL_FIELDS = 
-    new HashSet<>(Arrays.asList(new String[]{ 
-    FIELD_UID, FIELD_TYPE, FIELD_NAME,
-    EdgeDAO.FIELD_FROM_NODE_NAME, EdgeDAO.FIELD_FROM_NODE_TYPE, EdgeDAO.FIELD_FROM_NODE_UID,
-    EdgeDAO.FIELD_TO_NODE_NAME, EdgeDAO.FIELD_TO_NODE_TYPE, EdgeDAO.FIELD_TO_NODE_UID
-  }));
+  private static final Logger logger = Logger.getLogger(FixHangingEdgePlayer.class.getName());
   
   @Override
   public void initialise(ClassLoader cl, Mongo mongo, DB db)
@@ -74,8 +65,7 @@ public class FixHangingEdgePlayer
       if (edge == null) {
         if (command.isErrOnMissingEdge()) {
           throw new LogPlayerException(
-                  "Attempt to fix hanging edge: "+command.getEdgeUid() 
-                  + ", but no such edge exists.");
+                  "Attempt to fix hanging edge: "+command.getEdgeUid() + ", but no such edge exists.");
         } else {
           return; //Ignore missing edges
         }
@@ -83,21 +73,30 @@ public class FixHangingEdgePlayer
       
       boolean hanging = edge.getBoolean(EdgeDAO.FIELD_HANGING);
       if (!hanging) {
-        throw new LogPlayerException(
-            "Attempt to fix hanging edge: "+command.getEdgeUid() 
-            + ", however, the edge 'hanging' status was: "+hanging);
+        logger.info("Ignoring attempt to fix hanging edge: "+command.getEdgeUid()
+            + " because actual 'hanging' status was: "+hanging);
+        return;
       }
-      
-      edge.put(EdgeDAO.FIELD_FROM_NODE_NAME, command.getFromName());
+
+      if (command.getFromType() == null || command.getFromUid() == null ||
+          command.getToType() == null || command.getToUid() == null) {
+        throw new LogPlayerException("One or more of the required fields were not set");
+      }
+
       edge.put(EdgeDAO.FIELD_FROM_NODE_TYPE, command.getFromType());
       edge.put(EdgeDAO.FIELD_FROM_NODE_UID, command.getFromUid());
 
-      edge.put(EdgeDAO.FIELD_TO_NODE_NAME, command.getToName());
       edge.put(EdgeDAO.FIELD_TO_NODE_TYPE, command.getToType());
       edge.put(EdgeDAO.FIELD_TO_NODE_UID, command.getToUid());
 
+      edge.put(EdgeDAO.FIELD_FROM_NODE_TYPE, command.getFromType());
+      edge.put(EdgeDAO.FIELD_FROM_NODE_UID, command.getFromUid());
+
       hanging = checkHangingStatus(nodeDao, edge);
-      logger.info("Updated hanging status: "+hanging);
+      logger.info("Still hanging: "+hanging);
+
+      // Update edge in all cases, since we might have added UIDs etc that will be valid in future
+      edgeDao.update(edge);
       
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
@@ -106,61 +105,23 @@ public class FixHangingEdgePlayer
   
   private boolean checkHangingStatus(NodeDAO nodeDao, BasicDBObject serializedEdge) throws GraphModelException
   {
-    //Check that both node's type names are set
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_TYPE) ||
-        !serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_TYPE)) {
+    // Check that the from/to node UID fields are set
+    String fromUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
+    if (fromUid == null) {
       return true;
     }
-    
-    //If no 'from' node UID is specified, then locate it from the name field
-    boolean verifiedFromExists = false;
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_UID)) {
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_NAME)) {
-        return true;
-      }
-      String nodeType = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_TYPE);
-      String nodeName = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_NAME);
-      String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-      if (nodeUid == null) {
-        return true; //This graph node doesn't exist
-      }
-      serializedEdge.put(EdgeDAO.FIELD_FROM_NODE_UID, nodeUid);
-      verifiedFromExists = true;
+
+    String toUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
+    if (toUid == null) {
+      return true;
     }
 
-    //If no 'to' node UID is specified, then locate it from the name field
-    boolean verifiedToExists = false;
-    if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_UID)) {
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_NAME)) {
-        return true;
-      }
-      String nodeType = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_TYPE);
-      String nodeName = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_NAME);
-      String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-      if (nodeUid == null) {
-        return true; //This graph node doesn't exist
-      }
-      serializedEdge.put(EdgeDAO.FIELD_TO_NODE_UID, nodeUid);
-      verifiedToExists = true;
+    // Check that from/to nodes exist
+    if (!nodeDao.existsByUid(fromUid)) {
+      return true;
     }
-    
-    /*
-     * Check that the linked nodes exist
-     */
-    if (!verifiedFromExists) {
-      String fromUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
-      boolean exists = nodeDao.existsByUid(fromUid);
-      if (!exists) {
-        return true;
-      }
-    }
-    
-    if (!verifiedToExists) {
-      String toUid = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_UID);
-      boolean exists = nodeDao.existsByUid(toUid);
-      if (!exists) {
-        return true;
-      }
+    if (!nodeDao.existsByUid(toUid)) {
+      return true;
     }
     
     serializedEdge.put(EdgeDAO.FIELD_HANGING, false);
