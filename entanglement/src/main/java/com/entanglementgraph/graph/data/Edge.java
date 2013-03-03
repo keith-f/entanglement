@@ -19,6 +19,7 @@ package com.entanglementgraph.graph.data;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -79,6 +80,16 @@ public class Edge<F extends Node, T extends Node>
   public String toString() {
     return "Edge{" + "uid=" + uid + ", type=" + type + ", names=" + names
         + ", fromUid=" + fromUid + ", toUid=" + toUid +  + '}';
+  }
+
+  public void addName(String name)
+  {
+    names.add(name);
+  }
+
+  public void addNames(Collection<String> newNames)
+  {
+    names.addAll(newNames);
   }
 
   public void addNames(String... newNames)

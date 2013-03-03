@@ -19,6 +19,7 @@ package com.entanglementgraph.graph.data;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +46,16 @@ public class Node
   @Override
   public String toString() {
     return "Node{" + "uid=" + uid + ", names=" + names + ", type=" + type + '}';
+  }
+
+  public void addName(String name)
+  {
+    names.add(name);
+  }
+
+  public void addNames(Collection<String> newNames)
+  {
+    names.addAll(newNames);
   }
 
   public void addNames(String... newNames)
