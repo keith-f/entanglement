@@ -20,8 +20,9 @@ package uk.ac.ncl.aries.entanglement.player.spi;
 
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_UID;
 import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_TYPE;
-import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAME;
+import static uk.ac.ncl.aries.entanglement.graph.AbstractGraphEntityDAO.FIELD_NAMES;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -52,9 +53,9 @@ public class EdgeModificationPlayer
   
   private static final Set<String> EDGE_SPECIAL_FIELDS = 
     new HashSet<>(Arrays.asList(new String[]{ 
-    FIELD_UID, FIELD_TYPE, FIELD_NAME,
-    EdgeDAO.FIELD_FROM_NODE_NAME, EdgeDAO.FIELD_FROM_NODE_TYPE, EdgeDAO.FIELD_FROM_NODE_UID,
-    EdgeDAO.FIELD_TO_NODE_NAME, EdgeDAO.FIELD_TO_NODE_TYPE, EdgeDAO.FIELD_TO_NODE_UID
+    FIELD_UID, FIELD_TYPE, //FIELD_NAME,
+    EdgeDAO.FIELD_FROM_NODE_TYPE, EdgeDAO.FIELD_FROM_NODE_UID,
+    EdgeDAO.FIELD_TO_NODE_TYPE, EdgeDAO.FIELD_TO_NODE_UID
   }));
   
   /*
@@ -167,17 +168,19 @@ public class EdgeModificationPlayer
   {
     try {
       String entityType = serializedEdge.getString(FIELD_TYPE);
-      String entityName = serializedEdge.getString(FIELD_NAME);
+//      String entityName = serializedEdge.getString(FIELD_NAME);
+      BasicDBList entityNamesDbList = (BasicDBList) serializedEdge.get(FIELD_NAMES);
+
       if (entityType == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no entity type set. Item was: " + item);
+        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity type set. Item was: " + item);
       }
-      if (entityName == null) {
-        throw new LogPlayerException(RevisionItem.class.getName()
-                + " had no entity name set. Item was: " + item);
+      if (entityNamesDbList == null) {
+        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity name set. Item was: " + item);
       }
 
-      if (!edgeDao.existsByName(entityType, entityName)) {
+      Set<String> entityNames = new HashSet(entityNamesDbList);
+
+      if (!edgeDao.existsByAnyName(entityType, entityNames)) {
         // Create a new edge
         createNewEdge();
       } else {
@@ -185,27 +188,21 @@ public class EdgeModificationPlayer
         BasicDBObject existing;
         switch(command.getMergePol()) {
           case NONE:
-            logger.log(Level.INFO, "Ignoring existing edge: {0}, {1}", new Object[]{entityType, entityName});
+            logger.log(Level.INFO, "Ignoring existing edge: {0}, with name(s) {1}", new Object[]{entityType, entityNames});
             break;
           case ERR:
             throw new LogPlayerException("An edge with Type: "+entityType
-                    +" and Name: "+entityName+" already exists.");
+                    +" and Name(s): "+entityNames+" already exists.");
           case APPEND_NEW__LEAVE_EXISTING:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
+            existing = edgeDao.getByAnyName(serializedEdge.getString(FIELD_TYPE), entityNames);
             doAppendNewLeaveExisting(existing);
             break;
           case APPEND_NEW__OVERWRITE_EXSITING:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
+            existing = edgeDao.getByAnyName(serializedEdge.getString(FIELD_TYPE), entityNames);
             doAppendNewOverwriteExisting(existing);
             break;
           case OVERWRITE_ALL:
-            existing = edgeDao.getByName(
-                    serializedEdge.getString(FIELD_TYPE), 
-                    serializedEdge.getString(FIELD_NAME));
+            existing = edgeDao.getByAnyName(serializedEdge.getString(FIELD_TYPE), entityNames);
             doOverwriteAll(existing);
             break;
           default:
@@ -240,22 +237,11 @@ public class EdgeModificationPlayer
     }
     
     /*
-     * Edges MUST have a UID, and a type.
-     * If the edge is not allowed to be 'hanging', then a 'from node uid', and a 
-     * 'to node uid', as well as a 'from node type' and a 'to node type' are
-     * required. Edges may optionally have from/to node names, if those nodes 
-     * have well known names. 
-     * 
-     * However, the DBObject that we receive in the <code>RevisionItem<code>
-     * here may not have one or more of these required items set. For example,
-     * if the process that created the RevisionItem knows only the node name(s),
-     * and not their IDs, then it won't have specified the IDs. 
-     * Another example is the edge unique ID - the caller potentially doesn't 
-     * care about what UID is assigned to the edge, and therefore for efficiency
-     * reasons, won't specify one.
-     * 
-     * Here, we need to set any required values that don't currently have values
-     * specified for them by the incoming RevisionItem.
+     * Edges MUST have a UID, and a type, and must also specify to/from node UIDs (unless the edge is specified as to
+     * be a 'hanging' edge.
+     *
+     * In the case of a hanging edge, the to/from node UIDs my be either be omitted, or point to a non-existent node.
+     *
      */
     
     if (command.isAllowHanging()) {
@@ -273,69 +259,31 @@ public class EdgeModificationPlayer
                 + EdgeDAO.FIELD_TO_NODE_TYPE + " were not set.");
       }
 
-      //If no 'from' node UID is specified, then locate it from the name field
-      boolean verifiedFromExists = false;
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_UID)) {
-        if (!serializedEdge.containsField(EdgeDAO.FIELD_FROM_NODE_NAME)) {
-          throw new LogPlayerException("Can't play operation: "+item.getOp()
-                  + ". You must set at least at least one of these: " 
-                  + EdgeDAO.FIELD_FROM_NODE_UID +", " + EdgeDAO.FIELD_FROM_NODE_NAME);
-        }
-        String nodeType = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_TYPE);
-        String nodeName = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_NAME);
-        String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-        if (nodeUid == null) {
-          throw new LogPlayerException(
+      // Check that the from/to node UID fields are set
+      String fromUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
+      if (fromUid == null) {
+        throw new LogPlayerException(
             "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-            + ", and the 'from' node: "+nodeUid+" doesn't exist!");
-        }
-        verifiedFromExists = true;
-        serializedEdge.put(EdgeDAO.FIELD_FROM_NODE_UID, nodeUid);
+                + ", and the 'from' node UID was NULL.");
       }
 
-      //If no 'to' node UID is specified, then locate it from the name field
-      boolean verifiedToExists = false;
-      if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_UID)) {
-        if (!serializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_NAME)) {
-          throw new LogPlayerException("Can't play operation: "+item.getOp()
-                  + ". You must set at least at least one of these: " 
-                  + EdgeDAO.FIELD_TO_NODE_UID +", " + EdgeDAO.FIELD_TO_NODE_NAME);
-        }
-        String nodeType = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_TYPE);
-        String nodeName = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_NAME);
-        String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
-        if (nodeUid == null) {
-          throw new LogPlayerException(
+      String toUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
+      if (toUid == null) {
+        throw new LogPlayerException(
             "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-            + ", and the 'from' node: "+nodeUid+" doesn't exist!");
-        }
-        verifiedToExists = true;
-        serializedEdge.put(EdgeDAO.FIELD_TO_NODE_UID, nodeUid);
+                + ", and the 'to' node UID was NULL.");
       }
-    
-      /*
-       * Check that the linked nodes exist before creating the edge (if we 
-       * haven't already verified that the node(s) exist in the code above)
-       */
-      String fromUid = serializedEdge.getString(EdgeDAO.FIELD_FROM_NODE_UID);
-      String toUid = serializedEdge.getString(EdgeDAO.FIELD_TO_NODE_UID);
-      
-      if (!verifiedFromExists) {
-        boolean exists = nodeDao.existsByUid(fromUid);
-        if (!exists) {
-          throw new LogPlayerException(
+
+      // Check that from/to nodes exist
+      if (!nodeDao.existsByUid(fromUid)) {
+        throw new LogPlayerException(
             "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-            + ", and the 'from' node: "+fromUid+" doesn't exist!");
-        } 
+                + ", and the 'from' node: "+fromUid+" doesn't exist!");
       }
-      
-      if (!verifiedToExists) {
-        boolean exists = nodeDao.existsByUid(toUid);
-        if (!exists) {
-          throw new LogPlayerException(
+      if (!nodeDao.existsByUid(toUid)) {
+        throw new LogPlayerException(
             "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-            + ", and the 'from' node: "+toUid+" doesn't exist!");
-        } 
+                + ", and the 'from' node: "+toUid+" doesn't exist!");
       }
     } //End !command.isAllowHanging()
     
@@ -356,6 +304,7 @@ public class EdgeModificationPlayer
           throws GraphModelException
   {
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing edge
 
     for (String key : serializedEdge.keySet()) {
       if (EDGE_SPECIAL_FIELDS.contains(key)) {
@@ -378,6 +327,7 @@ public class EdgeModificationPlayer
           throws GraphModelException
   {
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing edge
 
     for (String key : serializedEdge.keySet()) {
       if (EDGE_SPECIAL_FIELDS.contains(key)) {
@@ -397,6 +347,7 @@ public class EdgeModificationPlayer
           throws GraphModelException
   {
     _checkAllImmutableFieldsAreEqual(existing);
+    _mergeNames(existing); // Allow new names to be added to an existing edge
     
     /*
      * In this case, we can simply use the new DBObject from the command.
@@ -406,10 +357,27 @@ public class EdgeModificationPlayer
     for (String fieldName : EDGE_SPECIAL_FIELDS) {
       serializedEdge.put(fieldName, existing.getString(fieldName));
     }
+    serializedEdge.put(FIELD_NAMES, existing.get(FIELD_NAMES)); //Copy merged name list
 
     edgeDao.update(serializedEdge);
   }
 
+  private void _mergeNames(BasicDBObject existing) {
+    // A MongoDB list containing the existing (known) names for this entity
+    BasicDBList namesDbList = (BasicDBList) existing.get(FIELD_NAMES);
+    // A list containing (potentially) new names for this entity
+    BasicDBList newEntityNamesDbList = (BasicDBList) serializedEdge.get(FIELD_NAMES);
+
+    //Not elegant, but there doesn't appear to be a better way...
+    for (Object newName : newEntityNamesDbList) {
+      if (!namesDbList.contains(newName)) {
+        namesDbList.add(newName);
+      }
+    }
+
+    // Save merged list
+    existing.put(FIELD_NAMES, namesDbList);
+  }
   
   private void _checkAllImmutableFieldsAreEqual(BasicDBObject existing) throws GraphModelException
   {

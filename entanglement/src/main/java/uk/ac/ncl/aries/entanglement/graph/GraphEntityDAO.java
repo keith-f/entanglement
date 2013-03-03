@@ -21,7 +21,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 
 /**
@@ -32,7 +34,7 @@ import uk.ac.ncl.aries.entanglement.player.LogPlayerException;
 public interface GraphEntityDAO 
 {
   public static final String FIELD_UID = "uid";
-  public static final String FIELD_NAME = "name";
+  public static final String FIELD_NAMES = "names";
   public static final String FIELD_TYPE = "type";
   
   
@@ -110,7 +112,7 @@ public interface GraphEntityDAO
   /**
    * Returns an instance by its unique ID. If no entity with the specified ID
    * exists, then null is returned.
-   * @param nodeUid the ID of the entity to return
+   * @param uid the ID of the entity to return
    * @return the entity with the unique ID, or null if no such entity exists.
    * @throws LogPlayerException 
    */
@@ -120,10 +122,52 @@ public interface GraphEntityDAO
   public BasicDBObject getByName(String entityType, String entityName)
       throws GraphModelException;
   
+  /**
+   * Returns the the graph entity by specified by the type <code>entityType<code>
+   * and one (or more) of the names <code>entityNames<code>. This method is 
+   * intended for the case where you wish to find a graph entity but are not sure
+   * which 'well known name' it is known by. Therefore, all names specified in
+   * <code>entityNames<code> should refer to the <b>same</b> entity.
+   * The result is undefined if you populate <code>entityNames<code> with names
+   * of >1 entity.
+   * 
+   * @param type the type name of the entity to find.
+   * @param entityNames one or more alternative names for a <b>single</b> graph
+   * entity.
+   * @return the specified graph entity if a match to <code>entityType</code>
+   * and at least one element of <code>entityNames</code> was found. Returns
+   * <code>null</code> if no match was found. The result is undefined if you 
+   * specify names in <code>entityNames</code> that are from multiple graph 
+   * entities.
+   * 
+   * @throws GraphModelException 
+   */
+  public BasicDBObject getByAnyName(String type, Set<String> entityNames)
+      throws GraphModelException;
+  
   public boolean existsByUid(String uniqueId)
       throws GraphModelException;
   
+  /**
+   * Returns true if an entity of type <code>entityType<code> exists with the
+   * specified <code>entityName<code>.
+   * @param entityType
+   * @param entityName
+   * @return
+   * @throws GraphModelException 
+   */
   public boolean existsByName(String entityType, String entityName)
+      throws GraphModelException;
+  
+  /**
+   * Returns true if an entity of type <code>entityType<code> exists with any 
+   * of the specified <code>entityNames<code>.
+   * @param entityType
+   * @param entityNames
+   * @return
+   * @throws GraphModelException 
+   */
+  public boolean existsByAnyName(String entityType, Collection<String> entityNames)
       throws GraphModelException;
   
   public BasicDBObject deleteByUid(String uid)
@@ -144,8 +188,8 @@ public interface GraphEntityDAO
   public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
       throws GraphModelException;
   
-  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
-      throws GraphModelException;
+//  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
+//      throws GraphModelException;
   
   public long countByType(String typeName)
       throws GraphModelException;

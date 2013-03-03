@@ -17,6 +17,7 @@
 
 package uk.ac.ncl.aries.entanglement.graph;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -26,7 +27,10 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.KeyExtractingIterable;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ncl.aries.entanglement.ObjectMarshallerFactory;
@@ -49,7 +53,7 @@ abstract public class AbstractGraphEntityDAO
    * Indexes entity type, followed by entity name
    */
   private static final DBObject IDX_TYPE_AND_NAME = 
-          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_NAME, 1);
+          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_NAMES, 1);
   
   protected final Mongo m;
   protected final DB db;
@@ -128,13 +132,18 @@ abstract public class AbstractGraphEntityDAO
 //      logger.log(Level.INFO, "Storing node: {0}", node);
       if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
         String uid = item.getString(FIELD_UID);
-        String name = item.getString(FIELD_NAME);
         String type = item.getString(FIELD_TYPE);
+        
+        BasicDBList nameDbList = (BasicDBList) item.get(FIELD_NAMES);
+        Set<String> names = null;
+        if (nameDbList != null) {
+          names = new HashSet((BasicDBList) item.get(FIELD_NAMES));
+        }
 //        logger.info("Running in consistency mode");
 
-        if (name != null && existsByName(type, name)) {
+        if (names != null && !names.isEmpty() && existsByAnyName(type, names)) {
           throw new GraphModelException(
-              "Failed to store item - an entity with the same 'well known' name already exists: "+name);        
+              "Failed to store item - an entity with the same 'well known' name already exists: "+names);        
         } else if (existsByUid(uid)) {
           throw new GraphModelException(
               "Failed to store item - an entity with this unique ID already exists: "+uid);
@@ -189,7 +198,7 @@ abstract public class AbstractGraphEntityDAO
     catch(Exception e) {
       throw new GraphModelException("Failed to update item: "
               +updated.getString(FIELD_UID)+", "+updated.getString(FIELD_TYPE)
-              +", "+updated.getString(FIELD_NAME), e);
+              +", "+updated.getString(FIELD_NAMES), e);
     }
   }
 
@@ -242,7 +251,10 @@ abstract public class AbstractGraphEntityDAO
     boolean upsert = false;
     
     try {
-      criteria = new BasicDBObject(FIELD_TYPE, entityType).append(FIELD_NAME, entityName);
+      BasicDBList nameList = new BasicDBList();
+      nameList.add(entityName);
+      criteria = new BasicDBObject(FIELD_TYPE, entityType).
+              append(FIELD_NAMES, new BasicDBObject("$in", nameList));
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -264,7 +276,7 @@ abstract public class AbstractGraphEntityDAO
   
   
   @Override
-  public String lookupUniqueIdForName(String type, String name)
+  public String lookupUniqueIdForName(String type, String entityName)
       throws GraphModelException
   {
     DBObject query = null;
@@ -272,14 +284,16 @@ abstract public class AbstractGraphEntityDAO
     try {
       query = new BasicDBObject();
       query.put(FIELD_TYPE, type);
-      query.put(FIELD_NAME, name);
+      BasicDBList nameList = new BasicDBList();
+      nameList.add(entityName);
+      query.put(FIELD_NAMES, new BasicDBObject("$in", nameList));
       
       fields = new BasicDBObject();
       fields.put(FIELD_UID, 1);
 
       DBObject result = col.findOne(query);
       if (result == null) {
-        //There is no node with this name
+        //There is no node with this entityName
         return null;
       }
       String nodeUniqueId = (String) result.get(FIELD_UID);
@@ -317,14 +331,16 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public BasicDBObject getByName(String type, String name)
+  public BasicDBObject getByName(String type, String entityName)
       throws GraphModelException
   {
     DBObject query = null;
     try {
       query = new BasicDBObject();
       query.put(FIELD_TYPE, type);
-      query.put(FIELD_NAME, name);
+      BasicDBList nameList = new BasicDBList();
+      nameList.add(entityName);
+      query.put(FIELD_NAMES, new BasicDBObject("$in", nameList));
 
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
       if (obj == null) {
@@ -338,6 +354,30 @@ abstract public class AbstractGraphEntityDAO
     }
   }
   
+  @Override
+  public BasicDBObject getByAnyName(String type, Set<String> entityNames)
+      throws GraphModelException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TYPE, type);
+      BasicDBList nameList = new BasicDBList();
+      nameList.addAll(entityNames);
+      query.put(FIELD_NAMES, new BasicDBObject("$in", nameList));
+
+      BasicDBObject obj = (BasicDBObject)  col.findOne(query);
+      if (obj == null) {
+        return null;
+      }
+      return obj;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+ 
   
   @Override
   public boolean existsByUid(String uniqueId)
@@ -370,12 +410,43 @@ abstract public class AbstractGraphEntityDAO
     try {
       query = new BasicDBObject();
       query.put(FIELD_TYPE, entityType);
-      query.put(FIELD_NAME, entityName);
+      BasicDBList nameList = new BasicDBList();
+      nameList.add(entityName);
+      query.put(FIELD_NAMES, new BasicDBObject("$in", nameList));
 
       long count = col.count(query);
       if (count > 1) {
         throw new GraphModelException(
             "Type: "+entityType+", Name: "+entityName 
+            +" should be unique, but we found: "+count
+            + " instances with that name!");
+      }
+      return count == 1;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+  @Override
+  public boolean existsByAnyName(String entityType, Collection<String> entityNames)
+      throws GraphModelException
+  {
+    DBObject query = null;
+    try {
+      query = new BasicDBObject();
+      query.put(FIELD_TYPE, entityType);
+      
+      BasicDBList nameList = new BasicDBList();
+      nameList.addAll(entityNames);
+      query.put(FIELD_NAMES, new BasicDBObject("$in", nameList));
+//      query.put(FIELD_NAME, entityName);
+
+      long count = col.count(query);
+      if (count > 1) {
+        throw new GraphModelException(
+            "Type: "+entityType+", Names: "+entityNames 
             +" should be unique, but we found: "+count
             + " instances with that name!");
       }
@@ -513,25 +584,6 @@ abstract public class AbstractGraphEntityDAO
     }
   }
   
-  @Override
-  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
-      throws GraphModelException
-  {
-    DBObject query = null;
-    try {
-      query = new BasicDBObject();
-      query.put(FIELD_TYPE, typeName);
-      DBObject keys = new BasicDBObject(FIELD_NAME, 1);
-      DBCursor cursor = col.find(query, keys, offset, limit);
-      
-      return new KeyExtractingIterable<>(cursor, FIELD_NAME, String.class);
-    }
-    catch(Exception e) {
-      throw new GraphModelException(
-          "Failed to perform database operation. Type was: "+typeName+"\n"
-          + "Query was: "+query, e);
-    }
-  }
   
   @Override
   public long countByType(String typeName)

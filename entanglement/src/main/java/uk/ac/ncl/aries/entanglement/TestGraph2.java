@@ -100,7 +100,7 @@ public class TestGraph2
     {
       TestNode1 nodeType1 = new TestNode1();
       nodeType1.setUid(UidGenerator.generateUid());
-      nodeType1.setName("TestNode1 unique name: "+UidGenerator.generateSimpleUid());
+      nodeType1.addNames("TestNode1 unique name: "+UidGenerator.generateSimpleUid());
       nodeType1.setNumber(i);
       nodeType1.setString1("First string: "+i);
       nodeType1.setString2("Second string: "+i);
@@ -111,7 +111,7 @@ public class TestGraph2
       
       
       TestNode2 nodeType2 = new TestNode2();
-      nodeType2.setName("TestNode2 unique name: "+UidGenerator.generateSimpleUid());
+      nodeType2.addNames("TestNode2 unique name: "+UidGenerator.generateSimpleUid());
       nodeType2.setDoubleNumber(Math.random());
       nodeType2.setAnotherNumber((float) Math.random());
       nodeType2.setString1("First string: "+i);
@@ -122,8 +122,7 @@ public class TestGraph2
       
       TestEdge1 edgeType1 = new TestEdge1();
       edgeType1.setSomeProperty("Some edge string: "+1);
-      edgeType1.setFromName(nodeType1.getName());
-      edgeType1.setToName(nodeType2.getName());
+
       
       
       //Example of submitting several revisions at the same time.

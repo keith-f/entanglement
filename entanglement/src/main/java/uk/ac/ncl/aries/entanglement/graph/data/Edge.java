@@ -18,6 +18,10 @@
 package uk.ac.ncl.aries.entanglement.graph.data;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -30,6 +34,8 @@ public class Edge<F extends Node, T extends Node>
 { 
   protected String uid;
   protected String type;
+  protected Set<String> names;
+
   protected String fromUid;
   protected String fromType;
   protected String toUid;
@@ -44,19 +50,15 @@ public class Edge<F extends Node, T extends Node>
    */
   protected boolean hanging;
   
-  /*
-   * Optional - we can specify named nodes here as well IN ADDITION TO UIDs.
-   */
-  protected String fromName;
-  protected String toName;
-  
   public Edge()
   {
+    names = new HashSet<>();
     this.type = getClass().getSimpleName();
   }
   
   public Edge(String fromUid, String toUid)
   {
+    names = new HashSet<>();
     this.type = getClass().getSimpleName();
     this.fromUid = fromUid;
     this.toUid = toUid;
@@ -64,28 +66,24 @@ public class Edge<F extends Node, T extends Node>
           
   public Edge(F from, T to) 
   {
+    names = new HashSet<>();
     this.type = getClass().getSimpleName();
     this.fromUid = from.getUid();
     this.fromType = from.getType();
-    this.fromName = from.getName();
     this.toUid = to.getUid();
     this.toType = to.getType();
-    this.toName = to.getName();
   }
   
-  public Edge(String fromType, String fromName, String toType, String toName) 
-  {
-    this.type = getClass().getSimpleName();
-    this.fromType = fromType;
-    this.fromName = fromName;
-    this.toType = toType;
-    this.toName = toName;
-  }
 
   @Override
   public String toString() {
-    return "Edge{" + "uid=" + uid + ", type=" + type + ", fromUid=" + fromUid 
-            + ", toUid=" + toUid + ", fromName=" + fromName + ", toName=" + toName + '}';
+    return "Edge{" + "uid=" + uid + ", type=" + type + ", names=" + names
+        + ", fromUid=" + fromUid + ", toUid=" + toUid +  + '}';
+  }
+
+  public void addNames(String... newNames)
+  {
+    names.addAll(Arrays.asList(newNames));
   }
 
   public String getUid() {
@@ -120,22 +118,6 @@ public class Edge<F extends Node, T extends Node>
     this.toUid = toUid;
   }
 
-  public String getFromName() {
-    return fromName;
-  }
-
-  public void setFromName(String fromName) {
-    this.fromName = fromName;
-  }
-
-  public String getToName() {
-    return toName;
-  }
-
-  public void setToName(String toName) {
-    this.toName = toName;
-  }
-
   public String getFromType() {
     return fromType;
   }
@@ -158,5 +140,13 @@ public class Edge<F extends Node, T extends Node>
 
   public void setHanging(boolean hanging) {
     this.hanging = hanging;
+  }
+
+  public Set<String> getNames() {
+    return names;
+  }
+
+  public void setNames(Set<String> names) {
+    this.names = names;
   }
 }

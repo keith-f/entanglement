@@ -232,7 +232,8 @@ public class MongoGraphToGephi {
 //        for (Node node : nodeItr) {
     for (DBObject node : nodeDao.iterateAll()) {
       String uidStr = (String) node.get(NodeDAO.FIELD_UID);
-      String name = (String) node.get(NodeDAO.FIELD_NAME);
+      BasicDBList names = (BasicDBList) node.get(NodeDAO.FIELD_NAMES);
+//      String name = (String) node.get(NodeDAO.FIELD_NAME);
       String type = (String) node.get(NodeDAO.FIELD_TYPE);
       Color nodeColour = DEFAULT_COLOR;
       if (nodeColorMappings.containsKey(type)) {
@@ -240,10 +241,10 @@ public class MongoGraphToGephi {
       }
       
       org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(uidStr);
-      if (name == null || name.isEmpty()) {
+      if (names == null || names.isEmpty()) {
         gephiNode.getNodeData().setLabel(uidStr);
       } else {
-        gephiNode.getNodeData().setLabel(name);
+        gephiNode.getNodeData().setLabel(names.toString());
       }
       float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
       gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1], rgbColorComp[2]);
