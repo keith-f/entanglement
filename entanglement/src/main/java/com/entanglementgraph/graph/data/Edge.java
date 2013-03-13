@@ -18,10 +18,6 @@
 package com.entanglementgraph.graph.data;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -32,15 +28,22 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Edge<F extends Node, T extends Node>
        implements Serializable
-{ 
-  protected String uid;
-  protected String type;
-  protected Set<String> names;
+{
+  protected EntityKeys keys;
 
-  protected String fromUid;
-  protected String fromType;
-  protected String toUid;
-  protected String toType;
+
+
+//  protected String uid;
+//  protected String type;
+//  protected Set<String> names;
+
+//  protected String fromUid;
+//  protected String fromType;
+//  protected String toUid;
+//  protected String toType;
+
+  protected EntityKeys from;
+  protected EntityKeys to;
   
   /**
    * Indicates whether or not this edge might be a hanging edge.
@@ -53,96 +56,70 @@ public class Edge<F extends Node, T extends Node>
   
   public Edge()
   {
-    names = new HashSet<>();
-    this.type = getClass().getSimpleName();
+    keys = new EntityKeys();
   }
-  
-  public Edge(String fromUid, String toUid)
+
+  public Edge(EntityKeys keys, EntityKeys from, EntityKeys to)
   {
-    names = new HashSet<>();
-    this.type = getClass().getSimpleName();
-    this.fromUid = fromUid;
-    this.toUid = toUid;
+    this.keys = keys;
+    this.from = from;
+    this.to = to;
+  }
+
+  public Edge(EntityKeys keys, F from, T to)
+  {
+    this.keys = keys;
+    this.from = from.keys;
+    this.to = to.keys;
+  }
+
+  public Edge(EntityKeys keys, String fromUid, String toUid)
+  {
+    this.keys = keys;
+    this.from = new EntityKeys(fromUid);
+    this.to = new EntityKeys(toUid);
   }
           
-  public Edge(F from, T to) 
-  {
-    names = new HashSet<>();
-    this.type = getClass().getSimpleName();
-    this.fromUid = from.getUid();
-    this.fromType = from.getType();
-    this.toUid = to.getUid();
-    this.toType = to.getType();
-  }
-  
+//  public Edge(F from, T to)
+//  {
+//    names = new HashSet<>();
+//    this.type = getClass().getSimpleName();
+//    this.from = new EntityRef(from.getUid(), from.getType(), from.getNames());
+//    this.to = new EntityRef(to.getUid(), to.getType(), to.getNames());
+//  }
 
   @Override
   public String toString() {
-    return "Edge{" + "uid=" + uid + ", type=" + type + ", names=" + names
-        + ", fromUid=" + fromUid + ", toUid=" + toUid +  + '}';
+    return "Edge{" +
+        "keys=" + keys +
+        ", from=" + from +
+        ", to=" + to +
+        ", hanging=" + hanging +
+        '}';
   }
 
-  public void addName(String name)
-  {
-    names.add(name);
+  public EntityKeys getKeys() {
+    return keys;
   }
 
-  public void addNames(Collection<String> newNames)
-  {
-    names.addAll(newNames);
+  public void setKeys(EntityKeys keys) {
+    this.keys = keys;
   }
 
-  public void addNames(String... newNames)
-  {
-    names.addAll(Arrays.asList(newNames));
+  public EntityKeys getFrom() {
+    return from;
   }
 
-  public String getUid() {
-    return uid;
+  public void setFrom(EntityKeys from) {
+    this.from = from;
   }
 
-  public void setUid(String uid) {
-    this.uid = uid;
+  public EntityKeys getTo() {
+    return to;
   }
 
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getFromUid() {
-    return fromUid;
-  }
-
-  public void setFromUid(String fromUid) {
-    this.fromUid = fromUid;
-  }
-
-  public String getToUid() {
-    return toUid;
-  }
-
-  public void setToUid(String toUid) {
-    this.toUid = toUid;
-  }
-
-  public String getFromType() {
-    return fromType;
-  }
-
-  public void setFromType(String fromType) {
-    this.fromType = fromType;
-  }
-
-  public String getToType() {
-    return toType;
-  }
-
-  public void setToType(String toType) {
-    this.toType = toType;
+  public void setTo(EntityKeys to) {
+    this.to = to;
   }
 
   public boolean isHanging() {
@@ -151,13 +128,5 @@ public class Edge<F extends Node, T extends Node>
 
   public void setHanging(boolean hanging) {
     this.hanging = hanging;
-  }
-
-  public Set<String> getNames() {
-    return names;
-  }
-
-  public void setNames(Set<String> names) {
-    this.names = names;
   }
 }

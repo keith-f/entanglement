@@ -18,7 +18,14 @@
 
 package com.entanglementgraph.revlog.commands;
 
+import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -32,6 +39,25 @@ public class NodeModification
 {
   private static final Logger logger = 
       Logger.getLogger(NodeModification.class.getName());
+
+  public static NodeModification create(GraphConnection graphConn, IdentificationType idType, MergePolicy mergePol, Node node)
+      throws DbObjectMarshallerException {
+    BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
+    NodeModification op = new NodeModification(idType, mergePol, nodeSer);
+    return op;
+  }
+
+  public static List<NodeModification> create(GraphConnection graphConn,
+                                        IdentificationType idType, MergePolicy mergePol, Collection<Node> nodes)
+      throws DbObjectMarshallerException {
+    List<NodeModification> ops = new ArrayList<>(nodes.size());
+    for (Node node : nodes) {
+      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
+      NodeModification op = new NodeModification(idType, mergePol, nodeSer);
+      ops.add(op);
+    }
+    return ops;
+  }
   
   private IdentificationType idType;
   private MergePolicy mergePol;

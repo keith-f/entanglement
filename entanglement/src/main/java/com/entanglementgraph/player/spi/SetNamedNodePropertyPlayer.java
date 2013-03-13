@@ -51,9 +51,7 @@ public class SetNamedNodePropertyPlayer
     try {
       SetNamedNodeProperty op = (SetNamedNodeProperty) item.getOp();
 
-      String nodeUniqueId = nodeDao.lookupUniqueIdForName(op.getnType(), op.getnName());
-
-      if (nodeUniqueId == null) {
+      if (!nodeDao.existsByName(op.getnType(), op.getnName())) {
         throw new LogPlayerException("Failed to find named node: "+op.getnName()
                 +" while attempting to add a property: "+op.getpName()
                 +", with value: "+op.getpVal());

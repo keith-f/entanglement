@@ -18,10 +18,6 @@
 package com.entanglementgraph.graph.data;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -31,60 +27,32 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Node
-       implements Serializable
+      implements Serializable
 { 
-  protected String uid;
-  protected Set<String> names;
-  protected String type;
+//  protected String uid;
+//  protected Set<String> names;
+//  protected String type;
+  protected EntityKeys keys;
   
   public Node()
   {
-    names = new HashSet<>();
-    this.type = getClass().getSimpleName();
+    keys = new EntityKeys();
+//    names = new HashSet<>();
+//    this.type = getClass().getSimpleName();
   }
 
   @Override
   public String toString() {
-    return "Node{" + "uid=" + uid + ", names=" + names + ", type=" + type + '}';
+    return "Node{" +
+        "keys=" + keys +
+        '}';
   }
 
-  public void addName(String name)
-  {
-    names.add(name);
+  public EntityKeys getKeys() {
+    return keys;
   }
 
-  public void addNames(Collection<String> newNames)
-  {
-    names.addAll(newNames);
+  public void setKeys(EntityKeys keys) {
+    this.keys = keys;
   }
-
-  public void addNames(String... newNames)
-  {
-    names.addAll(Arrays.asList(newNames));
-  }
-
-  public String getUid() {
-    return uid;
-  }
-
-  public void setUid(String uid) {
-    this.uid = uid;
-  }
-
-  public Set<String> getNames() {
-    return names;
-  }
-
-  public void setNames(Set<String> names) {
-    this.names = names;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
 }

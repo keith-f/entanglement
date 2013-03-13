@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.graph;
 
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -36,6 +37,8 @@ public interface GraphEntityDAO
   public static final String FIELD_UID = "uid";
   public static final String FIELD_NAMES = "names";
   public static final String FIELD_TYPE = "type";
+
+  public static final String FIELD_REF = "keys";
   
   
   public InsertMode getInsertModeHint();
@@ -106,9 +109,16 @@ public interface GraphEntityDAO
    * entity has the type <code>entityType</code> and name <code>entityName</code>.
    * @throws GraphModelException 
    */
-  public String lookupUniqueIdForName(String entityType, String entityName)
+//  public String lookupUniqueIdForName(String entityType, String entityName)
+//      throws GraphModelException;
+
+  public EntityKeys getEntityKeysetForUid(String uid) throws GraphModelException;
+
+  public EntityKeys getEntityKeysetForName(String type, String name) throws GraphModelException;
+
+  public BasicDBObject getByKey(EntityKeys keyset)
       throws GraphModelException;
-  
+
   /**
    * Returns an instance by its unique ID. If no entity with the specified ID
    * exists, then null is returned.
@@ -117,6 +127,9 @@ public interface GraphEntityDAO
    * @throws LogPlayerException 
    */
   public BasicDBObject getByUid(String uid)
+      throws GraphModelException;
+
+  public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException;
   
   public BasicDBObject getByName(String entityType, String entityName)
@@ -144,8 +157,15 @@ public interface GraphEntityDAO
    */
   public BasicDBObject getByAnyName(String type, Set<String> entityNames)
       throws GraphModelException;
-  
+
+
+  public boolean existsByKey(EntityKeys keyset)
+      throws GraphModelException;
+
   public boolean existsByUid(String uniqueId)
+      throws GraphModelException;
+
+  public boolean existsByAnyUid(Collection<String> entityUids)
       throws GraphModelException;
   
   /**

@@ -4,7 +4,7 @@
 # Author: Keith Flanagan
 
 # The Java class to run
-EXE_CLASSNAME="uk.ac.ncl.aries.mongodb.TestGraph1"
+EXE_CLASSNAME="com.entanglementgraph.TestGraph1"
 RAM="-Xmx1024M"
 
 # Get the filename of this script

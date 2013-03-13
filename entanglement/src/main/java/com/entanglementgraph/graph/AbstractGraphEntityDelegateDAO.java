@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.graph;
 
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -39,7 +40,7 @@ import java.util.Set;
  * 
  * @author Keith Flanagan
  */
- abstract public class AbstractGraphEntityDelegateDAO
+  abstract public class AbstractGraphEntityDelegateDAO
     implements GraphEntityDAO
 {
   private final GraphEntityDAO delegate;
@@ -84,13 +85,28 @@ import java.util.Set;
   }
 
   @Override
-  public String lookupUniqueIdForName(String entityType, String entityName) throws GraphModelException {
-    return delegate.lookupUniqueIdForName(entityType, entityName);
+  public EntityKeys getEntityKeysetForUid(String uid) throws GraphModelException {
+    return delegate.getEntityKeysetForUid(uid);
+  }
+
+  @Override
+  public EntityKeys getEntityKeysetForName(String type, String name) throws GraphModelException {
+    return delegate.getEntityKeysetForName(type, name);
+  }
+
+  @Override
+  public BasicDBObject getByKey(EntityKeys keyset) throws GraphModelException {
+    return delegate.getByKey(keyset);
   }
 
   @Override
   public BasicDBObject getByUid(String uid) throws GraphModelException {
     return delegate.getByUid(uid);
+  }
+
+  @Override
+  public BasicDBObject getByAnyUid(Set<String> uids) throws GraphModelException {
+    return delegate.getByAnyUid(uids);
   }
 
   @Override
@@ -104,8 +120,18 @@ import java.util.Set;
   }
 
   @Override
+  public boolean existsByKey(EntityKeys keyset) throws GraphModelException {
+    return delegate.existsByKey(keyset);
+  }
+
+  @Override
   public boolean existsByUid(String uniqueId) throws GraphModelException {
     return delegate.existsByUid(uniqueId);
+  }
+
+  @Override
+  public boolean existsByAnyUid(Collection<String> entityUids) throws GraphModelException {
+    return delegate.existsByAnyUid(entityUids);
   }
 
   @Override

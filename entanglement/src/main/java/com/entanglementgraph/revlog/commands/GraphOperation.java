@@ -20,6 +20,8 @@ package com.entanglementgraph.revlog.commands;
 
 //import net.sourceforge.ondex.core.ONDEXGraph;
 
+import com.entanglementgraph.util.GraphConnection;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +35,6 @@ import java.util.Set;
 abstract public class GraphOperation
     implements Serializable
 {
-
   private Set<String> pTags;
   private Set<String> pStrings;
   

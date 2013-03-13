@@ -73,8 +73,8 @@ public class GdfWriter
   public void writeNode(Node node, Color c) throws IOException
   {
     StringBuilder sb = new StringBuilder();
-    sb.append(node.getUid());
-    sb.append(",").append(node.getType());
+    sb.append(node.getKeys());
+    sb.append(",").append(node.getKeys().getType());
 //    sb.append(",").append(node.getIncomingEdgeIds().size());
     
     //Color
@@ -100,10 +100,10 @@ public class GdfWriter
   public void writeEdge(Edge edge) throws IOException
   {
     StringBuilder sb = new StringBuilder();
-    sb.append(edge.getFromUid());
-    sb.append(",").append(edge.getToUid());
-    sb.append(",").append(edge.getUid());
-    sb.append(",").append(edge.getType());
+    sb.append(edge.getFrom());
+    sb.append(",").append(edge.getTo());
+    sb.append(",").append(edge.getKeys());
+    sb.append(",").append(edge.getKeys().getType());
     
     delegate.write(sb.toString());
     delegate.newLine();

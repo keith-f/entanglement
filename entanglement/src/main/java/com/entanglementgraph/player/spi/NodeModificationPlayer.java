@@ -19,18 +19,12 @@
 package com.entanglementgraph.player.spi;
 
 
-import com.mongodb.BasicDBList;
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_UID;
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_TYPE;
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_NAMES;
+import com.entanglementgraph.graph.data.EntityKeys;
+import com.mongodb.*;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.torrenttamer.util.UidGenerator;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_REF;
+
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,24 +45,25 @@ import com.entanglementgraph.revlog.data.RevisionItem;
 public class NodeModificationPlayer 
     extends AbstractLogItemPlayer
 {
-  private static final Logger logger =
-          Logger.getLogger(NodeModificationPlayer.class.getName());
-  
-  private static final Set<String> NODE_SPECIAL_FIELDS = 
-    new HashSet<>(Arrays.asList(new String[]{ FIELD_UID, FIELD_TYPE }));
-  
+  private static final Logger logger = Logger.getLogger(NodeModificationPlayer.class.getName());
+
+//  private static final String FIELD_REF = "keys";
   
   /*
    * These are set for every time <code>playItem</code> is called.
    */
   private NodeDAO nodeDao;
   private EdgeDAO edgeDao;
+
+
   // The currently playing revision item
   private RevisionItem item;
   // The command wrapped by the RevisionItem
   private NodeModification command;
   // A MongoDB document embedded within the command that represents the graph entity being updated.
-  private BasicDBObject serializedNode;
+  private BasicDBObject reqSerializedNode;
+  // The deserialized key field from the reqSerializedNode. This identifies the object to be created/updated.
+  private EntityKeys reqKeyset;
   
   @Override
   public void initialise(ClassLoader cl, Mongo mongo, DB db)
@@ -89,67 +84,52 @@ public class NodeModificationPlayer
       this.nodeDao = nodeDao;
       this.edgeDao = edgeDao;
       command = (NodeModification) item.getOp();
-      serializedNode = command.getNode();
+      reqSerializedNode = command.getNode();
 
-      switch(command.getIdType()) {
-        case UID:
-          createOrModifyByUid();
-          break;
-        case NAME:
-          createOrModifyByName();
-          break;
-        default:
-          throw new LogPlayerException("Unsupported "
-            + IdentificationType.class.getName() + " type: " + command.getIdType());
-      }
+      //Deserialize 'key set' field from the node because we'll need it.
+      String jsonKeyset = reqSerializedNode.get(FIELD_REF).toString();
+      reqKeyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
+
+      //The reference field should contain at least one identification key
+      validateKeyset(reqKeyset);
+
+      createOrModify(reqKeyset);
+
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
     }
   }
 
-  
-  /**
-   * Called if the graph operation uses the UID field for identification.
-   *
+  /*
+   * To create or update an entity, then there must be at least one UID and/or at least one name.
+   * If one or more names are specified, then a entity type must also be present.
    */
-  private void createOrModifyByUid()
+  private void validateKeyset(EntityKeys keyset) throws LogPlayerException {
+    if (keyset.getNames().isEmpty() && keyset.getUids().isEmpty()) {
+      throw new LogPlayerException("You must specify at least one entity key (either a UID, or a type/name");
+    }
+    if (!keyset.getNames().isEmpty() && keyset.getType() == null) {
+      throw new LogPlayerException("You specified one or more entity names, but did not specify a type. " +
+          "Names were: "+keyset.getNames());
+    }
+  }
+
+  private void createOrModify(EntityKeys keyset)
           throws LogPlayerException
   {
     try {
-      String uid = serializedNode.getString(FIELD_UID);
-      if (uid == null) {
-        throw new LogPlayerException(
-              RevisionItem.class.getName()+" had no UID set. Item was: "+item);
-      }
+      // Does the entity exist by any key specified in the reference?
+      boolean exists = nodeDao.existsByKey(keyset);
 
-      if (!nodeDao.existsByUid(uid)) {
+      // No - create a new document
+      if (!exists) {
         // Create a new node and then exit
         createNewNode();
-      } else {
-        // Edit existing node - need to perform a merge
-        BasicDBObject existing;
-        switch(command.getMergePol()) {
-          case NONE:
-            logger.log(Level.INFO, "Ignoring existing node: {0}", uid);
-            break;
-          case ERR:
-            throw new LogPlayerException("A node with UID: "+uid+" already exists.");
-          case APPEND_NEW__LEAVE_EXISTING:
-            existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
-            doAppendNewLeaveExisting(existing);
-            break;
-          case APPEND_NEW__OVERWRITE_EXSITING:
-            existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
-            doAppendNewOverwriteExisting(existing);
-            break;
-          case OVERWRITE_ALL:
-            existing = nodeDao.getByUid(serializedNode.getString(FIELD_UID));
-            doOverwriteAll(existing);
-            break;
-          default:
-            throw new LogPlayerException(
-                    "Unsupported merge policy type: "+command.getMergePol());
-        }
+      }
+      // Yes  - update existing document
+      else {
+
+        updateExistingNode();
       }
     }
     catch(Exception e) {
@@ -158,83 +138,44 @@ public class NodeModificationPlayer
               + ". Command was: "+command.toString(), e);
     }
   }
-  
-  private void createOrModifyByName() throws LogPlayerException
-  {
-    try {
-      String entityType = serializedNode.getString(FIELD_TYPE);
-//      String entityName = serializedNode.getString(FIELD_NAME);
-      BasicDBList entityNamesDbList = (BasicDBList) serializedNode.get(FIELD_NAMES);
 
-      if (entityType == null) {
-        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity type set. Item was: " + item);
-      }
-      if (entityNamesDbList == null) {
-        throw new LogPlayerException(RevisionItem.class.getName() + " had no entity name set. Item was: " + item);
-      }
-      
-      Set<String> entityNames = new HashSet(entityNamesDbList);
-
-      //if (!nodeDao.existsByName(entityType, entityName)) {
-      if (!nodeDao.existsByAnyName(entityType, entityNames)) {
-        // Create a new node
-        createNewNode();
-      } else {
-        // Edit existing node - need to perform a merge
-        BasicDBObject existing;
-        switch(command.getMergePol()) {
-          case NONE:
-            logger.log(Level.INFO, "Ignoring existing node: {0} with name(s) {1}", new Object[]{entityType, entityNames});
-            break;
-          case ERR:
-            throw new LogPlayerException("A node with Type: "+entityType+" and name(s): "+entityNames+" already exists.");
-          case APPEND_NEW__LEAVE_EXISTING:
-            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
-//                    serializedNode.getString(FIELD_NAME));
-            doAppendNewLeaveExisting(existing);
-            break;
-          case APPEND_NEW__OVERWRITE_EXSITING:
-            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
-//                    serializedNode.getString(FIELD_NAME));
-            doAppendNewOverwriteExisting(existing);
-            break;
-          case OVERWRITE_ALL:
-            existing = nodeDao.getByAnyName(serializedNode.getString(FIELD_TYPE), entityNames);
-//                    serializedNode.getString(FIELD_NAME));
-            doOverwriteAll(existing);
-            break;
-          default:
-            throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
-        }
-      }
-    }
-    catch(Exception e) {
-      throw new LogPlayerException("Failed to play back command using "
-              +IdentificationType.class.getName()+": "+command.getIdType()
-              + ". Command was: "+command.toString(), e);
-    }
-  }
-  
-  
   /**
    * Called when a node is found to not exist already - we need to create it.
    */
   private void createNewNode() throws GraphModelException, LogPlayerException
   {
-    // Node type is a required property
-    if (!serializedNode.containsField(FIELD_TYPE)) {
-      throw new LogPlayerException("Can't play operation: "+item.getOp()
-              + ". Property " + FIELD_TYPE + " was not set.");
-    }
-    /*
-     * Generate a UID if one doesn't exist already (specifying a UID isn't 
-     * required if the caller has specified a type/name instead)
-     */
-    if (!serializedNode.containsField(FIELD_UID)) {
-      serializedNode.put(FIELD_UID, UidGenerator.generateUid());
-    }
-    nodeDao.store(serializedNode);
+    nodeDao.store(reqSerializedNode);
   }
+
+  private void updateExistingNode() throws LogPlayerException {
+    try {
+      // Edit existing node - need to perform a merge based on
+      BasicDBObject existing = nodeDao.getByKey(reqKeyset);
+      switch(command.getMergePol()) {
+        case NONE:
+          logger.log(Level.INFO, "Ignoring existing node: {0}", reqKeyset);
+          break;
+        case ERR:
+          throw new LogPlayerException("A node with one or more items in the following keyset already exists: "+reqKeyset);
+        case APPEND_NEW__LEAVE_EXISTING:
+          doAppendNewLeaveExisting(existing);
+          break;
+        case APPEND_NEW__OVERWRITE_EXSITING:
+          doAppendNewOverwriteExisting(existing);
+          break;
+        case OVERWRITE_ALL:
+          doOverwriteAll(existing);
+          break;
+        default:
+          throw new LogPlayerException(
+              "Unsupported merge policy type: "+command.getMergePol());
+      }
+    } catch (Exception e) {
+      throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);
+    }
+  }
+
+
   
   /**
    * This method adds new properties to an existing node. Where there are
@@ -245,19 +186,33 @@ public class NodeModificationPlayer
   private void doAppendNewLeaveExisting(BasicDBObject existing)
           throws GraphModelException
   {
-    _checkAllImmutableFieldsAreEqual(existing);
-    _mergeNames(existing); // Allow new names to be added to an existing node
+    try {
+      // Deserialize the keyset field of the existing object.
+      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
 
-    for (String key : serializedNode.keySet()) {
-      if (NODE_SPECIAL_FIELDS.contains(key)) {
-        continue; //Skip immutable identity/type fields
+      BasicDBObject updated = new BasicDBObject();
+      updated.putAll(existing.toMap());
+
+      for (String key : reqSerializedNode.keySet()) {
+        if (updated.containsField(key)) {
+          continue; //Don't overwrite existing properties
+        }
+        //Append fields that exist in the request, but not in the existing object
+        updated.put(key, reqSerializedNode.get(key));
       }
-      if (existing.containsField(key)) {
-        continue; //Don't overwrite existing properties
-      }
-      existing.append(key, serializedNode.get(key));
+
+      // Allow new keys to be added, but disallow editing type of the entity
+      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
+
+      // Replace the 'keys' field with the merged keys sub-document.
+      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+
+      nodeDao.update(updated);
     }
-    nodeDao.update(existing);
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform 'append new, leave existing' operation on existing node: "+existing);
+    }
   }
   
   /**
@@ -268,16 +223,30 @@ public class NodeModificationPlayer
   private void doAppendNewOverwriteExisting(BasicDBObject existing)
           throws GraphModelException
   {
-    _checkAllImmutableFieldsAreEqual(existing);
-    _mergeNames(existing); // Allow new names to be added to an existing node
+    try {
+      // Deserialize the keyset field of the existing object.
+      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
 
-    for (String key : serializedNode.keySet()) {
-      if (NODE_SPECIAL_FIELDS.contains(key)) {
-        continue; //Skip immutable identity/type fields
+      BasicDBObject updated = new BasicDBObject();
+      updated.putAll(existing.toMap());
+
+      for (String key : reqSerializedNode.keySet()) {
+        //Append fields that exist in the request, but not in the existing object
+        updated.put(key, reqSerializedNode.get(key));
       }
-      existing.append(key, serializedNode.get(key));
+
+      // Allow new keys to be added, but disallow editing type of the entity
+      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
+
+      // Replace the 'keys' field with the merged keys sub-document.
+      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+
+      nodeDao.update(updated);
     }
-    nodeDao.update(existing);
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform 'append new, overwrite existing' operation on existing node: "+existing);
+    }
   }
 
   /**
@@ -288,58 +257,59 @@ public class NodeModificationPlayer
   private void doOverwriteAll(BasicDBObject existing)
           throws GraphModelException
   {
-    _checkAllImmutableFieldsAreEqual(existing);
-    _mergeNames(existing); // Allow new names to be added to an existing node
-    
     /*
      * In this case, we can simply use the new DBObject from the command.
-     * We just need to ensure that the UID/type/name properties are carried 
-     * over from the existing object.
+     * We just need to merge keys from the existing object.
      */
-    for (String fieldName : NODE_SPECIAL_FIELDS) {
-      serializedNode.put(fieldName, existing.get(fieldName));
+    try {
+      // Deserialize the keyset field of the existing object.
+      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
+
+      BasicDBObject updated = new BasicDBObject();
+      updated.putAll(reqSerializedNode.toMap());
+
+      // Allow new keys to be added, but disallow editing type of the entity
+      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
+
+      // Replace the 'keys' field with the merged keys sub-document.
+      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+
+      nodeDao.update(updated);
     }
-    serializedNode.put(FIELD_NAMES, existing.get(FIELD_NAMES)); //Copy merged name list
-
-    nodeDao.update(serializedNode);
-  }
-
-  private void _mergeNames(BasicDBObject existing) {
-    // A MongoDB list containing the existing (known) names for this entity
-    BasicDBList namesDbList = (BasicDBList) existing.get(FIELD_NAMES);
-    // A list containing (potentially) new names for this entity
-    BasicDBList newEntityNamesDbList = (BasicDBList) serializedNode.get(FIELD_NAMES);
-
-    //Not elegant, but there doesn't appear to be a better way...
-    for (Object newName : newEntityNamesDbList) {
-      if (!namesDbList.contains(newName)) {
-        namesDbList.add(newName);
-      }
-    }
-
-    // Save merged list
-    existing.put(FIELD_NAMES, namesDbList);
-  }
-
-  private void _checkAllImmutableFieldsAreEqual(BasicDBObject existing) throws GraphModelException
-  {
-    for (String fieldName : NODE_SPECIAL_FIELDS) {
-      _checkImmutableFieldIsEqual(fieldName, existing);
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existing);
     }
   }
-  
-  private void _checkImmutableFieldIsEqual(String fieldName, BasicDBObject existing)
-          throws GraphModelException
-  {
-    if (serializedNode.containsField(fieldName)) {
-      String existingFieldVal = existing.getString(fieldName);
-      String newFieldVal = serializedNode.getString(fieldName);
-      if (!existingFieldVal.equals(newFieldVal)) {
-        throw new GraphModelException(
-                "You cannot update the immutable field: "+fieldName+": "
-                +existingFieldVal+" != "+newFieldVal);
-      }
+
+  private static EntityKeys _mergeKeys(EntityKeys existingKeyset, EntityKeys newKeyset)
+      throws DbObjectMarshallerException, GraphModelException {
+
+    //If entity types mismatch, then we have a problem.
+    if (newKeyset.getType() != null && existingKeyset.getType() != null &&
+        !newKeyset.getType().equals(existingKeyset.getType())) {
+      throw new GraphModelException("Attempt to merge existing keyset with keyset from current request failed. " +
+          "The type fields are non-null and mismatch. Existing keyset: "+existingKeyset
+          +". Request keyset: "+newKeyset);
     }
+
+    EntityKeys merged = new EntityKeys();
+    // Set entity type. Here, existing 'type' gets priority, followed by new type (just to be sure...)
+    if (existingKeyset.getType() != null) {
+      merged.setType(existingKeyset.getType());
+    } else if (newKeyset.getType() != null) {
+      merged.setType(newKeyset.getType());
+    }
+
+    // Merge UIDs
+    merged.addUids(existingKeyset.getUids());
+    merged.addUids(newKeyset.getUids());
+
+    // Merge names
+    merged.addNames(existingKeyset.getNames());
+    merged.addNames(newKeyset.getUids());
+
+    return merged;
   }
   
 }

@@ -98,8 +98,8 @@ public class GraphToGDFExporter
       Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
       for (Node node : nodeItr) {
         Color nodeColour = DEFAULT_COLOR;
-        if (nodeColorMappings.containsKey(node.getType())) {
-          nodeColour = nodeColorMappings.get(node.getType());
+        if (nodeColorMappings.containsKey(node.getKeys().getType())) {
+          nodeColour = nodeColorMappings.get(node.getKeys().getType());
         }
         
         writer.writeNode(node, nodeColour);

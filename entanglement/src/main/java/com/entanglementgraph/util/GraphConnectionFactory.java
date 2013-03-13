@@ -17,6 +17,9 @@
 
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.player.LogPlayer;
+import com.entanglementgraph.player.LogPlayerMongoDbImpl;
+import com.entanglementgraph.util.experimental.GraphOpPostCommitPlayer;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
@@ -60,7 +63,7 @@ public class GraphConnectionFactory {
     this.hostname = hostname;
     this.database = database;
     this.insertMode = InsertMode.INSERT_CONSISTENCY;
-    ObjectMarshallerFactory.create(classLoader);
+    marshaller = ObjectMarshallerFactory.create(classLoader);
   }
 
   public GraphConnection connect(String graphName, String graphBranch) throws GraphConnectionFactoryException {
@@ -82,6 +85,12 @@ public class GraphConnectionFactory {
       System.out.println("Setting DAO insert mode to: "+insertMode);
       nodeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
       edgeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
+
+      //Wire up a player by default
+      LogPlayer logPlayer = new LogPlayerMongoDbImpl(classLoader, marshaller,
+          graphName, graphBranch, revLog, nodeDao, edgeDao);
+      GraphOpPostCommitPlayer opPlayer = new GraphOpPostCommitPlayer(logPlayer);
+      revLog.addListener(opPlayer);
 
       GraphConnection connection = new GraphConnection();
       connection.setClassLoader(classLoader);

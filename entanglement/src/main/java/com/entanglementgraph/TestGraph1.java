@@ -18,19 +18,22 @@
 
 package com.entanglementgraph;
 
+import com.entanglementgraph.graph.data.Edge;
+import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.revlog.commands.*;
+import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.*;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.util.UidGenerator;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.TransactionBegin;
-import com.entanglementgraph.revlog.commands.TransactionCommit;
 
 /**
  *
@@ -38,82 +41,74 @@ import com.entanglementgraph.revlog.commands.TransactionCommit;
  */
 public class TestGraph1
 {
-  private static final ClassLoader classLoader = TestGraph1.class.getClassLoader();
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException
-  {
-    if (args.length != 3) {
+  private static class Chromosome extends Node {
+    private int length;
+    private String description;
+
+    public int getLength() {
+      return length;
+    }
+
+    public void setLength(int length) {
+      this.length = length;
+    }
+
+    public String getDescription() {
+      return description;
+    }
+
+    public void setDescription(String description) {
+      this.description = description;
+    }
+  }
+
+  private static class Gene extends Node {
+    private String description;
+
+    public String getDescription() {
+      return description;
+    }
+
+    public void setDescription(String description) {
+      this.description = description;
+    }
+  }
+
+  private static class ExistsWithin extends Edge<Gene, Chromosome> {
+
+  }
+
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException {
+    if (args.length != 1) {
       System.out.println("USAGE:\n"
           + "  * database name\n"
-          + "  * graph name\n"
-          + "  * graph branch name\n"
       );
       System.exit(1);
     }
-    
-    String dbName = args[0];
-    String graphName = args[1];
-    String graphBranchName = args[2];
-    
-    
-    
-    Mongo m = new Mongo();
-    
-//    Mongo m = new Mongo( "localhost" );
-    // or
-//    Mongo m = new Mongo( "localhost" , 27017 );
-    // or, to connect to a replica set, supply a seed list of members
-//    Mongo m = new Mongo(Arrays.asList(new ServerAddress("localhost", 27017),
-//                                          new ServerAddress("localhost", 27018),
-//                                          new ServerAddress("localhost", 27019)));
-    
-    m.setWriteConcern(WriteConcern.SAFE);
 
-    DB db = m.getDB( dbName );
-//    boolean auth = db.authenticate(myUserName, myPassword);
-    
-    
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
-    
-    String type = "cds";
-    String ds = "default";
-    String et = "default";
-    String txnId = UidGenerator.generateUid();
-    
-    int toCreate = 3;
-    
-    int txnSubmitId = 0;
-    log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, new TransactionBegin(txnId));
-    for (int i=0; i<toCreate; i++)
-    {
-//      String uid = UidGenerator.generateUid();
-//      String uid = i+"a";
-//      CreateNodeIfNotExists n1 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"a", ds, et);
-//      SetNamedNodeProperty p1a = new SetNamedNodeProperty(i+"a", "some-string", "foo");
-//      SetNamedNodeProperty p1b = new SetNamedNodeProperty(i+"a", "some-string", "bar");
-//      SetNamedNodeProperty p2 = new SetNamedNodeProperty(i+"a", "some-integer", 23);
-//      
-//      CreateNodeIfNotExistsByName n2 = new CreateNodeIfNotExistsByName(type, UidGenerator.generateUid(), i+"b", ds, et);
-//      CreateEdgeBetweenNamedNodes e1 = new CreateEdgeBetweenNamedNodes("has-part", UidGenerator.generateUid(), n1.getName(), n2.getName());
-      
-      
-      
-      //Examples of individual submissions
-      
-      
-//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, n1);
-//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1a);
-//      log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, p1b);
-      
-      //Example of submitting several revisions at the same time.
-      List<GraphOperation> opList = new LinkedList<>();
-//      opList.add(p2);
-//      opList.add(n2);
-//      opList.add(e1);
-      log.submitRevisions(graphName, graphBranchName, txnId, txnSubmitId++, opList);
-      
+    String hostname = "localhost";
+    String databaseName = args[0];
+
+
+
+    GraphConnectionFactory connFact = new GraphConnectionFactory(hostname, databaseName);
+    GraphConnection chromConn = connFact.connect("chromosomes", "trunk");
+    GraphConnection genesConn = connFact.connect("genes", "trunk");
+
+    String txnId = TxnUtils.beginNewTransaction(chromConn);
+    List<GraphOperation> ops = new LinkedList<>();
+    for (int i=0; i<3; i++) {
+      Chromosome chromosome = new Chromosome();
+      chromosome.getKeys().setType(Chromosome.class.getName());
+      chromosome.getKeys().addName("c" + i);
+      chromosome.getKeys().addUid(UidGenerator.generateUid());
+      chromosome.setDescription("This is chromosome " + i);
+      ops.add(NodeModification.create(chromConn, IdentificationType.NAME, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
+//      ops.add(new NodeModification(IdentificationType.NAME, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
     }
-    log.submitRevision(graphName, graphBranchName, txnId, txnSubmitId++, new TransactionCommit(txnId));
-    
+    chromConn.getRevisionLog().submitRevisions(chromConn.getGraphName(), chromConn.getGraphBranch(), txnId, 1, ops);
+    TxnUtils.commitTransaction(chromConn, txnId);
+
     System.out.println("\n\nDone.");
   }
   

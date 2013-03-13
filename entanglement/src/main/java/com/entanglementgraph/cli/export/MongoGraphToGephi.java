@@ -280,12 +280,12 @@ public class MongoGraphToGephi {
     Iterable<Edge> edgeItr = new DeserialisingIterable<>(
             edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
-      String fromUidStr = edge.getFromUid();
-      String toUidStr = edge.getToUid();
+      String fromUidStr = edge.getFrom().toString();
+      String toUidStr = edge.getTo().toString();
       org.gephi.graph.api.Edge gephiEdge = graphModel.factory().
               newEdge(directedGraph.getNode(fromUidStr),
               directedGraph.getNode(toUidStr), 1f, true);
-      gephiEdge.getEdgeData().setLabel(edge.getType());
+      gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
       directedGraph.addEdge(gephiEdge);
     }
 

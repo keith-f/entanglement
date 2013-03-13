@@ -34,7 +34,13 @@ public class TxnUtils
 {
   private static final Logger logger =
       Logger.getLogger(TxnUtils.class.getName());
-  
+
+  public static String beginNewTransaction(GraphConnection conn)
+      throws RevisionLogException
+  {
+    return beginNewTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch());
+  }
+
   public static String beginNewTransaction(RevisionLog revLog, String graphId, String branchId)
       throws RevisionLogException
   {
@@ -53,6 +59,12 @@ public class TxnUtils
       printDuration(start, System.currentTimeMillis());
     }
   }
+
+  public static void commitTransaction(GraphConnection conn, String txnId)
+      throws RevisionLogException
+  {
+    commitTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
+  }
   
   public static void commitTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
       throws RevisionLogException
@@ -68,6 +80,12 @@ public class TxnUtils
     finally {
       printDuration(start, System.currentTimeMillis());
     }
+  }
+
+  public static void rollbackTransaction(GraphConnection conn, String txnId)
+      throws RevisionLogException
+  {
+    rollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
   }
   
   public static void rollbackTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
@@ -111,8 +129,7 @@ public class TxnUtils
    * @param txnId
    * @throws RevisionLogException 
    */
-  public static void silentRollbackTransaction(RevisionLog revLog, 
-          String graphId, String branchId, String txnId)
+  public static void silentRollbackTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
   {
     try {
       rollbackTransaction(revLog, graphId, branchId, txnId);
@@ -122,6 +139,11 @@ public class TxnUtils
               + ". We're going to silently ignore this, apart from printing a stack trace (follows)");
       e.printStackTrace();
     }
+  }
+
+  public static void silentRollbackTransaction(GraphConnection conn, String txnId)
+  {
+    silentRollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
   }
   
   private static void printDuration(long startMs, long endMs)

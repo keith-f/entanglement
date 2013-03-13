@@ -190,7 +190,8 @@ public class EntanglementShell
   @Command
   public void startNavigator(String nodeType, String nodeName) 
           throws IOException, GraphModelException {
-    String nodeUid = nodeDao.lookupUniqueIdForName(nodeType, nodeName);
+    //FIXME - we need to go through this code and use keys instead of UIDs.
+    String nodeUid = nodeDao.getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
     NavigatorShell navShell = new NavigatorShell(revLog, nodeDao, edgeDao, nodeUid);
     NavigatorShell.startSubShell(navShell);
   }
