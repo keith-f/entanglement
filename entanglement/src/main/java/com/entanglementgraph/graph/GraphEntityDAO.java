@@ -38,7 +38,7 @@ public interface GraphEntityDAO
   public static final String FIELD_NAMES = "names";
   public static final String FIELD_TYPE = "type";
 
-  public static final String FIELD_REF = "keys";
+  public static final String FIELD_KEYS = "keys";
   
   
   public InsertMode getInsertModeHint();

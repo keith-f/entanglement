@@ -103,7 +103,7 @@ public class TestGraph1
       chromosome.getKeys().addName("c" + i);
       chromosome.getKeys().addUid(UidGenerator.generateUid());
       chromosome.setDescription("This is chromosome " + i);
-      ops.add(NodeModification.create(chromConn, IdentificationType.NAME, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
+      ops.add(NodeModification.create(chromConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
 //      ops.add(new NodeModification(IdentificationType.NAME, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
     }
     chromConn.getRevisionLog().submitRevisions(chromConn.getGraphName(), chromConn.getGraphBranch(), txnId, 1, ops);

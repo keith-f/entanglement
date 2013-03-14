@@ -30,7 +30,6 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.KeyExtractingIterable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -127,7 +126,7 @@ abstract public class AbstractGraphEntityDAO
   }
 
   private EntityKeys parseKeyset(DBObject dbObject) throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(FIELD_REF).toString();
+    String jsonKeyset = dbObject.get(FIELD_KEYS).toString();
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }
@@ -282,10 +281,10 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(uid);
-      query.put(FIELD_REF+".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
       fields = new BasicDBObject();
-      fields.put(FIELD_REF, 1);
+      fields.put(FIELD_KEYS, 1);
 
       DBObject result = col.findOne(query);
       if (result == null) {
@@ -307,13 +306,13 @@ abstract public class AbstractGraphEntityDAO
     DBObject fields = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_REF+".type", type);
+      query.put(FIELD_KEYS +".type", type);
       BasicDBList nameList = new BasicDBList();
       nameList.add(entityName);
-      query.put(FIELD_REF+".names", new BasicDBObject("$in", nameList));
+      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       fields = new BasicDBObject();
-      fields.put(FIELD_REF, 1);
+      fields.put(FIELD_KEYS, 1);
 
       DBObject result = col.findOne(query);
       if (result == null) {
@@ -358,7 +357,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(entityUid);
-      query.put(FIELD_REF+".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
 
       BasicDBObject obj = (BasicDBObject) col.findOne(query);
@@ -382,7 +381,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.addAll(uids);
-      query.put(FIELD_REF+".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
       if (obj == null) {
@@ -402,10 +401,10 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_REF+".type", type);
+      query.put(FIELD_KEYS +".type", type);
       BasicDBList nameList = new BasicDBList();
       nameList.add(entityName);
-      query.put(FIELD_REF+".names", new BasicDBObject("$in", nameList));
+      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
       if (obj == null) {
@@ -426,10 +425,10 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_REF+".type", type);
+      query.put(FIELD_KEYS +".type", type);
       BasicDBList nameList = new BasicDBList();
       nameList.addAll(entityNames);
-      query.put(FIELD_REF+".names", new BasicDBObject("$in", nameList));
+      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
       if (obj == null) {
@@ -470,7 +469,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(entityUid);
-      query.put(FIELD_REF+".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
       long count = col.count(query);
       if (count > 1) {
@@ -495,7 +494,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.addAll(entityUids);
-      query.put(FIELD_REF+".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
       long count = col.count(query);
       if (count > 1) {
@@ -518,10 +517,10 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_REF+".type", entityType);
+      query.put(FIELD_KEYS +".type", entityType);
       BasicDBList nameList = new BasicDBList();
       nameList.add(entityName);
-      query.put(FIELD_REF+".names", new BasicDBObject("$in", nameList));
+      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       long count = col.count(query);
       if (count > 1) {
@@ -543,10 +542,10 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_REF+".type", entityType);
+      query.put(FIELD_KEYS +".type", entityType);
       BasicDBList nameList = new BasicDBList();
       nameList.addAll(entityNames);
-      query.put(FIELD_REF+".names", new BasicDBObject("$in", nameList));
+      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       long count = col.count(query);
       if (count > 1) {

@@ -22,7 +22,7 @@ package com.entanglementgraph.player.spi;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.*;
 
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_REF;
+import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
 
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import java.util.logging.Level;
@@ -33,7 +33,6 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.player.LogPlayerException;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.revlog.commands.IdentificationType;
 import com.entanglementgraph.revlog.data.RevisionItem;
 
 /**
@@ -47,7 +46,7 @@ public class NodeModificationPlayer
 {
   private static final Logger logger = Logger.getLogger(NodeModificationPlayer.class.getName());
 
-//  private static final String FIELD_REF = "keys";
+//  private static final String FIELD_KEYS = "keys";
   
   /*
    * These are set for every time <code>playItem</code> is called.
@@ -86,8 +85,8 @@ public class NodeModificationPlayer
       command = (NodeModification) item.getOp();
       reqSerializedNode = command.getNode();
 
-      //Deserialize 'key set' field from the node because we'll need it.
-      String jsonKeyset = reqSerializedNode.get(FIELD_REF).toString();
+      //Deserialize 'key set' field from the entity because we'll need it.
+      String jsonKeyset = reqSerializedNode.get(FIELD_KEYS).toString();
       reqKeyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
 
       //The reference field should contain at least one identification key
@@ -133,9 +132,7 @@ public class NodeModificationPlayer
       }
     }
     catch(Exception e) {
-      throw new LogPlayerException("Failed to play back command using "
-              +IdentificationType.class.getName()+": "+command.getIdType()
-              + ". Command was: "+command.toString(), e);
+      throw new LogPlayerException("Failed to play back command. Command was: "+command.toString(), e);
     }
   }
 
@@ -167,8 +164,7 @@ public class NodeModificationPlayer
           doOverwriteAll(existing);
           break;
         default:
-          throw new LogPlayerException(
-              "Unsupported merge policy type: "+command.getMergePol());
+          throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
       }
     } catch (Exception e) {
       throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);
@@ -188,7 +184,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
       EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
 
       BasicDBObject updated = new BasicDBObject();
@@ -198,7 +194,7 @@ public class NodeModificationPlayer
         if (updated.containsField(key)) {
           continue; //Don't overwrite existing properties
         }
-        //Append fields that exist in the request, but not in the existing object
+        //Set fields that exist in the request, but not in the existing object
         updated.put(key, reqSerializedNode.get(key));
       }
 
@@ -206,12 +202,12 @@ public class NodeModificationPlayer
       EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
 
       // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       nodeDao.update(updated);
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, leave existing' operation on existing node: "+existing);
+      throw new GraphModelException("Failed to perform 'append new, leave existing' operation on existing node: "+existing, e);
     }
   }
   
@@ -225,14 +221,14 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
       EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(existing.toMap());
 
       for (String key : reqSerializedNode.keySet()) {
-        //Append fields that exist in the request, but not in the existing object
+        //Set all fields that exist in the request, regardless of whether they're present in the existing object
         updated.put(key, reqSerializedNode.get(key));
       }
 
@@ -240,12 +236,12 @@ public class NodeModificationPlayer
       EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
 
       // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       nodeDao.update(updated);
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, overwrite existing' operation on existing node: "+existing);
+      throw new GraphModelException("Failed to perform 'append new, overwrite existing' operation on existing node: "+existing, e);
     }
   }
 
@@ -263,7 +259,7 @@ public class NodeModificationPlayer
      */
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_REF).toString();
+      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
       EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
 
       BasicDBObject updated = new BasicDBObject();
@@ -273,12 +269,12 @@ public class NodeModificationPlayer
       EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
 
       // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_REF, marshaller.serialize(mergedKeys));
+      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       nodeDao.update(updated);
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existing);
+      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existing, e);
     }
   }
 

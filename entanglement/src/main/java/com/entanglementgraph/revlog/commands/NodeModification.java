@@ -40,26 +40,25 @@ public class NodeModification
   private static final Logger logger = 
       Logger.getLogger(NodeModification.class.getName());
 
-  public static NodeModification create(GraphConnection graphConn, IdentificationType idType, MergePolicy mergePol, Node node)
+  public static NodeModification create(GraphConnection graphConn, MergePolicy mergePol, Node node)
       throws DbObjectMarshallerException {
     BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-    NodeModification op = new NodeModification(idType, mergePol, nodeSer);
+    NodeModification op = new NodeModification(mergePol, nodeSer);
     return op;
   }
 
   public static List<NodeModification> create(GraphConnection graphConn,
-                                        IdentificationType idType, MergePolicy mergePol, Collection<Node> nodes)
+                                              MergePolicy mergePol, Collection<Node> nodes)
       throws DbObjectMarshallerException {
     List<NodeModification> ops = new ArrayList<>(nodes.size());
     for (Node node : nodes) {
       BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-      NodeModification op = new NodeModification(idType, mergePol, nodeSer);
+      NodeModification op = new NodeModification(mergePol, nodeSer);
       ops.add(op);
     }
     return ops;
   }
-  
-  private IdentificationType idType;
+
   private MergePolicy mergePol;
   
   private BasicDBObject node;
@@ -68,9 +67,8 @@ public class NodeModification
   {
   }
 
-  public NodeModification(IdentificationType idType, MergePolicy mergePol, BasicDBObject node)
+  public NodeModification(MergePolicy mergePol, BasicDBObject node)
   {
-    this.idType = idType;
     this.mergePol = mergePol;
     this.node = node;
   }
@@ -86,14 +84,6 @@ public class NodeModification
 
   public void setNode(BasicDBObject node) {
     this.node = node;
-  }
-
-  public IdentificationType getIdType() {
-    return idType;
-  }
-
-  public void setIdType(IdentificationType idType) {
-    this.idType = idType;
   }
 
   public MergePolicy getMergePol() {
