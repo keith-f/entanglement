@@ -89,6 +89,7 @@ public class EdgeModificationPlayer
     try {
       this.nodeDao = nodeDao;
       this.edgeDao = edgeDao;
+      this.item = item;
       command = (EdgeModification) item.getOp();
       reqSerializedEdge = command.getEdge();
 
@@ -124,6 +125,7 @@ public class EdgeModificationPlayer
   private void createOrModify(EntityKeys keyset)
       throws LogPlayerException
   {
+    logger.info("Attempting playback of entity: "+keyset);
     try {
       // Does the entity exist by any key specified in the reference?
       boolean exists = edgeDao.existsByKey(keyset);
@@ -152,6 +154,7 @@ public class EdgeModificationPlayer
     *
     */
     try {
+      logger.info("Creating new edge in: "+edgeDao.getCollection().getFullName());
       if (command.isAllowHanging()) {
         reqSerializedEdge.put(EdgeDAO.FIELD_HANGING, true);
       }

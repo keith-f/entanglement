@@ -18,8 +18,14 @@
 
 package com.entanglementgraph.revlog.commands;
 
+import com.entanglementgraph.graph.data.Edge;
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -29,8 +35,26 @@ import java.util.logging.Logger;
 public class EdgeModification
     extends GraphOperation
 {
-  private static final Logger logger = 
-      Logger.getLogger(EdgeModification.class.getName());
+  private static final Logger logger = Logger.getLogger(EdgeModification.class.getName());
+
+  public static EdgeModification create(GraphConnection graphConn, MergePolicy mergePol, Edge edge)
+      throws DbObjectMarshallerException {
+    BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
+    EdgeModification op = new EdgeModification(mergePol, edgeSer);
+    return op;
+  }
+
+  public static List<EdgeModification> create(GraphConnection graphConn,
+                                              MergePolicy mergePol, Collection<Edge> edges)
+      throws DbObjectMarshallerException {
+    List<EdgeModification> ops = new ArrayList<>(edges.size());
+    for (Edge edge : edges) {
+      BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
+      EdgeModification op = new EdgeModification(mergePol, edgeSer);
+      ops.add(op);
+    }
+    return ops;
+  }
 
   private MergePolicy mergePol;
   private BasicDBObject edge;

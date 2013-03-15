@@ -40,7 +40,7 @@ public interface EdgeDAO
   
   public static final String FIELD_HANGING = "hanging";
   
-  public DBCollection getNodeCol();
+//  public DBCollection getEdgeCol();
   
   
   /**

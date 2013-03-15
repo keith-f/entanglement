@@ -81,12 +81,6 @@ public class EdgeDAOSeparateDocImpl
     
     edgeCol.ensureIndex(IDX_TYPE__FROM_NODE_UID__TO_NODE_UID);
   }
-
-  
-  @Override
-  public DBCollection getNodeCol() {
-    return nodeCol;
-  }
     
   @Override
   public Iterable<DBObject> iterateEdgesBetweenNodes(String fromNodeUid, String toNodeUid)

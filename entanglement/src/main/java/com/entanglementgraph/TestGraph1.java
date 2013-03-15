@@ -19,6 +19,7 @@
 package com.entanglementgraph;
 
 import com.entanglementgraph.graph.data.Edge;
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.commands.*;
 import com.entanglementgraph.util.GraphConnection;
@@ -95,6 +96,7 @@ public class TestGraph1
     GraphConnection chromConn = connFact.connect("chromosomes", "trunk");
     GraphConnection genesConn = connFact.connect("genes", "trunk");
 
+    // Populate chromosomes graph
     String txnId = TxnUtils.beginNewTransaction(chromConn);
     List<GraphOperation> ops = new LinkedList<>();
     for (int i=0; i<3; i++) {
@@ -104,10 +106,36 @@ public class TestGraph1
       chromosome.getKeys().addUid(UidGenerator.generateUid());
       chromosome.setDescription("This is chromosome " + i);
       ops.add(NodeModification.create(chromConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
-//      ops.add(new NodeModification(IdentificationType.NAME, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
     }
     chromConn.getRevisionLog().submitRevisions(chromConn.getGraphName(), chromConn.getGraphBranch(), txnId, 1, ops);
     TxnUtils.commitTransaction(chromConn, txnId);
+
+
+    // Populate genes graph
+    txnId = TxnUtils.beginNewTransaction(genesConn);
+    ops = new LinkedList<>();
+    for (int i=0; i<3; i++) {
+      Gene gene = new Gene();
+      gene.getKeys().setType(Gene.class.getName());
+      gene.getKeys().addName("g" + i);
+      gene.getKeys().addUid(UidGenerator.generateUid());
+      gene.setDescription("This is gene " + i);
+      ops.add(NodeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, gene));
+
+      // Create a hanging edge between this gene and a chromosome.
+      // Note that the chromosome doesn't exist in the GENES graph.
+      ExistsWithin geneToChrom = new ExistsWithin();
+      geneToChrom.getKeys().setType(ExistsWithin.class.getName());
+      geneToChrom.getKeys().addUid(UidGenerator.generateUid());
+
+      geneToChrom.setHanging(true); //One or both of the connected nodes doesn't exist in this graph
+      geneToChrom.setFrom(gene.getKeys()); //Set the 'from' node
+      //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
+      geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), "c1"));
+      ops.add(EdgeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
+    }
+    genesConn.getRevisionLog().submitRevisions(genesConn.getGraphName(), genesConn.getGraphBranch(), txnId, 1, ops);
+    TxnUtils.commitTransaction(genesConn, txnId);
 
     System.out.println("\n\nDone.");
   }

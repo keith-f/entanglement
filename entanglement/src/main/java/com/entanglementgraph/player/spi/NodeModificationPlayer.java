@@ -82,6 +82,7 @@ public class NodeModificationPlayer
     try {
       this.nodeDao = nodeDao;
       this.edgeDao = edgeDao;
+      this.item = item;
       command = (NodeModification) item.getOp();
       reqSerializedNode = command.getNode();
 
