@@ -155,16 +155,15 @@ public class EdgeModificationPlayer
     */
     try {
       logger.info("Creating new edge in: "+edgeDao.getCollection().getFullName());
-      if (command.isAllowHanging()) {
-        reqSerializedEdge.put(EdgeDAO.FIELD_HANGING, true);
-      }
-      else
-      {
+
+      //If the command definitely doesn't allow hanging edges, then we need to make sure that the edge isn't hanging.
+      if (!command.isAllowHanging()) {
         //Check that both to/from node references are set and valid
         if (!reqSerializedEdge.containsField(EdgeDAO.FIELD_FROM) ||
             !reqSerializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_TYPE)) {
-          throw new LogPlayerException("Can't play operation: "+item.getOp()
-              + ". Either " + EdgeDAO.FIELD_FROM +" or "+ EdgeDAO.FIELD_TO + " were not set.");
+          throw new LogPlayerException("Can't play operation: "
+              + ". Either " + EdgeDAO.FIELD_FROM +" or "+ EdgeDAO.FIELD_TO + " were not set." +
+              "\nOperation was: "+item.getOp());
         }
 
         EntityKeys from = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM);
@@ -185,6 +184,7 @@ public class EdgeModificationPlayer
                   + ", and the 'to' node doesn't exist: "+to);
         }
 
+        // We've proved that this edge isn't hanging, so set the appropriate edge property.
         reqSerializedEdge.put(EdgeDAO.FIELD_HANGING, false);
       } //End !command.isAllowHanging()
 

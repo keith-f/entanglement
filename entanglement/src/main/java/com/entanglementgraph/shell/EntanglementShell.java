@@ -98,7 +98,7 @@ public class EntanglementShell
     }
 
     Shell shell = ShellFactory.createConsoleShell(
-            "entanglementgraph", "\n\nWelcome to Entanglement - let the hairballs commence!\n", new EntanglementShell(state));
+            "entanglement", "\n\nWelcome to Entanglement - let the hairballs commence!\n", new EntanglementShell(state));
     shell.setDisplayTime(true);
     return shell;
   }
@@ -179,6 +179,13 @@ public class EntanglementShell
     edgeDao = connection.getEdgeDao();
 
     logger.info("Connected!");
+  }
+
+  @Command
+  @Deprecated
+  public void startNavigator()
+      throws IOException, GraphModelException {
+    NavigatorShell.startSubShell(new NavigatorShell());
   }
   
   @Command

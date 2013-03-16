@@ -37,20 +37,21 @@ public class EdgeModification
 {
   private static final Logger logger = Logger.getLogger(EdgeModification.class.getName());
 
-  public static EdgeModification create(GraphConnection graphConn, MergePolicy mergePol, Edge edge)
+  public static EdgeModification create(GraphConnection graphConn,
+                                        MergePolicy mergePol, boolean allowHanging, Edge edge)
       throws DbObjectMarshallerException {
     BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
-    EdgeModification op = new EdgeModification(mergePol, edgeSer);
+    EdgeModification op = new EdgeModification(mergePol, allowHanging, edgeSer);
     return op;
   }
 
   public static List<EdgeModification> create(GraphConnection graphConn,
-                                              MergePolicy mergePol, Collection<Edge> edges)
+                                              MergePolicy mergePol, boolean allowHanging, Collection<Edge> edges)
       throws DbObjectMarshallerException {
     List<EdgeModification> ops = new ArrayList<>(edges.size());
     for (Edge edge : edges) {
       BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
-      EdgeModification op = new EdgeModification(mergePol, edgeSer);
+      EdgeModification op = new EdgeModification(mergePol, allowHanging, edgeSer);
       ops.add(op);
     }
     return ops;
@@ -79,7 +80,13 @@ public class EdgeModification
     this.edge = edge;
     this.allowHanging = false;
   }
-  
+
+  public EdgeModification(MergePolicy mergePol, boolean allowHanging, BasicDBObject edge)
+  {
+    this.mergePol = mergePol;
+    this.edge = edge;
+    this.allowHanging = allowHanging;
+  }
   
   
   @Override
