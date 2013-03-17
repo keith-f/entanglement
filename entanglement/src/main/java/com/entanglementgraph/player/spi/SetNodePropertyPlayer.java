@@ -34,18 +34,13 @@ public class SetNodePropertyPlayer
     extends AbstractLogItemPlayer
 {
   @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
-  
-  @Override
   public String getSupportedLogItemType()
   {
     return SetNodeProperty.class.getSimpleName();
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     try {

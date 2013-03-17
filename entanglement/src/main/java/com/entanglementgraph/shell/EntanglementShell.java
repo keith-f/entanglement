@@ -23,6 +23,7 @@ import asg.cliche.Command;
 import asg.cliche.Param;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
@@ -72,12 +73,14 @@ public class EntanglementShell
           Logger.getLogger(EntanglementShell.class.getName());
 
   private ShellState state;
+
+  private GraphConnection graphConn;
   
-  private static Mongo mongo;
-  private static DB db;
-  private static RevisionLog revLog;
-  private static NodeDAO nodeDao;
-  private static EdgeDAO edgeDao;
+//  private static Mongo mongo;
+//  private static DB db;
+//  private static RevisionLog revLog;
+//  private static NodeDAO nodeDao;
+//  private static EdgeDAO edgeDao;
 
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
@@ -171,35 +174,23 @@ public class EntanglementShell
       factory.setInsertMode(InsertMode.valueOf(insertMode));
     }
     GraphConnection connection = factory.connect(graphName, branchName);
-
-    mongo = connection.getMongo();
-    db = connection.getDb();
-    revLog = connection.getRevisionLog();
-    nodeDao = connection.getNodeDao();
-    edgeDao = connection.getEdgeDao();
+    graphConn = connection;
 
     logger.info("Connected!");
-  }
-
-  @Command
-  @Deprecated
-  public void startNavigator()
-      throws IOException, GraphModelException {
-    NavigatorShell.startSubShell(new NavigatorShell());
   }
   
   @Command
   public void startNavigator(String nodeUid)
           throws IOException, GraphModelException {
-    NavigatorShell navShell = new NavigatorShell(revLog, nodeDao, edgeDao, nodeUid);
+    NavigatorShell navShell = new NavigatorShell(graphConn, nodeUid);
     NavigatorShell.startSubShell(navShell);
   }
   @Command
   public void startNavigator(String nodeType, String nodeName) 
           throws IOException, GraphModelException {
     //FIXME - we need to go through this code and use keys instead of UIDs.
-    String nodeUid = nodeDao.getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
-    NavigatorShell navShell = new NavigatorShell(revLog, nodeDao, edgeDao, nodeUid);
+    String nodeUid = graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
+    NavigatorShell navShell = new NavigatorShell(graphConn, nodeUid);
     NavigatorShell.startSubShell(navShell);
   }
   
@@ -252,7 +243,7 @@ public class EntanglementShell
     logger.info("Listing revisions for: "+graphName+"/"+branchName);
     
     int count = 0;
-    for (RevisionItemContainer container : revLog.iterateCommittedRevisionsForGraph(graphName, branchName))
+    for (RevisionItemContainer container : graphConn.getRevisionLog().iterateCommittedRevisionsForGraph(graphName, branchName))
     {
       StringBuilder txt = new StringBuilder("  Rev: ");
       txt.append(container.getTransactionUid()).append(", ").append(container.getTxnSubmitId()).append(", ");
@@ -274,7 +265,7 @@ public class EntanglementShell
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
     
-    AsciiArtPrinter.printGraphAsAsciiArt(graphName, branchName, revLog);
+    AsciiArtPrinter.printGraphAsAsciiArt(graphName, branchName, graphConn.getRevisionLog());
   }
 
   @Command
@@ -288,7 +279,7 @@ public class EntanglementShell
   public void exportGraphAsGdf(File outputFile, File colorPropsFile)
            throws IOException, GraphModelException, RevisionLogException
   {
-    GraphToGDFExporter exporter = new GraphToGDFExporter(marshaller, revLog, nodeDao, edgeDao);
+    GraphToGDFExporter exporter = new GraphToGDFExporter(graphConn);
     exporter.setColorPropsFile(colorPropsFile);
     exporter.setOutputFile(outputFile);
     exporter.writeToFile();
@@ -299,7 +290,7 @@ public class EntanglementShell
   public void exportGraphAsGdf()
           throws IOException, GraphModelException, RevisionLogException
   {
-    GraphToGDFExporter exporter = new GraphToGDFExporter(marshaller, revLog, nodeDao, edgeDao);
+    GraphToGDFExporter exporter = new GraphToGDFExporter(graphConn);
     System.out.println(exporter.writeToString());
     System.out.println("Done.");
   }
@@ -308,7 +299,7 @@ public class EntanglementShell
   public void exportGraphAsGexf(File outputFile)
            throws IOException, GraphModelException, RevisionLogException
   {
-    MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
     exporter.exportGexf(outputFile);
     System.out.println("Done.");
   }
@@ -321,27 +312,26 @@ public class EntanglementShell
           File nodeToColorMapping) 
            throws IOException, GraphModelException, RevisionLogException
   {
-    MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
     exporter.setColorPropsFile(nodeToColorMapping);
     exporter.exportGexf(outputFile);
     System.out.println("Done.");
   }
   
-  @Command
-  public void playAllRevisions()
-      throws RevisionLogException, GraphModelException, LogPlayerException {
-    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-    
-    System.out.println("Playing all committed revisions from the revision history "
-            + "list into a graph structure: "+graphName+"/"+branchName);
-    
-    LogPlayer player = new LogPlayerMongoDbImpl(classLoader, marshaller,
-            graphName, branchName, revLog, nodeDao, edgeDao);
-    player.replayAllRevisions();
-    
-    System.out.println("Done.");
-  }
+//  @Command
+//  public void playAllRevisions()
+//      throws RevisionLogException, GraphModelException, LogPlayerException {
+//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
+//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
+//
+//    System.out.println("Playing all committed revisions from the revision history "
+//            + "list into a graph structure: "+graphName+"/"+branchName);
+//
+//    LogPlayer player = new LogPlayerMongoDbImpl(graphConn);
+//    player.replayAllRevisions();
+//
+//    System.out.println("Done.");
+//  }
   
  
   
@@ -354,7 +344,7 @@ public class EntanglementShell
   @Command
   public void findGraphNodeByUid(String uid)
       throws RevisionLogException, GraphModelException {
-    DBObject node = nodeDao.getByUid(uid);
+    DBObject node = graphConn.getNodeDao().getByUid(uid);
     if (node == null) {
       System.out.println("No node with UID: "+uid);
     } else {
@@ -366,7 +356,7 @@ public class EntanglementShell
   @Command
   public void findGraphNodeByName(String nodeType, String wellKnownName)
       throws RevisionLogException, GraphModelException {
-    DBObject node = nodeDao.getByName(nodeType, wellKnownName);
+    DBObject node = graphConn.getNodeDao().getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
     } else {
@@ -378,7 +368,7 @@ public class EntanglementShell
   @Command
   public void printPropertiesOfNamedNode(String nodeType, String wellKnownName)
       throws RevisionLogException, GraphModelException {
-    DBObject node = nodeDao.getByName(nodeType, wellKnownName);
+    DBObject node = graphConn.getNodeDao().getByName(nodeType, wellKnownName);
     if (node == null) {
       System.out.println("No node with name: "+wellKnownName);
       return;
@@ -396,7 +386,7 @@ public class EntanglementShell
   @Command
   public void listNodeTypes() throws GraphModelException
   {
-    List<String> types = nodeDao.listTypes();
+    List<String> types = graphConn.getNodeDao().listTypes();
     System.out.println(types.size()+" node types are present:");
     for(String type : types) {
       System.out.println("  * "+type);
@@ -406,10 +396,10 @@ public class EntanglementShell
   @Command
   public void listNodeUids(String type, int offset, int limit) throws GraphModelException
   {
-    Iterable<String> uidItr = nodeDao.iterateIdsByType(type, offset, limit);
+    Iterable<EntityKeys> keysItr = graphConn.getNodeDao().iterateKeysByType(type, offset, limit);
     System.out.println("UIDs of nodes with type: "+type);
-    for (String uid : uidItr) {
-      System.out.println("  * "+uid);
+    for (EntityKeys keys : keysItr) {
+      System.out.println("  * "+keys.getType()+": "+keys.getUids()+"; "+keys.getNames());
     }
   }
 //  @Command
@@ -425,14 +415,14 @@ public class EntanglementShell
   @Command
   public void countNodes() throws GraphModelException
   {
-    long count = nodeDao.count();
+    long count = graphConn.getNodeDao().count();
     System.out.println("Total nodes: "+count);
   }
   
   @Command
   public void countNodes(String type) throws GraphModelException
   {
-    long count = nodeDao.countByType(type);
+    long count = graphConn.getNodeDao().countByType(type);
     System.out.println("Total nodes of type: "+type+": "+count);
   }
   
@@ -603,7 +593,7 @@ public class EntanglementShell
     StringBuilder sb = new StringBuilder();
     sb.append("Sending a 'begin transaction' command for transaction ID: ").append(txnId);
     System.out.println(sb);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
+    graphConn.getRevisionLog().submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
   }
   
   @Command
@@ -620,7 +610,7 @@ public class EntanglementShell
     sb.append("Sending a 'rollback transaction' command for transaction ID: ").append(txnId);
     sb.append("\nFor convenience, now setting a new random transaction ID: "+newTxnId);
     System.out.println(sb);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
+    graphConn.getRevisionLog().submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
   }
   
   @Command
@@ -637,7 +627,7 @@ public class EntanglementShell
     sb.append("Sending a 'commit transaction' command for transaction ID: ").append(txnId);
     sb.append("\nFor convenience, now setting a new random transaction ID: "+newTxnId);
     System.out.println(sb);
-    revLog.submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
+    graphConn.getRevisionLog().submitRevision(graphName, branchName, txnId, txnSubmitId, txOp);
   }
   
 }

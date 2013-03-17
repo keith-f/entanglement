@@ -141,6 +141,23 @@ public class TestGraph1
     genesConn.getRevisionLog().submitRevisions(genesConn.getGraphName(), genesConn.getGraphBranch(), txnId, 1, ops);
     TxnUtils.commitTransaction(genesConn, txnId);
 
+
+    /*
+     * We now have two graphs:
+     * Chromosomes: contains 3 nodes
+     * Genes: contains 3 nodes, 3 (hanging edges)
+     *
+     * Next, try importing these graphs into a third 'integrated' graph:
+     */
+    GraphConnection mergedConn = connFact.connect("merged", "trunk");
+
+    txnId = TxnUtils.beginNewTransaction(mergedConn);
+    ops = new LinkedList<>();
+    ops.add(new BranchImport("chromosomes", "trunk"));
+    ops.add(new BranchImport("genes", "trunk"));
+    mergedConn.getRevisionLog().submitRevisions(mergedConn.getGraphName(), mergedConn.getGraphBranch(), txnId, 1, ops);
+    TxnUtils.commitTransaction(mergedConn, txnId);
+
     System.out.println("\n\nDone.");
   }
   

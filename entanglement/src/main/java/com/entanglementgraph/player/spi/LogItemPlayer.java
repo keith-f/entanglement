@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.player.spi;
 
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
@@ -32,12 +33,10 @@ import com.entanglementgraph.revlog.data.RevisionItem;
  */
 public interface LogItemPlayer
 {
-  public void initialise(ClassLoader cl, Mongo mongo, DB db);
-  
-  public void setMarshaller(DbObjectMarshaller marshaller);
+  public void setGraphConnection(GraphConnection graphConn);
   
   public String getSupportedLogItemType();
   
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException;
 }

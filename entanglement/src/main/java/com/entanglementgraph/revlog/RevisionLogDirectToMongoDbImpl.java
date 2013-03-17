@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.revlog;
 
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
@@ -76,7 +77,9 @@ public class RevisionLogDirectToMongoDbImpl
   private static final String DEFAULT_COL_REVLOG = "revisions";
   
   private final Set<RevisionLogListener> listeners;
-  
+
+  private final GraphConnection graphConn;
+
 //  private final HazelcastInstance hz;
   private final Mongo m;
   private final DB db;
@@ -89,20 +92,21 @@ public class RevisionLogDirectToMongoDbImpl
   
 //  private final JsonUtils serializer;
   private final DbObjectMarshaller marshaller;
-  
-  public RevisionLogDirectToMongoDbImpl(ClassLoader classLoader, Mongo m, DB db)
+
+  public RevisionLogDirectToMongoDbImpl(GraphConnection graphConn)
       throws RevisionLogException
   {
     this.listeners = new HashSet<>();
     this.revLogColName = DEFAULT_COL_REVLOG;
-    
-    
-    this.m = m;
-    this.db = db;
+
+    this.graphConn = graphConn;
+
+    this.m = graphConn.getMongo();
+    this.db = graphConn.getDb();
     this.revLogCol = db.getCollection(revLogColName);
-    
-    marshaller = ObjectMarshallerFactory.create(classLoader);
-    
+
+    marshaller = ObjectMarshallerFactory.create(graphConn.getClassLoader());
+
     //Create indexes
     revLogCol.ensureIndex(IDX__TXN_UID__COMMITTED);
     revLogCol.ensureIndex(IDX__TXN_SUBMIT_ID);

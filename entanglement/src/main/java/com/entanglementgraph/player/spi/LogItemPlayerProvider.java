@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.player.spi;
 
+import com.entanglementgraph.util.GraphConnection;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,17 +34,27 @@ public class LogItemPlayerProvider
   private static final Logger logger = 
           Logger.getLogger(LogItemPlayerProvider.class.getName());
   
-  private final DbObjectMarshaller marshaller;
+  private final GraphConnection graphConn;
+
+
   private final ServiceLoader<LogItemPlayer> logItemPlayerLoader;
   private final Map<String, LogItemPlayer> typeToProvider;
-  
-  public LogItemPlayerProvider(ClassLoader cl, DbObjectMarshaller marshaller)
+
+  public LogItemPlayerProvider(GraphConnection graphConn)
   {
-    this.marshaller = marshaller;
-    logger.info("Using classloader: "+cl);
-    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class, cl);
+    this.graphConn = graphConn;
+    logger.info("Using classloader: "+graphConn.getClassLoader());
+    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class, graphConn.getClassLoader());
     typeToProvider = new HashMap<>();
   }
+
+//  public LogItemPlayerProvider(ClassLoader cl, DbObjectMarshaller marshaller)
+//  {
+//    this.marshaller = marshaller;
+//    logger.info("Using classloader: "+cl);
+//    logItemPlayerLoader = ServiceLoader.load(LogItemPlayer.class, cl);
+//    typeToProvider = new HashMap<>();
+//  }
 
   public LogItemPlayer getPlayerFor(String itemType)
       throws LogItemPlayerProviderException
@@ -54,7 +65,7 @@ public class LogItemPlayerProvider
     
     for (LogItemPlayer impl : logItemPlayerLoader) {
       if (impl.getSupportedLogItemType().equals(itemType)) {
-        impl.setMarshaller(marshaller);
+        impl.setGraphConnection(graphConn);
         typeToProvider.put(itemType, impl);
         return impl;
       }

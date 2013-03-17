@@ -19,6 +19,8 @@
 package com.entanglementgraph.player.spi;
 
 
+import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import java.util.logging.Logger;
@@ -33,8 +35,7 @@ import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.revlog.data.RevisionItem;
 
 /**
- * Creates a node without performing any checks regarding whether it already
- * exists. 
+ *
  * 
  * @author Keith Flanagan
  */
@@ -43,22 +44,7 @@ public class BranchImportPlayer
 {
   private static final Logger logger =
           Logger.getLogger(BranchImportPlayer.class.getName());
- 
-  /*
-   * Set on initialisation
-   */
-  private ClassLoader cl;
-  private Mongo m;
-  private DB db;
 
-  
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-    this.cl = cl;
-    this.m = mongo;
-    this.db = db;
-  }
   
   @Override
   public String getSupportedLogItemType()
@@ -67,27 +53,36 @@ public class BranchImportPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
+    String sourceGraphName = null;
+    String sourceGraphBranch = null;
     try {
       BranchImport command = (BranchImport) item.getOp();
       
-      String fromGraphUid = command.getFromGraphUid();
-      String fromBranchUid = command.getFromBranchUid();
+      sourceGraphName = command.getFromGraphUid();
+      sourceGraphBranch = command.getFromBranchUid();
       
-      
-      
-      RevisionLog fromRevLog = new RevisionLogDirectToMongoDbImpl(cl, m, db);
-      
-      LogPlayer fromLogPlayer = new LogPlayerMongoDbImpl(cl, marshaller, 
-              fromGraphUid, fromBranchUid, fromRevLog, nodeDao, edgeDao);
-      fromLogPlayer.replayAllRevisions();
+      /*
+       * The graphConnection object in this player is the TARGET graph connection. To replay updates from the SOURCE
+       * graph, we'll need to create another connection object.
+       *
+       * To do this, we assume that the SOURCE graph is in the same MongoDB cluster and database as the TARGET graph.
+       * We may wish to change this in future.
+       */
+      GraphConnectionFactory connFact = new GraphConnectionFactory(
+          graphConnection.getClassLoader(),
+          graphConnection.getMongo().getAddress().getHost(), graphConnection.getDb().getName());
+
+      GraphConnection sourceGraphConn = connFact.connect(sourceGraphName, sourceGraphBranch);
+
+      LogPlayer sourceLogPlayer = new LogPlayerMongoDbImpl(sourceGraphConn, graphConnection);
+      sourceLogPlayer.replayAllRevisions();
        
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to play +"
-              +item.getOp().getClass().getSimpleName()+" command. "
-              +" Failed to merge graphs.", e);
+      throw new LogPlayerException("Failed to import all revision history from graph/branch: "
+          + sourceGraphName + "/" + sourceGraphBranch + ". Commands was:\n"+item.getOp(), e);
     }
   }
 

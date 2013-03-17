@@ -17,6 +17,9 @@
 
 package com.entanglementgraph.player.spi;
 
+import com.entanglementgraph.graph.EdgeDAO;
+import com.entanglementgraph.graph.NodeDAO;
+import com.entanglementgraph.util.GraphConnection;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 
 /**
@@ -26,11 +29,17 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 abstract public class AbstractLogItemPlayer
     implements LogItemPlayer
 {
+  protected GraphConnection graphConnection;
+  protected NodeDAO nodeDao;
+  protected EdgeDAO edgeDao;
   protected DbObjectMarshaller marshaller;
   
   @Override
-  public void setMarshaller(DbObjectMarshaller marshaller)
+  public void setGraphConnection(GraphConnection graphConnection)
   {
-    this.marshaller = marshaller;
+    this.graphConnection = graphConnection;
+    nodeDao = graphConnection.getNodeDao();
+    edgeDao = graphConnection.getEdgeDao();
+    marshaller = graphConnection.getMarshaller();
   }
 }

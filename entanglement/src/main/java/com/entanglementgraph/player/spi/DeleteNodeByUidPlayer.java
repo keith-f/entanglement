@@ -33,10 +33,6 @@ import com.entanglementgraph.revlog.data.RevisionItem;
 public class DeleteNodeByUidPlayer
     extends AbstractLogItemPlayer
 {
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
   
   @Override
   public String getSupportedLogItemType()
@@ -45,7 +41,7 @@ public class DeleteNodeByUidPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     try {

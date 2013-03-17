@@ -33,13 +33,8 @@ import com.entanglementgraph.revlog.data.RevisionItem;
 public class TransactionCommitPlayer
     extends AbstractLogItemPlayer
 {
-  private static final Logger logger =
-          Logger.getLogger(TransactionCommitPlayer.class.getName());
-  
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
+  private static final Logger logger = Logger.getLogger(TransactionCommitPlayer.class.getName());
+
   
   @Override
   public String getSupportedLogItemType()
@@ -48,13 +43,12 @@ public class TransactionCommitPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     TransactionCommit txn = (TransactionCommit) item.getOp();
     
-    logger.info("Acknowledging COMMIT of transaction: "+txn.getUid()
-            + "Nothing to do here yet.");
+    logger.info("Acknowledging COMMIT of transaction: "+txn.getUid() + "Nothing to do here yet.");
   }
 
 }

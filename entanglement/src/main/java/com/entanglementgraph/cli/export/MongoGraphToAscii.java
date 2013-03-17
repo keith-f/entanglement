@@ -18,6 +18,9 @@
 
 package com.entanglementgraph.cli.export;
 
+import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.mongodb.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -54,8 +57,7 @@ public class MongoGraphToAscii
     System.exit(0);
   }
   
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, IOException, GraphModelException
-  {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException, IOException, GraphModelException, GraphConnectionFactoryException {
     CommandLineParser parser = new PosixParser();
     Options options = new Options();
     
@@ -140,55 +142,30 @@ public class MongoGraphToAscii
       System.exit(1);
     }
 
+    GraphConnectionFactory connFact = new GraphConnectionFactory(classLoader, mongoHost, mongoDatabaseName);
+    GraphConnection conn = connFact.connect(graphName, graphBranch);
     
-    
-    Mongo m = new Mongo();
-//    Mongo m = new Mongo( "localhost" );
-    // or
-//    Mongo m = new Mongo( "localhost" , 27017 );
-    // or, to connect to a replica set, supply a seed list of members
-//    Mongo m = new Mongo(Arrays.asList(new ServerAddress("localhost", 27017),
-//                                          new ServerAddress("localhost", 27018),
-//                                          new ServerAddress("localhost", 27019)));
-    m.setWriteConcern(WriteConcern.SAFE);
-    DB db = m.getDB(mongoDatabaseName);
-//    boolean auth = db.authenticate(myUserName, myPassword);
-    
-    exportAscii(m, db, graphName, graphBranch, new File(outputFilename));
+    exportAscii(conn, new File(outputFilename));
     System.out.println("\n\nDone.");
   }
 
   
   
-  private static void exportAscii(Mongo m, DB db, String graphName, String graphBranch, 
-      File outputFile)
+  private static void exportAscii(GraphConnection conn, File outputFile)
       throws IOException, GraphModelException, RevisionLogException
   {
-    /*
-     * Database access
-     */
-    GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
-    DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-    DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    
-    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
-    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
-    
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
-    
-    
     /*
      * File writer
      */
     BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
     
     writer.append("Nodes:\n");
-    for (DBObject node : nodeDao.iterateAll()) {
+    for (DBObject node : conn.getNodeDao().iterateAll()) {
       writer.append(node.toString()).append("\n");
     }
     
     writer.append("Edges:\n");
-    for (DBObject edge : edgeDao.iterateAll()) {
+    for (DBObject edge : conn.getEdgeDao().iterateAll()) {
       writer.append(edge.toString()).append("\n");
     }
     

@@ -35,11 +35,7 @@ public class TransactionBeginPlayer
 {
   private static final Logger logger =
           Logger.getLogger(TransactionBeginPlayer.class.getName());
-  
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
+
   
   @Override
   public String getSupportedLogItemType()
@@ -48,7 +44,7 @@ public class TransactionBeginPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     TransactionBegin txn = (TransactionBegin) item.getOp();

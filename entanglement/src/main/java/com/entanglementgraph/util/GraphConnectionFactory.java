@@ -70,11 +70,21 @@ public class GraphConnectionFactory {
     try {
       logger.info("Connecting to: "+hostname+"/"+database+", graph: "+graphName+"/"+graphBranch);
 
+      GraphConnection connection = new GraphConnection();
+
+      // Underlying connection to MongoDB
       MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
       Mongo mongo = dbFactory.createMongoConnection();
       DB db = mongo.getDB(database);
+      connection.setClassLoader(classLoader);
+      connection.setMongo(mongo);
+      connection.setDb(db);
+      connection.setGraphBranch(graphBranch);
+      connection.setGraphName(graphName);
+      connection.setMarshaller(marshaller);
 
-      RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(classLoader, mongo, db);
+      RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(connection);
+      connection.setRevisionLog(revLog);
 
       GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
       DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
@@ -85,23 +95,15 @@ public class GraphConnectionFactory {
       System.out.println("Setting DAO insert mode to: "+insertMode);
       nodeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
       edgeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
+      connection.setEdgeDao(edgeDao);
+      connection.setNodeDao(nodeDao);
+
+      // Connection object is fully populated at this point.
 
       //Wire up a player by default
-      LogPlayer logPlayer = new LogPlayerMongoDbImpl(classLoader, marshaller,
-          graphName, graphBranch, revLog, nodeDao, edgeDao);
+      LogPlayer logPlayer = new LogPlayerMongoDbImpl(connection, connection);
       GraphOpPostCommitPlayer opPlayer = new GraphOpPostCommitPlayer(logPlayer);
       revLog.addListener(opPlayer);
-
-      GraphConnection connection = new GraphConnection();
-      connection.setClassLoader(classLoader);
-      connection.setDb(db);
-      connection.setEdgeDao(edgeDao);
-      connection.setGraphBranch(graphBranch);
-      connection.setGraphName(graphName);
-      connection.setMarshaller(marshaller);
-      connection.setMongo(mongo);
-      connection.setNodeDao(nodeDao);
-      connection.setRevisionLog(revLog);
 
       return connection;
     } catch (Exception e) {

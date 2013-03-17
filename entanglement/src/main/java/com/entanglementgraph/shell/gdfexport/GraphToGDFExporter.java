@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.shell.gdfexport;
 
+import com.entanglementgraph.util.GraphConnection;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 
@@ -47,7 +48,8 @@ import com.entanglementgraph.revlog.RevisionLogException;
 public class GraphToGDFExporter
 {
   private static final Color DEFAULT_COLOR = Color.BLACK;
-  
+
+  private final GraphConnection graphConn;
   private final DbObjectMarshaller marshaller;
   private final NodeDAO nodeDao;
   private final EdgeDAO edgeDao;
@@ -57,12 +59,13 @@ public class GraphToGDFExporter
   private File colorPropsFile;
   private File outputFile;
   
-  public GraphToGDFExporter(DbObjectMarshaller marshaller, RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao)
+  public GraphToGDFExporter(GraphConnection graphConn)
   {
-    this.marshaller = marshaller;
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
-    this.revLog = revLog;
+    this.graphConn = graphConn;
+    this.marshaller = graphConn.getMarshaller();
+    this.nodeDao = graphConn.getNodeDao();
+    this.edgeDao = graphConn.getEdgeDao();
+    this.revLog = graphConn.getRevisionLog();
   }
   
   public void writeToFile() throws IOException, GraphModelException, RevisionLogException

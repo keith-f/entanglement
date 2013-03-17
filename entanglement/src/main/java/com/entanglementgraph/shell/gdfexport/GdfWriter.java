@@ -59,7 +59,7 @@ public class GdfWriter
   public void writeNode(DBObject node, Color c) throws IOException
   {
     StringBuilder sb = new StringBuilder();
-    sb.append(node.get(NodeDAO.FIELD_UID));
+    sb.append(node.get(NodeDAO.FIELD_KEYS));
     sb.append(",").append(node.get(NodeDAO.FIELD_TYPE));
 //    sb.append(",").append(node.getIncomingEdgeIds().size());
     

@@ -33,13 +33,7 @@ import com.entanglementgraph.revlog.data.RevisionItem;
 public class TransactionRollbackPlayer
     extends AbstractLogItemPlayer
 {
-  private static final Logger logger =
-          Logger.getLogger(TransactionRollbackPlayer.class.getName());
-  
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
+  private static final Logger logger = Logger.getLogger(TransactionRollbackPlayer.class.getName());
   
   @Override
   public String getSupportedLogItemType()
@@ -48,7 +42,7 @@ public class TransactionRollbackPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     TransactionRollback txn = (TransactionRollback) item.getOp();

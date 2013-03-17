@@ -46,6 +46,11 @@ public class BranchImport
   public BranchImport() {
   }
 
+  public BranchImport(String fromGraphUid, String fromBranchUid) {
+    this.fromGraphUid = fromGraphUid;
+    this.fromBranchUid = fromBranchUid;
+  }
+
   public String getFromGraphUid() {
     return fromGraphUid;
   }

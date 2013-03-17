@@ -17,6 +17,9 @@
  */
 package com.entanglementgraph.cli.export;
 
+import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
@@ -73,9 +76,9 @@ public class MongoGraphToGephi {
   //Optional file containing node type --> Color
   private File colorPropsFile;
 
-  public MongoGraphToGephi(NodeDAO nodeDao, EdgeDAO edgeDao) {
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
+  public MongoGraphToGephi(GraphConnection conn) {
+    this.nodeDao = conn.getNodeDao();
+    this.edgeDao = conn.getEdgeDao();
   }
 
   private static void printHelpExit(Options options) {
@@ -90,8 +93,8 @@ public class MongoGraphToGephi {
   }
 
   public static void main(String[] args) throws UnknownHostException,
-          RevisionLogException, IOException,
-          GraphModelException {
+      RevisionLogException, IOException,
+      GraphModelException, GraphConnectionFactoryException {
     CommandLineParser parser = new PosixParser();
     Options options = new Options();
 
@@ -176,19 +179,10 @@ public class MongoGraphToGephi {
     }
 
 
+    GraphConnectionFactory connFact = new GraphConnectionFactory(classLoader, mongoHost, mongoDatabaseName);
+    GraphConnection conn = connFact.connect(graphName, graphBranch);
 
-    Mongo m = new Mongo();
-    m.setWriteConcern(WriteConcern.SAFE);
-    DB db = m.getDB(mongoDatabaseName);
-
-    GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
-    DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-    DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
-    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
-
-    MongoGraphToGephi exporter = new MongoGraphToGephi(nodeDao, edgeDao);
+    MongoGraphToGephi exporter = new MongoGraphToGephi(conn);
     exporter.exportGexf(new File(outputFilename));
     System.out.println("\n\nDone.");
   }
@@ -229,8 +223,8 @@ public class MongoGraphToGephi {
 //        Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
 //        for (Node node : nodeItr) {
     for (DBObject node : nodeDao.iterateAll()) {
-      String uidStr = (String) node.get(NodeDAO.FIELD_UID);
-      BasicDBList names = (BasicDBList) node.get(NodeDAO.FIELD_NAMES);
+      String uidStr = (String) node.get(NodeDAO.FIELD_KEYS);//FIXME parse proper names from EntityKeys here
+      String names = (String) node.get(NodeDAO.FIELD_KEYS); //FIXME parse proper names from EntityKeys here
 //      String name = (String) node.get(NodeDAO.FIELD_NAME);
       String type = (String) node.get(NodeDAO.FIELD_TYPE);
       Color nodeColour = DEFAULT_COLOR;

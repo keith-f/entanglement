@@ -39,18 +39,13 @@ public class FixHangingEdgePlayer
   private static final Logger logger = Logger.getLogger(FixHangingEdgePlayer.class.getName());
   
   @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
-  
-  @Override
   public String getSupportedLogItemType()
   {
     return FixHangingEdge.class.getSimpleName();
   }
   
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     try {

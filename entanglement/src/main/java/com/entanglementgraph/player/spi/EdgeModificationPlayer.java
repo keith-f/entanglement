@@ -18,9 +18,6 @@
 
 package com.entanglementgraph.player.spi;
 
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_UID;
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_TYPE;
-import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_NAMES;
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 
 import com.entanglementgraph.graph.data.EntityKeys;
@@ -52,10 +49,6 @@ public class EdgeModificationPlayer
   /*
    * These are set for every time <code>playItem</code> is called.
    */
-  private NodeDAO nodeDao;
-  private EdgeDAO edgeDao;
-
-
   // The currently playing revision item
   private RevisionItem item;
   // The command wrapped by the RevisionItem
@@ -64,11 +57,6 @@ public class EdgeModificationPlayer
   private BasicDBObject reqSerializedEdge;
   // The deserialized key field from the reqSerializedEdge. This identifies the object to be created/updated.
   private EntityKeys reqKeyset;
-  
-  @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
   
   @Override
   public String getSupportedLogItemType()
@@ -83,12 +71,10 @@ public class EdgeModificationPlayer
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     try {
-      this.nodeDao = nodeDao;
-      this.edgeDao = edgeDao;
       this.item = item;
       command = (EdgeModification) item.getOp();
       reqSerializedEdge = command.getEdge();

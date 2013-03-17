@@ -165,8 +165,8 @@ import java.util.Set;
   }
 
   @Override
-  public Iterable<String> iterateIdsByType(String typeName, int offset, int limit) throws GraphModelException {
-    return delegate.iterateIdsByType(typeName, offset, limit);
+  public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit) throws GraphModelException {
+    return delegate.iterateKeysByType(typeName, offset, limit);
   }
 
 //  @Override

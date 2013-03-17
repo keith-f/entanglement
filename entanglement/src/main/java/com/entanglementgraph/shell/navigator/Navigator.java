@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.shell.navigator;
 
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.DBObject;
 
 import java.util.SortedMap;
@@ -32,6 +33,7 @@ import com.entanglementgraph.graph.NodeDAO;
  */
 public class Navigator
 {
+  private final GraphConnection graphConn;
   private final NodeDAO nodeDao;
   private final EdgeDAO edgeDao;
   
@@ -43,30 +45,33 @@ public class Navigator
   
   private final Stack<Navigator> history;
 
-  public Navigator(NodeDAO nodeDao, EdgeDAO edgeDao, String startNodeUid)
+  public Navigator(GraphConnection graphConn, String startNodeUid)
           throws GraphModelException
   {
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
+    this.graphConn = graphConn;
+    this.nodeDao = graphConn.getNodeDao();
+    this.edgeDao = graphConn.getEdgeDao();
     this.history = new Stack<>();
     
     configure(startNodeUid);
   }
   
-  private Navigator(NodeDAO nodeDao, EdgeDAO edgeDao, Stack<Navigator> history, 
+  private Navigator(GraphConnection graphConn, Stack<Navigator> history,
           String startNodeUid) throws GraphModelException
   {
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
+    this.graphConn = graphConn;
+    this.nodeDao = graphConn.getNodeDao();
+    this.edgeDao = graphConn.getEdgeDao();
     this.history = history;
     configure(startNodeUid);
   }
   
-  private Navigator(NodeDAO nodeDao, EdgeDAO edgeDao, Stack<Navigator> history, 
+  private Navigator(GraphConnection graphConn, Stack<Navigator> history,
           DBObject node) throws GraphModelException
   {
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
+    this.graphConn = graphConn;
+    this.nodeDao = graphConn.getNodeDao();
+    this.edgeDao = graphConn.getEdgeDao();
     this.history = history;
     configure(node);
   }
@@ -80,11 +85,11 @@ public class Navigator
   private void configure(DBObject node) throws GraphModelException
   {
     setCurrentNode(node);
-    edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_UID));
+    edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_KEYS));
     getOutgoingEdgeTypeToCount().putAll(
-          edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_UID)));
+          edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_KEYS)));
     getIncomingEdgeTypeToCount().putAll(
-          edgeDao.countEdgesByTypeToNode((String) node.get(NodeDAO.FIELD_UID)));
+          edgeDao.countEdgesByTypeToNode((String) node.get(NodeDAO.FIELD_KEYS)));
 
     
     long incomingCount = 0;
@@ -120,7 +125,7 @@ public class Navigator
           throws NavigatorException
   {
     try {
-      return new Navigator(nodeDao, edgeDao, history, uid);
+      return new Navigator(graphConn, history, uid);
     } catch(Exception e) {
       throw new NavigatorException("Failed to perform navigator operation", e);
     }
@@ -131,7 +136,7 @@ public class Navigator
   {
     try {
       DBObject node = nodeDao.getByName(nodeType, nodeName);
-      return new Navigator(nodeDao, edgeDao, history, node);
+      return new Navigator(graphConn, history, node);
     } catch(Exception e) {
       throw new NavigatorException("Failed to perform navigator operation", e);
     }

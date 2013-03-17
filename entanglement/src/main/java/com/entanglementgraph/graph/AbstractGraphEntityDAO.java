@@ -49,12 +49,12 @@ abstract public class AbstractGraphEntityDAO
   /*
    * Indexes UID
    */
-  private static final DBObject IDX_UID = new BasicDBObject(FIELD_UID, 1);
+  private static final DBObject IDX_UIDS = new BasicDBObject(FIELD_KEYS+".uids", 1);
   /*
    * Indexes entity type, followed by entity name
    */
   private static final DBObject IDX_TYPE_AND_NAME = 
-          new BasicDBObject(FIELD_TYPE, 1).append(FIELD_NAMES, 1);
+          new BasicDBObject(FIELD_KEYS+".type", 1).append(FIELD_KEYS+".names", 1);
   
   protected final Mongo m;
   protected final DB db;
@@ -104,7 +104,7 @@ abstract public class AbstractGraphEntityDAO
     insertModeHint = InsertMode.INSERT_CONSISTENCY;
     
     //Make sure indexes exist
-    col.ensureIndex(IDX_UID);
+    col.ensureIndex(IDX_UIDS);
     col.ensureIndex(IDX_TYPE_AND_NAME);
   }
   
@@ -183,18 +183,27 @@ abstract public class AbstractGraphEntityDAO
   public void update(BasicDBObject updated)
       throws GraphModelException
   {
-    DBObject criteria;
-    
     try {
-      criteria = new BasicDBObject(FIELD_UID, updated.getString(FIELD_UID));
-      
+      logger.info("Updating object: "+updated);
+      EntityKeys keys = parseKeyset(updated);
+      BasicDBObject result = getByAnyUid(keys.getUids());
+      if (result == null) {
+        result = getByAnyName(keys.getType(), keys.getNames());
+      }
+      if (result == null) {
+        throw new GraphModelException("Failed to find any object with: "+keys.toString());
+      }
+
+      logger.info("Found: "+result);
+      DBObject criteria = new BasicDBObject(FIELD_KEYS, result.get(FIELD_KEYS));
+
+
+      logger.info("Criteria: "+criteria);
       //Perform atomic update of a single document
       col.findAndModify(criteria, updated);
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to update item: "
-              +updated.getString(FIELD_UID)+", "+updated.getString(FIELD_TYPE)
-              +", "+updated.getString(FIELD_NAMES), e);
+      throw new GraphModelException("Failed to update item: "+updated, e);
     }
   }
 
@@ -211,7 +220,10 @@ abstract public class AbstractGraphEntityDAO
     boolean upsert = false;
     
     try {
-      criteria = new BasicDBObject(FIELD_UID, uid);
+      criteria = new BasicDBObject();
+      BasicDBList uidList = new BasicDBList();
+      uidList.add(uid);
+      criteria.put(FIELD_KEYS+".uids", new BasicDBObject("$in", uidList));
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -249,8 +261,8 @@ abstract public class AbstractGraphEntityDAO
     try {
       BasicDBList nameList = new BasicDBList();
       nameList.add(entityName);
-      criteria = new BasicDBObject(FIELD_TYPE, entityType).
-              append(FIELD_NAMES, new BasicDBObject("$in", nameList));
+      criteria.put(FIELD_KEYS+".type", entityType);
+      criteria.put(FIELD_KEYS+".names",new BasicDBObject("$in", nameList));
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -281,7 +293,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(uid);
-      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS+".uids", new BasicDBObject("$in", uidList));
 
       fields = new BasicDBObject();
       fields.put(FIELD_KEYS, 1);
@@ -573,31 +585,12 @@ abstract public class AbstractGraphEntityDAO
             "Attempted a delete operation, but no such entity exists: "+uid);
       }
 
-      /*
-       * Below code is commented for now, but we need to implement this at 
-       * some point for consistency reasons.
-       */
-      // Check that this node doesn't connect to any others
-//      if (!toDelete.getOutgoingEdges().isEmpty())
-//      {
-//        throw new GraphModelException(
-//            "Attempted to delete node: "+nodeUid
-//            + ". However, the node contains outgoing edges to other nodes."
-//            + " Delete these first before attempting to remote this node.");
-//      }
-      
-      // Check that this node is not connected to by others
-//      if (!toDelete.getIncomingEdgeIds().isEmpty())
-//      {
-//        throw new GraphModelException(
-//            "Attempted to delete node: "+nodeUid
-//            + ". However, the node contains incoming edges from other nodes."
-//            + " Delete these first before attempting to remote this node.");
-//      }
       
       //Delete the specified object
       query = new BasicDBObject();
-      query.put(FIELD_UID, uid);
+      BasicDBList uidList = new BasicDBList();
+      uidList.add(uid);
+      query.put(FIELD_KEYS+".uids",new BasicDBObject("$in", uidList));
       
       WriteResult result = col.remove(query);
 //      logger.log(Level.INFO, "WriteResult: {0}", result.toString());
@@ -635,7 +628,7 @@ abstract public class AbstractGraphEntityDAO
       throws GraphModelException
   {
     try {
-      List<String> types = (List<String>) col.distinct(FIELD_TYPE);
+      List<String> types = (List<String>) col.distinct(FIELD_KEYS+".type");
       return types;
     }
     catch(Exception e) {
@@ -652,7 +645,7 @@ abstract public class AbstractGraphEntityDAO
     try {
 //      logger.log(Level.INFO, "Getting node(s) by type: {0}", typeName);
       query = new BasicDBObject();
-      query.put(FIELD_TYPE, typeName);
+      query.put(FIELD_KEYS+".type", typeName);
 
 //      logger.log(Level.INFO, "Generated query: {0}", query);
 
@@ -667,17 +660,17 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
+  public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
       throws GraphModelException
   {
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_TYPE, typeName);
-      DBObject keys = new BasicDBObject(FIELD_UID, 1);
+      query.put(FIELD_KEYS+".type", typeName);
+      DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
       DBCursor cursor = col.find(query, keys, offset, limit);
       
-      return new KeyExtractingIterable<>(cursor, FIELD_UID, String.class);
+      return new KeyExtractingIterable<>(cursor, FIELD_KEYS, EntityKeys.class);
     }
     catch(Exception e) {
       throw new GraphModelException(
@@ -694,7 +687,7 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = null;
     try {
       query = new BasicDBObject();
-      query.put(FIELD_TYPE, typeName);
+      query.put(FIELD_KEYS+".type", typeName);
       return col.count(query);
     }
     catch(Exception e) {

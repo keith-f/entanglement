@@ -19,6 +19,9 @@
 package com.entanglementgraph.cli.export;
 
 import com.entanglementgraph.shell.gdfexport.GdfWriter;
+import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
@@ -69,8 +72,7 @@ public class MongoGraphToGDF
     System.exit(0);
   }
   
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, IOException, GraphModelException
-  {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException, IOException, GraphModelException, GraphConnectionFactoryException {
     CommandLineParser parser = new PosixParser();
     Options options = new Options();
     
@@ -163,26 +165,15 @@ public class MongoGraphToGDF
       System.exit(1);
     }
 
-    
-    
-    Mongo m = new Mongo();
-//    Mongo m = new Mongo( "localhost" );
-    // or
-//    Mongo m = new Mongo( "localhost" , 27017 );
-    // or, to connect to a replica set, supply a seed list of members
-//    Mongo m = new Mongo(Arrays.asList(new ServerAddress("localhost", 27017),
-//                                          new ServerAddress("localhost", 27018),
-//                                          new ServerAddress("localhost", 27019)));
-    m.setWriteConcern(WriteConcern.SAFE);
-    DB db = m.getDB(mongoDatabaseName);
-//    boolean auth = db.authenticate(myUserName, myPassword);
-    
+    GraphConnectionFactory connFact = new GraphConnectionFactory(classLoader, mongoHost, mongoDatabaseName);
+    GraphConnection conn = connFact.connect(graphName, graphBranch);
+
     Map<String, Color> nodeColorMappings = new HashMap<>();
     if (colorPropsFilename != null) {
       nodeColorMappings.putAll(loadColorMappings(new File(colorPropsFilename)));
     }
     
-    exportGdf(m, db, nodeColorMappings, graphName, graphBranch, new File(outputFilename));
+    exportGdf(conn, nodeColorMappings, new File(outputFilename));
     System.out.println("\n\nDone.");
   }
 
@@ -250,22 +241,9 @@ public class MongoGraphToGDF
   }
   
   
-  private static void exportGdf(Mongo m, DB db, Map<String, Color> nodeColorMappings,
-          String graphName, String graphBranch, File outputFile)
+  private static void exportGdf(GraphConnection conn, Map<String, Color> nodeColorMappings, File outputFile)
       throws IOException, GraphModelException, RevisionLogException
   {
-    /*
-     * Database access
-     */
-    GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
-    DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-    DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-    
-    NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, m, db, nodeCol, edgeCol);
-    EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
-    
-    RevisionLog log = new RevisionLogDirectToMongoDbImpl(classLoader, m, db);
-    
     
     /*
      * GDF file writer
@@ -273,7 +251,7 @@ public class MongoGraphToGDF
     GdfWriter writer = new GdfWriter(new BufferedWriter(new FileWriter(outputFile)));
     
     writer.writeNodeDef();
-    Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
+    Iterable<Node> nodeItr = new DeserialisingIterable<>(conn.getNodeDao().iterateAll(), marshaller, Node.class);
     for (Node node : nodeItr) {
       Color nodeColour = DEFAULT_COLOR;
       if (nodeColorMappings.containsKey(node.getKeys().getType())) {
@@ -284,7 +262,7 @@ public class MongoGraphToGDF
     }
     
     writer.writeEdgeDef();
-    Iterable<Edge> edgeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Edge.class);
+    Iterable<Edge> edgeItr = new DeserialisingIterable<>(conn.getEdgeDao().iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
       writer.writeEdge(edge);
     }

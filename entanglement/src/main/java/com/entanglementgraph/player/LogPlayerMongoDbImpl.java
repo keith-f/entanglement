@@ -20,10 +20,11 @@ package com.entanglementgraph.player;
 
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.EdgeDAO;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.entanglementgraph.player.spi.LogItemPlayerProvider;
+import com.entanglementgraph.util.GraphConnection;
+
 import java.util.logging.Logger;
 import com.entanglementgraph.player.spi.LogItemPlayer;
-import com.entanglementgraph.player.spi.LogItemPlayerProvider;
 import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.data.RevisionItem;
@@ -38,50 +39,20 @@ public class LogPlayerMongoDbImpl
 {
   private static final Logger logger =
       Logger.getLogger(LogPlayerMongoDbImpl.class.getName());
-  
-//  private final Mongo m;
-//  private final DB db;
-  
-  private final String graphId;
-  private final String graphBranch;
-  
-//  private final DBCollection nodeCol;
-//  private final DBCollection edgeCol;
-  
-  private final RevisionLog revLog;
-  private final NodeDAO nodeDao;
-  private final EdgeDAO edgeDao;
-  
-  private final LogItemPlayerProvider playerProvider;
-  
-//  public LogPlayerMongoDbImpl(Mongo m, DB db, String graphName, String graphBranch, 
-//          DbObjectMarshaller marshaller,
-//          RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao)
-//      throws RevisionLogException
-//  {
-  public LogPlayerMongoDbImpl(ClassLoader cl, DbObjectMarshaller marshaller,
-          String graphName, String graphBranch, 
-          RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao)
+
+  private final GraphConnection srcGraphConn;
+  private final GraphConnection tgtGraphConn;
+
+//  private final LogItemPlayerProvider playerProvider;
+
+  public LogPlayerMongoDbImpl(GraphConnection srcGraphConn, GraphConnection tgtGraphConn)
       throws RevisionLogException
   {
-//    this.m = m;
-//    this.db = db;
-    this.graphId = graphName;
-    this.graphBranch = graphBranch;
-    
-    playerProvider = new LogItemPlayerProvider(cl, marshaller);
-    
-    this.revLog = revLog;
-    this.nodeDao = nodeDao;
-    this.edgeDao = edgeDao;
-    
-//    GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
-//    nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-//    edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-//    
-//    revLog = new RevisionLogDirectToMongoDbImpl(m, db);
-//    nodeDao = new NodeDAO(m, db, nodeCol, graphName, graphBranch);
-//    edgeDao = PlayerDAOFactory.createDefaultEdgeDAO(m, db, nodeCol, edgeCol);
+    this.srcGraphConn = srcGraphConn;
+    this.tgtGraphConn = tgtGraphConn;
+
+
+//    playerProvider = new LogItemPlayerProvider(graphConn);
   }
   
   @Override
@@ -89,12 +60,12 @@ public class LogPlayerMongoDbImpl
       throws LogPlayerException
   {
     try {
-      nodeDao.getCollection().drop();
-      edgeDao.getCollection().drop();
+      tgtGraphConn.getNodeDao().getCollection().drop();
+      tgtGraphConn.getEdgeDao().getCollection().drop();
     }
     catch(Exception e) {
       throw new LogPlayerException(
-          "Failed to delete working copy for graph: "+graphId+"/"+graphBranch, e);
+          "Failed to delete working copy for graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
     }
   }
 
@@ -104,20 +75,24 @@ public class LogPlayerMongoDbImpl
   {
     try {
       Iterable<RevisionItemContainer> containers = 
-              revLog.iterateCommittedRevisionsForGraph(graphId, graphBranch);
+              srcGraphConn.getRevisionLog().iterateCommittedRevisionsForGraph(
+                  srcGraphConn.getGraphName(), srcGraphConn.getGraphBranch());
+
+      LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
       for (RevisionItemContainer container : containers)
       {
         for (RevisionItem item : container.getItems()) {
   //        logger.info("Going to play revision: "+item);
 
           LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
-          itemPlayer.playItem(nodeDao, edgeDao, item);
+          itemPlayer.playItem(item);
         }
       }
     }
     catch(Exception e) {
       throw new LogPlayerException(
-          "Failed to replay log to a working copy: "+graphId+"/"+graphBranch, e);
+          "Failed to replay log from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
+          + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
     }
   }
   
@@ -127,30 +102,23 @@ public class LogPlayerMongoDbImpl
   {
     try {
       logger.info("Going to play revision items for txn: "+transactionUid);
+
       Iterable<RevisionItemContainer> containers = 
-              revLog.iterateRevisionsForTransaction(transactionUid);
+              srcGraphConn.getRevisionLog().iterateRevisionsForTransaction(transactionUid);
+      LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
       for (RevisionItemContainer container : containers)
       {
         for (RevisionItem item : container.getItems()) {
           LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
-          itemPlayer.playItem(nodeDao, edgeDao, item);
+          itemPlayer.playItem(item);
         }
       }
     }
-    catch(Exception e) {
+    catch(Exception | Error e) {
       throw new LogPlayerException(
-          "Failed to replay log items for transaction: "+transactionUid
-              +" to a working copy: "+graphId+"/"+graphBranch, e);
-    }
-    catch(Error e) {
-      /*
-       * /Make sure we pick up on ServiceConfigurationError and the like for
-       * cases where something isn't quite right with the SPI definition file
-       * or classpath.
-       */
-      throw new LogPlayerException(
-          "Failed to replay log items for transaction: "+transactionUid
-              +" to a working copy: "+graphId+"/"+graphBranch, e);
+          "Failed to replay transaction: "+transactionUid
+              +" from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
+              + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
     }
   }
 //  @Override
@@ -160,7 +128,7 @@ public class LogPlayerMongoDbImpl
 //    try {
 //      long fromRevId = -1;
 //      for (RevisionItem item : 
-//          revLog.iterateCommittedRevisionsForGraph(graphId, graphBranch, fromRevId)) {
+//          revLog.iterateCommittedRevisionsForGraph(graphName, graphBranch, fromRevId)) {
 //        if (item.getRevisionId() > toRevId) {
 //          break;
 //        }
@@ -173,7 +141,7 @@ public class LogPlayerMongoDbImpl
 //    }
 //    catch(Exception e) {
 //      throw new LogPlayerException(
-//          "Failed to replay log to a working copy: "+graphId+"/"+graphBranch, e);
+//          "Failed to replay log to a working copy: "+graphName+"/"+graphBranch, e);
 //    }
 //  }
   

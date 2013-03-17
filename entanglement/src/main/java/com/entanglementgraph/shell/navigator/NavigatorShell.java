@@ -26,6 +26,7 @@ import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.RevisionLog;
+import com.entanglementgraph.util.GraphConnection;
 
 /**
  *
@@ -33,6 +34,9 @@ import com.entanglementgraph.revlog.RevisionLog;
  */
 public class NavigatorShell
 {
+  private GraphConnection graphConn;
+
+
   public static void startSubShell(NavigatorShell navShell) throws IOException
   {
     Shell shell = ShellFactory.createConsoleShell(
@@ -40,17 +44,11 @@ public class NavigatorShell
     shell.setDisplayTime(true);
     shell.commandLoop();
   }
-
-  @Deprecated
-  public NavigatorShell()
-      throws GraphModelException
-  {
-  }
   
-  public NavigatorShell(RevisionLog revLog, NodeDAO nodeDao, EdgeDAO edgeDao, String startNodeUid)
+  public NavigatorShell(GraphConnection graphConn, String startNodeUid)
           throws GraphModelException
   {
-    Navigator nav = new Navigator(nodeDao, edgeDao, startNodeUid);
+    Navigator nav = new Navigator(graphConn, startNodeUid);
   }
 
   @Command(description = "Prints general statistics about the current graph.")

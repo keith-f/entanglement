@@ -34,8 +34,6 @@ import com.entanglementgraph.player.LogPlayerException;
  */
 public interface GraphEntityDAO 
 {
-  public static final String FIELD_UID = "uid";
-  public static final String FIELD_NAMES = "names";
   public static final String FIELD_TYPE = "type";
 
   public static final String FIELD_KEYS = "keys";
@@ -203,9 +201,9 @@ public interface GraphEntityDAO
   
   public Iterable<DBObject> iterateByType(String typeName)
       throws GraphModelException;
-  
 
-  public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
+  //  public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
+  public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
       throws GraphModelException;
   
 //  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)

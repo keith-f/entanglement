@@ -20,10 +20,12 @@ package com.entanglementgraph.player.spi;
 
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.*;
 
 import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
 
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,10 +53,6 @@ public class NodeModificationPlayer
   /*
    * These are set for every time <code>playItem</code> is called.
    */
-  private NodeDAO nodeDao;
-  private EdgeDAO edgeDao;
-
-
   // The currently playing revision item
   private RevisionItem item;
   // The command wrapped by the RevisionItem
@@ -65,23 +63,16 @@ public class NodeModificationPlayer
   private EntityKeys reqKeyset;
   
   @Override
-  public void initialise(ClassLoader cl, Mongo mongo, DB db)
-  {
-  }
-  
-  @Override
   public String getSupportedLogItemType()
   {
     return NodeModification.class.getSimpleName();
   }
 
   @Override
-  public void playItem(NodeDAO nodeDao, EdgeDAO edgeDao, RevisionItem item)
+  public void playItem(RevisionItem item)
       throws LogPlayerException
   {
     try {
-      this.nodeDao = nodeDao;
-      this.edgeDao = edgeDao;
       this.item = item;
       command = (NodeModification) item.getOp();
       reqSerializedNode = command.getNode();
