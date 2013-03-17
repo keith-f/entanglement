@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.util.MongoObjectParsers;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -125,12 +126,6 @@ abstract public class AbstractGraphEntityDAO
     return col;
   }
 
-  private EntityKeys parseKeyset(DBObject dbObject) throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(FIELD_KEYS).toString();
-    EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
-    return keyset;
-  }
-
   @Override
   public void store(BasicDBObject item)
       throws GraphModelException
@@ -138,7 +133,7 @@ abstract public class AbstractGraphEntityDAO
     try {
 //      logger.log(Level.INFO, "Storing node: {0}", node);
       if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
-        EntityKeys entitySet = parseKeyset(item);
+        EntityKeys entitySet = MongoObjectParsers.parseKeyset(marshaller, item);
 
         if (existsByKey(entitySet)) {
           throw new GraphModelException(
@@ -185,7 +180,7 @@ abstract public class AbstractGraphEntityDAO
   {
     try {
       logger.info("Updating object: "+updated);
-      EntityKeys keys = parseKeyset(updated);
+      EntityKeys keys = MongoObjectParsers.parseKeyset(marshaller, updated);
       BasicDBObject result = getByAnyUid(keys.getUids());
       if (result == null) {
         result = getByAnyName(keys.getType(), keys.getNames());
@@ -304,7 +299,7 @@ abstract public class AbstractGraphEntityDAO
         return null;
       }
 
-      EntityKeys keyset = parseKeyset(result);
+      EntityKeys keyset = MongoObjectParsers.parseKeyset(marshaller, result);
       return keyset;
     }
     catch(Exception e) {
@@ -332,7 +327,7 @@ abstract public class AbstractGraphEntityDAO
         return null;
       }
 
-      EntityKeys keyset = parseKeyset(result);
+      EntityKeys keyset = MongoObjectParsers.parseKeyset(marshaller, result);
       return keyset;
     }
     catch(Exception e) {

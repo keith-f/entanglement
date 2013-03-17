@@ -21,6 +21,7 @@ package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.MongoObjectParsers;
 import com.mongodb.*;
 
 import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
@@ -77,9 +78,7 @@ public class NodeModificationPlayer
       command = (NodeModification) item.getOp();
       reqSerializedNode = command.getNode();
 
-      //Deserialize 'key set' field from the entity because we'll need it.
-      String jsonKeyset = reqSerializedNode.get(FIELD_KEYS).toString();
-      reqKeyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
+      reqKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) reqSerializedNode.get(FIELD_KEYS) );
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
@@ -176,8 +175,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
-      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(existing.toMap());
@@ -213,8 +211,8 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
-      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
+
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(existing.toMap());
@@ -251,8 +249,7 @@ public class NodeModificationPlayer
      */
     try {
       // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
-      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(reqSerializedNode.toMap());
