@@ -29,6 +29,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.util.UidGenerator;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -297,8 +298,7 @@ public class EntanglementShell
   
   @Command
   public void exportGraphAsGexf(File outputFile)
-           throws IOException, GraphModelException, RevisionLogException
-  {
+      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
     MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
     exporter.exportGexf(outputFile);
     System.out.println("Done.");
@@ -309,9 +309,8 @@ public class EntanglementShell
           @Param(name="outputFile")
           File outputFile, 
           @Param(name="nodeToColorMapping")
-          File nodeToColorMapping) 
-           throws IOException, GraphModelException, RevisionLogException
-  {
+          File nodeToColorMapping)
+      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
     MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
     exporter.setColorPropsFile(nodeToColorMapping);
     exporter.exportGexf(outputFile);

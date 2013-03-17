@@ -17,11 +17,14 @@
  */
 package com.entanglementgraph.cli.export;
 
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.util.MongoObjectParsers;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 import java.awt.Color;
 import java.io.File;
@@ -94,7 +97,7 @@ public class MongoGraphToGephi {
 
   public static void main(String[] args) throws UnknownHostException,
       RevisionLogException, IOException,
-      GraphModelException, GraphConnectionFactoryException {
+      GraphModelException, GraphConnectionFactoryException, DbObjectMarshallerException {
     CommandLineParser parser = new PosixParser();
     Options options = new Options();
 
@@ -187,8 +190,15 @@ public class MongoGraphToGephi {
     System.out.println("\n\nDone.");
   }
 
+  private static String keysetToId(EntityKeys keyset) {
+    if (keyset.getUids().isEmpty()) {
+      throw new IllegalArgumentException("An entity must have at least one UID");
+    }
+    return keyset.getUids().iterator().next();
+  }
+
   public void exportGexf(File outputFile)
-          throws IOException, GraphModelException, RevisionLogException {
+      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
     //Load colour mappings, if any
     Map<String, Color> nodeColorMappings = new HashMap<>();
     if (colorPropsFile != null) {
@@ -220,23 +230,23 @@ public class MongoGraphToGephi {
     Map<String, AttributeColumn> nodeAttrNameToAttributeCol = new HashMap<>();
 
     // Create Gephi nodes
-//        Iterable<Node> nodeItr = new DeserialisingIterable<>(nodeDao.iterateAll(), marshaller, Node.class);
-//        for (Node node : nodeItr) {
+
     for (DBObject node : nodeDao.iterateAll()) {
-      String uidStr = (String) node.get(NodeDAO.FIELD_KEYS);//FIXME parse proper names from EntityKeys here
-      String names = (String) node.get(NodeDAO.FIELD_KEYS); //FIXME parse proper names from EntityKeys here
-//      String name = (String) node.get(NodeDAO.FIELD_NAME);
+      EntityKeys keyset = marshaller.deserialize(node.get(NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
+
+
       String type = (String) node.get(NodeDAO.FIELD_TYPE);
       Color nodeColour = DEFAULT_COLOR;
       if (nodeColorMappings.containsKey(type)) {
         nodeColour = nodeColorMappings.get(type);
       }
-      
+
+      String uidStr = keysetToId(keyset);
       org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(uidStr);
-      if (names == null || names.isEmpty()) {
+      if (keyset.getNames().isEmpty()) {
         gephiNode.getNodeData().setLabel(uidStr);
       } else {
-        gephiNode.getNodeData().setLabel(names.toString());
+        gephiNode.getNodeData().setLabel(keyset.getNames().toString()); //TODO ugly name
       }
       float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
       gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1], rgbColorComp[2]);
@@ -245,14 +255,19 @@ public class MongoGraphToGephi {
 //            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.getIndex(), node.getType() );
 
       for (String nodeAttrName : node.keySet()) {
+
         Object val = node.get(nodeAttrName);
         if (nodeAttrName.equals("_id")) {
           continue;
         }
         if (val instanceof BasicDBList) {
           val = val.toString();
+        } else if (val instanceof BasicDBObject) {
+          logger.info("Replacing value of type BasicDBObject with String.");
+          val = val.toString();
         }
         if (val == null) {
+          logger.info("Skipping node attribute with null value: "+nodeAttrName);
           continue;
         }
         AttributeColumn attrCol = nodeAttrNameToAttributeCol.get(nodeAttrName);
@@ -263,6 +278,13 @@ public class MongoGraphToGephi {
         }
 //        logger.info("nodeAttrName: " + nodeAttrName + ", val: " + val + ", type: " + val.getClass().getName());
 //        logger.info("attrCol: " + attrCol);
+        System.out.println("Gephi node: "+gephiNode);
+        System.out.println("Node data: "+gephiNode.getNodeData());
+        System.out.println("Attributes: "+gephiNode.getNodeData().getAttributes());
+        System.out.println("Attributes col: "+attrCol.getIndex());
+        System.out.println("Node attr name: "+nodeAttrName);
+        System.out.println("Val: "+val);
+        System.out.println("Val type: "+val.getClass().getName());
         gephiNode.getNodeData().getAttributes().setValue(attrCol.getIndex(), val);
       }
 
@@ -274,11 +296,15 @@ public class MongoGraphToGephi {
     Iterable<Edge> edgeItr = new DeserialisingIterable<>(
             edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
-      String fromUidStr = edge.getFrom().toString();
-      String toUidStr = edge.getTo().toString();
+      BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
+      String fromId = keysetToId(MongoObjectParsers.parseKeyset(marshaller, fromObj));
+
+      BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
+      String toId = keysetToId(MongoObjectParsers.parseKeyset(marshaller, toObj));
+
+
       org.gephi.graph.api.Edge gephiEdge = graphModel.factory().
-              newEdge(directedGraph.getNode(fromUidStr),
-              directedGraph.getNode(toUidStr), 1f, true);
+              newEdge(directedGraph.getNode(fromId), directedGraph.getNode(toId), 1f, true);
       gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
       directedGraph.addEdge(gephiEdge);
     }
