@@ -78,7 +78,7 @@ public class NodeModificationPlayer
       command = (NodeModification) item.getOp();
       reqSerializedNode = command.getNode();
 
-      reqKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) reqSerializedNode.get(FIELD_KEYS) );
+      reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS) );
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
@@ -141,7 +141,7 @@ public class NodeModificationPlayer
       BasicDBObject existing = nodeDao.getByKey(reqKeyset);
       switch(command.getMergePol()) {
         case NONE:
-          logger.log(Level.INFO, "Ignoring existing node: {0}", reqKeyset);
+//          logger.log(Level.INFO, "Ignoring existing node: {0}", reqKeyset);
           break;
         case ERR:
           throw new LogPlayerException("A node with one or more items in the following keyset already exists: "+reqKeyset);
@@ -175,7 +175,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(existing.toMap());
@@ -211,7 +211,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
 
       BasicDBObject updated = new BasicDBObject();
@@ -249,7 +249,7 @@ public class NodeModificationPlayer
      */
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, (DBObject) existing.get(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(reqSerializedNode.toMap());

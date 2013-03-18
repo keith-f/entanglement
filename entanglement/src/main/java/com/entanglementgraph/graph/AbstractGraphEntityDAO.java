@@ -159,10 +159,10 @@ abstract public class AbstractGraphEntityDAO
           secondsPerBlock = secondsPerBlock / 1000;
           double totalSeconds = (now - timestampOfFirstInsert);
           totalSeconds = totalSeconds / 1000;
-          logger.log(Level.INFO,
-                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
-                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
-                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
+//          logger.log(Level.INFO,
+//                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
+//                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
+//                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
           timestampOfLastPerformanceMessage = now;
         }
       }
@@ -179,7 +179,7 @@ abstract public class AbstractGraphEntityDAO
       throws GraphModelException
   {
     try {
-      logger.info("Updating object: "+updated);
+//      logger.info("Updating object: "+updated);
       EntityKeys keys = MongoObjectParsers.parseKeyset(marshaller, updated);
       BasicDBObject result = getByAnyUid(keys.getUids());
       if (result == null) {
@@ -189,11 +189,11 @@ abstract public class AbstractGraphEntityDAO
         throw new GraphModelException("Failed to find any object with: "+keys.toString());
       }
 
-      logger.info("Found: "+result);
+//      logger.info("Found: "+result);
       DBObject criteria = new BasicDBObject(FIELD_KEYS, result.get(FIELD_KEYS));
 
 
-      logger.info("Criteria: "+criteria);
+//      logger.info("Criteria: "+criteria);
       //Perform atomic update of a single document
       col.findAndModify(criteria, updated);
     }

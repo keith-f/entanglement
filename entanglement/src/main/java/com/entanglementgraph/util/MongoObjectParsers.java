@@ -32,6 +32,12 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
  */
 public class MongoObjectParsers {
 
+  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, String jsonKeyset)
+      throws DbObjectMarshallerException {
+    EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
+    return keyset;
+  }
+
   public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject)
       throws DbObjectMarshallerException {
     String jsonKeyset = dbObject.get(FIELD_KEYS).toString();

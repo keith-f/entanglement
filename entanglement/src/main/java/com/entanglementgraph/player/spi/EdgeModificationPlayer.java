@@ -111,7 +111,7 @@ public class EdgeModificationPlayer
   private void createOrModify(EntityKeys keyset)
       throws LogPlayerException
   {
-    logger.info("Attempting playback of entity: "+keyset);
+//    logger.info("Attempting playback of entity: "+keyset);
     try {
       // Does the entity exist by any key specified in the reference?
       boolean exists = edgeDao.existsByKey(keyset);
@@ -140,7 +140,7 @@ public class EdgeModificationPlayer
     *
     */
     try {
-      logger.info("Creating new edge in: "+edgeDao.getCollection().getFullName());
+//      logger.info("Creating new edge in: "+edgeDao.getCollection().getFullName());
 
       //If the command definitely doesn't allow hanging edges, then we need to make sure that the edge isn't hanging.
       if (!command.isAllowHanging()) {
@@ -189,7 +189,7 @@ public class EdgeModificationPlayer
       BasicDBObject existing = edgeDao.getByKey(reqKeyset);
       switch(command.getMergePol()) {
         case NONE:
-          logger.log(Level.INFO, "Ignoring existing edge: {0}", reqKeyset);
+//          logger.log(Level.INFO, "Ignoring existing edge: {0}", reqKeyset);
           break;
         case ERR:
           throw new LogPlayerException("An edge with one or more items in the following keyset already exists: "+reqKeyset);

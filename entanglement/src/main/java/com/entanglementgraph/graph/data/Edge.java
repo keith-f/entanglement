@@ -59,6 +59,14 @@ public class Edge<F extends Node, T extends Node>
     keys = new EntityKeys();
   }
 
+  public Edge(String type, EntityKeys from, EntityKeys to)
+  {
+    this.keys = new EntityKeys();
+    this.keys.setType(type);
+    this.from = from;
+    this.to = to;
+  }
+
   public Edge(EntityKeys keys, EntityKeys from, EntityKeys to)
   {
     this.keys = keys;
