@@ -28,6 +28,9 @@ import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
 
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,11 +58,11 @@ public class NodeModificationPlayer
    * These are set for every time <code>playItem</code> is called.
    */
   // The currently playing revision item
-  private RevisionItem item;
+//  private RevisionItem item;
   // The command wrapped by the RevisionItem
-  private NodeModification command;
+//  private NodeModification command;
   // A MongoDB document embedded within the command that represents the graph entity being updated.
-  private BasicDBObject reqSerializedNode;
+//  private BasicDBObject reqSerializedNode;
   // The deserialized key field from the reqSerializedNode. This identifies the object to be created/updated.
   private EntityKeys reqKeyset;
   
@@ -74,21 +77,71 @@ public class NodeModificationPlayer
       throws LogPlayerException
   {
     try {
-      this.item = item;
-      command = (NodeModification) item.getOp();
-      reqSerializedNode = command.getNode();
+//      this.item = item;
+      NodeModification command = (NodeModification) item.getOp();
+      BasicDBObject reqSerializedNode = command.getNode();
 
-      reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS) );
+      EntityKeys reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS) );
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
 
-      createOrModify(reqKeyset);
+      createOrModify(command, reqSerializedNode, reqKeyset);
 
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
     }
   }
+
+  private static class BatchItem {
+    private BatchItem(NodeModification command, BasicDBObject reqSerializedNode, EntityKeys keyset) {
+      this.command = command;
+      this.reqSerializedNode = reqSerializedNode;
+      this.keyset = keyset;
+    }
+
+    NodeModification command;
+    BasicDBObject reqSerializedNode;
+    EntityKeys keyset;
+  }
+
+//  @Override
+//  public void playBatch(List<RevisionItem> items) throws LogPlayerException {
+//    try {
+//      logger.info("Playing batch of " + items.size() + " items.");
+//      List<DBObject> newItems = new LinkedList<>();
+//      List<BatchItem> existingItems = new LinkedList<>();
+//      for (RevisionItem item : items) {
+//
+//        NodeModification command = (NodeModification) item.getOp();
+//        BasicDBObject reqSerializedNode = command.getNode();
+//
+//        EntityKeys reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
+//
+//        //The reference field should contain at least one identification key
+//        validateKeyset(reqKeyset);
+//
+//        if (nodeDao.existsByKey(reqKeyset)) {
+//          existingItems.add(new BatchItem(command, reqSerializedNode, reqKeyset));
+//        } else {
+//          newItems.add(reqSerializedNode);
+//        }
+//      }
+//      logger.info("Items to create " + newItems.size() + ". Items to update: " + existingItems.size());
+//      nodeDao.storeBatch(newItems);
+//
+//      logger.info("Created " + newItems.size());
+//
+//      for (BatchItem item : existingItems) {
+//        updateExistingNode(item.command, item.reqSerializedNode);
+//      }
+//
+//      logger.info("Updated " + existingItems.size());
+//
+//    } catch (Exception e) {
+//      throw new LogPlayerException("Failed to play command", e);
+//    }
+//  }
 
   /*
    * To create or update an entity, then there must be at least one UID and/or at least one name.
@@ -104,7 +157,7 @@ public class NodeModificationPlayer
     }
   }
 
-  private void createOrModify(EntityKeys keyset)
+  private void createOrModify(NodeModification command, BasicDBObject reqSerializedNode, EntityKeys keyset)
           throws LogPlayerException
   {
     try {
@@ -114,12 +167,12 @@ public class NodeModificationPlayer
       // No - create a new document
       if (!exists) {
         // Create a new node and then exit
-        createNewNode();
+        createNewNode(command, reqSerializedNode);
       }
       // Yes  - update existing document
       else {
 
-        updateExistingNode();
+        updateExistingNode(command, reqSerializedNode);
       }
     }
     catch(Exception e) {
@@ -130,12 +183,14 @@ public class NodeModificationPlayer
   /**
    * Called when a node is found to not exist already - we need to create it.
    */
-  private void createNewNode() throws GraphModelException, LogPlayerException
+  private void createNewNode(NodeModification command, BasicDBObject reqSerializedNode )
+      throws GraphModelException, LogPlayerException
   {
     nodeDao.store(reqSerializedNode);
   }
 
-  private void updateExistingNode() throws LogPlayerException {
+  private void updateExistingNode(NodeModification command, BasicDBObject reqSerializedNode)
+      throws LogPlayerException {
     try {
       // Edit existing node - need to perform a merge based on
       BasicDBObject existing = nodeDao.getByKey(reqKeyset);
@@ -146,13 +201,13 @@ public class NodeModificationPlayer
         case ERR:
           throw new LogPlayerException("A node with one or more items in the following keyset already exists: "+reqKeyset);
         case APPEND_NEW__LEAVE_EXISTING:
-          doAppendNewLeaveExisting(existing);
+          doAppendNewLeaveExisting(reqSerializedNode, existing);
           break;
         case APPEND_NEW__OVERWRITE_EXSITING:
-          doAppendNewOverwriteExisting(existing);
+          doAppendNewOverwriteExisting(reqSerializedNode, existing);
           break;
         case OVERWRITE_ALL:
-          doOverwriteAll(existing);
+          doOverwriteAll(reqSerializedNode, existing);
           break;
         default:
           throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
@@ -170,7 +225,7 @@ public class NodeModificationPlayer
    * in the update command, we leave the existing values as they are.
    * Immutable properties (UID, type and name) are, of course, ignored.
    */
-  private void doAppendNewLeaveExisting(BasicDBObject existing)
+  private void doAppendNewLeaveExisting(BasicDBObject reqSerializedNode, BasicDBObject existing)
           throws GraphModelException
   {
     try {
@@ -206,7 +261,7 @@ public class NodeModificationPlayer
    * values of existing properties. 
    * Immutable properties (UID, type and name) are, of course, ignored.
    */
-  private void doAppendNewOverwriteExisting(BasicDBObject existing)
+  private void doAppendNewOverwriteExisting(BasicDBObject reqSerializedNode, BasicDBObject existing)
           throws GraphModelException
   {
     try {
@@ -240,7 +295,7 @@ public class NodeModificationPlayer
    * values of existing properties. 
    * Immutable properties (UID, type and name) are, of course, ignored.
    */
-  private void doOverwriteAll(BasicDBObject existing)
+  private void doOverwriteAll(BasicDBObject reqSerializedNode, BasicDBObject existing)
           throws GraphModelException
   {
     /*

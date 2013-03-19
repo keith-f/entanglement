@@ -27,6 +27,8 @@ import com.entanglementgraph.player.LogPlayerException;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.data.RevisionItem;
 
+import java.util.List;
+
 /**
  *
  * @author Keith Flanagan
@@ -39,4 +41,7 @@ public interface LogItemPlayer
   
   public void playItem(RevisionItem item)
       throws LogPlayerException;
+
+//  public void playBatch(List<RevisionItem> items)
+//      throws LogPlayerException;
 }

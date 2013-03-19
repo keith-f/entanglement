@@ -68,7 +68,17 @@ import java.util.Set;
   public void store(BasicDBObject entity) throws GraphModelException {
     delegate.store(entity);
   }
-  
+
+  @Override
+  public void flush() throws GraphModelException {
+    delegate.flush();
+  }
+
+  //  @Override
+//  public void storeBatch(List<DBObject> entities) throws GraphModelException {
+//    delegate.storeBatch(entities);
+//  }
+//
   @Override
   public void update(BasicDBObject updated) throws GraphModelException {
     delegate.update(updated);

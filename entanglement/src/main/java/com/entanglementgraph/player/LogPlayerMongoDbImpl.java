@@ -23,12 +23,15 @@ import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.player.spi.LogItemPlayerProvider;
 import com.entanglementgraph.util.GraphConnection;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 import com.entanglementgraph.player.spi.LogItemPlayer;
 import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.data.RevisionItem;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;
+import com.entanglementgraph.util.MongoBatchInserter;
 
 /**
  *
@@ -51,8 +54,7 @@ public class LogPlayerMongoDbImpl
     this.srcGraphConn = srcGraphConn;
     this.tgtGraphConn = tgtGraphConn;
 
-
-//    playerProvider = new LogItemPlayerProvider(graphConn);
+//    this.batchInserter = new MongoBatchInserter(tgtGraphConn);
   }
   
   @Override
@@ -79,15 +81,17 @@ public class LogPlayerMongoDbImpl
                   srcGraphConn.getGraphName(), srcGraphConn.getGraphBranch());
 
       LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
+
       for (RevisionItemContainer container : containers)
       {
         for (RevisionItem item : container.getItems()) {
-  //        logger.info("Going to play revision: "+item);
+          //        logger.info("Going to play revision: "+item);
 
           LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
           itemPlayer.playItem(item);
         }
       }
+
     }
     catch(Exception e) {
       throw new LogPlayerException(
@@ -114,7 +118,13 @@ public class LogPlayerMongoDbImpl
         }
       }
     }
-    catch(Exception | Error e) {
+    catch(Exception e) {
+      throw new LogPlayerException(
+          "Failed to replay transaction: "+transactionUid
+              +" from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
+              + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
+    }
+    catch(Throwable e) {
       throw new LogPlayerException(
           "Failed to replay transaction: "+transactionUid
               +" from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()

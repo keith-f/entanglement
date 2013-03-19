@@ -62,6 +62,20 @@ public interface GraphEntityDAO
    */
   public void store(BasicDBObject entity)
       throws GraphModelException;
+
+  /**
+   * Same as <code>store</code>, except multiple objects are stored as a batch.
+   *
+   * NOTE: <code>InsertMode</code> is ignored here.
+   *
+   * @param items
+   * @throws GraphModelException
+   */
+//  public void storeBatch(List<DBObject> items)
+//      throws GraphModelException;
+
+  public void flush()
+      throws GraphModelException;
   
   /**
    * Updates (actually, replaces) an existing graph entity. The <code>UID</code> 

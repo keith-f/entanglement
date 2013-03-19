@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.util.MongoBatchInserter;
 import com.entanglementgraph.util.MongoObjectParsers;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -81,6 +82,8 @@ abstract public class AbstractGraphEntityDAO
    * we make the assumption that there is one graph checkout per collection.
    */
   protected final DBCollection col;
+
+  private final MongoBatchInserter batchInserter;
   
   /**
    * 
@@ -99,6 +102,8 @@ abstract public class AbstractGraphEntityDAO
     this.db = db;
     this.col = col;
     marshaller = ObjectMarshallerFactory.create(classLoader);
+
+    this.batchInserter = new MongoBatchInserter(col);
     
     printPeriodicPerformanceInfo = true;
     insertCount = 0;
@@ -131,9 +136,9 @@ abstract public class AbstractGraphEntityDAO
       throws GraphModelException
   {
     try {
+      EntityKeys entitySet = MongoObjectParsers.parseKeyset(marshaller, item);
 //      logger.log(Level.INFO, "Storing node: {0}", node);
       if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
-        EntityKeys entitySet = MongoObjectParsers.parseKeyset(marshaller, item);
 
         if (existsByKey(entitySet)) {
           throw new GraphModelException(
@@ -141,7 +146,8 @@ abstract public class AbstractGraphEntityDAO
         }
       }
 
-      col.insert(item);
+//      col.insert(item); //Direct to database
+      batchInserter.addItemToBatch(entitySet, item); //Add to batch
       
       /////// DEBUG (Performance info)
       if (printPeriodicPerformanceInfo) {  
@@ -173,6 +179,54 @@ abstract public class AbstractGraphEntityDAO
       throw new GraphModelException("Failed to store item: "+item, e);
     }
   }
+
+  @Override
+  public void flush()
+      throws GraphModelException {
+    try {
+      batchInserter.flush();
+    } catch(Exception e) {
+      throw new GraphModelException("Failed to flush changes to DB", e);
+    }
+  }
+
+//  @Override
+//  public void storeBatch(List<DBObject> items)
+//      throws GraphModelException
+//  {
+//    try {
+//      col.insert(items);
+//
+//      /////// DEBUG (Performance info)
+//      if (printPeriodicPerformanceInfo) {
+//        insertCount = insertCount + items.size();
+//        if (timestampOfLastPerformanceMessage < 0) {
+//          //First ever insert
+//          long now = System.currentTimeMillis();
+//          timestampOfLastPerformanceMessage = now;
+//          timestampOfFirstInsert = now;
+//          return;
+//        }
+//        if (insertCount % PRINT_PERF_INFO_EVERY == 0) {
+//          long now = System.currentTimeMillis();
+//          double secondsPerBlock = (now - timestampOfLastPerformanceMessage);
+//          secondsPerBlock = secondsPerBlock / 1000;
+//          double totalSeconds = (now - timestampOfFirstInsert);
+//          totalSeconds = totalSeconds / 1000;
+////          logger.log(Level.INFO,
+////                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
+////                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
+////                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
+//          timestampOfLastPerformanceMessage = now;
+//        }
+//      }
+//      /////// DEBUG (Performance info) (end)
+//    }
+//    catch(Exception e)
+//    {
+//      throw new GraphModelException("Failed to store items: "+items.size(), e);
+//    }
+//  }
   
   @Override
   public void update(BasicDBObject updated)
@@ -478,13 +532,16 @@ abstract public class AbstractGraphEntityDAO
       uidList.add(entityUid);
       query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
-      long count = col.count(query);
-      if (count > 1) {
-        throw new GraphModelException(
-                "Unique ID: "+entityUid+" should be unique, but we found: "
-                + count + " instances with that name!");
-      }
-      return count == 1;
+      DBObject fields = new BasicDBObject("_id", 1);
+      DBObject result = col.findOne(query, fields);
+      return result != null;
+//      long count = col.count(query);
+//      if (count > 1) {
+//        throw new GraphModelException(
+//                "Unique ID: "+entityUid+" should be unique, but we found: "
+//                + count + " instances with that name!");
+//      }
+//      return count == 1;
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation: \n"
@@ -503,13 +560,17 @@ abstract public class AbstractGraphEntityDAO
       uidList.addAll(entityUids);
       query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
-      long count = col.count(query);
-      if (count > 1) {
-        throw new GraphModelException(
-            "Unique IDs: "+entityUids+" should be unique, but we found: "
-                + count + " instances with that name!");
-      }
-      return count == 1;
+//      long count = col.count(query);
+      DBObject fields = new BasicDBObject("_id", 1);
+      DBObject result = col.findOne(query, fields);
+      return result != null;
+//      if (count > 1) {
+//        throw new GraphModelException(
+//            "Unique IDs: "+entityUids+" should be unique, but we found: "
+//                + count + " instances with that name!");
+//      }
+//      return count == 1;
+
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation: \n"
@@ -529,12 +590,15 @@ abstract public class AbstractGraphEntityDAO
       nameList.add(entityName);
       query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
-      long count = col.count(query);
-      if (count > 1) {
-        throw new GraphModelException("Type: "+entityType+", Name: "+entityName
-            +" should be unique, but we found: "+count + " instances with that name!");
-      }
-      return count == 1;
+      DBObject fields = new BasicDBObject("_id", 1);
+      DBObject result = col.findOne(query, fields);
+      return result != null;
+//      long count = col.count(query);
+//      if (count > 1) {
+//        throw new GraphModelException("Type: "+entityType+", Name: "+entityName
+//            +" should be unique, but we found: "+count + " instances with that name!");
+//      }
+//      return count == 1;
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
@@ -554,12 +618,15 @@ abstract public class AbstractGraphEntityDAO
       nameList.addAll(entityNames);
       query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
-      long count = col.count(query);
-      if (count > 1) {
-        throw new GraphModelException("Type: "+entityType+", Names: "+entityNames
-            +" should be unique, but we found: "+count + " instances with that name!");
-      }
-      return count == 1;
+      DBObject fields = new BasicDBObject("_id", 1);
+      DBObject result = col.findOne(query, fields);
+      return result != null;
+//      long count = col.count(query);
+//      if (count > 1) {
+//        throw new GraphModelException("Type: "+entityType+", Names: "+entityNames
+//            +" should be unique, but we found: "+count + " instances with that name!");
+//      }
+//      return count == 1;
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"

@@ -19,8 +19,12 @@ package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
+import com.entanglementgraph.player.LogPlayerException;
+import com.entanglementgraph.revlog.data.RevisionItem;
 import com.entanglementgraph.util.GraphConnection;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+
+import java.util.List;
 
 /**
  *
@@ -42,4 +46,17 @@ abstract public class AbstractLogItemPlayer
     edgeDao = graphConnection.getEdgeDao();
     marshaller = graphConnection.getMarshaller();
   }
+
+  /**
+   * Default implementation simply calls <code>playItem</code> for each <code>RevisionItem</code>.
+   * @param items
+   * @throws LogPlayerException
+   */
+//  public void playBatch(List<RevisionItem> items)
+//      throws LogPlayerException
+//  {
+//    for (RevisionItem item : items) {
+//      playItem(item);
+//    }
+//  }
 }
