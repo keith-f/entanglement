@@ -138,16 +138,16 @@ abstract public class AbstractGraphEntityDAO
     try {
       EntityKeys entitySet = MongoObjectParsers.parseKeyset(marshaller, item);
 //      logger.log(Level.INFO, "Storing node: {0}", node);
-      if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
+//      if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
+//
+//        if (existsByKey(entitySet)) {
+//          throw new GraphModelException(
+//              "Failed to store item - an entity with one or more of the specified UIDs or names already exists: "+entitySet);
+//        }
+//      }
 
-        if (existsByKey(entitySet)) {
-          throw new GraphModelException(
-              "Failed to store item - an entity with one or more of the specified UIDs or names already exists: "+entitySet);
-        }
-      }
-
-//      col.insert(item); //Direct to database
-      batchInserter.addItemToBatch(entitySet, item); //Add to batch
+      col.insert(item); //Direct to database
+//      batchInserter.addItemToBatch(entitySet, item); //Add to batch
       
       /////// DEBUG (Performance info)
       if (printPeriodicPerformanceInfo) {  
@@ -165,10 +165,10 @@ abstract public class AbstractGraphEntityDAO
           secondsPerBlock = secondsPerBlock / 1000;
           double totalSeconds = (now - timestampOfFirstInsert);
           totalSeconds = totalSeconds / 1000;
-//          logger.log(Level.INFO,
-//                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
-//                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
-//                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
+          logger.log(Level.INFO,
+                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
+                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
+                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
           timestampOfLastPerformanceMessage = now;
         }
       }
@@ -533,15 +533,8 @@ abstract public class AbstractGraphEntityDAO
       query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
 
       DBObject fields = new BasicDBObject("_id", 1);
-      DBObject result = col.findOne(query, fields);
-      return result != null;
-//      long count = col.count(query);
-//      if (count > 1) {
-//        throw new GraphModelException(
-//                "Unique ID: "+entityUid+" should be unique, but we found: "
-//                + count + " instances with that name!");
-//      }
-//      return count == 1;
+      DBCursor result = col.find(query, fields).limit(1);
+      return result.hasNext();
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation: \n"
@@ -562,14 +555,8 @@ abstract public class AbstractGraphEntityDAO
 
 //      long count = col.count(query);
       DBObject fields = new BasicDBObject("_id", 1);
-      DBObject result = col.findOne(query, fields);
-      return result != null;
-//      if (count > 1) {
-//        throw new GraphModelException(
-//            "Unique IDs: "+entityUids+" should be unique, but we found: "
-//                + count + " instances with that name!");
-//      }
-//      return count == 1;
+      DBCursor result = col.find(query, fields).limit(1);
+      return result.hasNext();
 
     }
     catch(Exception e) {
@@ -591,14 +578,8 @@ abstract public class AbstractGraphEntityDAO
       query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       DBObject fields = new BasicDBObject("_id", 1);
-      DBObject result = col.findOne(query, fields);
-      return result != null;
-//      long count = col.count(query);
-//      if (count > 1) {
-//        throw new GraphModelException("Type: "+entityType+", Name: "+entityName
-//            +" should be unique, but we found: "+count + " instances with that name!");
-//      }
-//      return count == 1;
+      DBCursor result = col.find(query, fields).limit(1);
+      return result.hasNext();
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
@@ -619,8 +600,10 @@ abstract public class AbstractGraphEntityDAO
       query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
 
       DBObject fields = new BasicDBObject("_id", 1);
-      DBObject result = col.findOne(query, fields);
-      return result != null;
+//      DBObject result = col.findOne(query, fields);
+      DBCursor result = col.find(query, fields).limit(1);
+      return result.hasNext();
+
 //      long count = col.count(query);
 //      if (count > 1) {
 //        throw new GraphModelException("Type: "+entityType+", Names: "+entityNames
