@@ -2,7 +2,6 @@ com.entanglementgraph.player.spi.BranchImportPlayer
 com.entanglementgraph.player.spi.DeleteNodeByUidPlayer
 com.entanglementgraph.player.spi.DeleteEdgeByUidPlayer
 com.entanglementgraph.player.spi.EdgeModificationPlayer
-com.entanglementgraph.player.spi.FixHangingEdgePlayer
 com.entanglementgraph.player.spi.NodeModificationPlayer
 com.entanglementgraph.player.spi.SetNamedNodePropertyPlayer
 com.entanglementgraph.player.spi.SetNodePropertyPlayer

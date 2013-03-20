@@ -18,11 +18,10 @@
 package com.entanglementgraph.graph.data;
 
 import com.entanglementgraph.graph.GraphModelException;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,6 +31,16 @@ import java.util.Set;
  * To change this template use File | Settings | File Templates.
  */
 public class EntityKeys {
+
+  public static Iterable<DBObject> buildKeyIndexes(String prefix) {
+    List<DBObject> indexes = new ArrayList<>(3);
+    indexes.add(new BasicDBObject(String.format("%s.uids", prefix), 1));
+    indexes.add(new BasicDBObject(String.format("%s.names", prefix), 1));
+    indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1).append(String.format("%s.names", prefix), 1));
+    return indexes;
+  }
+
+
   protected String type;
   protected Set<String> uids;
   protected Set<String> names;

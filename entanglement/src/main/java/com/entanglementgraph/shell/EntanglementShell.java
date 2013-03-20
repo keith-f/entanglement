@@ -24,9 +24,7 @@ import asg.cliche.Param;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.mongodb.DB;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
@@ -42,14 +40,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cli.export.MongoGraphToGephi;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.graph.InsertMode;
-import com.entanglementgraph.player.LogPlayer;
-import com.entanglementgraph.player.LogPlayerMongoDbImpl;
-import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.player.LogPlayerException;
-import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.TransactionBegin;
@@ -168,12 +159,8 @@ public class EntanglementShell
     String database = state.getProperties().get(PROP_DB_NAME);
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-    String insertMode = state.getProperties().get(PROP_INSERT_MODE);
 
     GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
-    if (insertMode != null) {
-      factory.setInsertMode(InsertMode.valueOf(insertMode));
-    }
     GraphConnection connection = factory.connect(graphName, branchName);
     graphConn = connection;
 

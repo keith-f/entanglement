@@ -60,7 +60,7 @@ public class GdfWriter
   {
     StringBuilder sb = new StringBuilder();
     sb.append(node.get(NodeDAO.FIELD_KEYS));
-    sb.append(",").append(node.get(NodeDAO.FIELD_TYPE));
+    sb.append(",").append(node.get(NodeDAO.FIELD_KEYS_TYPE));
 //    sb.append(",").append(node.getIncomingEdgeIds().size());
     
     //Color

@@ -135,48 +135,7 @@ public class EdgeModificationPlayer
    * Called when an edge is found to not exist already - we need to create it.
    */
   private void createNewEdge() throws GraphModelException, LogPlayerException {
-   /*
-    * In the case of a hanging edge, the to/from node UIDs my be either be omitted, or point to a non-existent node.
-    *
-    */
     try {
-//      logger.info("Creating new edge in: "+edgeDao.getCollection().getFullName());
-
-      //If the command definitely doesn't allow hanging edges, then we need to make sure that the edge isn't hanging.
-      if (!command.isAllowHanging()) {
-        //Check that both to/from node references are set and valid
-        if (!reqSerializedEdge.containsField(EdgeDAO.FIELD_FROM) ||
-            !reqSerializedEdge.containsField(EdgeDAO.FIELD_TO_NODE_TYPE)) {
-          throw new LogPlayerException("Can't play operation: "
-              + ". Either " + EdgeDAO.FIELD_FROM +" or "+ EdgeDAO.FIELD_TO + " were not set." +
-              "\nOperation was: "+item.getOp());
-        }
-
-        EntityKeys from = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM);
-        validateKeyset(from);
-
-        EntityKeys to = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO);
-        validateKeyset(to);
-
-        // Check that from/to nodes exist
-        if (!nodeDao.existsByKey(from)) {
-          throw new LogPlayerException(
-              "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-                  + ", and the 'from' node doesn't exist: "+from);
-        }
-        if (!nodeDao.existsByKey(to)) {
-          throw new LogPlayerException(
-              "While creating an edge, allowHanging was set to "+command.isAllowHanging()
-                  + ", and the 'to' node doesn't exist: "+to);
-        }
-
-        // We've proved that this edge isn't hanging, so set the appropriate edge property.
-        reqSerializedEdge.put(EdgeDAO.FIELD_HANGING, false);
-      } //End !command.isAllowHanging()
-
-      /*
-       * Finally, store the edge
-       */
       edgeDao.store(reqSerializedEdge);
     } catch(Exception e) {
       throw new LogPlayerException("Failed to create an edge. Command was: "+command.toString(), e);
@@ -241,16 +200,16 @@ public class EdgeModificationPlayer
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM);
+      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM, marshaller.serialize(fromMergedKeys));
+      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO);
+      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO, marshaller.serialize(toMergedKeys));
+      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
 
       edgeDao.update(updated);
@@ -287,16 +246,16 @@ public class EdgeModificationPlayer
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM);
+      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM, marshaller.serialize(fromMergedKeys));
+      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO);
+      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO, marshaller.serialize(toMergedKeys));
+      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
       edgeDao.update(updated);
     }
@@ -331,16 +290,16 @@ public class EdgeModificationPlayer
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM);
+      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM, marshaller.serialize(fromMergedKeys));
+      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO);
+      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO, marshaller.serialize(toMergedKeys));
+      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
       edgeDao.update(updated);
     }

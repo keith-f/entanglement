@@ -28,7 +28,6 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphDAOFactory;
-import com.entanglementgraph.graph.InsertMode;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.player.GraphCheckoutNamingScheme;
 import com.entanglementgraph.revlog.RevisionLog;
@@ -50,8 +49,6 @@ public class GraphConnectionFactory {
   private final String hostname;
   private final String database;
 
-  private InsertMode insertMode;
-
   private DbObjectMarshaller marshaller;
 
   public GraphConnectionFactory(String hostname, String database) {
@@ -62,7 +59,6 @@ public class GraphConnectionFactory {
     this.classLoader = classLoader;
     this.hostname = hostname;
     this.database = database;
-    this.insertMode = InsertMode.INSERT_CONSISTENCY;
     marshaller = ObjectMarshallerFactory.create(classLoader);
   }
 
@@ -92,9 +88,6 @@ public class GraphConnectionFactory {
       NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol, edgeCol);
       EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, nodeCol, edgeCol);
 
-      System.out.println("Setting DAO insert mode to: "+insertMode);
-      nodeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
-      edgeDao.setInsertModeHint(InsertMode.INSERT_CONSISTENCY);
       connection.setEdgeDao(edgeDao);
       connection.setNodeDao(nodeDao);
 
@@ -111,11 +104,4 @@ public class GraphConnectionFactory {
     }
   }
 
-  public InsertMode getInsertMode() {
-    return insertMode;
-  }
-
-  public void setInsertMode(InsertMode insertMode) {
-    this.insertMode = insertMode;
-  }
 }

@@ -21,7 +21,7 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.entanglementgraph.util.MongoObjectParsers;
+import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
@@ -52,13 +52,9 @@ import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.player.GraphCheckoutNamingScheme;
 import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.GraphDAOFactory;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.revlog.RevisionLogException;
 
 /**
@@ -235,7 +231,7 @@ public class MongoGraphToGephi {
       EntityKeys keyset = marshaller.deserialize(node.get(NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
 
 
-      String type = (String) node.get(NodeDAO.FIELD_TYPE);
+      String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
       Color nodeColour = DEFAULT_COLOR;
       if (nodeColorMappings.containsKey(type)) {
         nodeColour = nodeColorMappings.get(type);
@@ -297,10 +293,10 @@ public class MongoGraphToGephi {
             edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
       BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
-      String fromId = keysetToId(MongoObjectParsers.parseKeyset(marshaller, fromObj));
+      String fromId = keysetToId(MongoUtils.parseKeyset(marshaller, fromObj));
 
       BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
-      String toId = keysetToId(MongoObjectParsers.parseKeyset(marshaller, toObj));
+      String toId = keysetToId(MongoUtils.parseKeyset(marshaller, toObj));
 
 
       org.gephi.graph.api.Edge gephiEdge = graphModel.factory().

@@ -20,24 +20,17 @@ package com.entanglementgraph.player.spi;
 
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoObjectParsers;
+import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.*;
 
 import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
 
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.player.LogPlayerException;
-import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.revlog.data.RevisionItem;
 
@@ -81,7 +74,7 @@ public class NodeModificationPlayer
       NodeModification command = (NodeModification) item.getOp();
       BasicDBObject reqSerializedNode = command.getNode();
 
-      EntityKeys reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS) );
+      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
@@ -230,7 +223,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(existing.toMap());
@@ -266,7 +259,7 @@ public class NodeModificationPlayer
   {
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
 
       BasicDBObject updated = new BasicDBObject();
@@ -304,7 +297,7 @@ public class NodeModificationPlayer
      */
     try {
       // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoObjectParsers.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
 
       BasicDBObject updated = new BasicDBObject();
       updated.putAll(reqSerializedNode.toMap());

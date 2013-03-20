@@ -18,8 +18,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.util.MongoBatchInserter;
-import com.entanglementgraph.util.MongoObjectParsers;
+import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -29,9 +28,9 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.KeyExtractingIterable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -47,21 +46,14 @@ abstract public class AbstractGraphEntityDAO
 {
   private static final Logger logger =
       Logger.getLogger(AbstractGraphEntityDAO.class.getName());
-  
-  /*
-   * Indexes UID
-   */
-  private static final DBObject IDX_UIDS = new BasicDBObject(FIELD_KEYS+".uids", 1);
-  /*
-   * Indexes entity type, followed by entity name
-   */
-  private static final DBObject IDX_TYPE_AND_NAME = 
-          new BasicDBObject(FIELD_KEYS+".type", 1).append(FIELD_KEYS+".names", 1);
+
+  private static Iterable<DBObject> buildKeysetIndexes() {
+    return EntityKeys.buildKeyIndexes(FIELD_KEYS);
+  }
   
   protected final Mongo m;
   protected final DB db;
-  
-  protected InsertMode insertModeHint;
+
   
 //  private final JsonUtils json;
   protected final DbObjectMarshaller marshaller;
@@ -82,8 +74,6 @@ abstract public class AbstractGraphEntityDAO
    * we make the assumption that there is one graph checkout per collection.
    */
   protected final DBCollection col;
-
-  private final MongoBatchInserter batchInserter;
   
   /**
    * 
@@ -102,28 +92,13 @@ abstract public class AbstractGraphEntityDAO
     this.db = db;
     this.col = col;
     marshaller = ObjectMarshallerFactory.create(classLoader);
-
-    this.batchInserter = new MongoBatchInserter(col);
     
     printPeriodicPerformanceInfo = true;
     insertCount = 0;
-    insertModeHint = InsertMode.INSERT_CONSISTENCY;
-    
     //Make sure indexes exist
-    col.ensureIndex(IDX_UIDS);
-    col.ensureIndex(IDX_TYPE_AND_NAME);
+    MongoUtils.createIndexes(this.col, buildKeysetIndexes());
   }
-  
-  @Override
-  public InsertMode getInsertModeHint()
-  {
-    return insertModeHint;
-  }
-  @Override
-  public void setInsertModeHint(InsertMode insertMode)
-  {
-    this.insertModeHint = insertMode;
-  }
+
   
   @Override
   public DBCollection getCollection()
@@ -136,16 +111,6 @@ abstract public class AbstractGraphEntityDAO
       throws GraphModelException
   {
     try {
-      EntityKeys entitySet = MongoObjectParsers.parseKeyset(marshaller, item);
-//      logger.log(Level.INFO, "Storing node: {0}", node);
-//      if (insertModeHint == InsertMode.INSERT_CONSISTENCY) {
-//
-//        if (existsByKey(entitySet)) {
-//          throw new GraphModelException(
-//              "Failed to store item - an entity with one or more of the specified UIDs or names already exists: "+entitySet);
-//        }
-//      }
-
       col.insert(item); //Direct to database
 //      batchInserter.addItemToBatch(entitySet, item); //Add to batch
       
@@ -180,53 +145,7 @@ abstract public class AbstractGraphEntityDAO
     }
   }
 
-  @Override
-  public void flush()
-      throws GraphModelException {
-    try {
-      batchInserter.flush();
-    } catch(Exception e) {
-      throw new GraphModelException("Failed to flush changes to DB", e);
-    }
-  }
 
-//  @Override
-//  public void storeBatch(List<DBObject> items)
-//      throws GraphModelException
-//  {
-//    try {
-//      col.insert(items);
-//
-//      /////// DEBUG (Performance info)
-//      if (printPeriodicPerformanceInfo) {
-//        insertCount = insertCount + items.size();
-//        if (timestampOfLastPerformanceMessage < 0) {
-//          //First ever insert
-//          long now = System.currentTimeMillis();
-//          timestampOfLastPerformanceMessage = now;
-//          timestampOfFirstInsert = now;
-//          return;
-//        }
-//        if (insertCount % PRINT_PERF_INFO_EVERY == 0) {
-//          long now = System.currentTimeMillis();
-//          double secondsPerBlock = (now - timestampOfLastPerformanceMessage);
-//          secondsPerBlock = secondsPerBlock / 1000;
-//          double totalSeconds = (now - timestampOfFirstInsert);
-//          totalSeconds = totalSeconds / 1000;
-////          logger.log(Level.INFO,
-////                  "Inserted a total of\t{0}\t"+getClass().getSimpleName()+" documents. "
-////                  + "Total time\t{1}\t seconds. Seconds since last block: {2}",
-////                  new Object[]{insertCount, totalSeconds, secondsPerBlock});
-//          timestampOfLastPerformanceMessage = now;
-//        }
-//      }
-//      /////// DEBUG (Performance info) (end)
-//    }
-//    catch(Exception e)
-//    {
-//      throw new GraphModelException("Failed to store items: "+items.size(), e);
-//    }
-//  }
   
   @Override
   public void update(BasicDBObject updated)
@@ -234,7 +153,7 @@ abstract public class AbstractGraphEntityDAO
   {
     try {
 //      logger.info("Updating object: "+updated);
-      EntityKeys keys = MongoObjectParsers.parseKeyset(marshaller, updated);
+      EntityKeys keys = MongoUtils.parseKeyset(marshaller, updated);
       BasicDBObject result = getByAnyUid(keys.getUids());
       if (result == null) {
         result = getByAnyName(keys.getType(), keys.getNames());
@@ -243,11 +162,8 @@ abstract public class AbstractGraphEntityDAO
         throw new GraphModelException("Failed to find any object with: "+keys.toString());
       }
 
-//      logger.info("Found: "+result);
       DBObject criteria = new BasicDBObject(FIELD_KEYS, result.get(FIELD_KEYS));
 
-
-//      logger.info("Criteria: "+criteria);
       //Perform atomic update of a single document
       col.findAndModify(criteria, updated);
     }
@@ -272,7 +188,7 @@ abstract public class AbstractGraphEntityDAO
       criteria = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(uid);
-      criteria.put(FIELD_KEYS+".uids", new BasicDBObject("$in", uidList));
+      criteria.put(FIELD_KEYS_UIDS, new BasicDBObject("$in", uidList));
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -310,8 +226,8 @@ abstract public class AbstractGraphEntityDAO
     try {
       BasicDBList nameList = new BasicDBList();
       nameList.add(entityName);
-      criteria.put(FIELD_KEYS+".type", entityType);
-      criteria.put(FIELD_KEYS+".names",new BasicDBObject("$in", nameList));
+//      criteria.put(FIELD_KEYS+".type", entityType);
+      criteria.put(FIELD_KEYS_NAMES,new BasicDBObject("$in", nameList));
       
       fieldsToReturn = new BasicDBObject();
       sort = new BasicDBObject();
@@ -336,24 +252,16 @@ abstract public class AbstractGraphEntityDAO
 
   @Override
   public EntityKeys getEntityKeysetForUid(String uid) throws GraphModelException {
-    DBObject query = null;
-    DBObject fields = null;
+    DBObject query = buildGetByAnyUid(Collections.singleton(uid));
+    DBObject fields = new BasicDBObject(FIELD_KEYS, 1);
     try {
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.add(uid);
-      query.put(FIELD_KEYS+".uids", new BasicDBObject("$in", uidList));
-
-      fields = new BasicDBObject();
-      fields.put(FIELD_KEYS, 1);
-
-      DBObject result = col.findOne(query);
+      DBObject result = col.findOne(query, fields);
       if (result == null) {
         //There is no node with this entityName
         return null;
       }
 
-      EntityKeys keyset = MongoObjectParsers.parseKeyset(marshaller, result);
+      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result);
       return keyset;
     }
     catch(Exception e) {
@@ -363,25 +271,16 @@ abstract public class AbstractGraphEntityDAO
 
   @Override
   public EntityKeys getEntityKeysetForName(String type, String entityName) throws GraphModelException {
-    DBObject query = null;
-    DBObject fields = null;
+    DBObject query = buildAnyNameQuery(Collections.singleton(entityName));
+    DBObject fields = new BasicDBObject(FIELD_KEYS, 1);
     try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS +".type", type);
-      BasicDBList nameList = new BasicDBList();
-      nameList.add(entityName);
-      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
-
-      fields = new BasicDBObject();
-      fields.put(FIELD_KEYS, 1);
-
-      DBObject result = col.findOne(query);
+      DBObject result = col.findOne(query, fields);
       if (result == null) {
         //There is no node with this entityName
         return null;
       }
 
-      EntityKeys keyset = MongoObjectParsers.parseKeyset(marshaller, result);
+      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result);
       return keyset;
     }
     catch(Exception e) {
@@ -392,7 +291,6 @@ abstract public class AbstractGraphEntityDAO
   @Override
   public BasicDBObject getByKey(EntityKeys keyset)
       throws GraphModelException {
-    DBObject query = null;
     try {
       BasicDBObject doc = getByAnyUid(keyset.getUids());
       if (doc != null) {
@@ -403,7 +301,7 @@ abstract public class AbstractGraphEntityDAO
       return doc;
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation. Query was: "+query, e);
+      throw new GraphModelException("Failed to perform database operation.", e);
     }
   }
 
@@ -412,42 +310,16 @@ abstract public class AbstractGraphEntityDAO
   public BasicDBObject getByUid(String entityUid)
       throws GraphModelException
   {
-    DBObject query = null;
-    try {
-//      logger.log(Level.INFO, "Getting node by UID: {0}", nodeUid);
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.add(entityUid);
-      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
-
-
-      BasicDBObject obj = (BasicDBObject) col.findOne(query);
-      if (obj == null) {
-        return null;
-      }
-      return obj;
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
-    }
+    return getByAnyUid(Collections.singleton(entityUid));
   }
 
   @Override
   public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = buildGetByAnyUid(uids);
     try {
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.addAll(uids);
-      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
-
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
-      if (obj == null) {
-        return null;
-      }
       return obj;
     }
     catch(Exception e) {
@@ -459,42 +331,16 @@ abstract public class AbstractGraphEntityDAO
   public BasicDBObject getByName(String type, String entityName)
       throws GraphModelException
   {
-    DBObject query = null;
-    try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS +".type", type);
-      BasicDBList nameList = new BasicDBList();
-      nameList.add(entityName);
-      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
-
-      BasicDBObject obj = (BasicDBObject)  col.findOne(query);
-      if (obj == null) {
-        return null;
-      }
-      return obj;
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
-    }
+    return getByAnyName(type, Collections.singleton(entityName));
   }
   
   @Override
   public BasicDBObject getByAnyName(String type, Set<String> entityNames)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = buildAnyNameQuery(entityNames);
     try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS +".type", type);
-      BasicDBList nameList = new BasicDBList();
-      nameList.addAll(entityNames);
-      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
-
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
-      if (obj == null) {
-        return null;
-      }
       return obj;
     }
     catch(Exception e) {
@@ -505,7 +351,6 @@ abstract public class AbstractGraphEntityDAO
   @Override
   public boolean existsByKey(EntityKeys keyset)
       throws GraphModelException {
-    DBObject query = null;
     try {
       boolean exists = existsByAnyUid(keyset.getUids());
       if (exists) {
@@ -516,7 +361,7 @@ abstract public class AbstractGraphEntityDAO
       return exists;
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation. Query was: "+query, e);
+      throw new GraphModelException("Failed to perform database operation.", e);
     }
   }
  
@@ -525,98 +370,82 @@ abstract public class AbstractGraphEntityDAO
   public boolean existsByUid(String entityUid)
       throws GraphModelException
   {
-    DBObject query = null;
-    try {
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.add(entityUid);
-      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
-
-      DBObject fields = new BasicDBObject("_id", 1);
-      DBCursor result = col.find(query, fields).limit(1);
-      return result.hasNext();
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation: \n"
-          + "Query: "+query, e);
-    }
+    return existsByAnyUid(Collections.singleton(entityUid));
   }
 
   @Override
   public boolean existsByAnyUid(Collection<String> entityUids)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = buildGetByAnyUid(entityUids);
+    DBObject fields = new BasicDBObject("_id", 1);
     try {
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.addAll(entityUids);
-      query.put(FIELD_KEYS +".uids", new BasicDBObject("$in", uidList));
-
-//      long count = col.count(query);
-      DBObject fields = new BasicDBObject("_id", 1);
       DBCursor result = col.find(query, fields).limit(1);
       return result.hasNext();
-
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
   }
-  
+
+  private DBObject buildGetByAnyUid(Collection<String> entityUids) {
+    DBObject query = new BasicDBObject();
+    BasicDBList uidList = new BasicDBList();
+    uidList.addAll(entityUids);
+    query.put(FIELD_KEYS_UIDS, new BasicDBObject("$in", uidList));
+    return query;
+  }
+
   @Override
   public boolean existsByName(String entityType, String entityName)
       throws GraphModelException
   {
-    DBObject query = null;
-    try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS +".type", entityType);
-      BasicDBList nameList = new BasicDBList();
-      nameList.add(entityName);
-      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
-
-      DBObject fields = new BasicDBObject("_id", 1);
-      DBCursor result = col.find(query, fields).limit(1);
-      return result.hasNext();
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
-    }
+    return existsByAnyName(entityType, Collections.singleton(entityName));
   }
   
   @Override
   public boolean existsByAnyName(String entityType, Collection<String> entityNames)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = buildAnyNameQuery(entityNames);
+    DBObject fields = new BasicDBObject(FIELD_KEYS_TYPE, 1);
     try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS +".type", entityType);
-      BasicDBList nameList = new BasicDBList();
-      nameList.addAll(entityNames);
-      query.put(FIELD_KEYS +".names", new BasicDBObject("$in", nameList));
-
-      DBObject fields = new BasicDBObject("_id", 1);
-//      DBObject result = col.findOne(query, fields);
       DBCursor result = col.find(query, fields).limit(1);
-      return result.hasNext();
 
-//      long count = col.count(query);
-//      if (count > 1) {
-//        throw new GraphModelException("Type: "+entityType+", Names: "+entityNames
-//            +" should be unique, but we found: "+count + " instances with that name!");
-//      }
-//      return count == 1;
+      if (!result.hasNext()) {
+        return false;
+      }
+      for (DBObject next : result) {
+        String nextType = (String) next.get(FIELD_KEYS_TYPE);
+        if (nextType.equals(entityType)) {
+          return true;
+        }
+      }
+      return false;
     }
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
     }
   }
-  
+
+  /**
+   * Builds a MongoDB query to fetch documents by name, ignoring type. Since names are not guaranteed to be unique,
+   * you should manually check the type of the documents returned.
+   * This will be fixed once MongoDB performance improves for compound indexes.
+   * @param entityNames
+   * @return
+   */
+  private DBObject buildAnyNameQuery(Collection<String> entityNames) {
+    DBObject query = new BasicDBObject();
+    BasicDBList nameList = new BasicDBList();
+    nameList.addAll(entityNames);
+    query.put(FIELD_KEYS_NAMES, new BasicDBObject("$in", nameList));
+    return query;
+  }
+
+
   @Override
   public BasicDBObject deleteByUid(String uid)
       throws GraphModelException
@@ -635,7 +464,7 @@ abstract public class AbstractGraphEntityDAO
       query = new BasicDBObject();
       BasicDBList uidList = new BasicDBList();
       uidList.add(uid);
-      query.put(FIELD_KEYS+".uids",new BasicDBObject("$in", uidList));
+      query.put(FIELD_KEYS_UIDS,new BasicDBObject("$in", uidList));
       
       WriteResult result = col.remove(query);
 //      logger.log(Level.INFO, "WriteResult: {0}", result.toString());
@@ -654,11 +483,9 @@ abstract public class AbstractGraphEntityDAO
   public DBCursor iterateAll()
       throws GraphModelException
   {
-    DBObject query = null;
+    //Empty 'query' selects all documents (nodes in this case)
+    DBObject query = new BasicDBObject();
     try {
-      //Empty 'query' selects all documents (nodes in this case)
-      query = new BasicDBObject();
-
       final DBCursor cursor = col.find(query);
       return cursor;
     }
@@ -673,7 +500,7 @@ abstract public class AbstractGraphEntityDAO
       throws GraphModelException
   {
     try {
-      List<String> types = (List<String>) col.distinct(FIELD_KEYS+".type");
+      List<String> types = (List<String>) col.distinct(FIELD_KEYS_TYPE);
       return types;
     }
     catch(Exception e) {
@@ -686,14 +513,10 @@ abstract public class AbstractGraphEntityDAO
   public Iterable<DBObject> iterateByType(String typeName)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_KEYS_TYPE, typeName);
+
     try {
-//      logger.log(Level.INFO, "Getting node(s) by type: {0}", typeName);
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS+".type", typeName);
-
-//      logger.log(Level.INFO, "Generated query: {0}", query);
-
       DBCursor cursor = col.find(query);
       return cursor;
     }
@@ -708,13 +531,11 @@ abstract public class AbstractGraphEntityDAO
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_KEYS_TYPE, typeName);
+    DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
     try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS+".type", typeName);
-      DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
       DBCursor cursor = col.find(query, keys, offset, limit);
-      
       return new KeyExtractingIterable<>(cursor, FIELD_KEYS, EntityKeys.class);
     }
     catch(Exception e) {
@@ -729,10 +550,10 @@ abstract public class AbstractGraphEntityDAO
   public long countByType(String typeName)
       throws GraphModelException
   {
-    DBObject query = null;
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_KEYS_TYPE, typeName);
     try {
-      query = new BasicDBObject();
-      query.put(FIELD_KEYS+".type", typeName);
+
       return col.count(query);
     }
     catch(Exception e) {

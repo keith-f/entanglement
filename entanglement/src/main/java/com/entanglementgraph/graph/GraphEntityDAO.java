@@ -34,18 +34,12 @@ import com.entanglementgraph.player.LogPlayerException;
  */
 public interface GraphEntityDAO 
 {
-  public static final String FIELD_TYPE = "type";
-
   public static final String FIELD_KEYS = "keys";
-  
-  
-  public InsertMode getInsertModeHint();
-  public void setInsertModeHint(InsertMode mode);
+  public static final String FIELD_KEYS_TYPE = FIELD_KEYS+".type";
+  public static final String FIELD_KEYS_UIDS = FIELD_KEYS+".uids";
+  public static final String FIELD_KEYS_NAMES = FIELD_KEYS+".names";
+
   public DBCollection getCollection();
-//  public DBCollection getNodeCol();
-//  public DBCollection getEdgeCol();
-  
-  
   
   /**
    * Stores a new graph entity to the database. If the <code>InsertMode</code>
@@ -63,19 +57,6 @@ public interface GraphEntityDAO
   public void store(BasicDBObject entity)
       throws GraphModelException;
 
-  /**
-   * Same as <code>store</code>, except multiple objects are stored as a batch.
-   *
-   * NOTE: <code>InsertMode</code> is ignored here.
-   *
-   * @param items
-   * @throws GraphModelException
-   */
-//  public void storeBatch(List<DBObject> items)
-//      throws GraphModelException;
-
-  public void flush()
-      throws GraphModelException;
   
   /**
    * Updates (actually, replaces) an existing graph entity. The <code>UID</code> 
@@ -103,26 +84,23 @@ public interface GraphEntityDAO
    * @param propertyName the property to set.
    * @param propertyValue a data bean to be JSON-serialised and converted into
    * a DBObject.
-   * @throws LogPlayerException 
+   * @throws LogPlayerException
+   * @deprecated Don't use
    */
   public void setPropertyByUid(String uid, String propertyName, Object propertyValue)
       throws GraphModelException;
-  
-  public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
-      throws GraphModelException;
-  
+
   /**
-   * Given a graph entity's type and name (together these form a 
-   * uniquely-identifying key), returns the entity's UID.
-   * 
+   * @deprecated Don't use
    * @param entityType
    * @param entityName
-   * @return the UID for the graph entity, or <code>null</code> if no graph
-   * entity has the type <code>entityType</code> and name <code>entityName</code>.
-   * @throws GraphModelException 
+   * @param propertyName
+   * @param propertyValue
+   * @throws GraphModelException
    */
-//  public String lookupUniqueIdForName(String entityType, String entityName)
-//      throws GraphModelException;
+  public void setPropertyByName(String entityType, String entityName, String propertyName, Object propertyValue)
+      throws GraphModelException;
+
 
   public EntityKeys getEntityKeysetForUid(String uid) throws GraphModelException;
 

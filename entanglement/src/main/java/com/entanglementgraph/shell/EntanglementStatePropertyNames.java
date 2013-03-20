@@ -20,7 +20,6 @@ package com.entanglementgraph.shell;
 import com.torrenttamer.util.UidGenerator;
 import java.util.HashMap;
 import java.util.Map;
-import com.entanglementgraph.graph.InsertMode;
 
 /**
  *
@@ -40,8 +39,7 @@ public class EntanglementStatePropertyNames
   
   public static String PROP_DEFAULT_DATASOURCE_NAME = "default_datasource";
   public static String PROP_DEFAULT_EVIDENCETYPE_NAME = "default_evidencetype";
-  
-  public static String PROP_INSERT_MODE = "graph.insert_mode";
+
   
   
   
@@ -57,8 +55,7 @@ public class EntanglementStatePropertyNames
     
     defaults.put(PROP_DEFAULT_DATASOURCE_NAME, "default");
     defaults.put(PROP_DEFAULT_EVIDENCETYPE_NAME, "default");
-    
-    defaults.put(PROP_INSERT_MODE, InsertMode.INSERT_CONSISTENCY.name());
+
     
     return defaults;
   }

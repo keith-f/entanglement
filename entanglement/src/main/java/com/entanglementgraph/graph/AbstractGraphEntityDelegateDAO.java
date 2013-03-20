@@ -50,16 +50,6 @@ import java.util.Set;
   }
 
   @Override
-  public InsertMode getInsertModeHint() {
-    return delegate.getInsertModeHint();
-  }
-
-  @Override
-  public void setInsertModeHint(InsertMode mode) {
-    delegate.setInsertModeHint(mode);
-  }
-
-  @Override
   public DBCollection getCollection() {
     return delegate.getCollection();
   }
@@ -69,16 +59,6 @@ import java.util.Set;
     delegate.store(entity);
   }
 
-  @Override
-  public void flush() throws GraphModelException {
-    delegate.flush();
-  }
-
-  //  @Override
-//  public void storeBatch(List<DBObject> entities) throws GraphModelException {
-//    delegate.storeBatch(entities);
-//  }
-//
   @Override
   public void update(BasicDBObject updated) throws GraphModelException {
     delegate.update(updated);
@@ -178,11 +158,6 @@ import java.util.Set;
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit) throws GraphModelException {
     return delegate.iterateKeysByType(typeName, offset, limit);
   }
-
-//  @Override
-//  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit) throws GraphModelException {
-//    return delegate.iterateNamesByType(typeName, offset, limit);
-//  }
 
   @Override
   public long countByType(String typeName) throws GraphModelException {

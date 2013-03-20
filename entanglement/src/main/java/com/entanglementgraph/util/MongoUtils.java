@@ -19,9 +19,13 @@ package com.entanglementgraph.util;
 
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.mongodb.BasicDBList;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+
+import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,7 +34,19 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
  * Time: 17:32
  * To change this template use File | Settings | File Templates.
  */
-public class MongoObjectParsers {
+public class MongoUtils {
+
+  public static void createIndexes(DBCollection col, Iterable<DBObject> indexDefns) {
+    for (DBObject idx : indexDefns) {
+      col.ensureIndex(idx);
+    }
+  }
+
+  public static BasicDBList singleton(String item) {
+    BasicDBList list = new BasicDBList();
+    list.add(item);
+    return list;
+  }
 
   public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, String jsonKeyset)
       throws DbObjectMarshallerException {

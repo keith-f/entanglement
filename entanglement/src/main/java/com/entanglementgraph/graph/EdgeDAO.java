@@ -29,20 +29,20 @@ import java.util.Map;
 public interface EdgeDAO
     extends GraphEntityDAO
 {
-  public static final String FIELD_FROM_NODE_UID = "fromUid";
-  public static final String FIELD_TO_NODE_UID = "toUid";
-  
-  public static final String FIELD_FROM_NODE_TYPE = "fromType";
-  public static final String FIELD_TO_NODE_TYPE = "toType";
-  
-  public static final String FIELD_FROM = "from";
-  public static final String FIELD_TO = "to";
-  
-  public static final String FIELD_HANGING = "hanging";
-  
-//  public DBCollection getEdgeCol();
-  
-  
+
+
+  public static final String FIELD_FROM_KEYS = "from";
+  public static final String FIELD_FROM_KEYS_TYPE = FIELD_FROM_KEYS+".type";
+  public static final String FIELD_FROM_KEYS_UIDS = FIELD_FROM_KEYS+".uids";
+  public static final String FIELD_FROM_KEYS_NAMES = FIELD_FROM_KEYS+".names";
+
+  public static final String FIELD_TO_KEYS = "to";
+  public static final String FIELD_TO_KEYS_TYPE = FIELD_TO_KEYS+".type";
+  public static final String FIELD_TO_KEYS_UIDS = FIELD_TO_KEYS+".uids";
+  public static final String FIELD_TO_KEYS_NAMES = FIELD_TO_KEYS+".names";
+
+
+
   /**
    * Given a 'from' node and a 'to' node, returns an iterator over all the 
    * edges between these nodes.

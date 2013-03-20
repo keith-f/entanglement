@@ -18,20 +18,14 @@
 
 package com.entanglementgraph.player;
 
-import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.player.spi.LogItemPlayerProvider;
 import com.entanglementgraph.util.GraphConnection;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 import com.entanglementgraph.player.spi.LogItemPlayer;
-import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.data.RevisionItem;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;
-import com.entanglementgraph.util.MongoBatchInserter;
 
 /**
  *

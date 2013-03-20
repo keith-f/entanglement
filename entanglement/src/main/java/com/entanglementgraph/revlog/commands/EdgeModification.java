@@ -59,8 +59,7 @@ public class EdgeModification
 
   private MergePolicy mergePol;
   private BasicDBObject edge;
-  
-  private boolean allowHanging;
+
  
 
   public EdgeModification()
@@ -71,21 +70,18 @@ public class EdgeModification
   {
     this.mergePol = MergePolicy.NONE;
     this.edge = edge;
-    this.allowHanging = false;
   }
   
   public EdgeModification(MergePolicy mergePol, BasicDBObject edge)
   {
     this.mergePol = mergePol;
     this.edge = edge;
-    this.allowHanging = false;
   }
 
   public EdgeModification(MergePolicy mergePol, boolean allowHanging, BasicDBObject edge)
   {
     this.mergePol = mergePol;
     this.edge = edge;
-    this.allowHanging = allowHanging;
   }
   
   
@@ -110,12 +106,5 @@ public class EdgeModification
     this.mergePol = mergePol;
   }
 
-  public boolean isAllowHanging() {
-    return allowHanging;
-  }
-
-  public void setAllowHanging(boolean allowHanging) {
-    this.allowHanging = allowHanging;
-  }
 
 }
