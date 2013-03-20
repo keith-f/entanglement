@@ -128,11 +128,6 @@ public class TestGraph1
       geneToChrom.getKeys().setType(ExistsWithin.class.getName());
       geneToChrom.getKeys().addUid(UidGenerator.generateUid());
 
-      /*
-       * One or both of the connected nodes doesn't exist in this graph. We can assert this because, by design,
-       * the gene graph doesn't contain chromosome nodes.
-       */
-      geneToChrom.setHanging(true);
       geneToChrom.setFrom(gene.getKeys()); //Set the 'from' node
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
       geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), "c1"));

@@ -31,28 +31,8 @@ public class Edge<F extends Node, T extends Node>
 {
   protected EntityKeys keys;
 
-
-
-//  protected String uid;
-//  protected String type;
-//  protected Set<String> names;
-
-//  protected String fromUid;
-//  protected String fromType;
-//  protected String toUid;
-//  protected String toType;
-
   protected EntityKeys from;
   protected EntityKeys to;
-  
-  /**
-   * Indicates whether or not this edge might be a hanging edge.
-   * If true, indicates that this edge is <i>possibly</i> hanging (i.e., one or
-   * both of the associated nodes does not exist).
-   * If false, indicates that this edge is <i>definitely not</i> hanging; both
-   * associated nodes exist.
-   */
-  protected boolean hanging;
   
   public Edge()
   {
@@ -102,7 +82,6 @@ public class Edge<F extends Node, T extends Node>
         "keys=" + keys +
         ", from=" + from +
         ", to=" + to +
-        ", hanging=" + hanging +
         '}';
   }
 
@@ -130,11 +109,4 @@ public class Edge<F extends Node, T extends Node>
     this.to = to;
   }
 
-  public boolean isHanging() {
-    return hanging;
-  }
-
-  public void setHanging(boolean hanging) {
-    this.hanging = hanging;
-  }
 }
