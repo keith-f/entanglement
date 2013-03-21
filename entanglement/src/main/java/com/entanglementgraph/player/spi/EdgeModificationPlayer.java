@@ -21,11 +21,13 @@ package com.entanglementgraph.player.spi;
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.google.gson.internal.StringMap;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,9 +81,15 @@ public class EdgeModificationPlayer
       command = (EdgeModification) item.getOp();
       reqSerializedEdge = command.getEdge();
 
-      //Deserialize 'key set' field from the entity because we'll need it.
-      String jsonKeyset = reqSerializedEdge.get(FIELD_KEYS).toString();
-      reqKeyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
+      //FIXME this is a quick fix. We need to not be using BasicDBObject on the command - use a proper JSON string instead
+      //Due to the way this is serialized, we need to get an internal GSON class and decode EntityKeys manually in this case
+      //If we don't do it this way, then Strings aren't properly quoted, meaning that special characters have bad effects
+      StringMap sm = (StringMap) reqSerializedEdge.get(FIELD_KEYS);
+      EntityKeys reqKeyset = new EntityKeys();
+      reqKeyset.setType((String) sm.get("type"));
+      reqKeyset.setUids(new HashSet<String>((List) sm.get("uids")));
+      reqKeyset.setNames(new HashSet<String>((List) sm.get("names")));
+      // ^^^ Quick hack end
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);

@@ -50,6 +50,7 @@ public class ObjectMarshallerFactory
 //    adapters.put(GraphOperation.class, new GraphOperationDeserializer(defaultCl));
     adapters.put(RevisionItem.class, new RevisionItemSerializer());
     adapters.put(RevisionItem.class, new RevisionItemDeserializer(classLoader));
+
 //    adapters.put(byte[].class, new ByteArraySerializer());
 //    adapters.put(RevisionItem.class, new RevisionItemDeserializer(defaultCl));
     GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller(adapters);

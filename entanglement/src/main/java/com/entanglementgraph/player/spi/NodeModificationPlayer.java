@@ -21,12 +21,17 @@ package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.MongoUtils;
+import com.google.gson.internal.StringMap;
 import com.mongodb.*;
 
 import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
 
+import com.mongodb.util.JSON;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.entanglementgraph.graph.GraphModelException;
@@ -70,11 +75,30 @@ public class NodeModificationPlayer
       throws LogPlayerException
   {
     try {
-//      this.item = item;
       NodeModification command = (NodeModification) item.getOp();
       BasicDBObject reqSerializedNode = command.getNode();
 
-      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
+      //FIXME this is a quick fix. We need to not be using BasicDBObject on the command - use a proper JSON string instead
+      //Due to the way this is serialized, we need to get an internal GSON class and decode EntityKeys manually in this case
+      //If we don't do it this way, then Strings aren't properly quoted, meaning that special characters have bad effects
+      StringMap sm = (StringMap) reqSerializedNode.get(FIELD_KEYS);
+      EntityKeys reqKeyset = new EntityKeys();
+      reqKeyset.setType((String) sm.get("type"));
+      reqKeyset.setUids(new HashSet<String>((List) sm.get("uids")));
+      reqKeyset.setNames(new HashSet<String>((List) sm.get("names")));
+      // ^^^ Quick hack end
+
+//      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
+//      System.out.println(" +++++++++++++++++++++ Type: "+reqSerializedNode.get(FIELD_KEYS).getClass().getName());
+//      System.out.println(" +++++++++++++++++++++ toString: "+reqSerializedNode.get(FIELD_KEYS).toString());
+//      System.out.println(" +++++++++++++++++++++ getString: "+reqSerializedNode.getString(FIELD_KEYS));
+//      System.out.println(" +++++ node doc: " + reqSerializedNode.toString());
+//      System.out.println(" +++++ node doc: "+ reqSerializedNode.getString(FIELD_KEYS));
+//      StringMap sm = (StringMap) reqSerializedNode.get(FIELD_KEYS);
+//      for (Object key : sm.keySet()) {
+//        System.out.println("  - "+key+"   val_type:"+sm.get(key).getClass().getName()+"   value: "+sm.get(key));
+//      }
+//      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, (DBObject) reqSerializedNode.get(FIELD_KEYS));
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
