@@ -32,8 +32,7 @@ import com.entanglementgraph.revlog.commands.TransactionRollback;
  */
 public class TxnUtils
 {
-  private static final Logger logger =
-      Logger.getLogger(TxnUtils.class.getName());
+  private static final Logger logger = Logger.getLogger(TxnUtils.class.getName());
 
   public static String beginNewTransaction(GraphConnection conn)
       throws RevisionLogException
@@ -92,7 +91,7 @@ public class TxnUtils
       throws RevisionLogException
   {
     if (txnId == null) {
-      logger.info("txnId was null - ignoring rollback request");
+//      logger.info("txnId was null - ignoring rollback request");
       return;
     }
     long start = System.currentTimeMillis();
@@ -149,6 +148,6 @@ public class TxnUtils
   private static void printDuration(long startMs, long endMs)
   {
     double durationSec = (endMs - startMs) / 1000d;
-    logger.info("Operation took: "+durationSec+" seconds.");
+//    logger.info("Operation took: "+durationSec+" seconds.");
   }
 }

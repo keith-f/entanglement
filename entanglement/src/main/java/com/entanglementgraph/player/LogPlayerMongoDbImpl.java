@@ -40,15 +40,12 @@ public class LogPlayerMongoDbImpl
   private final GraphConnection srcGraphConn;
   private final GraphConnection tgtGraphConn;
 
-//  private final LogItemPlayerProvider playerProvider;
 
   public LogPlayerMongoDbImpl(GraphConnection srcGraphConn, GraphConnection tgtGraphConn)
       throws RevisionLogException
   {
     this.srcGraphConn = srcGraphConn;
     this.tgtGraphConn = tgtGraphConn;
-
-//    this.batchInserter = new MongoBatchInserter(tgtGraphConn);
   }
   
   @Override
@@ -99,7 +96,7 @@ public class LogPlayerMongoDbImpl
       throws LogPlayerException
   {
     try {
-      logger.info("Going to play revision items for txn: "+transactionUid);
+//      logger.info("Going to play revision items for txn: "+transactionUid);
 
       Iterable<RevisionItemContainer> containers = 
               srcGraphConn.getRevisionLog().iterateRevisionsForTransaction(transactionUid);

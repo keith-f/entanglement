@@ -212,14 +212,8 @@ public class RevisionLogDirectToMongoDbImpl
         item.setOp(op);
         item.setType(op.getClass().getSimpleName());
         container.getItems().add(item);
-        
-//        //Serialize
-//        DBObject dbObject = (DBObject) JSON.parse(JsonSerializer.serializeToString(item));
-//        dbObjects.add(dbObject);
       }
 
-//      revLogTmpCol.insert(dbObjects);
-//      DBObject dbObject = (DBObject) JSON.parse(serializer.serializeToString(container));
       DBObject dbObject = marshaller.serialize(container);
       revLogCol.insert(dbObject);
 
@@ -235,26 +229,19 @@ public class RevisionLogDirectToMongoDbImpl
   {
     String transactionUid = op.getUid();
     try {
-      logger.info("************* COMMITTING: "+transactionUid);
+//      logger.info("************* COMMITTING: "+transactionUid);
       Date now = new Date(System.currentTimeMillis());
-  //    String nowStr = serializer.serializeToString(now);
-
-      System.out.println("++++++++++++++++++++++++: "+marshaller.serializeToString(now));
-  //    DBObject nowObj = (DBObject) JSON.parse(JsonSerializer.serializeToString(now));
 
       DBObject query = new BasicDBObject(FIELD_TXN_UID, transactionUid);
       DBObject update = new BasicDBObject("$set", 
               new BasicDBObject(FIELD_COMMITTED, true)
               .append(FIELD_DATE_COMMITTED, marshaller.serializeToString(now)));
-  //            .append("dateCommitted", nowStr));
-      logger.info("Generated query: "+query);
-      logger.info("Generated update: "+update);
 
       WriteResult result = revLogCol.updateMulti(query, update);
 
-      logger.info("************* COMMIT COMPLETED: "+transactionUid+". Notify listeners...");
+//      logger.info("************* COMMIT COMPLETED: "+transactionUid+". Notify listeners...");
       notifyPostCommit(op);
-      logger.info("************* ALL LISTENERS NOTIFIED: "+transactionUid);
+//      logger.info("************* ALL LISTENERS NOTIFIED: "+transactionUid);
     }
     catch(Exception e) {
       logger.info("************* COMMIT FAILED: "+transactionUid);
@@ -279,14 +266,6 @@ public class RevisionLogDirectToMongoDbImpl
     }
   }
   
-//  @Override
-//  public Iterable<RevisionItem> iterateUncommittedRevisions()
-//  {
-//    DBObject query = new BasicDBObject();
-//    final DBCursor cursor = revLogTmpCol.find(query).sort(SORT_BY_REV);
-//    return new DeserialisingIterable<>(cursor, new RevisionItemDBObjectDeserializer());
-//  }
-  
   @Override
   public Iterable<RevisionItemContainer> iterateUncommittedRevisions(String transactionUid)
   {
@@ -306,24 +285,7 @@ public class RevisionLogDirectToMongoDbImpl
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_TXN_SUBMIT_ID);
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
-  
-  
 
-
-//  @Override
-//  public Iterable<RevisionItem> iterateCommittedRevisions()
-//  {
-//    final DBCursor cursor = revLogCol.find().sort(SORT_BY_REV);
-//    return new DeserialisingIterable<>(cursor, new RevisionItemDBObjectDeserializer());
-//  }
-
-//  @Override
-//  public Iterable<RevisionItem> iterateCommittedRevisionsForGraph(String graphId)
-//  {
-//    DBObject query = new BasicDBObject("graphUniqueId", graphId);
-//    final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_REV);
-//    return new DeserialisingIterable<>(cursor, new RevisionItemDBObjectDeserializer());
-//  }
 
   @Override
   public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(
@@ -335,28 +297,9 @@ public class RevisionLogDirectToMongoDbImpl
         new BasicDBObject(FIELD_COMMITTED, true)
     };
     DBObject query = new BasicDBObject("$and", Arrays.asList(andArgs));
-//    logger.info("Generated query: "+query);
     
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_DATE_COMMITTED).sort(SORT_BY_TXN_SUBMIT_ID);
-//    return new DeserialisingIterable<>(cursor, new RevisionItemDBObjectDeserializer());
-//    return new DeserialisingIterable<>(cursor, new JsonDBObjectDeserializer(RevisionItemContainer.class));
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
-
-//  @Override
-//  public Iterable<RevisionItem> iterateCommittedRevisionsForGraph(String graphId,
-//      String branchId, long fromRevId)
-//  {
-//    DBObject[] andArgs = new BasicDBObject[] {
-//        new BasicDBObject("graphUniqueId", graphId),
-//        new BasicDBObject("graphBranchId", branchId),
-//        new BasicDBObject("revisionId", new BasicDBObject("$gte", fromRevId))
-//    };
-//    DBObject query = new BasicDBObject("$and", Arrays.asList(andArgs));
-//    logger.info("Generated query: "+query);
-//    
-//    final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_REV);
-//    return new DeserialisingIterable<>(cursor, new RevisionItemDBObjectDeserializer());
-//  }
 
 }
