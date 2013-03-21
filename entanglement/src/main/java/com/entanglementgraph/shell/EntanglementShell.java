@@ -24,6 +24,8 @@ import asg.cliche.Param;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.revlog.commands.*;
+import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
@@ -42,10 +44,6 @@ import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cli.export.MongoGraphToGephi;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.TransactionBegin;
-import com.entanglementgraph.revlog.commands.TransactionCommit;
-import com.entanglementgraph.revlog.commands.TransactionRollback;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;
 import com.entanglementgraph.shell.gdfexport.GraphToGDFExporter;
 import com.entanglementgraph.shell.navigator.NavigatorShell;
@@ -66,13 +64,8 @@ public class EntanglementShell
 
   private ShellState state;
 
+  private GraphConnectionFactory factory;
   private GraphConnection graphConn;
-  
-//  private static Mongo mongo;
-//  private static DB db;
-//  private static RevisionLog revLog;
-//  private static NodeDAO nodeDao;
-//  private static EdgeDAO edgeDao;
 
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
@@ -160,11 +153,11 @@ public class EntanglementShell
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
 
-    GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
+    factory = new GraphConnectionFactory(classLoader, hostname, database);
     GraphConnection connection = factory.connect(graphName, branchName);
     graphConn = connection;
 
-    logger.info("Connected!");
+    logger.info("Connected to "+graphName+"/"+branchName+"!");
   }
   
   @Command
@@ -212,6 +205,18 @@ public class EntanglementShell
       txt.append("\n");
     }
     System.out.println(txt);
+  }
+
+  @Command(description = "Imports the specified graph content into the current graph")
+  public void importGraph(@Param(name = "srcGraphName")   String srcGraphName,
+                          @Param(name = "srcGraphBranch") String srcGraphBranch)
+      throws GraphConnectionFactoryException, RevisionLogException {
+    String txnId = TxnUtils.beginNewTransaction(graphConn);
+    List ops = new LinkedList<>();
+    ops.add(new BranchImport(srcGraphName, srcGraphBranch));
+
+    graphConn.getRevisionLog().submitRevisions(graphConn.getGraphName(), graphConn.getGraphBranch(), txnId, 1, ops);
+    TxnUtils.commitTransaction(graphConn, txnId);
   }
   
   
