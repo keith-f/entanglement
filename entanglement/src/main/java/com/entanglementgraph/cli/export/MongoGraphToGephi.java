@@ -188,7 +188,7 @@ public class MongoGraphToGephi {
 
   private static String keysetToId(EntityKeys keyset) {
     if (keyset.getUids().isEmpty()) {
-      throw new IllegalArgumentException("An entity must have at least one UID");
+      throw new IllegalArgumentException("An entity must have at least one UID. Offending keyset was: "+keyset);
     }
     return keyset.getUids().iterator().next();
   }
@@ -231,8 +231,10 @@ public class MongoGraphToGephi {
       EntityKeys keyset = marshaller.deserialize(node.get(NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
 
 
-      String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
+      //String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
+      String type = keyset.getType();
       Color nodeColour = DEFAULT_COLOR;
+      System.out.println("Type: "+type+", custom color: "+nodeColorMappings.get(type));
       if (nodeColorMappings.containsKey(type)) {
         nodeColour = nodeColorMappings.get(type);
       }

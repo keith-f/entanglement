@@ -417,7 +417,7 @@ abstract public class AbstractGraphEntityDAO
         return false;
       }
       for (DBObject next : result) {
-        //FIXME at some point, find out why this doesn't work... (FIELD_KEYS_TYPE == "keys.type")
+        //FIXME at some point, find out why this doesn't work (where FIELD_KEYS_TYPE == "keys.type") ...
 //        String nextType = (String) next.get(FIELD_KEYS_TYPE);
         //FIXME ... and why this does.
         String nextType = (String) ((BasicDBObject)next.get("keys")).get("type");
