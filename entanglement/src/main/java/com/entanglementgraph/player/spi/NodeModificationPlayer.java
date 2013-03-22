@@ -82,10 +82,20 @@ public class NodeModificationPlayer
       //Due to the way this is serialized, we need to get an internal GSON class and decode EntityKeys manually in this case
       //If we don't do it this way, then Strings aren't properly quoted, meaning that special characters have bad effects
       StringMap sm = (StringMap) reqSerializedNode.get(FIELD_KEYS);
-      EntityKeys reqKeyset = new EntityKeys();
-      reqKeyset.setType((String) sm.get("type"));
-      reqKeyset.setUids(new HashSet<String>((List) sm.get("uids")));
-      reqKeyset.setNames(new HashSet<String>((List) sm.get("names")));
+      reqKeyset = new EntityKeys();
+      String type = (String) sm.get("type");
+      List<String> uids = (List) sm.get("uids");
+      List<String> names = (List) sm.get("names");
+
+      if (type != null) {
+        reqKeyset.setType(type);
+      }
+      if (uids != null) {
+        reqKeyset.getUids().addAll(uids);
+      }
+      if (names != null) {
+        reqKeyset.getNames().addAll(names);
+      }
       // ^^^ Quick hack end
 
 //      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
