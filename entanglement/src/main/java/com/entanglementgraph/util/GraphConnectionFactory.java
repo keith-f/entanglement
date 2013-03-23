@@ -104,4 +104,16 @@ public class GraphConnectionFactory {
     }
   }
 
+  public static void silentClose(GraphConnection conn) {
+    if (conn == null) {
+      return;
+    }
+    try {
+      conn.getMongo().close();
+    } catch (Exception e) {
+      logger.info("Failed to close connection. Nothing we can do here. Ignoring this problem, but stack trace follows");
+      e.printStackTrace();
+    }
+  }
+
 }
