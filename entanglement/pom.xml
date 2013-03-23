@@ -8,6 +8,15 @@
   
   <name>ARIES/Entanglement</name>
 
+  <licenses>
+    <license>
+      <name>Apache, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+
   <!-- Build options -->
   <build>
     <plugins>
