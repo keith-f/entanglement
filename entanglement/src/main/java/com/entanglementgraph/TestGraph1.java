@@ -131,7 +131,7 @@ public class TestGraph1
       geneToChrom.setFrom(gene.getKeys()); //Set the 'from' node
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
       geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), "c1"));
-      ops.add(EdgeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, true, geneToChrom));
+      ops.add(EdgeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
     }
     genesConn.getRevisionLog().submitRevisions(genesConn.getGraphName(), genesConn.getGraphBranch(), txnId, 1, ops);
     TxnUtils.commitTransaction(genesConn, txnId);
