@@ -48,6 +48,18 @@ public class EntityKeys
     return keyset;
   }
 
+  public static boolean containsAtLeastOneName(EntityKeys keyset) {
+    return !keyset.names.isEmpty();
+  }
+
+  public static boolean containsAtLeastOneUid(EntityKeys keyset) {
+    return !keyset.uids.isEmpty();
+  }
+
+  public static boolean containsAtLeastOneKey(EntityKeys keyset) {
+    return !keyset.names.isEmpty() || !keyset.uids.isEmpty();
+  }
+
 
   protected String type;
   protected Set<String> uids;
