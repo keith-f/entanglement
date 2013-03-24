@@ -40,6 +40,12 @@ public class EntityKeys {
     return indexes;
   }
 
+  public static EntityKeys createWithType(String type) {
+    EntityKeys keyset = new EntityKeys();
+    keyset.setType(type);
+    return keyset;
+  }
+
 
   protected String type;
   protected Set<String> uids;
