@@ -1,6 +1,6 @@
 com.entanglementgraph.revlog.commands.BranchImport
-com.entanglementgraph.revlog.commands.DeleteEdgeByUid
-com.entanglementgraph.revlog.commands.DeleteNodeByUid
+com.entanglementgraph.revlog.commands.DeleteEdge
+com.entanglementgraph.revlog.commands.DeleteNode
 com.entanglementgraph.revlog.commands.EdgeModification
 com.entanglementgraph.revlog.commands.NodeModification
 com.entanglementgraph.revlog.commands.SetNamedNodeProperty

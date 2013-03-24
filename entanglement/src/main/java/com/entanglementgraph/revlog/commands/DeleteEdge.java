@@ -17,46 +17,37 @@
 
 package com.entanglementgraph.revlog.commands;
 
-import java.util.logging.Logger;
+import com.entanglementgraph.graph.data.EntityKeys;
 
 /**
  *
  * @author Keith Flanagan
  */
-public class DeleteEdgeByUid
+public class DeleteEdge
     extends GraphOperation
 {
-  private static final Logger logger = 
-      Logger.getLogger(DeleteEdgeByUid.class.getName());
+  private EntityKeys edgeKeyset;
   
-  /*
-   * Edge ID
-   */
-  private String uid;
-  
-  public DeleteEdgeByUid()
+  public DeleteEdge()
   {
   }
   
-  public DeleteEdgeByUid(String uniqueId)
+  public DeleteEdge(EntityKeys edgeKeyset)
   {
-    this.uid = uniqueId;
+    this.edgeKeyset = edgeKeyset;
   }
 
   @Override
   public String toString()
   {
-    return "DeleteEdgeByUid{" + "uniqueId=" + uid + '}';
+    return "DeleteEdge" + "edgeKeyset=" + edgeKeyset + '}';
   }
 
-  public String getUid()
-  {
-    return uid;
+  public EntityKeys getEdgeKeyset() {
+    return edgeKeyset;
   }
 
-  public void setUid(String uniqueId)
-  {
-    this.uid = uniqueId;
+  public void setEdgeKeyset(EntityKeys edgeKeyset) {
+    this.edgeKeyset = edgeKeyset;
   }
-
 }

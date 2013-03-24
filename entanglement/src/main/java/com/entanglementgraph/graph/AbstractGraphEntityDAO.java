@@ -26,7 +26,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
-import com.mongodb.WriteResult;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.KeyExtractingIterable;
 import java.util.Collection;
@@ -252,7 +251,7 @@ abstract public class AbstractGraphEntityDAO
 
   @Override
   public EntityKeys getEntityKeysetForUid(String uid) throws GraphModelException {
-    DBObject query = buildGetByAnyUid(Collections.singleton(uid));
+    DBObject query = buildAnyUidQuery(Collections.singleton(uid));
     DBObject fields = new BasicDBObject(FIELD_KEYS, 1);
     try {
       DBObject result = col.findOne(query, fields);
@@ -317,7 +316,7 @@ abstract public class AbstractGraphEntityDAO
   public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException
   {
-    DBObject query = buildGetByAnyUid(uids);
+    DBObject query = buildAnyUidQuery(uids);
     try {
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
       return obj;
@@ -377,7 +376,7 @@ abstract public class AbstractGraphEntityDAO
   public boolean existsByAnyUid(Collection<String> entityUids)
       throws GraphModelException
   {
-    DBObject query = buildGetByAnyUid(entityUids);
+    DBObject query = buildAnyUidQuery(entityUids);
     DBObject fields = new BasicDBObject("_id", 1);
     try {
       DBCursor result = col.find(query, fields).limit(1);
@@ -387,14 +386,6 @@ abstract public class AbstractGraphEntityDAO
       throw new GraphModelException("Failed to perform database operation: \n"
           + "Query: "+query, e);
     }
-  }
-
-  private DBObject buildGetByAnyUid(Collection<String> entityUids) {
-    DBObject query = new BasicDBObject();
-    BasicDBList uidList = new BasicDBList();
-    uidList.addAll(entityUids);
-    query.put(FIELD_KEYS_UIDS, new BasicDBObject("$in", uidList));
-    return query;
   }
 
   @Override
@@ -457,35 +448,41 @@ abstract public class AbstractGraphEntityDAO
   }
 
 
+  private DBObject buildAnyUidQuery(Collection<String> entityUids) {
+    DBObject query = new BasicDBObject();
+    BasicDBList uidList = new BasicDBList();
+    uidList.addAll(entityUids);
+    query.put(FIELD_KEYS_UIDS, new BasicDBObject("$in", uidList));
+    return query;
+  }
+
+
   @Override
-  public BasicDBObject deleteByUid(String uid)
+  public void delete(EntityKeys keys)
       throws GraphModelException
   {
-    DBObject query = null;
     try {
-//      logger.log(Level.INFO, "Deleting node by UID: {0}", nodeUid);
-      BasicDBObject toDelete = (BasicDBObject) getByUid(uid);
-      if (toDelete == null) {
-        throw new GraphModelException(
-            "Attempted a delete operation, but no such entity exists: "+uid);
+      //Build a query to delete by UID
+      if (!keys.getUids().isEmpty()) {
+        DBObject deleteByAnyUid = buildAnyUidQuery(keys.getUids());
+        col.remove(deleteByAnyUid);
       }
 
-      
-      //Delete the specified object
-      query = new BasicDBObject();
-      BasicDBList uidList = new BasicDBList();
-      uidList.add(uid);
-      query.put(FIELD_KEYS_UIDS,new BasicDBObject("$in", uidList));
-      
-      WriteResult result = col.remove(query);
-//      logger.log(Level.INFO, "WriteResult: {0}", result.toString());
-
-      return toDelete;
+      //Build a query to delete by type and name
+      if (!keys.getNames().isEmpty()) {
+        if (keys.getType() == null || keys.getType().length() == 0) {
+          throw new GraphModelException("While attempting to delete an entity by name, no type field was set. " +
+              "EntityKeys was: "+keys);
+        }
+        DBObject deleteByAnyName = buildAnyNameQuery(keys.getUids());
+        //This is likely to be slow (MongoDB index bug?), but hopefully 'delete' isn't a common operation.
+        deleteByAnyName.put(FIELD_KEYS_TYPE, keys.getType());
+        col.remove(deleteByAnyName);
+      }
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation: \n"
-          + "Query: "+query, e);
-    }    
+      throw new GraphModelException("Failed to perform database operation.", e);
+    }
   }
   
   

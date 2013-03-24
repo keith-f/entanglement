@@ -180,7 +180,7 @@ public interface GraphEntityDAO
   public boolean existsByAnyName(String entityType, Collection<String> entityNames)
       throws GraphModelException;
   
-  public BasicDBObject deleteByUid(String uid)
+  public void delete(EntityKeys keys)
       throws GraphModelException;
   
   

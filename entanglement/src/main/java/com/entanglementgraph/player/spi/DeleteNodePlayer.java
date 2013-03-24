@@ -18,26 +18,27 @@
 
 package com.entanglementgraph.player.spi;
 
+import com.entanglementgraph.revlog.commands.DeleteNode;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.player.LogPlayerException;
 import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.revlog.commands.DeleteNodeByUid;
+import com.entanglementgraph.revlog.commands.DeleteNode;
 import com.entanglementgraph.revlog.data.RevisionItem;
 
 /**
  *
  * @author Keith Flanagan
  */
-public class DeleteNodeByUidPlayer
+public class DeleteNodePlayer
     extends AbstractLogItemPlayer
 {
   
   @Override
   public String getSupportedLogItemType()
   {
-    return DeleteNodeByUid.class.getSimpleName();
+    return DeleteNode.class.getSimpleName();
   }
 
   @Override
@@ -45,8 +46,8 @@ public class DeleteNodeByUidPlayer
       throws LogPlayerException
   {
     try {
-      DeleteNodeByUid op = (DeleteNodeByUid) item.getOp();
-      nodeDao.deleteByUid(op.getUid());
+      DeleteNode op = (DeleteNode) item.getOp();
+      nodeDao.delete(op.getNodeKeyset());
     } catch (Exception e) {
       throw new LogPlayerException("Failed to play command", e);
     }
