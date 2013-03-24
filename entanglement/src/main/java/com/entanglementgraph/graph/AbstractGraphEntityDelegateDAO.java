@@ -135,8 +135,9 @@ import java.util.Set;
   }
 
   @Override
-  public BasicDBObject deleteByUid(String uid) throws GraphModelException {
-    return delegate.deleteByUid(uid);
+  public void delete(EntityKeys keys)
+      throws GraphModelException {
+    delegate.delete(keys);
   }
 
   @Override
