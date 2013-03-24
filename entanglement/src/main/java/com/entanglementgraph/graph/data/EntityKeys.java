@@ -21,6 +21,7 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -30,7 +31,8 @@ import java.util.*;
  * Time: 21:09
  * To change this template use File | Settings | File Templates.
  */
-public class EntityKeys {
+public class EntityKeys
+  implements Serializable {
 
   public static Iterable<DBObject> buildKeyIndexes(String prefix) {
     List<DBObject> indexes = new ArrayList<>(3);
