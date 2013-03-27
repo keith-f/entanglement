@@ -329,6 +329,8 @@ public class EntanglementShell
     Mongo mongo = dbFactory.createMongoConnection();
     DB db = mongo.getDB(database);
     BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, true));
+    bw.write(PerformanceLogger.getHeader());
+    bw.newLine();
     PerformanceLogger perfLogger = new PerformanceLogger(mongo, db, bw);
     exe.scheduleWithFixedDelay(perfLogger, 0, 120 * 1000, TimeUnit.MILLISECONDS);
   }
