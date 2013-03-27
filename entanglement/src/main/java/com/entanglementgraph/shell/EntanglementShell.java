@@ -35,10 +35,14 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cli.export.MongoGraphToGephi;
@@ -61,6 +65,8 @@ public class EntanglementShell
 {
   private static final Logger logger =
           Logger.getLogger(EntanglementShell.class.getName());
+
+  private ScheduledThreadPoolExecutor exe;
 
   private ShellState state;
 
@@ -93,6 +99,7 @@ public class EntanglementShell
 
   public EntanglementShell(ShellState state) {
     this.state = state;
+    this.exe = new ScheduledThreadPoolExecutor(10);
     classLoader = EntanglementShell.class.getClassLoader();
     marshaller = ObjectMarshallerFactory.create(classLoader);
   }
@@ -308,21 +315,16 @@ public class EntanglementShell
     exporter.exportGexf(outputFile);
     System.out.println("Done.");
   }
-  
-//  @Command
-//  public void playAllRevisions()
-//      throws RevisionLogException, GraphModelException, LogPlayerException {
-//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-//
-//    System.out.println("Playing all committed revisions from the revision history "
-//            + "list into a graph structure: "+graphName+"/"+branchName);
-//
-//    LogPlayer player = new LogPlayerMongoDbImpl(graphConn);
-//    player.replayAllRevisions();
-//
-//    System.out.println("Done.");
-//  }
+
+  @Command
+  public void startLogger(
+      @Param(name="outputFile") File outputFile)
+      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException, GraphConnectionFactoryException {
+    GraphConnection conn = factory.connect("test", "test");
+    BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, true));
+    PerformanceLogger perfLogger = new PerformanceLogger(conn.getMongo(), conn.getDb(), bw);
+    exe.scheduleWithFixedDelay(perfLogger, 0, 120 * 1000, TimeUnit.MILLISECONDS);
+  }
   
  
   
