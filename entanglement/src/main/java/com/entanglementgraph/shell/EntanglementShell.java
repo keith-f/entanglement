@@ -26,7 +26,10 @@ import asg.cliche.ShellFactory;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.revlog.commands.*;
 import com.entanglementgraph.util.TxnUtils;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.torrenttamer.mongodb.MongoDbFactory;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
@@ -318,11 +321,15 @@ public class EntanglementShell
 
   @Command
   public void startLogger(
-      @Param(name="outputFile") File outputFile)
-      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException, GraphConnectionFactoryException {
-    GraphConnection conn = factory.connect("test", "test");
+      @Param(name="outputFile") File outputFile,
+      @Param(name="hostname") String hostname,
+      @Param(name="database") String database)
+      throws IOException, MongoDbFactoryException {
+    MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
+    Mongo mongo = dbFactory.createMongoConnection();
+    DB db = mongo.getDB(database);
     BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, true));
-    PerformanceLogger perfLogger = new PerformanceLogger(conn.getMongo(), conn.getDb(), bw);
+    PerformanceLogger perfLogger = new PerformanceLogger(mongo, db, bw);
     exe.scheduleWithFixedDelay(perfLogger, 0, 120 * 1000, TimeUnit.MILLISECONDS);
   }
   
