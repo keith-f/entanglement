@@ -19,6 +19,7 @@
 
   <!-- Build options -->
   <build>
+    <finalName>entanglement</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -55,6 +56,19 @@
               <value>1234</value>
             </systemProperty>
           </systemProperties>
+        </configuration>
+      </plugin>
+
+      <!-- Assembly plugin -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assemble/exe.xml</descriptor>
+          </descriptors>
+          <archive>
+            <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
         </configuration>
       </plugin>
     </plugins>
