@@ -34,6 +34,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.*;
@@ -190,7 +191,9 @@ public class MongoGraphToGephi {
     if (keyset.getUids().isEmpty()) {
       throw new IllegalArgumentException("An entity must have at least one UID. Offending keyset was: "+keyset);
     }
-    return keyset.getUids().iterator().next();
+//    return keyset.getUids().iterator().next();
+    Set<String> uids = keyset.getUids();
+    return uids.iterator().next();
   }
 
   public void exportGexf(File outputFile)
