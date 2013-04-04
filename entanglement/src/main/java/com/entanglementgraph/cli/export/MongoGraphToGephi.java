@@ -23,14 +23,15 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+
 import org.apache.commons.cli.*;
 
 /**
- *
  * @author Allyson Lister
  */
 public class MongoGraphToGephi {
@@ -39,18 +40,18 @@ public class MongoGraphToGephi {
       getClassLoader();
   private static final Color DEFAULT_COLOR = Color.BLACK;
 
-  private static void printHelpExit ( Options options ) {
+  private static void printHelpExit(Options options) {
     HelpFormatter formatter = new HelpFormatter();
     String cmdSyntax = "mongoGraphToGEXF.sh";
     String header = "";
     String footer = "";
     int width = 80;
     //formatter.printHelp( "notification.sh", options );
-    formatter.printHelp( width, cmdSyntax, header, options, footer );
-    System.exit( 0 );
+    formatter.printHelp(width, cmdSyntax, header, options, footer);
+    System.exit(0);
   }
 
-  public static void main ( String[] args ) throws UnknownHostException,
+  public static void main(String[] args) throws UnknownHostException,
       RevisionLogException, IOException,
       GraphModelException, GraphConnectionFactoryException,
       DbObjectMarshallerException {
@@ -60,26 +61,26 @@ public class MongoGraphToGephi {
 //    options.addOption("g", "format-gdf", false,
 //        "Specifies that the output format is GDF (currently the only option)");
 
-    options.addOption( "h", "mongo-host", true,
-        "The MongoDB server host to connect to." );
+    options.addOption("h", "mongo-host", true,
+        "The MongoDB server host to connect to.");
 
-    options.addOption( "d", "mongo-database", true,
-        "The name of a MongoDB database to connect to." );
+    options.addOption("d", "mongo-database", true,
+        "The name of a MongoDB database to connect to.");
 
-    options.addOption( "g", "graph-name", true,
-        "The name of a graph to use (there may be multiple graphs per MongoDB database)." );
+    options.addOption("g", "graph-name", true,
+        "The name of a graph to use (there may be multiple graphs per MongoDB database).");
 
-    options.addOption( "b", "graph-branch", true,
-        "The name of a graph branch to use (there may be multiple branches per graph)." );
+    options.addOption("b", "graph-branch", true,
+        "The name of a graph branch to use (there may be multiple branches per graph).");
 
-    options.addOption( "o", "output-file", true,
-        "Specifies a path to a file to use " );
+    options.addOption("o", "output-file", true,
+        "Specifies a path to a file to use ");
 
-    options.addOption( "c", "color-mapping", false,
-        "Specifies a properties file for the color mapping of nodes " );
+    options.addOption("c", "color-mapping", false,
+        "Specifies a properties file for the color mapping of nodes ");
 
-    if ( args.length == 0 ) {
-      printHelpExit( options );
+    if (args.length == 0) {
+      printHelpExit(options);
     }
 
     String mongoHost = null;
@@ -91,68 +92,68 @@ public class MongoGraphToGephi {
     String colorPropsFile = null;
 
     try {
-      CommandLine line = parser.parse( options, args );
+      CommandLine line = parser.parse(options, args);
 
-      if ( line.hasOption( "mongo-host" ) ) {
-        mongoHost = line.getOptionValue( "mongo-host", null );
+      if (line.hasOption("mongo-host")) {
+        mongoHost = line.getOptionValue("mongo-host", null);
       } else {
         throw new IllegalArgumentException(
-            "You must specify a hostname" );
+            "You must specify a hostname");
       }
 
-      if ( line.hasOption( "mongo-database" ) ) {
+      if (line.hasOption("mongo-database")) {
         mongoDatabaseName = line.
-            getOptionValue( "mongo-database", null );
+            getOptionValue("mongo-database", null);
       } else {
         throw new IllegalArgumentException(
-            "You must specify a database name" );
+            "You must specify a database name");
       }
 
-      if ( line.hasOption( "graph-name" ) ) {
-        graphName = line.getOptionValue( "graph-name", null );
+      if (line.hasOption("graph-name")) {
+        graphName = line.getOptionValue("graph-name", null);
       } else {
         throw new IllegalArgumentException(
-            "You must specify a graph name" );
+            "You must specify a graph name");
       }
 
-      if ( line.hasOption( "graph-branch" ) ) {
-        graphBranch = line.getOptionValue( "graph-branch", null );
+      if (line.hasOption("graph-branch")) {
+        graphBranch = line.getOptionValue("graph-branch", null);
       } else {
         throw new IllegalArgumentException(
-            "You must specify a graph branch name" );
+            "You must specify a graph branch name");
       }
 
-      if ( line.hasOption( "output-file" ) ) {
-        outputFilename = line.getOptionValue( "output-file", null );
-        if ( !outputFilename.contains( ".gexf" ) && outputFilename.
-            contains( ".pdf" ) && outputFilename.contains( ".svg" )
-            && outputFilename.contains( ".gdf" ) ) {
+      if (line.hasOption("output-file")) {
+        outputFilename = line.getOptionValue("output-file", null);
+        if (!outputFilename.contains(".gexf") && outputFilename.
+            contains(".pdf") && outputFilename.contains(".svg")
+            && outputFilename.contains(".gdf")) {
           throw new IllegalArgumentException(
               "You must specify an output filename with an extension "
-                  + "of [.pdf|.svg|.gexf|gdf]" );
+                  + "of [.pdf|.svg|.gexf|gdf]");
         }
       } else {
         throw new IllegalArgumentException(
             "You must specify an output filename with an extension "
-                + "of [.pdf|.svg|.gexf|gdf]" );
+                + "of [.pdf|.svg|.gexf|gdf]");
       }
-      if ( line.hasOption( "color-mapping" ) ) {
-        colorPropsFile = line.getOptionValue( "color-mapping", null );
+      if (line.hasOption("color-mapping")) {
+        colorPropsFile = line.getOptionValue("color-mapping", null);
       }
 
-    } catch ( ParseException e ) {
-      printHelpExit( options );
-      System.exit( 1 );
+    } catch (ParseException e) {
+      printHelpExit(options);
+      System.exit(1);
     }
 
     GraphConnectionFactory connFact = new GraphConnectionFactory(
-        classLoader, mongoHost, mongoDatabaseName );
-    GraphConnection conn = connFact.connect( graphName, graphBranch );
+        classLoader, mongoHost, mongoDatabaseName);
+    GraphConnection conn = connFact.connect(graphName, graphBranch);
 
 
-    MongoToGephiExporter exporter = new MongoToGephiExporter( conn,
-        new File( colorPropsFile ) );
-    exporter.exportAll( new File( outputFilename ) );
-    System.out.println( "\n\nDone." );
+    MongoToGephiExporter exporter = new MongoToGephiExporter(conn,
+        new File(colorPropsFile));
+    exporter.exportAll(new File(outputFilename));
+    System.out.println("\n\nDone.");
   }
 }
