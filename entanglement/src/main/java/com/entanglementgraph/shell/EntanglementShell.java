@@ -23,6 +23,7 @@ import asg.cliche.Command;
 import asg.cliche.Param;
 import asg.cliche.Shell;
 import asg.cliche.ShellFactory;
+import com.entanglementgraph.cli.export.MongoToGephiExporter;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.revlog.commands.*;
 import com.entanglementgraph.util.TxnUtils;
@@ -300,25 +301,24 @@ public class EntanglementShell
     System.out.println(exporter.writeToString());
     System.out.println("Done.");
   }
-  
+
   @Command
   public void exportGraphAsGexf(File outputFile)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
-    MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
-    exporter.exportGexf(outputFile);
+    MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, null);
+    exporter.exportAll(outputFile);
     System.out.println("Done.");
   }
-  
+
   @Command
   public void exportGraphAsGexf(
-          @Param(name="outputFile")
-          File outputFile, 
-          @Param(name="nodeToColorMapping")
-          File nodeToColorMapping)
+      @Param(name="outputFile")
+      File outputFile,
+      @Param(name="nodeToColorMapping")
+      File nodeToColorMapping)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
-    MongoGraphToGephi exporter = new MongoGraphToGephi(graphConn);
-    exporter.setColorPropsFile(nodeToColorMapping);
-    exporter.exportGexf(outputFile);
+    MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, nodeToColorMapping);
+    exporter.exportAll(outputFile);
     System.out.println("Done.");
   }
 

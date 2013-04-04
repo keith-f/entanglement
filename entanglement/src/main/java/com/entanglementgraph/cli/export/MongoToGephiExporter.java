@@ -68,8 +68,7 @@ public class MongoToGephiExporter {
       getLogger(MongoGraphToGephi.class.getName());
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
-      ObjectMarshallerFactory.create(MongoGraphToGephi.class.
-          getClassLoader());
+      ObjectMarshallerFactory.create(MongoGraphToGephi.class.getClassLoader());
   private final NodeDAO nodeDao;
   private final EdgeDAO edgeDao;
   private Map<String, Color> colorMapping;
@@ -96,7 +95,8 @@ public class MongoToGephiExporter {
       throw new IllegalArgumentException("An entity must have at least "
           + "one UID. Offending keyset was: " + keyset);
     }
-    return keyset.getUids().iterator().next();
+    Set<String> uids = keyset.getUids();
+    return uids.iterator().next();
   }
 
   private static Map<String, Color> loadColorMappings(File propFile)
@@ -395,9 +395,8 @@ public class MongoToGephiExporter {
 
       // add the node that the current edge is pointing to
       if (EntityKeys.containsAtLeastOneUid(currentEdge.getTo())) {
-        String currentUid =
-            currentEdge.getTo().getUids().iterator().
-                next();
+        Set<String> uids = currentEdge.getTo().getUids();
+        String currentUid = uids.iterator().next();
         DBObject currentNodeObject = nodeDao.getByUid(currentUid);
         org.gephi.graph.api.Node gNode = parseEntanglementNode(
             currentNodeObject,
