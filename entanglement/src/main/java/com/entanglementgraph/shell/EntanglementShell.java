@@ -180,7 +180,10 @@ public class EntanglementShell
   public void startNavigator(String nodeType, String nodeName) 
           throws IOException, GraphModelException {
     //FIXME - we need to go through this code and use keys instead of UIDs.
-    String nodeUid = graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
+    graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
+    EntityKeys nodeKeyset = graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName);
+    Set<String> uids = nodeKeyset.getUids();
+    String nodeUid = uids.iterator().next();
     NavigatorShell navShell = new NavigatorShell(graphConn, nodeUid);
     NavigatorShell.startSubShell(navShell);
   }

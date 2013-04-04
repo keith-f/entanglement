@@ -26,17 +26,17 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * @author Keith Flanagan
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Node
-      implements Serializable
+public class Node<N extends Node>
+      implements Serializable, GraphEntity
 { 
 //  protected String uid;
 //  protected Set<String> names;
 //  protected String type;
-  protected EntityKeys keys;
+  protected EntityKeys<N> keys;
   
   public Node()
   {
-    keys = new EntityKeys();
+    keys = new EntityKeys<>();
 //    names = new HashSet<>();
 //    this.type = getClass().getSimpleName();
   }
@@ -48,11 +48,11 @@ public class Node
         '}';
   }
 
-  public EntityKeys getKeys() {
+  public EntityKeys<N> getKeys() {
     return keys;
   }
 
-  public void setKeys(EntityKeys keys) {
+  public void setKeys(EntityKeys<N> keys) {
     this.keys = keys;
   }
 }

@@ -17,7 +17,10 @@
 
 package com.entanglementgraph.shell.navigator;
 
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.MongoUtils;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 import java.util.SortedMap;
@@ -26,6 +29,7 @@ import java.util.Stack;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
+import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
 /**
  *
@@ -67,7 +71,7 @@ public class Navigator
   }
   
   private Navigator(GraphConnection graphConn, Stack<Navigator> history,
-          DBObject node) throws GraphModelException
+                    BasicDBObject node) throws GraphModelException
   {
     this.graphConn = graphConn;
     this.nodeDao = graphConn.getNodeDao();
@@ -78,18 +82,22 @@ public class Navigator
   
   private void configure(String nodeUid) throws GraphModelException
   {
-    DBObject node = nodeDao.getByUid(nodeUid);
+    BasicDBObject node = nodeDao.getByUid(nodeUid);
     configure(node);
   }
   
-  private void configure(DBObject node) throws GraphModelException
+  private void configure(BasicDBObject node) throws GraphModelException
   {
     setCurrentNode(node);
-    edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_KEYS));
-    getOutgoingEdgeTypeToCount().putAll(
-          edgeDao.countEdgesByTypeFromNode((String) node.get(NodeDAO.FIELD_KEYS)));
-    getIncomingEdgeTypeToCount().putAll(
-          edgeDao.countEdgesByTypeToNode((String) node.get(NodeDAO.FIELD_KEYS)));
+    EntityKeys nodeKeyset = null;
+    try {
+      nodeKeyset = MongoUtils.parseKeyset(graphConn.getMarshaller(), (DBObject) node.get(NodeDAO.FIELD_KEYS));
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphModelException("Failed to parse keyset from node document: "+node, e);
+    }
+    edgeDao.countEdgesByTypeFromNode(nodeKeyset);
+    getOutgoingEdgeTypeToCount().putAll(edgeDao.countEdgesByTypeFromNode(nodeKeyset));
+    getIncomingEdgeTypeToCount().putAll(edgeDao.countEdgesByTypeToNode(nodeKeyset));
 
     
     long incomingCount = 0;
@@ -135,7 +143,7 @@ public class Navigator
           throws NavigatorException
   {
     try {
-      DBObject node = nodeDao.getByName(nodeType, nodeName);
+      BasicDBObject node = nodeDao.getByName(nodeType, nodeName);
       return new Navigator(graphConn, history, node);
     } catch(Exception e) {
       throw new NavigatorException("Failed to perform navigator operation", e);

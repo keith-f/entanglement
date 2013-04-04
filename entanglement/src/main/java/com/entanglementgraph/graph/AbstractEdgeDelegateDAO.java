@@ -25,6 +25,7 @@ import com.mongodb.DBObject;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -40,12 +41,12 @@ import java.util.Set;
  * 
  * @author Keith Flanagan
  */
-abstract public class AbstractGraphEntityDelegateDAO
-    implements GraphEntityDAO
+ public class AbstractEdgeDelegateDAO
+    implements EdgeDAO
 {
-  private final GraphEntityDAO delegate;
+  private final EdgeDAO delegate;
 
-  public AbstractGraphEntityDelegateDAO(GraphEntityDAO delegate) {
+  public AbstractEdgeDelegateDAO(EdgeDAO delegate) {
     this.delegate = delegate;
   }
 
@@ -170,4 +171,68 @@ abstract public class AbstractGraphEntityDelegateDAO
     return delegate.count();
   }
 
+  @Override
+  public Iterable<DBObject> iterateEdgesBetweenNodes(EntityKeys fromNode, EntityKeys to) throws GraphModelException {
+    return delegate.iterateEdgesBetweenNodes(fromNode, to);
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
+    return delegate.iterateEdgesBetweenNodes(edgeType, from, to);
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from) throws GraphModelException {
+    return delegate.iterateEdgesFromNode(from);
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from) throws GraphModelException {
+    return delegate.iterateEdgesFromNode(edgeType, from);
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to) throws GraphModelException {
+    return delegate.iterateEdgesToNode(to);
+  }
+
+  @Override
+  public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType) throws GraphModelException {
+    return delegate.existsEdgeToNodeOfType(from, toNodeType);
+  }
+
+  @Override
+  public Long countEdgesFromNode(EntityKeys from) throws GraphModelException {
+    return delegate.countEdgesFromNode(from);
+  }
+
+  @Override
+  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from) throws GraphModelException {
+    return delegate.countEdgesOfTypeFromNode(edgeType, from);
+  }
+
+  @Override
+  public Long countEdgesToNode(EntityKeys to) throws GraphModelException {
+    return delegate.countEdgesToNode(to);
+  }
+
+  @Override
+  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to) throws GraphModelException {
+    return delegate.countEdgesOfTypeToNode(edgeType, to);
+  }
+
+  @Override
+  public Long countEdgesOfTypeBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
+    return delegate.countEdgesOfTypeBetweenNodes(edgeType, from, to);
+  }
+
+  @Override
+  public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from) throws GraphModelException {
+    return delegate.countEdgesByTypeFromNode(from);
+  }
+
+  @Override
+  public Map<String, Long> countEdgesByTypeToNode(EntityKeys to) throws GraphModelException {
+    return delegate.countEdgesByTypeToNode(to);
+  }
 }

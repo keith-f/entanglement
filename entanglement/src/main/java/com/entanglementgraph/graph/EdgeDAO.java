@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.graph;
 
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.*;
 
 import java.util.Map;
@@ -52,7 +53,7 @@ public interface EdgeDAO
    * @throws GraphModelException 
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
-          String fromNodeUid, String toNodeUid)
+      EntityKeys fromNode, EntityKeys to)
           throws GraphModelException;
   
   /**
@@ -66,17 +67,27 @@ public interface EdgeDAO
    * @throws GraphModelException 
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
-          String edgeType, String fromNodeUid, String toNodeUid)
+          String edgeType, EntityKeys from, EntityKeys to)
           throws GraphModelException;
   
   /**
    * Given a node , returns an Iterable over all the outgoing edges of that node.
-   * @param fromNodeUid the node whose outgoing edges are to be iterated
+   * @param from the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
    * @throws GraphModelException 
    */
-  public Iterable<DBObject> iterateEdgesFromNode(String fromNodeUid)
+  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
           throws GraphModelException;
+
+  /**
+   * Given a node, returns an Iterable over all the outgoing edges of that node, of the specified <code>edgeType</code>.
+   * @param edgeType the edge type to return.
+   * @param from the node whose outgoing edges are to be iterated
+   * @return an Iterable of edges.
+   * @throws GraphModelException
+   */
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
+      throws GraphModelException;
   
   /**
    * Given a node, returns an Iterable over all the incoming edges to that node.
@@ -84,7 +95,7 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException 
    */
-  public Iterable<DBObject> iterateEdgesToNode(String toNodeUid)
+  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
           throws GraphModelException;
   
   /**
@@ -96,26 +107,26 @@ public interface EdgeDAO
    * other node of type <code>toNodeType</code>.
    * @throws GraphModelException 
    */
-  public boolean existsEdgeToNodeOfType(String fromNodeUid, String toNodeType)
+  public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType)
           throws GraphModelException;
   
 
   
   
-  public Long countEdgesFromNode(String fromNodeUid)
+  public Long countEdgesFromNode(EntityKeys from)
           throws GraphModelException;
   
-  public Long countEdgesOfTypeFromNode(String edgeType, String fromNodeUid)
+  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
           throws GraphModelException;
   
-  public Long countEdgesToNode(String toNodeUid)
+  public Long countEdgesToNode(EntityKeys to)
           throws GraphModelException;
   
-  public Long countEdgesOfTypeToNode(String edgeType, String toNodeUid)
+  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
           throws GraphModelException;
   
   public Long countEdgesOfTypeBetweenNodes(
-          String edgeType, String fromNodeUid, String toNodeUid)
+          String edgeType, EntityKeys from, EntityKeys to)
           throws GraphModelException;
   
   
@@ -131,7 +142,7 @@ public interface EdgeDAO
    * 
    * @throws GraphModelException 
    */
-  public Map<String, Long> countEdgesByTypeFromNode(String fromNodeUid)
+  public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from)
           throws GraphModelException;
   
   /**
@@ -145,7 +156,7 @@ public interface EdgeDAO
    * 
    * @throws GraphModelException 
    */
-  public Map<String, Long> countEdgesByTypeToNode(String toNodeUid)
+  public Map<String, Long> countEdgesByTypeToNode(EntityKeys to)
           throws GraphModelException;
 
 }

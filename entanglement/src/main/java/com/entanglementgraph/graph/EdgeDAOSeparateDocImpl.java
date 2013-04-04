@@ -18,6 +18,7 @@
 
 package com.entanglementgraph.graph;
 
+import static com.entanglementgraph.util.MongoUtils.list;
 import static com.entanglementgraph.util.MongoUtils.singleton;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.util.MongoUtils;
@@ -29,6 +30,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Note: currently, this implementation only supports the 'uids' field of an EntityKeys object. Type/name queries
+ * are not yet implemented.
  *
  * @author Keith Flanagan
  */
@@ -36,8 +39,7 @@ public class EdgeDAOSeparateDocImpl
     extends AbstractGraphEntityDAO
     implements EdgeDAO
 {
-  private static final Logger logger =
-      Logger.getLogger(EdgeDAOSeparateDocImpl.class.getName());
+  private static final Logger logger = Logger.getLogger(EdgeDAOSeparateDocImpl.class.getName());
 
   /*
    * Indexes
@@ -52,8 +54,7 @@ public class EdgeDAOSeparateDocImpl
 
   
   private final DBCollection nodeCol;
-  
-  ////////// DEBUG / TEST - Performance info stuff (end)
+
   
   public EdgeDAOSeparateDocImpl(ClassLoader classLoader, Mongo m, DB db, 
           DBCollection nodeCol, DBCollection edgeCol)
@@ -67,14 +68,31 @@ public class EdgeDAOSeparateDocImpl
     MongoUtils.createIndexes(edgeCol, buildToIndexes());
   }
     
+//  @Override
+//  public Iterable<DBObject> iterateEdgesBetweenNodes(String fromUid, String toUid)
+//      throws GraphModelException
+//  {
+//    logger.log(Level.INFO, "Iterating edges between nodes: {0} --> {1}", new Object[]{fromUid, toUid});
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    try {
+//      final DBCursor cursor = col.find(query);
+//      return cursor;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(String fromUid, String toUid)
+  public Iterable<DBObject> iterateEdgesBetweenNodes(EntityKeys from, EntityKeys to)
       throws GraphModelException
   {
-    logger.log(Level.INFO, "Iterating edges between nodes: {0} --> {1}", new Object[]{fromUid, toUid});
+    logger.log(Level.INFO, "Iterating edges between nodes: {0} --> {1}", new Object[]{from, to});
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+    addFromToUidQuery(query, from, to);
     try {
       final DBCursor cursor = col.find(query);
       return cursor;
@@ -84,17 +102,53 @@ public class EdgeDAOSeparateDocImpl
           + "Query: "+query, e);
     }
   }
+
+  private void addFromToUidQuery(DBObject query, EntityKeys from, EntityKeys to)
+      throws GraphModelException
+  {
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
+    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
+  }
+
+  private void addFromToNameQuery(DBObject query, EntityKeys from, EntityKeys to)
+      throws GraphModelException
+  {
+    query.put(FIELD_FROM_KEYS_NAMES, new BasicDBObject("$in", list(from.getNames())));
+    query.put(FIELD_TO_KEYS_NAMES, new BasicDBObject("$in", list(to.getNames())));
+    query.put(FIELD_FROM_KEYS_TYPE, from.getType());
+    query.put(FIELD_TO_KEYS_TYPE, to.getType());
+  }
   
+//  @Override
+//  public Iterable<DBObject> iterateEdgesBetweenNodes(
+//          String edgeType, String fromUid, String toUid)
+//          throws GraphModelException
+//  {
+//    logger.log(Level.INFO, "Iterating edges of type {0} between nodes: {1} --> {2}",
+//        new Object[]{edgeType, fromUid, toUid});
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    query.put(FIELD_KEYS_TYPE, edgeType);
+//    try {
+//      final DBCursor cursor = col.find(query);
+//
+//      return cursor;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
   public Iterable<DBObject> iterateEdgesBetweenNodes(
-          String edgeType, String fromUid, String toUid)
-          throws GraphModelException
+      String edgeType, EntityKeys from, EntityKeys to)
+      throws GraphModelException
   {
-    logger.log(Level.INFO, "Iterating edges of type {0} between nodes: {1} --> {2}",
-        new Object[]{edgeType, fromUid, toUid});
+    logger.log(Level.INFO, "Iterating edges of type {0} between nodes: {1} --> {2}", new Object[]{edgeType, from, to});
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+    addFromToUidQuery(query, from, to);
     query.put(FIELD_KEYS_TYPE, edgeType);
     try {
       final DBCursor cursor = col.find(query);
@@ -107,29 +161,29 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
+//  @Override
+//  public Iterable<DBObject> iterateEdgesFromNode(String fromUid)
+//          throws GraphModelException
+//  {
+//    logger.log(Level.INFO, "Iterating edges starting from node: {0}",  new Object[]{fromUid});
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    try {
+//      final DBCursor cursor = col.find(query);
+//      return cursor;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\nQuery: "+query, e);
+//    }
+//  }
+
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String fromUid)
-          throws GraphModelException
+  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
+      throws GraphModelException
   {
-    logger.log(Level.INFO, "Iterating edges starting from node: {0}",  new Object[]{fromUid});
+    logger.log(Level.INFO, "Iterating edges starting from node: {0}",  new Object[]{from});
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
-    try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\nQuery: "+query, e);
-    }
-  }
-  
-  @Override
-  public Iterable<DBObject> iterateEdgesToNode(String toUid)
-          throws GraphModelException
-  {
-    logger.log(Level.INFO, "Iterating edges ending at node: {0}",  new Object[]{toUid});
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
     try {
       final DBCursor cursor = col.find(query);
       return cursor;
@@ -139,31 +193,143 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
+      throws GraphModelException {
+    logger.log(Level.INFO, "Iterating edges of type: {0} starting from node: {1}",  new Object[]{edgeType, from});
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
+    query.put(FIELD_KEYS_TYPE, edgeType);
+    try {
+      final DBCursor cursor = col.find(query);
+      return cursor;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: "+query, e);
+    }
+  }
+
+//  @Override
+//  public Iterable<DBObject> iterateEdgesToNode(String toUid)
+//          throws GraphModelException
+//  {
+//    logger.log(Level.INFO, "Iterating edges ending at node: {0}",  new Object[]{toUid});
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    try {
+//      final DBCursor cursor = col.find(query);
+//      return cursor;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\nQuery: "+query, e);
+//    }
+//  }
+
   @Override
-  public boolean existsEdgeToNodeOfType(String fromUid, String toNodeType)
+  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
           throws GraphModelException
   {
-    logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}",
-        new Object[]{fromUid, toNodeType});
+    logger.log(Level.INFO, "Iterating edges ending at node: {0}",  new Object[]{to});
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
+    try {
+      final DBCursor cursor = col.find(query);
+      return cursor;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: "+query, e);
+    }
+  }
+
+//  @Override
+//  public boolean existsEdgeToNodeOfType(String fromUid, String toNodeType)
+//          throws GraphModelException
+//  {
+//    logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}",
+//        new Object[]{fromUid, toNodeType});
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    query.put(FIELD_TO_KEYS_TYPE, toNodeType);
+//    try {
+//      return col.find(query).limit(1).hasNext();
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
+  @Override
+  public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType)
+      throws GraphModelException
+  {
+    logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}", new Object[]{from, toNodeType});
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
     query.put(FIELD_TO_KEYS_TYPE, toNodeType);
     try {
       return col.find(query).limit(1).hasNext();
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
+      throw new GraphModelException("Failed to perform database operation:\n" + "Query: "+query, e);
     }
   }
   
   
+//  @Override
+//  public Long countEdgesFromNode(String fromUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    try {
+//      long count = col.count(query);
+//      return count;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
-  public Long countEdgesFromNode(String fromUid)
-          throws GraphModelException
+  public Long countEdgesFromNode(EntityKeys from)
+      throws GraphModelException
   {
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
+    try {
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n" + "Query: "+query, e);
+    }
+  }
+  
+//  @Override
+//  public Long countEdgesOfTypeFromNode(String edgeType, String fromUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    query.put(FIELD_KEYS_TYPE, edgeType);
+//    try {
+//      long count = col.count(query);
+//      return count;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
+  @Override
+  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
+      throws GraphModelException
+  {
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
+    query.put(FIELD_KEYS_TYPE, edgeType);
     try {
       long count = col.count(query);
       return count;
@@ -171,15 +337,64 @@ public class EdgeDAOSeparateDocImpl
     catch(Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: "+query, e);
-    } 
+    }
   }
-  
+
+//  @Override
+//  public Long countEdgesToNode(String toUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    try {
+//      long count = col.count(query);
+//      return count;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
-  public Long countEdgesOfTypeFromNode(String edgeType, String fromUid)
-          throws GraphModelException
+  public Long countEdgesToNode(EntityKeys to)
+      throws GraphModelException
   {
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
+    try {
+      long count = col.count(query);
+      return count;
+    }
+    catch(Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
+    }
+  }
+  
+//  @Override
+//  public Long countEdgesOfTypeToNode(String edgeType, String toUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    query.put(FIELD_KEYS_TYPE, edgeType);
+//    try {
+//      long count = col.count(query);
+//      return count;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
+  @Override
+  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
+      throws GraphModelException
+  {
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
     query.put(FIELD_KEYS_TYPE, edgeType);
     try {
       long count = col.count(query);
@@ -191,47 +406,33 @@ public class EdgeDAOSeparateDocImpl
     }
   }
   
-  @Override
-  public Long countEdgesToNode(String toUid)
-          throws GraphModelException
-  {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
-    try {
-      long count = col.count(query);
-      return count;
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
-    }
-  }
-  
-  @Override
-  public Long countEdgesOfTypeToNode(String edgeType, String toUid)
-          throws GraphModelException
-  {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
-    query.put(FIELD_KEYS_TYPE, edgeType);
-    try {
-      long count = col.count(query);
-      return count;
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation:\n"
-          + "Query: "+query, e);
-    }
-  }
-  
+//  @Override
+//  public Long countEdgesOfTypeBetweenNodes(
+//          String edgeType, String fromUid, String toUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    query.put(FIELD_KEYS_TYPE, edgeType);
+//    try {
+//      long count = col.count(query);
+//      return count;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
   public Long countEdgesOfTypeBetweenNodes(
-          String edgeType, String fromUid, String toUid)
-          throws GraphModelException
+      String edgeType, EntityKeys from, EntityKeys to)
+      throws GraphModelException
   {
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
+    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
     query.put(FIELD_KEYS_TYPE, edgeType);
     try {
       long count = col.count(query);
@@ -243,12 +444,36 @@ public class EdgeDAOSeparateDocImpl
     }
   }
   
+//  @Override
+//  public Map<String, Long> countEdgesByTypeFromNode(String fromUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+//    DBObject fields = new BasicDBObject();
+//    fields.put(FIELD_KEYS_TYPE, 1);
+//    try {
+//      Map<DBObject, Long> counts =  count(col.find(query, fields));
+//      Map<String, Long> edgeTypeToCount = new HashMap<>();
+//
+//      for (Map.Entry<DBObject, Long> entry : counts.entrySet()) {
+//        edgeTypeToCount.put((String) entry.getKey().get(FIELD_KEYS_TYPE), entry.getValue());
+//      }
+//
+//      return edgeTypeToCount;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
-  public Map<String, Long> countEdgesByTypeFromNode(String fromUid)
-          throws GraphModelException
+  public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from)
+      throws GraphModelException
   {
     DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", singleton(fromUid)));
+    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
     DBObject fields = new BasicDBObject();
     fields.put(FIELD_KEYS_TYPE, 1);
     try {
@@ -258,7 +483,7 @@ public class EdgeDAOSeparateDocImpl
       for (Map.Entry<DBObject, Long> entry : counts.entrySet()) {
         edgeTypeToCount.put((String) entry.getKey().get(FIELD_KEYS_TYPE), entry.getValue());
       }
-      
+
       return edgeTypeToCount;
     }
     catch(Exception e) {
@@ -279,12 +504,36 @@ public class EdgeDAOSeparateDocImpl
     return counts;
   }
   
+//  @Override
+//  public Map<String, Long> countEdgesByTypeToNode(String toUid)
+//          throws GraphModelException
+//  {
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+//    DBObject fields = new BasicDBObject();
+//    fields.put(FIELD_KEYS_TYPE, 1);
+//    try {
+//      Map<DBObject, Long> counts =  count(col.find(query, fields));
+//      Map<String, Long> edgeTypeToCount = new HashMap<>();
+//
+//      for (Map.Entry<DBObject, Long> entry : counts.entrySet()) {
+//        edgeTypeToCount.put((String) entry.getKey().get(FIELD_KEYS_TYPE), entry.getValue());
+//      }
+//
+//      return edgeTypeToCount;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException("Failed to perform database operation:\n"
+//          + "Query: "+query, e);
+//    }
+//  }
+
   @Override
-  public Map<String, Long> countEdgesByTypeToNode(String toUid)
-          throws GraphModelException
+  public Map<String, Long> countEdgesByTypeToNode(EntityKeys to)
+      throws GraphModelException
   {
     DBObject query = new BasicDBObject();
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", singleton(toUid)));
+    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
     DBObject fields = new BasicDBObject();
     fields.put(FIELD_KEYS_TYPE, 1);
     try {

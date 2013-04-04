@@ -31,7 +31,7 @@ import java.util.*;
  * Time: 21:09
  * To change this template use File | Settings | File Templates.
  */
-public class EntityKeys
+public class EntityKeys<E>
   implements Serializable {
 
   public static Iterable<DBObject> buildKeyIndexes(String prefix) {

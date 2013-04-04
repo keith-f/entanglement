@@ -26,55 +26,47 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * @author Keith Flanagan
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Edge<F extends Node, T extends Node>
-       implements Serializable
+public class Edge<E extends Edge, F extends Node, T extends Node>
+       implements Serializable, GraphEntity
 {
-  protected EntityKeys keys;
+  protected EntityKeys<E> keys;
 
-  protected EntityKeys from;
-  protected EntityKeys to;
+  protected EntityKeys<F> from;
+  protected EntityKeys<T> to;
   
   public Edge()
   {
-    keys = new EntityKeys();
+    keys = new EntityKeys<>();
   }
 
-  public Edge(String type, EntityKeys from, EntityKeys to)
+  public Edge(String type, EntityKeys<F> from, EntityKeys<T> to)
   {
-    this.keys = new EntityKeys();
+    this.keys = new EntityKeys<>();
     this.keys.setType(type);
     this.from = from;
     this.to = to;
   }
 
-  public Edge(EntityKeys keys, EntityKeys from, EntityKeys to)
+  public Edge(EntityKeys<E> keys, EntityKeys<F> from, EntityKeys<T> to)
   {
     this.keys = keys;
     this.from = from;
     this.to = to;
   }
 
-  public Edge(EntityKeys keys, F from, T to)
+  public Edge(EntityKeys<E> keys, F from, T to)
   {
     this.keys = keys;
     this.from = from.keys;
     this.to = to.keys;
   }
 
-  public Edge(EntityKeys keys, String fromUid, String toUid)
+  public Edge(EntityKeys<E> keys, String fromUid, String toUid)
   {
     this.keys = keys;
-    this.from = new EntityKeys(fromUid);
-    this.to = new EntityKeys(toUid);
+    this.from = new EntityKeys<>(fromUid);
+    this.to = new EntityKeys<>(toUid);
   }
-          
-//  public Edge(F from, T to)
-//  {
-//    names = new HashSet<>();
-//    this.type = getClass().getSimpleName();
-//    this.from = new EntityRef(from.getUid(), from.getType(), from.getNames());
-//    this.to = new EntityRef(to.getUid(), to.getType(), to.getNames());
-//  }
 
   @Override
   public String toString() {
@@ -85,28 +77,27 @@ public class Edge<F extends Node, T extends Node>
         '}';
   }
 
-  public EntityKeys getKeys() {
+  public EntityKeys<E> getKeys() {
     return keys;
   }
 
-  public void setKeys(EntityKeys keys) {
+  public void setKeys(EntityKeys<E> keys) {
     this.keys = keys;
   }
 
-  public EntityKeys getFrom() {
+  public EntityKeys<F> getFrom() {
     return from;
   }
 
-  public void setFrom(EntityKeys from) {
+  public void setFrom(EntityKeys<F> from) {
     this.from = from;
   }
 
-  public EntityKeys getTo() {
+  public EntityKeys<T> getTo() {
     return to;
   }
 
-  public void setTo(EntityKeys to) {
+  public void setTo(EntityKeys<T> to) {
     this.to = to;
   }
-
 }

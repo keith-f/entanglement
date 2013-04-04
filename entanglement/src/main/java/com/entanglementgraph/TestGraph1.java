@@ -75,7 +75,7 @@ public class TestGraph1
     }
   }
 
-  private static class ExistsWithin extends Edge<Gene, Chromosome> {
+  private static class ExistsWithin extends Edge<ExistsWithin, Gene, Chromosome> {
 
   }
 
