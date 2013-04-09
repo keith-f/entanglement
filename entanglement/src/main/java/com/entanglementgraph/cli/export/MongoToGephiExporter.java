@@ -163,8 +163,8 @@ public class MongoToGephiExporter {
 
   /**
    * Export a subgraph associated with the node which has a Uid matching that
-   * provided. It will continue exploring all outgoing edges until reaching a
-   * "stop" node, or one which is of a type provided.
+   * provided. It will continue exploring all outgoing edges ONLY until reaching a
+   * "stop" node of one the types provided.
    *
    * @param nodeUid    The id to begin the subgraph with
    * @param stopTypes  a list of node types which will stop the progression of
@@ -205,7 +205,6 @@ public class MongoToGephiExporter {
     addChildNodes(nodeUid, stopTypes, directedGraph, graphModel,
         attributeModel);
 
-
     // Print out a summary of the full graph
     System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
         + " Complete Edges: " + directedGraph.getEdgeCount());
@@ -222,6 +221,57 @@ public class MongoToGephiExporter {
         lookup(ExportController.class);
     System.out.println(outputFile.getAbsoluteFile());
     ec.exportFile(outputFile);
+
+  }
+
+  /**
+   * Export a subgraph (as a Gephi object) associated with the node which has a Uid matching that
+   * provided. It will continue exploring all outgoing edges ONLY until reaching a
+   * "stop" node of one the types provided.
+   *
+   * @param nodeUid   The id to begin the subgraph with
+   * @param stopTypes a list of node types which will stop the progression of
+   *                  the query
+   * @return the GraphModel containing the subgraph requested
+   */
+  public GraphModel exportOutgoingSubgraph(String nodeUid,
+                                           Set<String> stopTypes) throws GraphModelException,
+      DbObjectMarshallerException {
+
+    // Init a gephi project - and therefore a workspace
+
+    ProjectController pc = Lookup.getDefault().lookup(
+        ProjectController.class);
+    pc.newProject();
+    // Gephi tutorials suggest having the line below, even if not used...
+    //noinspection UnusedDeclaration
+    Workspace workspace = pc.getCurrentWorkspace();
+
+    // Get a graph model - it exists because we have a workspace
+    GraphModel graphModel = Lookup.getDefault().lookup(
+        GraphController.class).getModel();
+
+    // Create a directed graph based on this graph model
+    DirectedGraph directedGraph = graphModel.getDirectedGraph();
+    // Add column for node type
+    AttributeController ac = Lookup.getDefault().
+        lookup(AttributeController.class);
+    AttributeModel attributeModel = ac.getModel();
+
+    // Start with the core node
+    BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
+    directedGraph.addNode(parseEntanglementNode(coreNode, graphModel,
+        attributeModel));
+
+    // Export subgraph into gephi directed graph
+    addChildNodes(nodeUid, stopTypes, directedGraph, graphModel,
+        attributeModel);
+
+    // Print out a summary of the full graph
+    System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
+        + " Complete Edges: " + directedGraph.getEdgeCount());
+
+    return graphModel;
 
   }
 
