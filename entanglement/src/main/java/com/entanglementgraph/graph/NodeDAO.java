@@ -19,20 +19,20 @@
 package com.entanglementgraph.graph;
 
 /**
- *
  * @author Keith Flanagan
  */
 public interface NodeDAO
-    extends GraphEntityDAO
-{
+    extends GraphEntityDAO {
   /**
    * Attempts to add a Node instance to an existing graph.
    * @param node
    * @throws GraphModelException if a node with the same unique ID already
    * exists in the data structure.
-   * @deprecated 
+   * deprecated : as this method is deprecated *AND* commented out, IntelliJ seems to think it is the
+   * *class* and not the method that is deprecated, causing problems for the inspection routines. Therefore
+   * have removed the "@" symbol from in front of "deprecated".
    */
 //  public void store(Node node)
 //      throws GraphModelException;
-  
+
 }

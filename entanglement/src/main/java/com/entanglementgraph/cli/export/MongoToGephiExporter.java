@@ -33,18 +33,6 @@ import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
@@ -58,6 +46,17 @@ import org.gephi.io.exporter.api.ExportController;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Allyson Lister
@@ -74,9 +73,9 @@ public class MongoToGephiExporter {
   private Map<String, Color> colorMapping;
 
   /**
-   * @param conn         set up node and edge DAOs
+   * @param conn           set up node and edge DAOs
    * @param colorPropsFile the optional color mapping for node types (provide an
-   *                     empty one if no particular color mapping is required)
+   *                       empty one if no particular color mapping is required)
    */
   public MongoToGephiExporter(GraphConnection conn,
                               File colorPropsFile) throws IOException {
@@ -175,13 +174,15 @@ public class MongoToGephiExporter {
   public void exportOutgoingSubgraph(String nodeUid,
                                      Set<String> stopTypes,
                                      File outputFile) throws GraphModelException,
-      DbObjectMarshallerException {
+      DbObjectMarshallerException, IOException {
 
     // Init a gephi project - and therefore a workspace
 
     ProjectController pc = Lookup.getDefault().lookup(
         ProjectController.class);
     pc.newProject();
+    // Gephi tutorials suggest having the line below, even if not used...
+    //noinspection UnusedDeclaration
     Workspace workspace = pc.getCurrentWorkspace();
 
     // Get a graph model - it exists because we have a workspace
@@ -204,6 +205,24 @@ public class MongoToGephiExporter {
     addChildNodes(nodeUid, stopTypes, directedGraph, graphModel,
         attributeModel);
 
+
+    // Print out a summary of the full graph
+    System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
+        + " Complete Edges: " + directedGraph.getEdgeCount());
+
+    // This line is a hack to get around a weird NullPointerException
+    // which crops up when exporting to GEXF. See url below for details:
+    // https://forum.gephi.org/viewtopic.php?f=27&t=2337
+    //noinspection UnusedDeclaration
+    DynamicModel dynamicModel = Lookup.getDefault().lookup(
+        DynamicController.class).getModel();
+
+    // Export full graph in GEXF format
+    ExportController ec = Lookup.getDefault().
+        lookup(ExportController.class);
+    System.out.println(outputFile.getAbsoluteFile());
+    ec.exportFile(outputFile);
+
   }
 
   /**
@@ -223,6 +242,8 @@ public class MongoToGephiExporter {
     ProjectController pc = Lookup.getDefault().lookup(
         ProjectController.class);
     pc.newProject();
+    // Gephi tutorials suggest having the line below, even if not used...
+    //noinspection UnusedDeclaration
     Workspace workspace = pc.getCurrentWorkspace();
 
     // Get a graph model - it exists because we have a workspace
@@ -264,6 +285,7 @@ public class MongoToGephiExporter {
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to gexf. See url below for details:
     // https://forum.gephi.org/viewtopic.php?f=27&t=2337
+    //noinspection UnusedDeclaration
     DynamicModel dynamicModel = Lookup.getDefault().lookup(
         DynamicController.class).getModel();
 
@@ -280,12 +302,12 @@ public class MongoToGephiExporter {
                                                         AttributeModel attributeModel)
       throws DbObjectMarshallerException {
 
-    EntityKeys keyset = marshaller.deserialize(node.get(
+    EntityKeys keySet = marshaller.deserialize(node.get(
         NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
 
 
     //String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
-    String type = keyset.getType();
+    String type = keySet.getType();
     Color nodeColour = DEFAULT_COLOR;
     System.out.println("Type: " + type + ", custom color: "
         + colorMapping.get(type));
@@ -293,13 +315,13 @@ public class MongoToGephiExporter {
       nodeColour = colorMapping.get(type);
     }
 
-    String uidStr = keysetToId(keyset);
+    String uidStr = keysetToId(keySet);
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(
         uidStr);
-    if (keyset.getNames().isEmpty()) {
+    if (keySet.getNames().isEmpty()) {
       gephiNode.getNodeData().setLabel(uidStr);
     } else {
-      gephiNode.getNodeData().setLabel(keyset.getNames().toString()); //TODO ugly name
+      gephiNode.getNodeData().setLabel(keySet.getNames().toString()); //TODO ugly name
     }
     float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
     gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1],
