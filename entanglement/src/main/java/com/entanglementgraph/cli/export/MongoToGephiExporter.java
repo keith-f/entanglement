@@ -74,8 +74,7 @@ public class MongoToGephiExporter {
 
   /**
    * @param conn           set up node and edge DAOs
-   * @param colorPropsFile the optional color mapping for node types (provide an
-   *                       empty one if no particular color mapping is required)
+   * @param colorPropsFile the optional color mapping for node types
    */
   public MongoToGephiExporter(GraphConnection conn,
                               File colorPropsFile) throws IOException {
