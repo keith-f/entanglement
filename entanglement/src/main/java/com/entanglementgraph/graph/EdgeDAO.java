@@ -19,144 +19,142 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.mongodb.*;
+import com.mongodb.DBObject;
 
 import java.util.Map;
 
 /**
- *
  * @author Keith Flanagan
  */
 public interface EdgeDAO
-    extends GraphEntityDAO
-{
+    extends GraphEntityDAO {
 
 
   public static final String FIELD_FROM_KEYS = "from";
-  public static final String FIELD_FROM_KEYS_TYPE = FIELD_FROM_KEYS+".type";
-  public static final String FIELD_FROM_KEYS_UIDS = FIELD_FROM_KEYS+".uids";
-  public static final String FIELD_FROM_KEYS_NAMES = FIELD_FROM_KEYS+".names";
+  public static final String FIELD_FROM_KEYS_TYPE = FIELD_FROM_KEYS + ".type";
+  public static final String FIELD_FROM_KEYS_UIDS = FIELD_FROM_KEYS + ".uids";
+  public static final String FIELD_FROM_KEYS_NAMES = FIELD_FROM_KEYS + ".names";
 
   public static final String FIELD_TO_KEYS = "to";
-  public static final String FIELD_TO_KEYS_TYPE = FIELD_TO_KEYS+".type";
-  public static final String FIELD_TO_KEYS_UIDS = FIELD_TO_KEYS+".uids";
-  public static final String FIELD_TO_KEYS_NAMES = FIELD_TO_KEYS+".names";
-
+  public static final String FIELD_TO_KEYS_TYPE = FIELD_TO_KEYS + ".type";
+  public static final String FIELD_TO_KEYS_UIDS = FIELD_TO_KEYS + ".uids";
+  public static final String FIELD_TO_KEYS_NAMES = FIELD_TO_KEYS + ".names";
 
 
   /**
-   * Given a 'from' node and a 'to' node, returns an iterator over all the 
+   * Given a 'from' node and a 'to' node, returns an iterator over all the
    * edges between these nodes.
-   * @param fromNodeUid the ID of the 'from' node.
-   * @param toNodeUid the ID of the 'to' node.
+   *
+   * @param fromNode the ID of the 'from' node.
+   * @param to       the ID of the 'to' node.
    * @return an iterable list of edge instances.
-   * @throws GraphModelException 
+   * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
       EntityKeys fromNode, EntityKeys to)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   /**
-   * Given a 'from' node and a 'to' node, returns an iterator over all the 
+   * Given a 'from' node and a 'to' node, returns an iterator over all the
    * edges of type <code>edgeType<code> between those nodes.
+   *
    * @param edgeType the type of edge to return
-   * @param fromNodeUid the UID of the 'from' node.
-   * @param toNodeUid the UID of the 'to' node.
-   * @return an iterable set of edge instances with the specifed type that
-   * link the two specified nodes.
-   * @throws GraphModelException 
+   * @param from     the UID of the 'from' node.
+   * @param to       the UID of the 'to' node.
+   * @return an iterable set of edge instances with the specified type that
+   *         link the two specified nodes.
+   * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesBetweenNodes(
-          String edgeType, EntityKeys from, EntityKeys to)
-          throws GraphModelException;
-  
+      String edgeType, EntityKeys from, EntityKeys to)
+      throws GraphModelException;
+
   /**
    * Given a node , returns an Iterable over all the outgoing edges of that node.
+   *
    * @param from the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
-   * @throws GraphModelException 
+   * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
-          throws GraphModelException;
+      throws GraphModelException;
 
   /**
    * Given a node, returns an Iterable over all the outgoing edges of that node, of the specified <code>edgeType</code>.
+   *
    * @param edgeType the edge type to return.
-   * @param from the node whose outgoing edges are to be iterated
+   * @param from     the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException;
-  
+
   /**
    * Given a node, returns an Iterable over all the incoming edges to that node.
-   * @param toNodeUid the node whose incoming edges are to be iterated.
+   *
+   * @param to the node whose incoming edges are to be iterated.
    * @return an Iterable of edges.
-   * @throws GraphModelException 
+   * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   /**
-   * Returns true if there exists at least one edge between the specified node, 
+   * Returns true if there exists at least one edge between the specified node,
    * and any node of type <code>toNodeType</code>.
-   * @param fromNodeUid the node ID from which an edge should start
+   *
+   * @param from       the node ID from which an edge should start
    * @param toNodeType the type of node that we're interested in as a destination
    * @return true if there is an edge between <code>fromNodeUid</code> and any
-   * other node of type <code>toNodeType</code>.
-   * @throws GraphModelException 
+   *         other node of type <code>toNodeType</code>.
+   * @throws GraphModelException
    */
   public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType)
-          throws GraphModelException;
-  
+      throws GraphModelException;
 
-  
-  
+
   public Long countEdgesFromNode(EntityKeys from)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   public Long countEdgesToNode(EntityKeys to)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   public Long countEdgesOfTypeBetweenNodes(
-          String edgeType, EntityKeys from, EntityKeys to)
-          throws GraphModelException;
-  
-  
-  
+      String edgeType, EntityKeys from, EntityKeys to)
+      throws GraphModelException;
+
+
   /**
-   * Given a node UID, returns a count of each distinct outgoing edge type for 
+   * Given a node UID, returns a count of each distinct outgoing edge type for
    * that node.
-   * 
-   * @param fromNodeUid the node whose outgoing edges are to be counted.
+   *
+   * @param from the node whose outgoing edges are to be counted.
    * @return a Map of 'edge type name' to a count of the number of outgoing edges
-   * that the specified node has of that type. Only edge type counts where the
-   * count is greater than 0 are returned.
-   * 
-   * @throws GraphModelException 
+   *         that the specified node has of that type. Only edge type counts where the
+   *         count is greater than 0 are returned.
+   * @throws GraphModelException
    */
   public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from)
-          throws GraphModelException;
-  
+      throws GraphModelException;
+
   /**
-   * Given a node UID, returns a count of each distinct incoming edge type for 
+   * Given a node UID, returns a count of each distinct incoming edge type for
    * that node.
-   * 
-   * @param toNodeUid the node whose incoming edges are to be counted.
+   *
+   * @param to the node whose incoming edges are to be counted.
    * @return a Map of 'edge type name' to a count of the number of incoming edges
-   * that the specified node has of that type. Only edge type counts where the
-   * count is greater than 0 are returned.
-   * 
-   * @throws GraphModelException 
+   *         that the specified node has of that type. Only edge type counts where the
+   *         count is greater than 0 are returned.
+   * @throws GraphModelException
    */
   public Map<String, Long> countEdgesByTypeToNode(EntityKeys to)
-          throws GraphModelException;
+      throws GraphModelException;
 
 }
