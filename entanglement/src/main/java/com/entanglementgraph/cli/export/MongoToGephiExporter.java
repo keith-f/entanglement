@@ -231,7 +231,7 @@ public class MongoToGephiExporter {
    * @param nodeUid   The id to begin the subgraph with
    * @param stopTypes a list of node types which will stop the progression of
    *                  the query
-   * @return the GraphModel containing the subgraph requested
+   * @return the GraphModel containing the subgraph requested, or null if not found.
    */
   public GraphModel exportOutgoingSubgraph(String nodeUid,
                                            Set<String> stopTypes) throws GraphModelException,
@@ -259,6 +259,10 @@ public class MongoToGephiExporter {
 
     // Start with the core node
     BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
+    if (coreNode == null) {
+      System.err.println("No node with Uid " + nodeUid + " found in database.");
+      return null;
+    }
     directedGraph.addNode(parseEntanglementNode(coreNode, graphModel,
         attributeModel));
 
