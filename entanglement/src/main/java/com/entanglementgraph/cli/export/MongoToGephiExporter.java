@@ -67,7 +67,7 @@ public class MongoToGephiExporter {
       getLogger(MongoGraphToGephi.class.getName());
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
-      ObjectMarshallerFactory.create(MongoGraphToGephi.class.getClassLoader());
+      ObjectMarshallerFactory.create(MongoToGephiExporter.class.getClassLoader());
   private final NodeDAO nodeDao;
   private final EdgeDAO edgeDao;
   private Map<String, Color> colorMapping;
@@ -355,7 +355,7 @@ public class MongoToGephiExporter {
         NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
 
 
-    //String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
+//    String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
     String type = keySet.getType();
     Color nodeColour = DEFAULT_COLOR;
     System.out.println("Type: " + type + ", custom color: "
