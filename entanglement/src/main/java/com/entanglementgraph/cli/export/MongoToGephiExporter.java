@@ -342,8 +342,7 @@ public class MongoToGephiExporter {
     // create the gephi node object after finding a value within the _id field.
     for (String nodeAttrName : nodeObject.keySet()) {
       if (nodeAttrName.equals("_id")) {
-        String id = (String) nodeObject.get(nodeAttrName);
-        gephiNode = graphModel.factory().newNode(id);
+        gephiNode = graphModel.factory().newNode(nodeObject.get(nodeAttrName).toString());
         break;
       }
     }
