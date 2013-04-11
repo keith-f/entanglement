@@ -358,13 +358,13 @@ public class MongoToGephiExporter {
     // assign values from the names attribute to the gephi node in the appropriate location (the label).
     String type = "";
     for (String nodeAttrName : nodeObject.keySet()) {
-      System.err.println("current node attribute name: " + nodeAttrName);
       if (nodeAttrName.equals(NodeDAO.FIELD_KEYS)) {
         // the value for the node attributes is never written as "keys.names", for example. It is just written
         // as "keys" and then you have to drill down further. Here, the result of a get() call is a DBObject
         // rather than a BasicDBObject, which is what you'd get if there weren't nested attributes (e.g. with _id)
         DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
         for (String keysAttrName : nestedObj.keySet()) {
+          System.err.println("current node attribute name: " + keysAttrName);
           if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
             if (nestedObj.get(keysAttrName) instanceof Set) {
               Set names = (Set) nestedObj.get(keysAttrName);
@@ -404,8 +404,10 @@ public class MongoToGephiExporter {
 
 
     // now we move on to all other attributes present in the node.
-    // Please note that this for loop will only add non-nested values, as nested values would mean that val would
-    // be of the type DBObject (and not BasicDBList or BasicDBObject).
+    // Please note that this for loop will only parse non-nested values, as nested values would mean that val would
+    // be of the type DBObject: instead they currently only get listed under a single attribute with the title
+    // of the nested attribute name, e.g. for node attr name "keys" you might get:
+    // Val: { "type" : "Gene" , "uids" : [ "c0a2653570834d7aba00e9ab9551fae1"] , "names" : [ "MEOX2"]}
     for (String nodeAttrName : nodeObject.keySet()) {
 
       Object val = nodeObject.get(nodeAttrName);
