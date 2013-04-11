@@ -487,7 +487,8 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found edge with name {0}", currentEdge.getKeys().getNames());
+      logger.log(Level.INFO, "Found edge with id {0} and name {1}",
+          new String[]{currentEdge.getKeys().getUids().toString(), currentEdge.getKeys().getNames().toString()});
 
 
       // add the node that the current edge is pointing to
