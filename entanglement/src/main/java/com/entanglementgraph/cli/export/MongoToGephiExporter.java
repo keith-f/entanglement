@@ -243,7 +243,7 @@ public class MongoToGephiExporter {
     // Start with the core node
     BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
     if (coreNode == null) {
-      System.err.println("No node with Uid " + nodeUid + " found in database.");
+      logger.log(Level.WARNING, "No node with Uid {0} found in database.", nodeUid);
       return null;
     }
     directedGraph.addNode(parseEntanglementNode(coreNode, graphModel, attributeModel));
@@ -253,8 +253,8 @@ public class MongoToGephiExporter {
     addChildNodes(coreAriesNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
 
     // Print out a summary of the full graph
-    System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
-        + " Complete Edges: " + directedGraph.getEdgeCount());
+    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
+        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
 
     return graphModel;
 
@@ -364,7 +364,6 @@ public class MongoToGephiExporter {
         // rather than a BasicDBObject, which is what you'd get if there weren't nested attributes (e.g. with _id)
         DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
         for (String keysAttrName : nestedObj.keySet()) {
-          System.err.println("current node attribute name: " + keysAttrName);
           if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
             if (nestedObj.get(keysAttrName) instanceof Set) {
               Set names = (Set) nestedObj.get(keysAttrName);
@@ -488,6 +487,8 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
+      logger.log(Level.INFO, "Found edge with name {0}", currentEdge.getKeys().getNames());
+
 
       // add the node that the current edge is pointing to
       if (EntityKeys.containsAtLeastOneUid(currentEdge.getTo())) {
