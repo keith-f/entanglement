@@ -462,7 +462,8 @@ public class MongoToGephiExporter {
          * edges for that node.
          */
     for (DBObject obj : edgeDao.iterateEdgesFromNode(new EntityKeys(nodeUid))) {
-      Edge currentEdge = (Edge) obj;
+      // deserialize the DBObject to get all Edge properties.
+      Edge currentEdge = marshaller.deserialize(obj.get(EdgeDAO.FIELD_KEYS).toString(), Edge.class);
       // add the current edge's information
       directedGraph.addEdge(parseEntanglementEdge(currentEdge,
           graphModel,
