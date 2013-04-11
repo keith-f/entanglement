@@ -340,6 +340,8 @@ public class MongoToGephiExporter {
 
 
     org.gephi.graph.api.Node gephiNode = null;
+    Map<String, AttributeColumn> nodeAttrNameToAttributeCol =
+        new HashMap<>();
 
     // create the gephi node object after finding a value within the _id field.
     for (String nodeAttrName : nodeObject.keySet()) {
@@ -354,24 +356,38 @@ public class MongoToGephiExporter {
     }
 
     // assign values from the names attribute to the gephi node in the appropriate location (the label).
+    String type = "";
     for (String nodeAttrName : nodeObject.keySet()) {
       System.err.println("current node attribute name: " + nodeAttrName);
-      if (nodeAttrName.equals(NodeDAO.FIELD_KEYS_TYPE)) {
-        if (nodeObject.get(nodeAttrName) instanceof Set) {
-          Set names = (Set) nodeObject.get(nodeAttrName);
-          gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
-//          break;
+      if (nodeAttrName.equals(NodeDAO.FIELD_KEYS)) {
+        // the value for the node attributes is never written as "keys.names", for example. It is just written
+        // as "keys" and then you have to drill down further. Here, the result of a get() call is a DBObject
+        // rather than a BasicDBObject, which is what you'd get if there weren't nested attributes (e.g. with _id)
+        DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
+        for (String keysAttrName : nestedObj.keySet()) {
+          if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
+            if (nestedObj.get(keysAttrName) instanceof Set) {
+              Set names = (Set) nestedObj.get(keysAttrName);
+              gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
+            }
+          } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
+            // save the type of the node while we're at it
+            type = nestedObj.get(keysAttrName).toString();
+            // save the node type in the list of attributes for that gephi node.
+            AttributeColumn typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
+            nodeAttrNameToAttributeCol.put(nodeAttrName, typeColumn);
+            gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
+          }
         }
+        break;
       }
     }
-
     // if you couldn't find a name, fill with the id instead
     if (gephiNode.getNodeData().getLabel() == null) {
       gephiNode.getNodeData().setLabel(((Integer) gephiNode.getId()).toString());
     }
 
     // retrieve the appropriate color based on provided color mappings.
-    String type = nodeObject.get(NodeDAO.FIELD_KEYS_TYPE).toString();
     Color nodeColour = DEFAULT_COLOR;
     System.out.println("Type: " + type + ", custom color: " + colorMapping.get(type));
     if (colorMapping.containsKey(type)) {
@@ -388,14 +404,13 @@ public class MongoToGephiExporter {
 
 
     // now we move on to all other attributes present in the node.
-    Map<String, AttributeColumn> nodeAttrNameToAttributeCol =
-        new HashMap<>();
-
+    // Please note that this for loop will only add non-nested values, as nested values would mean that val would
+    // be of the type DBObject (and not BasicDBList or BasicDBObject).
     for (String nodeAttrName : nodeObject.keySet()) {
 
       Object val = nodeObject.get(nodeAttrName);
-      if (nodeAttrName.equals("_id") || nodeAttrName.equals(NodeDAO.FIELD_KEYS_TYPE)) {
-        continue; // ignore as have already set thess values.
+      if (nodeAttrName.equals("_id")) {
+        continue; // ignore as have already set these values.
       }
       if (val instanceof BasicDBList) {
         val = val.toString();
