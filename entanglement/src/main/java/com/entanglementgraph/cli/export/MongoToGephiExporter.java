@@ -308,8 +308,10 @@ public class MongoToGephiExporter {
     Iterable<Edge> edgeItr = new DeserialisingIterable<>(
         edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
-      directedGraph.addEdge(parseEntanglementEdge(edge, graphModel,
-          directedGraph));
+      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(edge, graphModel, directedGraph);
+      if (gephiEdge != null) {
+        directedGraph.addEdge(gephiEdge);
+      }
     }
 
     // Print out a summary of the full graph
@@ -434,18 +436,22 @@ public class MongoToGephiExporter {
   private org.gephi.graph.api.Edge parseEntanglementEdge(Edge edge,
                                                          GraphModel graphModel, DirectedGraph directedGraph) throws
       GraphModelException, DbObjectMarshallerException {
+
     BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
-    String fromId = keysetToId(MongoUtils.parseKeyset(marshaller,
-        fromObj));
 
     BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
-    String toId = keysetToId(MongoUtils.
-        parseKeyset(marshaller, toObj));
 
+    // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
+    if (fromObj == null || toObj == null) {
+      System.out.println("Edge " + edge.getKeys().getUids().iterator().next() + " is hanging and will not be" +
+          "propagated to Gephi.");
+      return null;
+    }
 
-    org.gephi.graph.api.Edge gephiEdge = graphModel.factory().
-        newEdge(directedGraph.getNode(fromId), directedGraph.
-            getNode(toId), 1f, true);
+    String fromId = keysetToId(MongoUtils.parseKeyset(marshaller, fromObj));
+    String toId = keysetToId(MongoUtils.parseKeyset(marshaller, toObj));
+    org.gephi.graph.api.Edge gephiEdge = graphModel.factory().newEdge(directedGraph.getNode(fromId), directedGraph.
+        getNode(toId), 1f, true);
     gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
 
     return gephiEdge;
@@ -465,9 +471,10 @@ public class MongoToGephiExporter {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       // add the current edge's information
-      directedGraph.addEdge(parseEntanglementEdge(currentEdge,
-          graphModel,
-          directedGraph));
+      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
+      if (gephiEdge != null) {
+        directedGraph.addEdge(gephiEdge);
+      }
 
       // add the node that the current edge is pointing to
       if (EntityKeys.containsAtLeastOneUid(currentEdge.getTo())) {
