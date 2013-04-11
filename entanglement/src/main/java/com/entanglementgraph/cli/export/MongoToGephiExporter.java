@@ -487,8 +487,7 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found edge with id {0} and name {1}",
-          new String[]{currentEdge.getKeys().getUids().toString(), currentEdge.getKeys().getNames().toString()});
+      logger.log(Level.INFO, "Found edge with id {0}", currentEdge.getKeys().getUids().toString());
 
 
       // add the node that the current edge is pointing to
@@ -505,15 +504,17 @@ public class MongoToGephiExporter {
           directedGraph.addEdge(gephiEdge);
         }
 
+        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
          * further outgoing edges.
          */
-        if (stopTypes.contains(currentNodeObject.get(NodeDAO.FIELD_KEYS_TYPE))) {
-          return;
+        if (stopTypes.contains(currentNode.getKeys().getType())) {
+          logger.log(Level.INFO, "Stopping at node of type {0}", currentNode.getKeys().getType());
+          continue;
         }
-        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+        logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
         addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
       }
     }
