@@ -438,7 +438,6 @@ public class MongoToGephiExporter {
       GraphModelException, DbObjectMarshallerException {
 
     BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
-
     BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
 
     // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
@@ -470,11 +469,6 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      // add the current edge's information
-      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
-      if (gephiEdge != null) {
-        directedGraph.addEdge(gephiEdge);
-      }
 
       // add the node that the current edge is pointing to
       if (EntityKeys.containsAtLeastOneUid(currentEdge.getTo())) {
@@ -483,19 +477,24 @@ public class MongoToGephiExporter {
         DBObject currentNodeObject = nodeDao.getByUid(currentUid);
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
-                /*
-                 * if the node is a stop type, then don't drill down further
-                 * into the subgraph. Otherwise, continue until there are no
-                 * further outgoing edges.
-                 */
+
+        // add the current edge's information. This cannot be added until nodes at both ends have been added.
+        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
+        if (gephiEdge != null) {
+          directedGraph.addEdge(gephiEdge);
+        }
+
+        /*
+         * if the node is a stop type, then don't drill down further
+         * into the subgraph. Otherwise, continue until there are no
+         * further outgoing edges.
+         */
         if (stopTypes.contains(currentNodeObject.get(NodeDAO.FIELD_KEYS_TYPE))) {
           return;
         }
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
       }
-
     }
-
   }
 }
