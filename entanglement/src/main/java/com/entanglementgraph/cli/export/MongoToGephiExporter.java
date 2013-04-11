@@ -355,10 +355,12 @@ public class MongoToGephiExporter {
 
     // assign values from the names attribute to the gephi node in the appropriate location (the label).
     for (String nodeAttrName : nodeObject.keySet()) {
-      if (nodeAttrName.equals("names")) {  // might be keys.names
+      System.err.println("current node attribute name: " + nodeAttrName);
+      if (nodeAttrName.equals(NodeDAO.FIELD_KEYS_TYPE)) {
         if (nodeObject.get(nodeAttrName) instanceof Set) {
           Set names = (Set) nodeObject.get(nodeAttrName);
           gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
+//          break;
         }
       }
     }
@@ -392,7 +394,7 @@ public class MongoToGephiExporter {
     for (String nodeAttrName : nodeObject.keySet()) {
 
       Object val = nodeObject.get(nodeAttrName);
-      if (nodeAttrName.equals("_id") || nodeAttrName.equals("names")) { // again, might be keys.names
+      if (nodeAttrName.equals("_id") || nodeAttrName.equals(NodeDAO.FIELD_KEYS_TYPE)) {
         continue; // ignore as have already set thess values.
       }
       if (val instanceof BasicDBList) {
