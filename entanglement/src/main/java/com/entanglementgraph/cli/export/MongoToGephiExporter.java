@@ -362,7 +362,7 @@ public class MongoToGephiExporter {
     }
 
     // if you couldn't find a name, fill with the id instead
-    if (gephiNode.getNodeData().getLabel().isEmpty()) {
+    if (gephiNode.getNodeData().getLabel() == null) {
       gephiNode.getNodeData().setLabel(((Integer) gephiNode.getId()).toString());
     }
 
