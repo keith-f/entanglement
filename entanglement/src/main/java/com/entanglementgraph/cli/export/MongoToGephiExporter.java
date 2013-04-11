@@ -24,6 +24,7 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
@@ -175,38 +176,21 @@ public class MongoToGephiExporter {
                                      File outputFile) throws GraphModelException,
       DbObjectMarshallerException, IOException {
 
-    // Init a gephi project - and therefore a workspace
+    // We need to have our own gephi workspace prepared in this method in order to have something to store the
+    // incoming GraphModel.
 
+    // Init a gephi project - and therefore a workspace
     ProjectController pc = Lookup.getDefault().lookup(
         ProjectController.class);
     pc.newProject();
+
     // Gephi tutorials suggest having the line below, even if not used...
-    //noinspection UnusedDeclaration
     Workspace workspace = pc.getCurrentWorkspace();
-
-    // Get a graph model - it exists because we have a workspace
-    GraphModel graphModel = Lookup.getDefault().lookup(
-        GraphController.class).getModel();
-
-    // Create a directed graph based on this graph model
-    DirectedGraph directedGraph = graphModel.getDirectedGraph();
-    // Add column for node type
-    AttributeController ac = Lookup.getDefault().
-        lookup(AttributeController.class);
-    AttributeModel attributeModel = ac.getModel();
-
-    // Start with the core node
-    BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
-    directedGraph.addNode(parseEntanglementNode(coreNode, graphModel,
-        attributeModel));
-
-    // Export subgraph into gephi directed graph
-    addChildNodes(nodeUid, stopTypes, directedGraph, graphModel,
-        attributeModel);
-
-    // Print out a summary of the full graph
-    System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
-        + " Complete Edges: " + directedGraph.getEdgeCount());
+    GraphModel graphModel = exportOutgoingSubgraph(nodeUid, stopTypes);
+    if (graphModel == null) {
+      return;
+    }
+    workspace.add(graphModel);
 
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to GEXF. See url below for details:
@@ -238,7 +222,6 @@ public class MongoToGephiExporter {
       DbObjectMarshallerException {
 
     // Init a gephi project - and therefore a workspace
-
     ProjectController pc = Lookup.getDefault().lookup(
         ProjectController.class);
     pc.newProject();
@@ -263,12 +246,11 @@ public class MongoToGephiExporter {
       System.err.println("No node with Uid " + nodeUid + " found in database.");
       return null;
     }
-    directedGraph.addNode(parseEntanglementNode(coreNode, graphModel,
-        attributeModel));
+    directedGraph.addNode(parseEntanglementNode(coreNode, graphModel, attributeModel));
 
     // Export subgraph into gephi directed graph
-    addChildNodes(nodeUid, stopTypes, directedGraph, graphModel,
-        attributeModel);
+    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
+    addChildNodes(coreAriesNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
 
     // Print out a summary of the full graph
     System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
@@ -318,8 +300,7 @@ public class MongoToGephiExporter {
 
     // Create Gephi nodes
     for (DBObject node : nodeDao.iterateAll()) {
-      directedGraph.addNode(parseEntanglementNode(node, graphModel,
-          attributeModel));
+      directedGraph.addNode(parseEntanglementNode(node, graphModel, attributeModel));
     }
 
     // Create Gephi edges; currently with a standard weight of 1
@@ -350,32 +331,51 @@ public class MongoToGephiExporter {
 
   }
 
-  public org.gephi.graph.api.Node parseEntanglementNode(DBObject node,
+  public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
                                                         GraphModel graphModel,
                                                         AttributeModel attributeModel)
       throws DbObjectMarshallerException {
 
-    EntityKeys keySet = marshaller.deserialize(node.get(
-        NodeDAO.FIELD_KEYS).toString(), EntityKeys.class);
 
+    org.gephi.graph.api.Node gephiNode = null;
 
-//    String type = (String) node.get(NodeDAO.FIELD_KEYS_TYPE);
-    String type = keySet.getType();
+    // create the gephi node object after finding a value within the _id field.
+    for (String nodeAttrName : nodeObject.keySet()) {
+      if (nodeAttrName.equals("_id")) {
+        String id = (String) nodeObject.get(nodeAttrName);
+        gephiNode = graphModel.factory().newNode(id);
+        break;
+      }
+    }
+    if (gephiNode == null) {
+      System.err.println("No identifier found for node when converting to Gephi project file.");
+      return gephiNode;
+    }
+
+    // assign values from the names attribute to the gephi node in the appropriate location (the label).
+    for (String nodeAttrName : nodeObject.keySet()) {
+      if (nodeAttrName.equals("names")) {  // might be keys.names
+        if (nodeObject.get(nodeAttrName) instanceof Set) {
+          Set names = (Set) nodeObject.get(nodeAttrName);
+          gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
+        }
+      }
+    }
+
+    // if you couldn't find a name, fill with the id instead
+    if (gephiNode.getNodeData().getLabel().isEmpty()) {
+      gephiNode.getNodeData().setLabel(((Integer) gephiNode.getId()).toString());
+    }
+
+    // retrieve the appropriate color based on provided color mappings.
+    String type = (String) nodeObject.get(NodeDAO.FIELD_KEYS_TYPE);
     Color nodeColour = DEFAULT_COLOR;
-    System.out.println("Type: " + type + ", custom color: "
-        + colorMapping.get(type));
+    System.out.println("Type: " + type + ", custom color: " + colorMapping.get(type));
     if (colorMapping.containsKey(type)) {
       nodeColour = colorMapping.get(type);
     }
 
-    String uidStr = keysetToId(keySet);
-    org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(
-        uidStr);
-    if (keySet.getNames().isEmpty()) {
-      gephiNode.getNodeData().setLabel(uidStr);
-    } else {
-      gephiNode.getNodeData().setLabel(keySet.getNames().toString()); //TODO ugly name
-    }
+    // set the color for the node
     float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
     gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1],
         rgbColorComp[2]);
@@ -383,14 +383,16 @@ public class MongoToGephiExporter {
 //              getGreen(), nodeColour.getBlue());
 //            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.getIndex(), node.getType() );
 
+
+    // now we move on to all other attributes present in the node.
     Map<String, AttributeColumn> nodeAttrNameToAttributeCol =
         new HashMap<>();
 
-    for (String nodeAttrName : node.keySet()) {
+    for (String nodeAttrName : nodeObject.keySet()) {
 
-      Object val = node.get(nodeAttrName);
-      if (nodeAttrName.equals("_id")) {
-        continue;
+      Object val = nodeObject.get(nodeAttrName);
+      if (nodeAttrName.equals("_id") || nodeAttrName.equals("names")) { // again, might be keys.names
+        continue; // ignore as have already set thess values.
       }
       if (val instanceof BasicDBList) {
         val = val.toString();
@@ -423,8 +425,7 @@ public class MongoToGephiExporter {
       System.out.println("Node attr name: " + nodeAttrName);
       System.out.println("Val: " + val);
       System.out.println("Val type: " + val.getClass().getName());
-      gephiNode.getNodeData().getAttributes().setValue(attrCol.
-          getIndex(), val);
+      gephiNode.getNodeData().getAttributes().setValue(attrCol.getIndex(), val);
     }
 
     return gephiNode;
@@ -452,18 +453,18 @@ public class MongoToGephiExporter {
 
   }
 
-  private void addChildNodes(String nodeUid, Set<String> stopTypes,
+  private void addChildNodes(EntityKeys entityKeys, Set<String> stopTypes,
                              DirectedGraph directedGraph, GraphModel graphModel,
                              AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
 
-        /*
-         * Start with the provided node Uid, and iterate through all outgoing
-         * edges for that node.
-         */
-    for (DBObject obj : edgeDao.iterateEdgesFromNode(new EntityKeys(nodeUid))) {
+    /*
+     * Start with the provided node, and iterate through all outgoing
+     * edges for that node.
+     */
+    for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
       // deserialize the DBObject to get all Edge properties.
-      Edge currentEdge = marshaller.deserialize(obj.get(EdgeDAO.FIELD_KEYS).toString(), Edge.class);
+      Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       // add the current edge's information
       directedGraph.addEdge(parseEntanglementEdge(currentEdge,
           graphModel,
@@ -474,24 +475,18 @@ public class MongoToGephiExporter {
         Set<String> uids = currentEdge.getTo().getUids();
         String currentUid = uids.iterator().next();
         DBObject currentNodeObject = nodeDao.getByUid(currentUid);
-        org.gephi.graph.api.Node gNode = parseEntanglementNode(
-            currentNodeObject,
-            graphModel,
-            attributeModel);
+        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
                 /*
                  * if the node is a stop type, then don't drill down further
                  * into the subgraph. Otherwise, continue until there are no
                  * further outgoing edges.
                  */
-        String type = (String) currentNodeObject.get(
-            NodeDAO.FIELD_KEYS_TYPE);
-        if (stopTypes.contains(type)) {
+        if (stopTypes.contains(currentNodeObject.get(NodeDAO.FIELD_KEYS_TYPE))) {
           return;
         }
-        addChildNodes(currentUid, stopTypes, directedGraph,
-            graphModel,
-            attributeModel);
+        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+        addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
       }
 
     }
