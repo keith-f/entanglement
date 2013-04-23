@@ -89,13 +89,27 @@ public class MongoToGephiExporter {
     this.edgeDao = conn.getEdgeDao();
   }
 
+  /**
+   * EntityKeys may contain either UIDs, a unique combination of type and name, or both. This method ensures
+   * that something sensible, and unique, is returned.
+   *
+   * @param keyset the EntityKey to examine
+   * @return an appropriate string for that EntityKey
+   */
   private static String keysetToId(EntityKeys keyset) {
-    if (keyset.getUids().isEmpty()) {
-      throw new IllegalArgumentException("An entity must have at least "
-          + "one UID. Offending keyset was: " + keyset);
+    if (!keyset.getUids().isEmpty()) {
+      Set<String> uids = keyset.getUids();
+      return uids.iterator().next();
     }
-    Set<String> uids = keyset.getUids();
-    return uids.iterator().next();
+
+    if (!keyset.getNames().isEmpty() && !keyset.getType().isEmpty()) {
+      Set<String> names = keyset.getNames();
+      return keyset.getType() + ": " + names.iterator().next();
+    }
+
+    throw new IllegalArgumentException("An entity must have at least "
+        + "one UID -OR- a suitable type/name combination. Offending keyset was: " + keyset);
+
   }
 
   private static Map<String, Color> loadColorMappings(File propFile)
@@ -171,6 +185,7 @@ public class MongoToGephiExporter {
    *                   the query
    * @param outputFile the file to export the subgraph to
    */
+  @SuppressWarnings("UnusedDeclaration")
   public void exportOutgoingSubgraph(String nodeUid,
                                      Set<String> stopTypes,
                                      File outputFile) throws GraphModelException,
@@ -186,7 +201,7 @@ public class MongoToGephiExporter {
 
     // Gephi tutorials suggest having the line below, even if not used...
     Workspace workspace = pc.getCurrentWorkspace();
-    GraphModel graphModel = exportOutgoingSubgraph(nodeUid, stopTypes);
+    GraphModel graphModel = exportSubgraph(nodeUid, stopTypes);
     if (graphModel == null) {
       return;
     }
@@ -209,7 +224,7 @@ public class MongoToGephiExporter {
 
   /**
    * Export a subgraph (as a Gephi object) associated with the node which has a Uid matching that
-   * provided. It will continue exploring all outgoing edges ONLY until reaching a
+   * provided. It will continue exploring all edges irrespective of directionality until reaching a
    * "stop" node of one the types provided.
    *
    * @param nodeUid   The id to begin the subgraph with
@@ -217,8 +232,8 @@ public class MongoToGephiExporter {
    *                  the query
    * @return the GraphModel containing the subgraph requested, or null if not found.
    */
-  public GraphModel exportOutgoingSubgraph(String nodeUid,
-                                           Set<String> stopTypes) throws GraphModelException,
+  public GraphModel exportSubgraph(String nodeUid,
+                                   Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
     // Init a gephi project - and therefore a workspace
@@ -475,26 +490,55 @@ public class MongoToGephiExporter {
 
   }
 
-  private void addChildNodes(EntityKeys entityKeys, Set<String> stopTypes,
+  /**
+   * Adds all edges (irrespective of directionality) and their associated nodes connected to the parent keys until
+   * there are either no more edges, or until a stop node is reached.
+   *
+   * @param parentKeys     the EntityKeys which define the node to start at
+   * @param stopTypes      the node types which determine where a subgraph should stop
+   * @param directedGraph  the Gephi directed graph to add nodes and edges to
+   * @param graphModel     the graph model to use when creating new edges and nodes
+   * @param attributeModel helps to store the known attribute columns for the current node
+   * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
+   * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   */
+  private void addChildNodes(EntityKeys parentKeys, Set<String> stopTypes,
                              DirectedGraph directedGraph, GraphModel graphModel,
                              AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
 
     /*
-     * Start with the provided node, and iterate through all outgoing
-     * edges for that node.
+     * Start with the provided node, and iterate through all
+     * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
-    for (DBObject obj : edgeDao.iterateEdgesFromNode(entityKeys)) {
+    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), stopTypes, directedGraph, graphModel, attributeModel);
+    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), stopTypes, directedGraph, graphModel, attributeModel);
+  }
+
+  /**
+   * Adds all edges associated with the particular Iterable until
+   * there are either no more edges, or until a stop node is reached.
+   *
+   * @param edgeIterator   the iterator which define the set of edges to add
+   * @param stopTypes      the node types which determine where a subgraph should stop
+   * @param directedGraph  the Gephi directed graph to add nodes and edges to
+   * @param graphModel     the graph model to use when creating new edges and nodes
+   * @param attributeModel helps to store the known attribute columns for the current node
+   * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
+   * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   */
+  private void iterateEdges(Iterable<DBObject> edgeIterator, Set<String> stopTypes,
+                            DirectedGraph directedGraph, GraphModel graphModel,
+                            AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
+    for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       logger.log(Level.INFO, "Found edge with id {0}", currentEdge.getKeys().getUids().toString());
 
 
       // add the node that the current edge is pointing to
-      if (EntityKeys.containsAtLeastOneUid(currentEdge.getTo())) {
-        Set<String> uids = currentEdge.getTo().getUids();
-        String currentUid = uids.iterator().next();
-        DBObject currentNodeObject = nodeDao.getByUid(currentUid);
+      if (nodeDao.existsByKey(currentEdge.getTo())) {
+        DBObject currentNodeObject = nodeDao.getByKey(currentEdge.getTo());
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
 
@@ -508,7 +552,7 @@ public class MongoToGephiExporter {
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
-         * further outgoing edges.
+         * further edges.
          */
         if (stopTypes.contains(currentNode.getKeys().getType())) {
           logger.log(Level.INFO, "Stopping at node of type {0}", currentNode.getKeys().getType());
@@ -518,5 +562,7 @@ public class MongoToGephiExporter {
         addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
       }
     }
+
   }
+
 }
