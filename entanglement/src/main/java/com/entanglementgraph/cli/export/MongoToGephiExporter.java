@@ -510,34 +510,41 @@ public class MongoToGephiExporter {
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
-    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), stopTypes, directedGraph, graphModel, attributeModel);
-    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), stopTypes, directedGraph, graphModel, attributeModel);
+    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, directedGraph, graphModel, attributeModel);
+    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
   }
 
   /**
    * Adds all edges associated with the particular Iterable until
    * there are either no more edges, or until a stop node is reached.
    *
-   * @param edgeIterator   the iterator which define the set of edges to add
-   * @param stopTypes      the node types which determine where a subgraph should stop
-   * @param directedGraph  the Gephi directed graph to add nodes and edges to
-   * @param graphModel     the graph model to use when creating new edges and nodes
-   * @param attributeModel helps to store the known attribute columns for the current node
+   * @param edgeIterator        the iterator which define the set of edges to add
+   * @param iterateOverOutgoing if true, the iterator is looking at outgoing edges, and so the opposing node is
+   *                            retrieved via getTo(). If false, the iterator is looking at incoming edges, and
+   *                            so the opposing node is retrieved via getFrom().
+   * @param stopTypes           the node types which determine where a subgraph should stop
+   * @param directedGraph       the Gephi directed graph to add nodes and edges to
+   * @param graphModel          the graph model to use when creating new edges and nodes
+   * @param attributeModel      helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
-  private void iterateEdges(Iterable<DBObject> edgeIterator, Set<String> stopTypes,
+  private void iterateEdges(Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
                             DirectedGraph directedGraph, GraphModel graphModel,
                             AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found edge with id {0}", currentEdge.getKeys().getUids().toString());
+      logger.log(Level.FINE, "Found edge with id {0}", currentEdge.getKeys().toString());
 
+      EntityKeys opposingNodeKeys = currentEdge.getFrom();
+      if (iterateOverOutgoing) {
+        opposingNodeKeys = currentEdge.getTo();
+      }
 
       // add the node that the current edge is pointing to
-      if (nodeDao.existsByKey(currentEdge.getTo())) {
-        DBObject currentNodeObject = nodeDao.getByKey(currentEdge.getTo());
+      if (nodeDao.existsByKey(opposingNodeKeys)) {
+        DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
 
@@ -548,17 +555,20 @@ public class MongoToGephiExporter {
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+        logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(), currentNode.getKeys().toString()});
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
          * further edges.
          */
         if (stopTypes.contains(currentNode.getKeys().getType())) {
-          logger.log(Level.INFO, "Stopping at node of type {0}", currentNode.getKeys().getType());
+          logger.log(Level.FINE, "Stopping at node of type {0}", currentNode.getKeys().getType());
           continue;
         }
-        logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
+        logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
         addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
+      } else {
+        logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }
     }
 
