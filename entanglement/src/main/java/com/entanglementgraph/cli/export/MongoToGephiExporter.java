@@ -176,9 +176,8 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * Export a subgraph associated with the node which has a Uid matching that
-   * provided. It will continue exploring all outgoing edges ONLY until reaching a
-   * "stop" node of one the types provided.
+   * Export a subgraph to a file rather than to a Gephi GraphModel. Will call
+   * the GraphModel version of exportSubgraph().
    *
    * @param nodeUid    The id to begin the subgraph with
    * @param stopTypes  a list of node types which will stop the progression of
@@ -186,9 +185,9 @@ public class MongoToGephiExporter {
    * @param outputFile the file to export the subgraph to
    */
   @SuppressWarnings("UnusedDeclaration")
-  public void exportOutgoingSubgraph(String nodeUid,
-                                     Set<String> stopTypes,
-                                     File outputFile) throws GraphModelException,
+  public void exportSubgraph(String nodeUid,
+                             Set<String> stopTypes,
+                             File outputFile) throws GraphModelException,
       DbObjectMarshallerException, IOException {
 
     // We need to have our own gephi workspace prepared in this method in order to have something to store the
