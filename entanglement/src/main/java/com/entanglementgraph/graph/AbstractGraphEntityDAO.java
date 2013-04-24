@@ -402,11 +402,8 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = buildAnyNameQuery(entityNames);
     DBObject fields = new BasicDBObject(FIELD_KEYS_TYPE, 1);
     try {
-      DBCursor result = col.find(query, fields).limit(1);
+      DBCursor result = col.find(query, fields);
 
-      if (!result.hasNext()) {
-        return false;
-      }
       for (DBObject next : result) {
         //FIXME at some point, find out why this doesn't work (where FIELD_KEYS_TYPE == "keys.type") ...
 //        String nextType = (String) next.get(FIELD_KEYS_TYPE);
@@ -417,8 +414,7 @@ abstract public class AbstractGraphEntityDAO
           throw new GraphModelException("When performing a query with one or more entity names, one or more of the " +
               "result items had a entity type of NULL. Your dataset therefore inconsistent, since an entity type is " +
               "required when specifying one or more entity names.\n" +
-              "Query was: "+query +
-              "\nOffending item was: "+next);
+              "Query was: "+query + "\nOffending item was: "+next);
         }
         if (nextType.equals(entityType)) {
           return true;
