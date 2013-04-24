@@ -354,7 +354,7 @@ public class MongoToGephiExporter {
 
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
-    logger.log(Level.INFO, "Inspecting Entanglement node which has a constructed Gephi node id of {1}",
+    logger.log(Level.INFO, "Parsing Entanglement node with a constructed Gephi node id of {0}",
         gephiNode.getNodeData().getId());
 
     // assign values from the names attribute to the gephi node in the appropriate location.
@@ -490,8 +490,8 @@ public class MongoToGephiExporter {
      */
     logger.log(Level.INFO, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
     iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, directedGraph, graphModel, attributeModel);
-//    logger.log(Level.INFO, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
-//    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
+    logger.log(Level.INFO, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
+    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
   }
 
   /**
@@ -530,11 +530,13 @@ public class MongoToGephiExporter {
       if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
+        logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
         org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
         if (gephiEdge != null) {
           directedGraph.addEdge(gephiEdge);
+          logger.log(Level.INFO, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
