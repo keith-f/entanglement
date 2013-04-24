@@ -384,13 +384,13 @@ public class MongoToGephiExporter {
             if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
               if (nestedObj.get(keysAttrName) instanceof Set) {
                 Set names = (Set) nestedObj.get(keysAttrName);
-                logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{keysAttrName, names.toString()});
+                logger.log(Level.INFO, "Value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
                 gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
               }
             } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
               // save the type of the node while we're at it
               type = nestedObj.get(keysAttrName).toString();
-              logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{keysAttrName, type});
+              logger.log(Level.INFO, "Value for attribute {0} is {1}", new String[]{keysAttrName, type});
               AttributeColumn typeColumn;
               // If not already present, save the node type in the list of attributes for that gephi node.
               if (!nodeAttrNameToAttributeCol.containsKey(keysAttrName)) {
@@ -415,10 +415,10 @@ public class MongoToGephiExporter {
             logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
           }
           if (attributeValue.isEmpty()) {
-            logger.log(Level.INFO, "Skipping node attribute '{0}' whose value cannot be resolved to a string", nodeAttrName);
+            logger.log(Level.INFO, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
             continue;
           }
-          logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{nodeAttrName, attributeValue});
+          logger.log(Level.INFO, "Value for attribute {0} is {1}", new String[]{nodeAttrName, attributeValue});
           AttributeColumn attrColumn;
           if (!nodeAttrNameToAttributeCol.containsKey(nodeAttrName)) {
             attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
@@ -559,8 +559,9 @@ public class MongoToGephiExporter {
       //      ]
       //    }
 
-      DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
-      if (currentNodeObject != null) {
+      if (nodeDao.existsByKey(opposingNodeKeys)) {
+        DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
+//      if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
 
