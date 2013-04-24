@@ -352,21 +352,10 @@ public class MongoToGephiExporter {
       throws DbObjectMarshallerException {
 
 
-    org.gephi.graph.api.Node gephiNode = null;
-
     // create the gephi node object after creating a unique identifier using available key attributes.
-
-    for (String nodeAttrName : nodeObject.keySet()) {
-      if (nodeAttrName.equals("_id")) {
-        logger.log(Level.INFO, "Inspecting Entanglement node with _id {0}", nodeObject.get(nodeAttrName).toString());
-        gephiNode = graphModel.factory().newNode(nodeObject.get(nodeAttrName).toString());
-        break;
-      }
-    }
-    if (gephiNode == null) {
-      System.err.println("No identifier found for node when converting to Gephi project file.");
-      return gephiNode;
-    }
+    org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
+    logger.log(Level.INFO, "Inspecting Entanglement node {0} which has Gephi node id {1}",
+        new String[]{nodeObject.toString(), Integer.toString(gephiNode.getId())});
 
     // assign values from the names attribute to the gephi node in the appropriate location.
     String type = "";
