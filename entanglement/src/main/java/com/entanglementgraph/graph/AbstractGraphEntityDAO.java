@@ -334,16 +334,40 @@ abstract public class AbstractGraphEntityDAO
   }
   
   @Override
-  public BasicDBObject getByAnyName(String type, Set<String> entityNames)
+  public BasicDBObject getByAnyName(String entityType, Set<String> entityNames)
       throws GraphModelException
   {
     DBObject query = buildAnyNameQuery(entityNames);
     try {
-      BasicDBObject obj = (BasicDBObject)  col.findOne(query);
-      return obj;
+      DBCursor result = col.find(query);
+      /*
+       * The 'result' object above contains any MongoDB documents that match one or more of the specified entityNames.
+       * However, we don't yet know if any of these documents have a 'keys.type' value that matches 'entityType'. This
+       * is because there currently appears to be a Mongo bug that means querying compound indexes containing arrays is
+       * really slow.
+       *
+       */
+      for (DBObject next : result) {
+        //FIXME at some point, find out why this doesn't work (where FIELD_KEYS_TYPE == "keys.type") ...
+//        String nextType = (String) next.get(FIELD_KEYS_TYPE);
+        //FIXME ... and why this does.
+        String nextType = (String) ((BasicDBObject)next.get("keys")).get("type");
+
+        if (nextType == null) {
+          throw new GraphModelException("When performing a query with one or more entity names, one or more of the " +
+              "result items had a entity type of NULL. Your dataset therefore inconsistent, since an entity type is " +
+              "required when specifying one or more entity names.\n" +
+              "Query was: "+query + "\nOffending item was: "+next);
+        }
+        if (nextType.equals(entityType)) {
+          return (BasicDBObject) next;
+        }
+      }
+      return null;
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform database operation. Query was: "+query, e);
+      throw new GraphModelException("Failed to perform database operation:\n"
+          + "Query: "+query, e);
     }
   }
 
@@ -403,7 +427,13 @@ abstract public class AbstractGraphEntityDAO
     DBObject fields = new BasicDBObject(FIELD_KEYS_TYPE, 1);
     try {
       DBCursor result = col.find(query, fields);
-
+      /*
+       * The 'result' object above contains any MongoDB documents that match one or more of the specified entityNames.
+       * However, we don't yet know if any of these documents have a 'keys.type' value that matches 'entityType'. This
+       * is because there currently appears to be a Mongo bug that means querying compound indexes containing arrays is
+       * really slow.
+       *
+       */
       for (DBObject next : result) {
         //FIXME at some point, find out why this doesn't work (where FIELD_KEYS_TYPE == "keys.type") ...
 //        String nextType = (String) next.get(FIELD_KEYS_TYPE);
