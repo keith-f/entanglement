@@ -27,7 +27,6 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -90,26 +89,26 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * EntityKeys may contain either UIDs, a unique combination of type and name, or both. This method ensures
-   * that something sensible, and unique, is returned.
+   * This method will create an id appropriate to a gephi node from the Entanglement object,
+   * so there is no need to deserialize.
    *
-   * @param keyset the EntityKey to examine
-   * @return an appropriate string for that EntityKey
+   * @param object the entanglement object to examine
+   * @return an appropriate *unique* string for that object
    */
-  private static String keysetToId(EntityKeys keyset) {
-    if (!keyset.getUids().isEmpty()) {
-      Set<String> uids = keyset.getUids();
-      return uids.iterator().next();
+  private static String keysetToId(DBObject object) {
+
+    if (!((BasicDBList) ((BasicDBObject) object.get("keys")).get("uids")).isEmpty()) {
+      // just return the first UID.
+      return (String) ((BasicDBList) ((BasicDBObject) object.get("keys")).get("uids")).iterator().next();
     }
 
-    if (!keyset.getNames().isEmpty() && !keyset.getType().isEmpty()) {
-      Set<String> names = keyset.getNames();
-      return keyset.getType() + ": " + names.iterator().next();
+    if (!((BasicDBList) ((BasicDBObject) object.get("keys")).get("names")).isEmpty() &&
+        !((String) ((BasicDBObject) object.get("keys")).get("type")).isEmpty()) {
+      return (String) ((BasicDBObject) object.get("keys")).get("type") +
+          ((BasicDBList) ((BasicDBObject) object.get("keys")).get("names")).iterator().next();
     }
-
     throw new IllegalArgumentException("An entity must have at least "
-        + "one UID -OR- a suitable type/name combination. Offending keyset was: " + keyset);
-
+        + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + object);
   }
 
   private static Map<String, Color> loadColorMappings(File propFile)
@@ -355,7 +354,8 @@ public class MongoToGephiExporter {
 
     org.gephi.graph.api.Node gephiNode = null;
 
-    // create the gephi node object after finding a value within the _id field.
+    // create the gephi node object after creating a unique identifier using available key attributes.
+
     for (String nodeAttrName : nodeObject.keySet()) {
       if (nodeAttrName.equals("_id")) {
         logger.log(Level.INFO, "Inspecting Entanglement node with _id {0}", nodeObject.get(nodeAttrName).toString());
@@ -468,8 +468,8 @@ public class MongoToGephiExporter {
       return null;
     }
 
-    String fromId = keysetToId(MongoUtils.parseKeyset(marshaller, fromObj));
-    String toId = keysetToId(MongoUtils.parseKeyset(marshaller, toObj));
+    String fromId = keysetToId(fromObj);
+    String toId = keysetToId(toObj);
     org.gephi.graph.api.Edge gephiEdge = graphModel.factory().newEdge(directedGraph.getNode(fromId), directedGraph.
         getNode(toId), 1f, true);
     gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
