@@ -354,8 +354,8 @@ public class MongoToGephiExporter {
 
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
-    logger.log(Level.INFO, "Inspecting Entanglement node {0} which has Gephi node id {1}",
-        new String[]{nodeObject.toString(), Integer.toString(gephiNode.getId())});
+    logger.log(Level.INFO, "Inspecting Entanglement node which has a constructed Gephi node id of {1}",
+        gephiNode.getNodeData().getId());
 
     // assign values from the names attribute to the gephi node in the appropriate location.
     String type = "";
@@ -488,8 +488,10 @@ public class MongoToGephiExporter {
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
+    logger.log(Level.INFO, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
     iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, directedGraph, graphModel, attributeModel);
-    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
+//    logger.log(Level.INFO, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
+//    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
   }
 
   /**
@@ -511,39 +513,21 @@ public class MongoToGephiExporter {
                             DirectedGraph directedGraph, GraphModel graphModel,
                             AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
 
-    if (iterateOverOutgoing) {
-      logger.log(Level.INFO, "Iterating over outgoing edges.");
-    } else {
-      logger.log(Level.INFO, "Iterating over incoming edges.");
-    }
-
-
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found edge with keys {0}", currentEdge.getKeys().toString());
+      logger.log(Level.INFO, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
+          currentEdge.getKeys().getUids().toString()});
 
       EntityKeys opposingNodeKeys = currentEdge.getFrom();
       if (iterateOverOutgoing) {
         opposingNodeKeys = currentEdge.getTo();
       }
-      logger.log(Level.INFO, "Found opposing node on edge with keys {0}", opposingNodeKeys.toString());
+      logger.log(Level.INFO, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to
-      // "nodeDao.existsByKey(opposingNodeKeys)" isn't working, in that the node exists, but this value returns false
-      // for, e.g., the keys returned for
-      // > db.integration_test_allyson_trunk_edges.find({"keys.uids" : "20884c22585e487db74098569d8962e2"}).pretty()
-      // "to" : {
-      //      "type" : "Chromosome",
-      //          "uids" : [ ],
-      //      "names" : [
-      //      "16"
-      //      ]
-      //    }
-
-      if (nodeDao.existsByKey(opposingNodeKeys)) {
-        DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
-//      if (currentNodeObject != null) {
+      DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
+      if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
 
@@ -554,7 +538,9 @@ public class MongoToGephiExporter {
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
-        logger.log(Level.INFO, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(), currentNode.getKeys().toString()});
+        logger.log(Level.INFO, "Edge {0} links to node {1}",
+            new String[]{currentEdge.getKeys().getUids().iterator().next().toString(),
+                currentNode.getKeys().getUids().iterator().next().toString()});
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
