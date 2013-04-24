@@ -360,6 +360,7 @@ public class MongoToGephiExporter {
     // create the gephi node object after finding a value within the _id field.
     for (String nodeAttrName : nodeObject.keySet()) {
       if (nodeAttrName.equals("_id")) {
+        logger.log(Level.INFO, "Inspecting Entanglement node with _id {0}", nodeObject.get(nodeAttrName).toString());
         gephiNode = graphModel.factory().newNode(nodeObject.get(nodeAttrName).toString());
         break;
       }
@@ -369,9 +370,10 @@ public class MongoToGephiExporter {
       return gephiNode;
     }
 
-    // assign values from the names attribute to the gephi node in the appropriate location (the label).
+    // assign values from the names attribute to the gephi node in the appropriate location.
     String type = "";
     for (String nodeAttrName : nodeObject.keySet()) {
+      // Parse the nested values within keys
       if (nodeAttrName.equals(NodeDAO.FIELD_KEYS)) {
         // the value for the node attributes is never written as "keys.names", for example. It is just written
         // as "keys" and then you have to drill down further. Here, the result of a get() call is a DBObject
@@ -386,17 +388,50 @@ public class MongoToGephiExporter {
           } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
             // save the type of the node while we're at it
             type = nestedObj.get(keysAttrName).toString();
-            // save the node type in the list of attributes for that gephi node.
             logger.log(Level.INFO, "Attribute name is {0}, value is {1}", new String[]{keysAttrName, type});
-            AttributeColumn typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
-            nodeAttrNameToAttributeCol.put(nodeAttrName, typeColumn);
+            AttributeColumn typeColumn;
+            // If not already present, save the node type in the list of attributes for that gephi node.
+            if (!nodeAttrNameToAttributeCol.containsKey(keysAttrName)) {
+              typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
+              nodeAttrNameToAttributeCol.put(keysAttrName, typeColumn);
+            } else {
+              typeColumn = nodeAttrNameToAttributeCol.get(nodeAttrName);
+            }
             gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
           }
         }
-        break;
+      } else {
+        // Now parse all node attributes which are not FIELD_KEYS, specifically those which are not nested.
+        Object attributeValueObj = nodeObject.get(nodeAttrName);
+        String attributeValue = "";
+        // For two simple types, just convert to String in preparation for loading into the Gephi node.
+        if (attributeValueObj instanceof BasicDBList || attributeValueObj instanceof BasicDBObject) {
+          attributeValue = attributeValueObj.toString();
+          logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
+        }
+        if (attributeValue.isEmpty()) {
+          logger.log(Level.INFO, "Skipping node attribute {0} which cannot be resolved to a string", nodeAttrName);
+          continue;
+        }
+        AttributeColumn attrColumn;
+        if (!nodeAttrNameToAttributeCol.containsKey(nodeAttrName)) {
+          attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
+          nodeAttrNameToAttributeCol.put(nodeAttrName, attrColumn);
+        } else {
+          attrColumn = nodeAttrNameToAttributeCol.get(nodeAttrName);
+        }
+        logger.log(Level.INFO, "nodeAttrName: " + nodeAttrName + ", val: " + attributeValue + ", type: " + attributeValueObj.getClass().getName());
+        logger.log(Level.INFO, "attrCol: " + attrColumn.getIndex());
+        System.out.println("Gephi node: " + gephiNode);
+        System.out.println("Node data: " + gephiNode.getNodeData());
+        System.out.println("Attributes: " + gephiNode.getNodeData().
+            getAttributes());
+        // Now set the attribute's value on this gephi node
+        gephiNode.getNodeData().getAttributes().setValue(attrColumn.getIndex(), attributeValue);
       }
     }
-    // if you couldn't find a name, fill with the id instead
+
+    // Now that all parsing is complete, if you couldn't find a name, fill with the id instead
     if (gephiNode.getNodeData().getLabel() == null) {
       gephiNode.getNodeData().setLabel(((Integer) gephiNode.getId()).toString());
     }
@@ -415,48 +450,6 @@ public class MongoToGephiExporter {
 //      gephiNode.getNodeData().setColor(nodeColour.getRed(), nodeColour.
 //              getGreen(), nodeColour.getBlue());
 //            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.getIndex(), node.getType() );
-
-
-    // now we move on to all other attributes present in the node.
-    // Please note that this for loop will only parse non-nested values, as nested values would mean that val would
-    // be of the type DBObject: instead they currently only get listed under a single attribute with the title
-    // of the nested attribute name, e.g. for node attr name "keys" you might get:
-    // Val: { "type" : "Gene" , "uids" : [ "c0a2653570834d7aba00e9ab9551fae1"] , "names" : [ "MEOX2"]}
-    for (String nodeAttrName : nodeObject.keySet()) {
-
-      Object val = nodeObject.get(nodeAttrName);
-      if (nodeAttrName.equals("_id")) {
-        continue; // ignore as have already set these values.
-      }
-      if (val instanceof BasicDBList) {
-        val = val.toString();
-      } else if (val instanceof BasicDBObject) {
-        logger.info("Replacing value of type BasicDBObject with String.");
-        val = val.toString();
-      }
-      if (val == null) {
-        logger.log(Level.INFO, "Skipping node attribute with null value: {0}", nodeAttrName);
-        continue;
-      }
-      AttributeColumn attrCol = nodeAttrNameToAttributeCol.get(
-          nodeAttrName);
-      if (attrCol == null) {
-        attrCol = attributeModel.getNodeTable().addColumn(
-            nodeAttrName, AttributeType.parse(val));
-        nodeAttrNameToAttributeCol.put(nodeAttrName, attrCol);
-      }
-//        logger.info("nodeAttrName: " + nodeAttrName + ", val: " + val + ", type: " + val.getClass().getName());
-//        logger.info("attrCol: " + attrCol);
-      System.out.println("Gephi node: " + gephiNode);
-      System.out.println("Node data: " + gephiNode.getNodeData());
-      System.out.println("Attributes: " + gephiNode.getNodeData().
-          getAttributes());
-      System.out.println("Attributes col: " + attrCol.getIndex());
-      System.out.println("Node attr name: " + nodeAttrName);
-      System.out.println("Val: " + val);
-      System.out.println("Val type: " + val.getClass().getName());
-      gephiNode.getNodeData().getAttributes().setValue(attrCol.getIndex(), val);
-    }
 
     return gephiNode;
 
