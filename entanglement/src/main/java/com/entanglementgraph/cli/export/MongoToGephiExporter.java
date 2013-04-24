@@ -387,6 +387,7 @@ public class MongoToGephiExporter {
             // save the type of the node while we're at it
             type = nestedObj.get(keysAttrName).toString();
             // save the node type in the list of attributes for that gephi node.
+            logger.log(Level.INFO, "Attribute name is {0}, value is {1}", new String[]{keysAttrName, type});
             AttributeColumn typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
             nodeAttrNameToAttributeCol.put(nodeAttrName, typeColumn);
             gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
@@ -430,15 +431,11 @@ public class MongoToGephiExporter {
       if (val instanceof BasicDBList) {
         val = val.toString();
       } else if (val instanceof BasicDBObject) {
-        logger.
-            info(
-                "Replacing value of type BasicDBObject with String.");
+        logger.info("Replacing value of type BasicDBObject with String.");
         val = val.toString();
       }
       if (val == null) {
-        logger.log(Level.INFO,
-            "Skipping node attribute with null value: {0}",
-            nodeAttrName);
+        logger.log(Level.INFO, "Skipping node attribute with null value: {0}", nodeAttrName);
         continue;
       }
       AttributeColumn attrCol = nodeAttrNameToAttributeCol.get(
@@ -535,7 +532,7 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.FINE, "Found edge with id {0}", currentEdge.getKeys().toString());
+      logger.log(Level.INFO, "Found edge with id {0}", currentEdge.getKeys().toString());
 
       EntityKeys opposingNodeKeys = currentEdge.getFrom();
       if (iterateOverOutgoing) {
@@ -555,20 +552,20 @@ public class MongoToGephiExporter {
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
-        logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(), currentNode.getKeys().toString()});
+        logger.log(Level.INFO, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(), currentNode.getKeys().toString()});
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
          * further edges.
          */
         if (stopTypes.contains(currentNode.getKeys().getType())) {
-          logger.log(Level.FINE, "Stopping at node of type {0}", currentNode.getKeys().getType());
+          logger.log(Level.INFO, "Stopping at node of type {0}", currentNode.getKeys().getType());
           continue;
         }
-        logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
+        logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
         addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
       } else {
-        logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
+        logger.log(Level.INFO, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }
     }
 
