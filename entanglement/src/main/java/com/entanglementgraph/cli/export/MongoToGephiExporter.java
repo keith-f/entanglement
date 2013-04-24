@@ -383,12 +383,13 @@ public class MongoToGephiExporter {
           if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
             if (nestedObj.get(keysAttrName) instanceof Set) {
               Set names = (Set) nestedObj.get(keysAttrName);
+              logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{keysAttrName, names.toString()});
               gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
             }
           } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
             // save the type of the node while we're at it
             type = nestedObj.get(keysAttrName).toString();
-            logger.log(Level.INFO, "Attribute name is {0}, value is {1}", new String[]{keysAttrName, type});
+            logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{keysAttrName, type});
             AttributeColumn typeColumn;
             // If not already present, save the node type in the list of attributes for that gephi node.
             if (!nodeAttrNameToAttributeCol.containsKey(keysAttrName)) {
@@ -400,6 +401,8 @@ public class MongoToGephiExporter {
             gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
           }
         }
+      } else if (nodeAttrName.equals("_id")) {
+        continue; // we have already parsed the id value. Continue not required but makes the logic explicit
       } else {
         // Now parse all node attributes which are not FIELD_KEYS, specifically those which are not nested.
         Object attributeValueObj = nodeObject.get(nodeAttrName);
@@ -410,9 +413,10 @@ public class MongoToGephiExporter {
           logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
         }
         if (attributeValue.isEmpty()) {
-          logger.log(Level.INFO, "Skipping node attribute {0} which cannot be resolved to a string", nodeAttrName);
+          logger.log(Level.INFO, "Skipping node attribute '{0}' whose value cannot be resolved to a string", nodeAttrName);
           continue;
         }
+        logger.log(Level.INFO, "Value for attribute '{0}' is {1}", new String[]{nodeAttrName, attributeValue});
         AttributeColumn attrColumn;
         if (!nodeAttrNameToAttributeCol.containsKey(nodeAttrName)) {
           attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
@@ -420,7 +424,6 @@ public class MongoToGephiExporter {
         } else {
           attrColumn = nodeAttrNameToAttributeCol.get(nodeAttrName);
         }
-        logger.log(Level.INFO, "nodeAttrName: " + nodeAttrName + ", val: " + attributeValue + ", type: " + attributeValueObj.getClass().getName());
         logger.log(Level.INFO, "attrCol: " + attrColumn.getIndex());
         System.out.println("Gephi node: " + gephiNode);
         System.out.println("Node data: " + gephiNode.getNodeData());
@@ -522,19 +525,39 @@ public class MongoToGephiExporter {
   private void iterateEdges(Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
                             DirectedGraph directedGraph, GraphModel graphModel,
                             AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
+
+    if (iterateOverOutgoing) {
+      logger.log(Level.INFO, "Iterating over outgoing edges.");
+    } else {
+      logger.log(Level.INFO, "Iterating over incoming edges.");
+    }
+
+
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found edge with id {0}", currentEdge.getKeys().toString());
+      logger.log(Level.INFO, "Found edge with keys {0}", currentEdge.getKeys().toString());
 
       EntityKeys opposingNodeKeys = currentEdge.getFrom();
       if (iterateOverOutgoing) {
         opposingNodeKeys = currentEdge.getTo();
       }
+      logger.log(Level.INFO, "Found opposing node on edge with keys {0}", opposingNodeKeys.toString());
 
       // add the node that the current edge is pointing to
-      if (nodeDao.existsByKey(opposingNodeKeys)) {
-        DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
+      // "nodeDao.existsByKey(opposingNodeKeys)" isn't working, in that the node exists, but this value returns false
+      // for, e.g., the keys returned for
+      // > db.integration_test_allyson_trunk_edges.find({"keys.uids" : "20884c22585e487db74098569d8962e2"}).pretty()
+      // "to" : {
+      //      "type" : "Chromosome",
+      //          "uids" : [ ],
+      //      "names" : [
+      //      "16"
+      //      ]
+      //    }
+
+      DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
+      if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
         directedGraph.addNode(gNode);
 
@@ -552,7 +575,7 @@ public class MongoToGephiExporter {
          * further edges.
          */
         if (stopTypes.contains(currentNode.getKeys().getType())) {
-          logger.log(Level.INFO, "Stopping at node of type {0}", currentNode.getKeys().getType());
+          logger.log(Level.INFO, "Stopping at pre-defined stop node of type {0}", currentNode.getKeys().getType());
           continue;
         }
         logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
