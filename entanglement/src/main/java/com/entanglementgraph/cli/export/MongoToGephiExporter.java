@@ -379,7 +379,6 @@ public class MongoToGephiExporter {
 
     // retrieve the appropriate color based on provided color mappings.
     Color nodeColour = DEFAULT_COLOR;
-//    System.out.println("Type: " + type + ", custom color: " + colorMapping.get(type));
     if (colorMapping.containsKey(type)) {
       nodeColour = colorMapping.get(type);
     }
