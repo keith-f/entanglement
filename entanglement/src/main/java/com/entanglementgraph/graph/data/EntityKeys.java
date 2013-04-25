@@ -38,7 +38,16 @@ public class EntityKeys<E>
     List<DBObject> indexes = new ArrayList<>(3);
     indexes.add(new BasicDBObject(String.format("%s.uids", prefix), 1));
     indexes.add(new BasicDBObject(String.format("%s.names", prefix), 1));
-    indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1).append(String.format("%s.names", prefix), 1));
+    indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1));
+
+    //Note that if both of the following indexes are present, MongoDB queries run *really* slowly (lots of scans)
+    //indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1).append(String.format("%s.names", prefix), 1));
+    //indexes.add(new BasicDBObject(String.format("%s.names", prefix), 1).append(String.format("%s.type", prefix), 1));
+    /*
+     * ^^^ Disabling the above for the moment, since a compound index doesn't really give us much advantage here anyway.
+     * For current datasets, names are sufficiently unique that only a few objects are scanned. We can make do with
+     * just the 'names' index only.
+     */
     return indexes;
   }
 
