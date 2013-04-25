@@ -51,10 +51,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +68,7 @@ public class MongoToGephiExporter {
   private final NodeDAO nodeDao;
   private final EdgeDAO edgeDao;
   private Map<String, Color> colorMapping;
+  private HashSet<String> investigatedEdges;
 
   /**
    * @param conn           set up node and edge DAOs
@@ -86,6 +84,7 @@ public class MongoToGephiExporter {
     }
     this.nodeDao = conn.getNodeDao();
     this.edgeDao = conn.getEdgeDao();
+    this.investigatedEdges = new HashSet<>();
   }
 
   /**
@@ -280,11 +279,9 @@ public class MongoToGephiExporter {
    * @throws IOException
    * @throws GraphModelException
    * @throws RevisionLogException
-   * @throws DbObjectMarshallerException
    */
   public void exportAll(File outputFile)
-      throws IOException, GraphModelException, RevisionLogException,
-      DbObjectMarshallerException {
+      throws IOException, GraphModelException, RevisionLogException {
 
     // Init a gephi project - and therefore a workspace
     ProjectController pc = Lookup.getDefault().lookup(
@@ -348,8 +345,7 @@ public class MongoToGephiExporter {
 
   public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
                                                         GraphModel graphModel,
-                                                        AttributeModel attributeModel)
-      throws DbObjectMarshallerException {
+                                                        AttributeModel attributeModel) {
 
 
     // create the gephi node object after creating a unique identifier using available key attributes.
@@ -426,7 +422,7 @@ public class MongoToGephiExporter {
 
     // retrieve the appropriate color based on provided color mappings.
     Color nodeColour = DEFAULT_COLOR;
-    System.out.println("Type: " + type + ", custom color: " + colorMapping.get(type));
+//    System.out.println("Type: " + type + ", custom color: " + colorMapping.get(type));
     if (colorMapping.containsKey(type)) {
       nodeColour = colorMapping.get(type);
     }
@@ -443,9 +439,21 @@ public class MongoToGephiExporter {
 
   }
 
+  /**
+   * Adds "from", "to", and an appropriate label to a new Gephi edge based on the Entanglement edge. Note that
+   * currently the entanglement edge UIDs are not saved in Gephi, as Gephi does not have a specific place to
+   * store such an ID. If it turns out we wish to store this as a standard edge attribute, this functionality can
+   * easily be added.
+   *
+   * @param edge          the Entanglement edge to process
+   * @param graphModel    the graph model to retrieve the Gephi factory from
+   * @param directedGraph the DirectedGraph which already contains the nodes on either side of the new Gephi edge
+   * @return the new Gephi edge
+   * @throws GraphModelException if there is a problem retrieving the from/to nodes from Entanglement
+   */
   private org.gephi.graph.api.Edge parseEntanglementEdge(Edge edge,
                                                          GraphModel graphModel, DirectedGraph directedGraph) throws
-      GraphModelException, DbObjectMarshallerException {
+      GraphModelException {
 
     BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
     BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
@@ -518,6 +526,13 @@ public class MongoToGephiExporter {
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       logger.log(Level.INFO, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
           currentEdge.getKeys().getUids().toString()});
+      // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
+      if (investigatedEdges.containsAll(currentEdge.getKeys().getUids())) {
+        logger.log(Level.INFO, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
+        continue;
+      } else {
+        investigatedEdges.addAll(currentEdge.getKeys().getUids());
+      }
 
       EntityKeys opposingNodeKeys = currentEdge.getFrom();
       if (iterateOverOutgoing) {
