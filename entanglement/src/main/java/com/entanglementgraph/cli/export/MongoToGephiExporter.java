@@ -366,11 +366,6 @@ public class MongoToGephiExporter {
           if ((attrColumn = attributeModel.getNodeTable().getColumn(nodeAttrName)) == null) {
             attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
           }
-          logger.log(Level.INFO, "attrCol: " + attrColumn.getIndex());
-          System.out.println("Gephi node: " + gephiNode);
-          System.out.println("Node data: " + gephiNode.getNodeData());
-          System.out.println("Attributes: " + gephiNode.getNodeData().
-              getAttributes());
           // Now set the attribute's value on this gephi node
           gephiNode.getNodeData().getAttributes().setValue(attrColumn.getIndex(), attributeValue);
           break;
