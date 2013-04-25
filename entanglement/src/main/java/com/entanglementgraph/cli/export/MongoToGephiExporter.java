@@ -353,10 +353,10 @@ public class MongoToGephiExporter {
           Object attributeValueObj = nodeObject.get(nodeAttrName);
           String attributeValue = "";
           // For two simple types, just convert to String in preparation for loading into the Gephi node.
-          if (attributeValueObj instanceof BasicDBList || attributeValueObj instanceof BasicDBObject) {
-            attributeValue = attributeValueObj.toString();
-            logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
-          }
+//          if (attributeValueObj instanceof BasicDBList || attributeValueObj instanceof BasicDBObject) {
+          attributeValue = attributeValueObj.toString();
+          logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
+//          }
           if (attributeValue.isEmpty()) {
             logger.log(Level.INFO, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
             continue;
