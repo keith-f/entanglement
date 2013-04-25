@@ -43,8 +43,6 @@ import org.gephi.graph.api.DirectedGraph;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.io.exporter.api.ExportController;
-import org.gephi.project.api.ProjectController;
-import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -69,8 +67,6 @@ public class MongoToGephiExporter {
   private final EdgeDAO edgeDao;
   private Map<String, Color> colorMapping;
   private HashSet<String> investigatedEdges;
-  private ProjectController pc;
-  private Workspace workspace;
   private GraphModel graphModel;
   private DirectedGraph directedGraph;
 
@@ -91,10 +87,6 @@ public class MongoToGephiExporter {
     this.edgeDao = conn.getEdgeDao();
     this.investigatedEdges = new HashSet<>();
 
-    // Init a project - and therefore a workspace
-    this.pc = Lookup.getDefault().lookup(ProjectController.class);
-    this.pc.newProject();
-    this.workspace = this.pc.getCurrentWorkspace();
     // Get a graph model - it exists because we have a workspace
     this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
 
@@ -188,6 +180,7 @@ public class MongoToGephiExporter {
     return nodeTypeToColour;
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public DirectedGraph getDirectedGraph() {
     return directedGraph;
   }
