@@ -548,7 +548,7 @@ public class MongoToGephiExporter {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
 
         // this node may have been added previously
-        if (!directedGraph.contains(gNode)) {
+        if (directedGraph.getNode(gNode.getNodeData().getId()) == null) {
           directedGraph.addNode(gNode);
           logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
         } else {
