@@ -527,6 +527,8 @@ public class MongoToGephiExporter {
       logger.log(Level.INFO, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
           currentEdge.getKeys().getUids().toString()});
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
+      // we want to do this before we start parsing entanglement nodes and edges, which is why
+      // directedGraph.contains(Edge) isn't being used.
       if (investigatedEdges.containsAll(currentEdge.getKeys().getUids())) {
         logger.log(Level.INFO, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
         continue;
@@ -540,12 +542,18 @@ public class MongoToGephiExporter {
       }
       logger.log(Level.INFO, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
-      // add the node that the current edge is pointing to
+      // add the node that the current edge is pointing to, if it hasn't already been added.
       DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
       if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
-        directedGraph.addNode(gNode);
-        logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
+
+        // this node may have been added previously
+        if (!directedGraph.contains(gNode)) {
+          directedGraph.addNode(gNode);
+          logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
+        } else {
+          logger.log(Level.INFO, "Gephi node {0} already present. Skipping.", gNode.getNodeData().getId());
+        }
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
         org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
