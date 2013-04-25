@@ -69,6 +69,11 @@ public class MongoToGephiExporter {
   private final EdgeDAO edgeDao;
   private Map<String, Color> colorMapping;
   private HashSet<String> investigatedEdges;
+  private ProjectController pc;
+  private Workspace workspace;
+  private GraphModel graphModel;
+  private DirectedGraph directedGraph;
+
 
   /**
    * @param conn           set up node and edge DAOs
@@ -85,6 +90,16 @@ public class MongoToGephiExporter {
     this.nodeDao = conn.getNodeDao();
     this.edgeDao = conn.getEdgeDao();
     this.investigatedEdges = new HashSet<>();
+
+    // Init a project - and therefore a workspace
+    this.pc = Lookup.getDefault().lookup(ProjectController.class);
+    this.pc.newProject();
+    this.workspace = this.pc.getCurrentWorkspace();
+    // Get a graph model - it exists because we have a workspace
+    this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
+
+    // Create a directed graph based on this graph model
+    this.directedGraph = graphModel.getDirectedGraph();
   }
 
   /**
@@ -188,21 +203,7 @@ public class MongoToGephiExporter {
                              File outputFile) throws GraphModelException,
       DbObjectMarshallerException, IOException {
 
-    // We need to have our own gephi workspace prepared in this method in order to have something to store the
-    // incoming GraphModel.
-
-    // Init a gephi project - and therefore a workspace
-    ProjectController pc = Lookup.getDefault().lookup(
-        ProjectController.class);
-    pc.newProject();
-
-    // Gephi tutorials suggest having the line below, even if not used...
-    Workspace workspace = pc.getCurrentWorkspace();
-    GraphModel graphModel = exportSubgraph(nodeUid, stopTypes);
-    if (graphModel == null) {
-      return;
-    }
-    workspace.add(graphModel);
+    exportSubgraph(nodeUid, stopTypes);
 
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to GEXF. See url below for details:
@@ -211,11 +212,15 @@ public class MongoToGephiExporter {
     DynamicModel dynamicModel = Lookup.getDefault().lookup(
         DynamicController.class).getModel();
 
-    // Export full graph in GEXF format
-    ExportController ec = Lookup.getDefault().
-        lookup(ExportController.class);
+    //Export full graph
+    ExportController ec = Lookup.getDefault().lookup(ExportController.class);
+    try {
+      ec.exportFile(outputFile);
+    } catch (IOException ex) {
+      ex.printStackTrace();
+      return;
+    }
     System.out.println(outputFile.getAbsoluteFile());
-    ec.exportFile(outputFile);
 
   }
 
@@ -225,28 +230,12 @@ public class MongoToGephiExporter {
    * "stop" node of one the types provided.
    *
    * @param nodeUid   The id to begin the subgraph with
-   * @param stopTypes a list of node types which will stop the progression of
-   *                  the query
-   * @return the GraphModel containing the subgraph requested, or null if not found.
+   * @param stopTypes a list of node types which will stop the progression of the query
    */
-  public GraphModel exportSubgraph(String nodeUid,
-                                   Set<String> stopTypes) throws GraphModelException,
+  public void exportSubgraph(String nodeUid,
+                             Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
-    // Init a gephi project - and therefore a workspace
-    ProjectController pc = Lookup.getDefault().lookup(
-        ProjectController.class);
-    pc.newProject();
-    // Gephi tutorials suggest having the line below, even if not used...
-    //noinspection UnusedDeclaration
-    Workspace workspace = pc.getCurrentWorkspace();
-
-    // Get a graph model - it exists because we have a workspace
-    GraphModel graphModel = Lookup.getDefault().lookup(
-        GraphController.class).getModel();
-
-    // Create a directed graph based on this graph model
-    DirectedGraph directedGraph = graphModel.getDirectedGraph();
     // Add column for node type
     AttributeController ac = Lookup.getDefault().
         lookup(AttributeController.class);
@@ -256,19 +245,17 @@ public class MongoToGephiExporter {
     BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with Uid {0} found in database.", nodeUid);
-      return null;
+      return;
     }
-    directedGraph.addNode(parseEntanglementNode(coreNode, graphModel, attributeModel));
+    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
 
     // Export subgraph into gephi directed graph
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodes(coreAriesNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
+    addChildNodes(coreAriesNode.getKeys(), stopTypes, attributeModel);
 
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
         new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
-
-    return graphModel;
 
   }
 
@@ -283,34 +270,13 @@ public class MongoToGephiExporter {
   public void exportAll(File outputFile)
       throws IOException, GraphModelException, RevisionLogException {
 
-    // Init a gephi project - and therefore a workspace
-    ProjectController pc = Lookup.getDefault().lookup(
-        ProjectController.class);
-    pc.newProject();
-    // Gephi tutorials suggest having the line below, even if not used...
-    //noinspection UnusedDeclaration
-    Workspace workspace = pc.getCurrentWorkspace();
-
-    // Get a graph model - it exists because we have a workspace
-    GraphModel graphModel = Lookup.getDefault().lookup(
-        GraphController.class).getModel();
-
-    // Create a directed graph based on this graph model
-    DirectedGraph directedGraph = graphModel.getDirectedGraph();
-    // Add column for node type
     AttributeController ac = Lookup.getDefault().
         lookup(AttributeController.class);
     AttributeModel attributeModel = ac.getModel();
 
-
-//        AttributeColumn nodeTypeCol = attributeModel.getNodeTable().addColumn(
-//                "nodeType",
-//                AttributeType.STRING );
-
-
     // Create Gephi nodes
     for (DBObject node : nodeDao.iterateAll()) {
-      directedGraph.addNode(parseEntanglementNode(node, graphModel, attributeModel));
+      directedGraph.addNode(parseEntanglementNode(node, attributeModel));
     }
 
     // Create Gephi edges; currently with a standard weight of 1
@@ -318,7 +284,7 @@ public class MongoToGephiExporter {
     Iterable<Edge> edgeItr = new DeserialisingIterable<>(
         edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
-      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(edge, graphModel, directedGraph);
+      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(edge);
       if (gephiEdge != null) {
         directedGraph.addEdge(gephiEdge);
       }
@@ -344,7 +310,6 @@ public class MongoToGephiExporter {
   }
 
   public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
-                                                        GraphModel graphModel,
                                                         AttributeModel attributeModel) {
 
 
@@ -445,14 +410,11 @@ public class MongoToGephiExporter {
    * store such an ID. If it turns out we wish to store this as a standard edge attribute, this functionality can
    * easily be added.
    *
-   * @param edge          the Entanglement edge to process
-   * @param graphModel    the graph model to retrieve the Gephi factory from
-   * @param directedGraph the DirectedGraph which already contains the nodes on either side of the new Gephi edge
+   * @param edge the Entanglement edge to process
    * @return the new Gephi edge
    * @throws GraphModelException if there is a problem retrieving the from/to nodes from Entanglement
    */
-  private org.gephi.graph.api.Edge parseEntanglementEdge(Edge edge,
-                                                         GraphModel graphModel, DirectedGraph directedGraph) throws
+  private org.gephi.graph.api.Edge parseEntanglementEdge(Edge edge) throws
       GraphModelException {
 
     BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
@@ -481,14 +443,11 @@ public class MongoToGephiExporter {
    *
    * @param parentKeys     the EntityKeys which define the node to start at
    * @param stopTypes      the node types which determine where a subgraph should stop
-   * @param directedGraph  the Gephi directed graph to add nodes and edges to
-   * @param graphModel     the graph model to use when creating new edges and nodes
    * @param attributeModel helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
   private void addChildNodes(EntityKeys parentKeys, Set<String> stopTypes,
-                             DirectedGraph directedGraph, GraphModel graphModel,
                              AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
 
@@ -497,9 +456,9 @@ public class MongoToGephiExporter {
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
     logger.log(Level.INFO, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
-    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, directedGraph, graphModel, attributeModel);
+    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
     logger.log(Level.INFO, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
-    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, directedGraph, graphModel, attributeModel);
+    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
   }
 
   /**
@@ -511,14 +470,11 @@ public class MongoToGephiExporter {
    *                            retrieved via getTo(). If false, the iterator is looking at incoming edges, and
    *                            so the opposing node is retrieved via getFrom().
    * @param stopTypes           the node types which determine where a subgraph should stop
-   * @param directedGraph       the Gephi directed graph to add nodes and edges to
-   * @param graphModel          the graph model to use when creating new edges and nodes
    * @param attributeModel      helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
-                            DirectedGraph directedGraph, GraphModel graphModel,
                             AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
 
     for (DBObject obj : edgeIterator) {
@@ -545,7 +501,7 @@ public class MongoToGephiExporter {
       // add the node that the current edge is pointing to, if it hasn't already been added.
       DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
       if (currentNodeObject != null) {
-        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
+        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
 
         // this node may have been added previously. If it has been, then we know that we may actually be in
         // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
@@ -560,7 +516,7 @@ public class MongoToGephiExporter {
         }
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge, graphModel, directedGraph);
+        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge);
         if (gephiEdge != null) {
           directedGraph.addEdge(gephiEdge);
           logger.log(Level.INFO, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
@@ -580,7 +536,7 @@ public class MongoToGephiExporter {
           continue;
         }
         logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
-        addChildNodes(currentNode.getKeys(), stopTypes, directedGraph, graphModel, attributeModel);
+        addChildNodes(currentNode.getKeys(), stopTypes, attributeModel);
       } else {
         logger.log(Level.INFO, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }
