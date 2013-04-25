@@ -188,6 +188,10 @@ public class MongoToGephiExporter {
     return nodeTypeToColour;
   }
 
+  public DirectedGraph getDirectedGraph() {
+    return directedGraph;
+  }
+
   /**
    * Export a subgraph to a file rather than to a Gephi GraphModel. Will call
    * the GraphModel version of exportSubgraph().
