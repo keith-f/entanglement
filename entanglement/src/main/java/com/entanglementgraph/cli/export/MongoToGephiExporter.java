@@ -547,12 +547,16 @@ public class MongoToGephiExporter {
       if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, graphModel, attributeModel);
 
-        // this node may have been added previously
+        // this node may have been added previously. If it has been, then we know that we may actually be in
+        // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
+        // don't add the current edge, and move on to the next one without investigating further children.
         if (directedGraph.getNode(gNode.getNodeData().getId()) == null) {
           directedGraph.addNode(gNode);
           logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
         } else {
-          logger.log(Level.INFO, "Gephi node {0} already present. Skipping.", gNode.getNodeData().getId());
+          logger.log(Level.INFO, "Gephi node {0} already present. Skipping entire edge and node addition.",
+              gNode.getNodeData().getId());
+          continue;
         }
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
