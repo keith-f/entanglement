@@ -68,42 +68,4 @@ public class MongoUtils {
     return keyset;
   }
 
-  /**
-   * We can't go from a <code>DeserialisingIterable</code> which returns an EntityKeys over some parameterised type
-   * without compile errors. Eg the following will fail:
-   * <pre>
-   * return DeserialisingIterable<EntityKeys<Message>> (new DeserialisingIterable<>(cursor, marshaller, EntityKeys.class);
-   * </pre>
-   *
-   * The solution is to create another Iterable that casts each object as it is returned, as below.
-   * @param iterable
-   * @param <T>
-   * @return
-   */
-  public static <T> Iterable<EntityKeys<T>> wrapEntityKeysIterable(final Iterable<EntityKeys> iterable) {
-    return new Iterable<EntityKeys<T>>() {
-      final Iterator<EntityKeys> dbItr = iterable.iterator();
-      @Override
-      public Iterator<EntityKeys<T>> iterator() {
-        return new Iterator<EntityKeys<T>>() {
-
-          @Override
-          public boolean hasNext() {
-            return dbItr.hasNext();
-          }
-
-          @Override
-          public EntityKeys<T> next() {
-            return (EntityKeys<T>) dbItr.next();
-          }
-
-          @Override
-          public void remove() {
-            dbItr.remove();
-          }
-        };
-      }
-    };
-  }
-
 }
