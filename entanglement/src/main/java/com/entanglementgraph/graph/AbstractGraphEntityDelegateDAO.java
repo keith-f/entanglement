@@ -43,7 +43,7 @@ import java.util.Set;
 abstract public class AbstractGraphEntityDelegateDAO
     implements GraphEntityDAO
 {
-  private final GraphEntityDAO delegate;
+  protected final GraphEntityDAO delegate;
 
   public AbstractGraphEntityDelegateDAO(GraphEntityDAO delegate) {
     this.delegate = delegate;
