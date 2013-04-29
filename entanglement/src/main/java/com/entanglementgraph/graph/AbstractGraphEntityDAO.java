@@ -570,7 +570,7 @@ abstract public class AbstractGraphEntityDAO
     DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
     try {
       DBCursor cursor = col.find(query, keys, offset, limit);
-      return new KeyExtractingIterable<>(cursor, FIELD_KEYS, EntityKeys.class);
+      return new KeyExtractingIterable<>(cursor, marshaller, FIELD_KEYS, EntityKeys.class);
     }
     catch(Exception e) {
       throw new GraphModelException(
