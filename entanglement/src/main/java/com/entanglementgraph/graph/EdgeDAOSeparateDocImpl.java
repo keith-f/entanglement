@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.entanglementgraph.util.MongoUtils.list;
+import static com.entanglementgraph.graph.EdgeQueries.*;
 
 /**
  *
@@ -76,129 +76,6 @@ public class EdgeDAOSeparateDocImpl
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
     }
-  }
-
-  /**
-   * Graph entities can be uniquely identified either by one of their UID strings, or by their type combined with one
-   * of their names. Edge queries involving both the 'from' and 'to' nodes must therefore perform several database
-   * queries in order to ensure that all appropriate edge documents are found. These are:
-   * <ul>
-   *   <li>from (uid) + to (uid)</li>
-   *   <li>from (uid) + to (type+name)</li>
-   *   <li>from (type+name) + to (uid)</li>
-   *   <li>from (type+name) + to (type+name)</li>
-   * </ul>
-   *
-   * Helpfully, MongoDB provides the <code>$or</code> operator. Not only does this operator get around the usual
-   * limit of one index per query, but each part of the 'or' operation executes in parallel.
-   *
-   * This method constructs a query along the lines of the following, which can be used to query the edges between two
-   * nodes with all possible graph entity addressing combinations:
-   * <pre>
-   * $or: [ { from.uids: AAA, to.uids: BBB }, { from.names: YYY, from.type: ZZZ, to.names: WWW, to.type : XXX }, ..., ... ]
-   * </pre>
-   *
-   * @return
-   */
-  private DBObject buildFromToNodeQuery(EntityKeys from, EntityKeys to) {
-    DBObject query = new BasicDBObject();
-
-    //The outer '$or':
-    BasicDBList or = new BasicDBList();
-    query.put("$or", or);
-
-    or.add(buildFromUidToUidQuery(from, to));
-    or.add(buildFromUidToNameQuery(from, to));
-    or.add(buildFromNameToUidQuery(from, to));
-    or.add(buildFromNameToNameQuery(from, to));
-
-    return query;
-  }
-
-  /**
-   * There are two ways to address a graph entity - by UID or by type+name. This method builds a query that returns
-   * edges starting at a specified <code>from</code> node, using either identification method. MongoDB executes
-   * both parts of this $or query in parallel.
-   *
-   * @param from
-   * @return
-   */
-  private DBObject buildFromNodeQuery(EntityKeys from) {
-    DBObject query = new BasicDBObject();
-
-    DBObject uidQuery = new BasicDBObject();
-    uidQuery.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
-
-    DBObject nameQuery = new BasicDBObject();
-    nameQuery.put(FIELD_FROM_KEYS_NAMES, new BasicDBObject("$in", list(from.getNames())));
-    nameQuery.put(FIELD_FROM_KEYS_TYPE, from.getType());
-
-    //The outer '$or':
-    BasicDBList or = new BasicDBList();
-    query.put("$or", or);
-    or.add(uidQuery);
-    or.add(nameQuery);
-
-    return query;
-  }
-
-  /**
-   * There are two ways to address a graph entity - by UID or by type+name. This method builds a query that returns
-   * edges ending at a specified <code>to</code> node, using either identification method. MongoDB executes
-   * both parts of this $or query in parallel.
-   *
-   * @param to
-   * @return
-   */
-  private DBObject buildToNodeQuery(EntityKeys to) {
-    DBObject query = new BasicDBObject();
-
-    DBObject uidQuery = new BasicDBObject();
-    uidQuery.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
-
-    DBObject nameQuery = new BasicDBObject();
-    nameQuery.put(FIELD_TO_KEYS_NAMES, new BasicDBObject("$in", list(to.getNames())));
-    nameQuery.put(FIELD_TO_KEYS_TYPE, to.getType());
-
-    //The outer '$or':
-    BasicDBList or = new BasicDBList();
-    query.put("$or", or);
-    or.add(uidQuery);
-    or.add(nameQuery);
-
-    return query;
-  }
-
-  private DBObject buildFromUidToUidQuery(EntityKeys from, EntityKeys to)  {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
-    return query;
-  }
-
-  private DBObject buildFromUidToNameQuery(EntityKeys from, EntityKeys to) {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
-    query.put(FIELD_TO_KEYS_NAMES, new BasicDBObject("$in", list(to.getNames())));
-    query.put(FIELD_TO_KEYS_TYPE, to.getType());
-    return query;
-  }
-
-  private DBObject buildFromNameToUidQuery(EntityKeys from, EntityKeys to) {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_NAMES, new BasicDBObject("$in", list(from.getNames())));
-    query.put(FIELD_FROM_KEYS_TYPE, from.getType());
-    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
-    return query;
-  }
-
-  private DBObject buildFromNameToNameQuery(EntityKeys from, EntityKeys to) {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_FROM_KEYS_NAMES, new BasicDBObject("$in", list(from.getNames())));
-    query.put(FIELD_FROM_KEYS_TYPE, from.getType());
-    query.put(FIELD_TO_KEYS_NAMES, new BasicDBObject("$in", list(to.getNames())));
-    query.put(FIELD_TO_KEYS_TYPE, to.getType());
-    return query;
   }
 
 
