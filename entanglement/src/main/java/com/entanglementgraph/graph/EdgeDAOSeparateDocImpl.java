@@ -80,8 +80,7 @@ public class EdgeDAOSeparateDocImpl
 
 
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(
-      String edgeType, EntityKeys from, EntityKeys to)
+  public Iterable<DBObject> iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException {
     // Build a query to find edges between nodes, regardless of whether UID or type+name is used.
     DBObject query = buildFromToNodeQuery(from, to);
@@ -135,6 +134,23 @@ public class EdgeDAOSeparateDocImpl
       throws GraphModelException {
     logger.log(Level.INFO, "Iterating edges ending at node: {0}", new Object[]{to});
     DBObject query = buildToNodeQuery(to);
+    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+
+    try {
+      final DBCursor cursor = col.find(query);
+      return cursor;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
+    }
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
+      throws GraphModelException {
+    logger.log(Level.INFO, "Iterating edges of type {0} ending at node: {1}", new Object[]{edgeType, to});
+    DBObject query = buildToNodeQuery(to);
+    //Add a restriction on the type of edge returned
+    query.put(FIELD_KEYS_TYPE, edgeType);
     logger.log(Level.INFO, "Query: {0}", new Object[]{query});
 
     try {

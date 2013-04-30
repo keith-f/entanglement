@@ -75,6 +75,11 @@ import java.util.Set;
   }
 
   @Override
+  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
+    return delegate.iterateEdgesToNode(edgeType, to);
+  }
+
+  @Override
   public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType) throws GraphModelException {
     return delegate.existsEdgeToNodeOfType(from, toNodeType);
   }

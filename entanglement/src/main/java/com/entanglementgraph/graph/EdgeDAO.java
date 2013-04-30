@@ -101,6 +101,16 @@ public interface EdgeDAO
       throws GraphModelException;
 
   /**
+   * Given a node, returns an Iterable over all the incoming edges to that node, of the specified <code>edgeType</code>.
+   * @param edgeType
+   * @param to
+   * @return
+   * @throws GraphModelException
+   */
+  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
+      throws GraphModelException;
+
+  /**
    * Returns true if there exists at least one edge between the specified node,
    * and any node of type <code>toNodeType</code>.
    *
