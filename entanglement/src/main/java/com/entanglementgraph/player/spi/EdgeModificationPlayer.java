@@ -107,7 +107,7 @@ public class EdgeModificationPlayer
       createOrModify(reqKeyset);
 
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to play command", e);
+      throw new LogPlayerException("Failed to play command: "+item.toString(), e);
     }
   }
 
