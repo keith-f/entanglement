@@ -43,6 +43,8 @@ import org.gephi.graph.api.DirectedGraph;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.io.exporter.api.ExportController;
+import org.gephi.project.api.ProjectController;
+import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -87,8 +89,14 @@ public class MongoToGephiExporter {
     this.edgeDao = conn.getEdgeDao();
     this.investigatedEdges = new HashSet<>();
 
+    //Init a project - and therefore a workspace
+    ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+    pc.newProject();
+    Workspace workspace = pc.getCurrentWorkspace();
+
     // Get a graph model - it exists because we have a workspace
     this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
+    System.out.println("GraphModel: "+graphModel);
 
     // Create a directed graph based on this graph model
     this.directedGraph = graphModel.getDirectedGraph();
