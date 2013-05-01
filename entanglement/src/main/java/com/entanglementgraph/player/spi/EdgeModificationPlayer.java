@@ -117,11 +117,12 @@ public class EdgeModificationPlayer
    */
   private static void validateKeyset(EntityKeys keyset) throws LogPlayerException {
     if (keyset.getNames().isEmpty() && keyset.getUids().isEmpty()) {
-      throw new LogPlayerException("You must specify at least one entity key (either a UID, or a type/name");
+      throw new LogPlayerException("You must specify at least one entity key (either a UID, or a type/name. " +
+          "Keyset was: "+keyset);
     }
     if (!keyset.getNames().isEmpty() && keyset.getType() == null) {
       throw new LogPlayerException("You specified one or more entity names, but did not specify a type. " +
-          "Names were: "+keyset.getNames());
+          "Keyset was: "+keyset);
     }
   }
 
