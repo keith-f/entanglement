@@ -116,7 +116,7 @@ public class NodeModificationPlayer
       createOrModify(command, reqSerializedNode, reqKeyset);
 
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to play command", e);
+      throw new LogPlayerException("Failed to play command: "+item.toString(), e);
     }
   }
 
@@ -176,11 +176,12 @@ public class NodeModificationPlayer
    */
   private void validateKeyset(EntityKeys keyset) throws LogPlayerException {
     if (keyset.getNames().isEmpty() && keyset.getUids().isEmpty()) {
-      throw new LogPlayerException("You must specify at least one entity key (either a UID, or a type/name");
+      throw new LogPlayerException("You must specify at least one entity key (either a UID, or a type/name"
+          + "Keyset was: "+keyset);
     }
     if (!keyset.getNames().isEmpty() && keyset.getType() == null) {
-      throw new LogPlayerException("You specified one or more entity names, but did not specify a type. " +
-          "Names were: "+keyset.getNames());
+      throw new LogPlayerException("You specified one or more entity names, but did not specify a type. "
+          + "Keyset was: "+keyset);
     }
   }
 
