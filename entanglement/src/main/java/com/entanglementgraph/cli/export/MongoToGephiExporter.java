@@ -64,13 +64,14 @@ public class MongoToGephiExporter {
 
   private static Workspace workspace;
 
-  private static synchronized void initialiseWorkspace() {
+  public static synchronized Workspace getWorkspace() {
     //Init a project - and therefore a workspace. This must only be done once per JVM
     if (workspace == null) {
       ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
       pc.newProject();
       workspace = pc.getCurrentWorkspace();
     }
+    return workspace;
   }
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
@@ -101,11 +102,11 @@ public class MongoToGephiExporter {
     this.investigatedEdges = new HashSet<>();
 
     // Ensure that we have a Gephi Workspace
-    initialiseWorkspace();
+    getWorkspace();
 
     // Get a graph model - it exists because we have a workspace
     this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
-    System.out.println("GraphModel: "+graphModel);
+    System.out.println("GraphModel: " + graphModel);
 
     // Create a directed graph based on this graph model
     this.directedGraph = graphModel.getDirectedGraph();
@@ -551,5 +552,4 @@ public class MongoToGephiExporter {
     }
 
   }
-
 }
