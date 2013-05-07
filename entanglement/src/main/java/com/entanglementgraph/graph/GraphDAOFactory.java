@@ -22,35 +22,28 @@ import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 
 /**
- *
  * @author Keith Flanagan
  */
-public class GraphDAOFactory
-{
-  public static NodeDAO createDefaultNodeDAO(ClassLoader classLoader, Mongo m, DB db, 
-          DBCollection nodeCol, DBCollection edgeCol)
-  {
-    NodeDAO nodeDao = new NodeDAONodePerDocImpl(classLoader, m, db, nodeCol);
-    return nodeDao;
+public class GraphDAOFactory {
+  public static NodeDAO createDefaultNodeDAO(ClassLoader classLoader, Mongo m, DB db,
+                                             DBCollection nodeCol) {
+    return new NodeDAONodePerDocImpl(classLoader, m, db, nodeCol);
   }
-  
-  public static EdgeDAO createDefaultEdgeDAO(ClassLoader classLoader, 
-          Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
-  {
-    return createSeparateDocImplEdgeDAO(classLoader, m, db, nodeCol, edgeCol);
+
+  public static EdgeDAO createDefaultEdgeDAO(ClassLoader classLoader,
+                                             Mongo m, DB db, DBCollection edgeCol) {
+    return createSeparateDocImplEdgeDAO(classLoader, m, db, edgeCol);
   }
-  
+
 //  public static EdgeDAO createAttachementImplEdgeDAO(Mongo m, DB db, DBCollection edgeCol)
 //  {
 //    EdgeDAO edgeDao = new EdgeDAOAttachToNodeDocImpl(m, db, edgeCol);
 //    return edgeDao;
 //  }
-  
-  
-  public static EdgeDAO createSeparateDocImplEdgeDAO(ClassLoader classLoader, 
-          Mongo m, DB db, DBCollection nodeCol, DBCollection edgeCol)
-  {
-    EdgeDAO edgeDao = new EdgeDAOSeparateDocImpl(classLoader, m, db, nodeCol, edgeCol);
-    return edgeDao;
+
+
+  public static EdgeDAO createSeparateDocImplEdgeDAO(ClassLoader classLoader,
+                                                     Mongo m, DB db, DBCollection edgeCol) {
+    return new EdgeDAOSeparateDocImpl(classLoader, m, db, edgeCol);
   }
 }
