@@ -179,7 +179,7 @@
         <dependency>
             <groupId>org.gephi</groupId>
             <artifactId>gephi-toolkit</artifactId>
-            <version>0.8.2</version>
+            <version>0.9-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
