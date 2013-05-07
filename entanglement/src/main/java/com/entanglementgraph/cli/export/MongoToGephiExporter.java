@@ -60,8 +60,19 @@ import java.util.logging.Logger;
  */
 public class MongoToGephiExporter {
 
-  private static final Logger logger = Logger.
-      getLogger(MongoGraphToGephi.class.getName());
+  private static final Logger logger = Logger.getLogger(MongoGraphToGephi.class.getName());
+
+  private static Workspace workspace;
+
+  private static synchronized void initialiseWorkspace() {
+    //Init a project - and therefore a workspace. This must only be done once per JVM
+    if (workspace == null) {
+      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+      pc.newProject();
+      workspace = pc.getCurrentWorkspace();
+    }
+  }
+
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToGephiExporter.class.getClassLoader());
@@ -89,10 +100,8 @@ public class MongoToGephiExporter {
     this.edgeDao = conn.getEdgeDao();
     this.investigatedEdges = new HashSet<>();
 
-    //Init a project - and therefore a workspace
-    ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
-    pc.newProject();
-    Workspace workspace = pc.getCurrentWorkspace();
+    // Ensure that we have a Gephi Workspace
+    initialiseWorkspace();
 
     // Get a graph model - it exists because we have a workspace
     this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
