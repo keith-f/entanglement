@@ -214,18 +214,18 @@ public class MongoToGephiExporter {
   /**
    * Export a subgraph to a file rather just populating the Gephi graph.
    *
-   * @param nodeUid    The id to begin the subgraph with
+   * @param entityKey  The EntityKey to begin the subgraph with
    * @param stopTypes  a list of node types which will stop the progression of
    *                   the query
    * @param outputFile the file to export the subgraph to
    */
   @SuppressWarnings("UnusedDeclaration")
-  public void exportSubgraph(String nodeUid,
+  public void exportSubgraph(EntityKeys entityKey,
                              Set<String> stopTypes,
                              File outputFile) throws GraphModelException,
       DbObjectMarshallerException, IOException {
 
-    buildSubgraph(nodeUid, stopTypes);
+    buildSubgraph(entityKey, stopTypes);
 
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to GEXF. See url below for details:
@@ -253,10 +253,10 @@ public class MongoToGephiExporter {
    * <p/>
    * The subgraph is stored in the class variable directedGraph.
    *
-   * @param nodeUid   The id to begin the subgraph with
+   * @param entityKey The entity key set to begin the subgraph with
    * @param stopTypes a list of node types which will stop the progression of the query
    */
-  public void buildSubgraph(String nodeUid,
+  public void buildSubgraph(EntityKeys entityKey,
                             Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
@@ -264,11 +264,13 @@ public class MongoToGephiExporter {
     AttributeController ac = Lookup.getDefault().
         lookup(AttributeController.class);
     AttributeModel attributeModel = ac.getModel();
+    // ensure the current graph is empty
+    directedGraph.clear();
 
     // Start with the core node
-    BasicDBObject coreNode = nodeDao.getByUid(nodeUid);
+    BasicDBObject coreNode = nodeDao.getByKey(entityKey);
     if (coreNode == null) {
-      logger.log(Level.WARNING, "No node with Uid {0} found in database.", nodeUid);
+      logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return;
     }
     directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
@@ -566,5 +568,10 @@ public class MongoToGephiExporter {
       }
     }
 
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public NodeDAO getNodeDao() {
+    return nodeDao;
   }
 }
