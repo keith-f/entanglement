@@ -51,6 +51,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,7 +104,15 @@ public class MongoToGephiExporter {
     if (colorPropsFile != null) {
       this.colorMapping.putAll(loadColorMappings(colorPropsFile));
     } else {
-      this.colorMapping = new HashMap<>();
+      // use the default mappings found in the resources within this project
+      try {
+        this.colorMapping.putAll(loadColorMappings(
+            new File(MongoToGephiExporter.class.getResource("color.properties").toURI())));
+      } catch (URISyntaxException e) {
+        // if cannot be loaded, issue a notice but continue;
+        logger.log(Level.INFO, "Default color properties file not loaded");
+        this.colorMapping = new HashMap<>();
+      }
 
     }
     this.nodeDao = conn.getNodeDao();
