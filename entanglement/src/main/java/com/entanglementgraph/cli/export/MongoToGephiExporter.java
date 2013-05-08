@@ -104,11 +104,12 @@ public class MongoToGephiExporter {
       this.colorMapping.putAll(loadColorMappings(colorPropsFile));
     } else {
       // use the default mappings found in the resources within this project
-      this.colorMapping.putAll(loadColorMappings(
-          new File(MongoToGephiExporter.class.getResource("color.properties").getFile())));
+      File aaa = new File(MongoToGephiExporter.class.getResource("color.properties").getFile());
+      System.err.println("file: " + aaa.toString());
+      this.colorMapping.putAll(loadColorMappings(aaa));
       // if cannot be loaded, issue a notice but continue;
-      logger.log(Level.INFO, "Default color properties file not loaded");
-      this.colorMapping = new HashMap<>();
+//      logger.log(Level.INFO, "Default color properties file not loaded");
+//      this.colorMapping = new HashMap<>();
 
     }
     this.nodeDao = conn.getNodeDao();
