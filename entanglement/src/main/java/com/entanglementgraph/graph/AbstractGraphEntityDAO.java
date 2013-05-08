@@ -569,7 +569,8 @@ abstract public class AbstractGraphEntityDAO
     query.put(FIELD_KEYS_TYPE, typeName);
     DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
     try {
-      DBCursor cursor = col.find(query, keys, offset, limit);
+      //DBCursor cursor = col.find(query, keys, offset, limit);
+      DBCursor cursor = col.find(query, keys).skip(offset).limit(limit);
       return new KeyExtractingIterable<>(cursor, marshaller, FIELD_KEYS, EntityKeys.class);
     }
     catch(Exception e) {
