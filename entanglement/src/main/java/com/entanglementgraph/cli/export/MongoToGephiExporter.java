@@ -255,9 +255,10 @@ public class MongoToGephiExporter {
    *
    * @param entityKey The entity key set to begin the subgraph with
    * @param stopTypes a list of node types which will stop the progression of the query
+   * @return true if a node with the given EntityKey was found, false otherwise.
    */
-  public void buildSubgraph(EntityKeys entityKey,
-                            Set<String> stopTypes) throws GraphModelException,
+  public boolean buildSubgraph(EntityKeys entityKey,
+                               Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
     // Add column for node type
@@ -271,7 +272,7 @@ public class MongoToGephiExporter {
     BasicDBObject coreNode = nodeDao.getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
-      return;
+      return false;
     }
     directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
 
@@ -282,6 +283,8 @@ public class MongoToGephiExporter {
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
         new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
+
+    return true;
 
   }
 
