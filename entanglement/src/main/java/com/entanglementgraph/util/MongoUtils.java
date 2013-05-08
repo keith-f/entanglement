@@ -25,6 +25,7 @@ import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
+import javax.lang.model.type.PrimitiveType;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -49,7 +50,13 @@ public class MongoUtils {
     return list;
   }
 
-  public static BasicDBList list(Collection<String> items) {
+//  public static BasicDBList list(Collection<String> items) {
+//    BasicDBList list = new BasicDBList();
+//    list.addAll(items);
+//    return list;
+//  }
+
+  public static BasicDBList list(Collection items) {
     BasicDBList list = new BasicDBList();
     list.addAll(items);
     return list;
