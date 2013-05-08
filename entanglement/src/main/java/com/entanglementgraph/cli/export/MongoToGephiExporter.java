@@ -64,13 +64,23 @@ public class MongoToGephiExporter {
 
   private static Workspace workspace;
 
-  private static synchronized void initialiseWorkspace() {
+  /**
+   * There have been problems with Gephi exports where more than one workspace was initialized. In such cases,
+   * it can sometimes be difficult to find which workspace has your graph. To solve this, the following static
+   * method should be used to retrieve a single workspace which can be used from both within this class and within
+   * calling methods. When using this class in your own code, please use this workspace instead of instatiating your
+   * own.
+   *
+   * @return a single workspace where the requested graphs are made.
+   */
+  public static synchronized Workspace getWorkspace() {
     //Init a project - and therefore a workspace. This must only be done once per JVM
     if (workspace == null) {
       ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
       pc.newProject();
       workspace = pc.getCurrentWorkspace();
     }
+    return workspace;
   }
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
@@ -101,11 +111,10 @@ public class MongoToGephiExporter {
     this.investigatedEdges = new HashSet<>();
 
     // Ensure that we have a Gephi Workspace
-    initialiseWorkspace();
+    getWorkspace();
 
     // Get a graph model - it exists because we have a workspace
     this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
-    System.out.println("GraphModel: "+graphModel);
 
     // Create a directed graph based on this graph model
     this.directedGraph = graphModel.getDirectedGraph();
@@ -203,8 +212,7 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * Export a subgraph to a file rather than to a Gephi GraphModel. Will call
-   * the GraphModel version of exportSubgraph().
+   * Export a subgraph to a file rather just populating the Gephi graph.
    *
    * @param nodeUid    The id to begin the subgraph with
    * @param stopTypes  a list of node types which will stop the progression of
@@ -217,7 +225,7 @@ public class MongoToGephiExporter {
                              File outputFile) throws GraphModelException,
       DbObjectMarshallerException, IOException {
 
-    exportSubgraph(nodeUid, stopTypes);
+    buildSubgraph(nodeUid, stopTypes);
 
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to GEXF. See url below for details:
@@ -234,20 +242,22 @@ public class MongoToGephiExporter {
       ex.printStackTrace();
       return;
     }
-    System.out.println(outputFile.getAbsoluteFile());
+    logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
 
   }
 
   /**
-   * Export a subgraph (as a Gephi object) associated with the node which has a Uid matching that
+   * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
    * provided. It will continue exploring all edges irrespective of directionality until reaching a
    * "stop" node of one the types provided.
+   * <p/>
+   * The subgraph is stored in the class variable directedGraph.
    *
    * @param nodeUid   The id to begin the subgraph with
    * @param stopTypes a list of node types which will stop the progression of the query
    */
-  public void exportSubgraph(String nodeUid,
-                             Set<String> stopTypes) throws GraphModelException,
+  public void buildSubgraph(String nodeUid,
+                            Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
     // Add column for node type
@@ -274,7 +284,7 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * Export all nodes and edges in the mongodb graph
+   * Export all nodes and edges in the Entanglement graph to the output file specified.
    *
    * @param outputFile the file to export the graph to
    * @throws IOException
@@ -305,8 +315,8 @@ public class MongoToGephiExporter {
     }
 
     // Print out a summary of the full graph
-    System.out.println("Complete Nodes: " + directedGraph.getNodeCount()
-        + " Complete Edges: " + directedGraph.getEdgeCount());
+    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
+        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
 
     // This line is a hack to get around a weird NullPointerException
     // which crops up when exporting to gexf. See url below for details:
@@ -318,18 +328,26 @@ public class MongoToGephiExporter {
     // Export full graph in GEXF format
     ExportController ec = Lookup.getDefault().
         lookup(ExportController.class);
-    System.out.println(outputFile.getAbsoluteFile());
+    logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
     ec.exportFile(outputFile);
 
   }
 
+  /**
+   * Given a DBObject (which is expected to be a node), parse all attributes of the object and store within a
+   * Gephi node object.
+   *
+   * @param nodeObject     the Entanglement object to parse
+   * @param attributeModel the Gephi AttributeModel to use when adding new column types to Gephi
+   * @return the populated Gephi node
+   */
   public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
                                                         AttributeModel attributeModel) {
 
 
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
-    logger.log(Level.INFO, "Parsing Entanglement node with a constructed Gephi node id of {0}",
+    logger.log(Level.FINE, "Parsing Entanglement node with a constructed Gephi node id of {0}",
         gephiNode.getNodeData().getId());
 
     // assign values from the names attribute to the gephi node in the appropriate location.
@@ -347,13 +365,13 @@ public class MongoToGephiExporter {
             if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
               if (nestedObj.get(keysAttrName) instanceof Set) {
                 Set names = (Set) nestedObj.get(keysAttrName);
-                logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
+                logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
                 gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
               }
             } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
               // save the type of the node while we're at it
               type = nestedObj.get(keysAttrName).toString();
-              logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, type});
+              logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, type});
               AttributeColumn typeColumn;
               // If not already present, save the node type in the list of attributes for that gephi node.
               if ((typeColumn = attributeModel.getNodeTable().getColumn(keysAttrName)) == null) {
@@ -368,17 +386,14 @@ public class MongoToGephiExporter {
         default:
           // Now parse all node attributes which are not FIELD_KEYS, specifically those which are not nested.
           Object attributeValueObj = nodeObject.get(nodeAttrName);
-          String attributeValue = "";
-          // For two simple types, just convert to String in preparation for loading into the Gephi node.
-//          if (attributeValueObj instanceof BasicDBList || attributeValueObj instanceof BasicDBObject) {
-          attributeValue = attributeValueObj.toString();
-          logger.log(Level.INFO, "Converting attribute value object to string: {0}", attributeValue);
-//          }
+          String attributeValue = attributeValueObj.toString();
+          // Just convert to String in preparation for loading into the Gephi node.
+          logger.log(Level.FINE, "Converting attribute value object to string: {0}", attributeValue);
           if (attributeValue.isEmpty()) {
-            logger.log(Level.INFO, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
+            logger.log(Level.FINE, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
             continue;
           }
-          logger.log(Level.INFO, "Value for attribute {0} is {1}", new String[]{nodeAttrName, attributeValue});
+          logger.log(Level.FINE, "Value for attribute {0} is {1}", new String[]{nodeAttrName, attributeValue});
           AttributeColumn attrColumn;
           if ((attrColumn = attributeModel.getNodeTable().getColumn(nodeAttrName)) == null) {
             attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
@@ -430,8 +445,8 @@ public class MongoToGephiExporter {
 
     // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
     if (fromObj == null || toObj == null) {
-      System.out.println("Edge " + edge.getKeys().getUids().iterator().next() + " is hanging and will not be" +
-          "propagated to Gephi.");
+      logger.log(Level.FINE, "Edge {0} is hanging and will not be propagated to Gephi.",
+          edge.getKeys().getUids().iterator().next());
       return null;
     }
 
@@ -446,10 +461,10 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * Adds all edges (irrespective of directionality) and their associated nodes connected to the parent keys until
+   * Adds all child nodes and the edges between them (irrespective of directionality) until
    * there are either no more edges, or until a stop node is reached.
    *
-   * @param parentKeys     the EntityKeys which define the node to start at
+   * @param parentKeys     the EntityKeys which define the node to start at (the parent node)
    * @param stopTypes      the node types which determine where a subgraph should stop
    * @param attributeModel helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
@@ -463,15 +478,15 @@ public class MongoToGephiExporter {
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
-    logger.log(Level.INFO, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
+    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
     iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
-    logger.log(Level.INFO, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
+    logger.log(Level.FINE, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
     iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
   }
 
   /**
-   * Adds all edges associated with the particular Iterable until
-   * there are either no more edges, or until a stop node is reached.
+   * Adds all edges associated with the particular Iterable until there are either no more edges, or until a stop
+   * node is reached.
    *
    * @param edgeIterator        the iterator which define the set of edges to add
    * @param iterateOverOutgoing if true, the iterator is looking at outgoing edges, and so the opposing node is
@@ -488,15 +503,16 @@ public class MongoToGephiExporter {
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
-      logger.log(Level.INFO, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
+      logger.log(Level.FINE, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
           currentEdge.getKeys().getUids().toString()});
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
       // we want to do this before we start parsing entanglement nodes and edges, which is why
       // directedGraph.contains(Edge) isn't being used.
       if (investigatedEdges.containsAll(currentEdge.getKeys().getUids())) {
-        logger.log(Level.INFO, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
+        logger.log(Level.FINE, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
         continue;
       } else {
+        //noinspection unchecked
         investigatedEdges.addAll(currentEdge.getKeys().getUids());
       }
 
@@ -504,7 +520,7 @@ public class MongoToGephiExporter {
       if (iterateOverOutgoing) {
         opposingNodeKeys = currentEdge.getTo();
       }
-      logger.log(Level.INFO, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
+      logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
       DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
@@ -516,9 +532,9 @@ public class MongoToGephiExporter {
         // don't add the current edge, and move on to the next one without investigating further children.
         if (directedGraph.getNode(gNode.getNodeData().getId()) == null) {
           directedGraph.addNode(gNode);
-          logger.log(Level.INFO, "Added node to Gephi: {0}", gNode.getNodeData().getId());
+          logger.log(Level.FINE, "Added node to Gephi: {0}", gNode.getNodeData().getId());
         } else {
-          logger.log(Level.INFO, "Gephi node {0} already present. Skipping entire edge and node addition.",
+          logger.log(Level.FINE, "Gephi node {0} already present. Skipping entire edge and node addition.",
               gNode.getNodeData().getId());
           continue;
         }
@@ -527,11 +543,11 @@ public class MongoToGephiExporter {
         org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge);
         if (gephiEdge != null) {
           directedGraph.addEdge(gephiEdge);
-          logger.log(Level.INFO, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
+          logger.log(Level.FINE, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
-        logger.log(Level.INFO, "Edge {0} links to node {1}",
+        logger.log(Level.FINE, "Edge {0} links to node {1}",
             new String[]{currentEdge.getKeys().getUids().iterator().next().toString(),
                 currentNode.getKeys().getUids().iterator().next().toString()});
         /*
@@ -540,16 +556,15 @@ public class MongoToGephiExporter {
          * further edges.
          */
         if (stopTypes.contains(currentNode.getKeys().getType())) {
-          logger.log(Level.INFO, "Stopping at pre-defined stop node of type {0}", currentNode.getKeys().getType());
+          logger.log(Level.FINE, "Stopping at pre-defined stop node of type {0}", currentNode.getKeys().getType());
           continue;
         }
-        logger.log(Level.INFO, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
+        logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
         addChildNodes(currentNode.getKeys(), stopTypes, attributeModel);
       } else {
-        logger.log(Level.INFO, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
+        logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }
     }
 
   }
-
 }

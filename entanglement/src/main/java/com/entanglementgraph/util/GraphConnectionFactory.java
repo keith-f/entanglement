@@ -17,31 +17,24 @@
 
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.graph.EdgeDAO;
+import com.entanglementgraph.graph.GraphDAOFactory;
+import com.entanglementgraph.graph.NodeDAO;
+import com.entanglementgraph.player.GraphCheckoutNamingScheme;
 import com.entanglementgraph.player.LogPlayer;
 import com.entanglementgraph.player.LogPlayerMongoDbImpl;
+import com.entanglementgraph.revlog.RevisionLog;
+import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.util.experimental.GraphOpPostCommitPlayer;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.torrenttamer.mongodb.MongoDbFactory;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.entanglementgraph.ObjectMarshallerFactory;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.graph.GraphDAOFactory;
-import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.player.GraphCheckoutNamingScheme;
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 
 import java.util.logging.Logger;
 
-/**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 24/02/2013
- * Time: 13:10
- * To change this template use File | Settings | File Templates.
- */
 public class GraphConnectionFactory {
   private static final Logger logger = Logger.getLogger(GraphConnectionFactory.class.getName());
 
@@ -64,7 +57,7 @@ public class GraphConnectionFactory {
 
   public GraphConnection connect(String graphName, String graphBranch) throws GraphConnectionFactoryException {
     try {
-      logger.info("Connecting to: "+hostname+"/"+database+", graph: "+graphName+"/"+graphBranch);
+      logger.info("Connecting to: " + hostname + "/" + database + ", graph: " + graphName + "/" + graphBranch);
 
       GraphConnection connection = new GraphConnection();
 
@@ -85,8 +78,8 @@ public class GraphConnectionFactory {
       GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
       DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
       DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
-      NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol, edgeCol);
-      EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, nodeCol, edgeCol);
+      NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol);
+      EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, edgeCol);
 
       connection.setEdgeDao(edgeDao);
       connection.setNodeDao(nodeDao);
@@ -104,6 +97,7 @@ public class GraphConnectionFactory {
     }
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public static void silentClose(GraphConnection conn) {
     if (conn == null) {
       return;

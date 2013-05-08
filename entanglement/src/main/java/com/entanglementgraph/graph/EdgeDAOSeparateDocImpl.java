@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 import static com.entanglementgraph.graph.EdgeQueries.*;
 
 /**
- *
  * @author Keith Flanagan
  */
 public class EdgeDAOSeparateDocImpl
@@ -50,14 +49,9 @@ public class EdgeDAOSeparateDocImpl
   }
 
 
-  private final DBCollection nodeCol;
-
-
   public EdgeDAOSeparateDocImpl(ClassLoader classLoader, Mongo m, DB db,
-                                DBCollection nodeCol, DBCollection edgeCol) {
+                                DBCollection edgeCol) {
     super(classLoader, m, db, edgeCol);
-
-    this.nodeCol = nodeCol;
 
     //Create indexes
     MongoUtils.createIndexes(edgeCol, buildFromIndexes());
@@ -68,10 +62,9 @@ public class EdgeDAOSeparateDocImpl
   public Iterable<DBObject> iterateEdgesBetweenNodes(EntityKeys from, EntityKeys to)
       throws GraphModelException {
     DBObject query = buildFromToNodeQuery(from, to);
-    logger.log(Level.INFO, "Iterating edges between nodes: {0} --> {1}.\nQuery: {2}", new Object[]{from, to, query});
+    logger.log(Level.FINE, "Iterating edges between nodes: {0} --> {1}.\nQuery: {2}", new Object[]{from, to, query});
     try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
+      return col.find(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -86,12 +79,10 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildFromToNodeQuery(from, to);
     // Also limit by edge type.
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Iterating edges of type {0} between nodes: {1} --> {2}.\nQuery: {3}",
+    logger.log(Level.FINE, "Iterating edges of type {0} between nodes: {1} --> {2}.\nQuery: {3}",
         new Object[]{edgeType, from, to, query});
     try {
-      final DBCursor cursor = col.find(query);
-
-      return cursor;
+      return col.find(query); // this method returns a DBCursor
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -102,12 +93,11 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
       throws GraphModelException {
-    logger.log(Level.INFO, "Iterating edges starting from node: {0}", new Object[]{from});
+    logger.log(Level.FINE, "Iterating edges starting from node: {0}", new Object[]{from});
     DBObject query = buildFromNodeQuery(from);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
+      return col.find(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
@@ -115,14 +105,13 @@ public class EdgeDAOSeparateDocImpl
 
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException {
-    logger.log(Level.INFO, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
+    logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
     DBObject query = buildFromNodeQuery(from);
     //Add a restriction on the type of edge returned
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
+      return col.find(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
@@ -132,13 +121,12 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
       throws GraphModelException {
-    logger.log(Level.INFO, "Iterating edges ending at node: {0}", new Object[]{to});
+    logger.log(Level.FINE, "Iterating edges ending at node: {0}", new Object[]{to});
     DBObject query = buildToNodeQuery(to);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
+      return col.find(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
@@ -147,15 +135,14 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException {
-    logger.log(Level.INFO, "Iterating edges of type {0} ending at node: {1}", new Object[]{edgeType, to});
+    logger.log(Level.FINE, "Iterating edges of type {0} ending at node: {1}", new Object[]{edgeType, to});
     DBObject query = buildToNodeQuery(to);
     //Add a restriction on the type of edge returned
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      final DBCursor cursor = col.find(query);
-      return cursor;
+      return col.find(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
@@ -164,11 +151,11 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType)
       throws GraphModelException {
-    logger.log(Level.INFO, "Finding edges from node: {0}, to any node of type {1}", new Object[]{from, toNodeType});
+    logger.log(Level.FINE, "Finding edges from node: {0}, to any node of type {1}", new Object[]{from, toNodeType});
     DBObject query = buildFromNodeQuery(from);
     //Add a restriction on 'to' node type
     query.put(FIELD_TO_KEYS_TYPE, toNodeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
 //    DBObject query = new BasicDBObject();
 //    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
@@ -187,10 +174,9 @@ public class EdgeDAOSeparateDocImpl
 //    DBObject query = new BasicDBObject();
 //    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
     DBObject query = buildFromNodeQuery(from);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
-      long count = col.count(query);
-      return count;
+      return col.count(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n" + "Query: " + query, e);
     }
@@ -207,11 +193,10 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildFromNodeQuery(from);
     //Add a restriction on the edge type
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      long count = col.count(query);
-      return count;
+      return col.count(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -223,11 +208,10 @@ public class EdgeDAOSeparateDocImpl
   public Long countEdgesToNode(EntityKeys to)
       throws GraphModelException {
     DBObject query = buildToNodeQuery(to);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      long count = col.count(query);
-      return count;
+      return col.count(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -241,11 +225,10 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildToNodeQuery(to);
     //Add a restriction on the edge type
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      long count = col.count(query);
-      return count;
+      return col.count(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -265,11 +248,10 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildFromToNodeQuery(from, to);
     //Add a restriction on the edge type
     query.put(FIELD_KEYS_TYPE, edgeType);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
     try {
-      long count = col.count(query);
-      return count;
+      return col.count(query);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
           + "Query: " + query, e);
@@ -284,7 +266,7 @@ public class EdgeDAOSeparateDocImpl
 //    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
 
     DBObject query = buildFromNodeQuery(from);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
 
     DBObject fields = new BasicDBObject();
@@ -323,7 +305,7 @@ public class EdgeDAOSeparateDocImpl
 //    DBObject query = new BasicDBObject();
 //    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
     DBObject query = buildToNodeQuery(to);
-    logger.log(Level.INFO, "Query: {0}", new Object[]{query});
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
 
     DBObject fields = new BasicDBObject();
