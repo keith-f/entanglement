@@ -95,22 +95,15 @@ public class MongoToGephiExporter {
 
 
   /**
-   * @param conn           set up node and edge DAOs
-   * @param colorPropsFile the optional color mapping for node types
+   * @param conn         set up node and edge DAOs
+   * @param colorMapping the optional color mapping for node types
    */
   public MongoToGephiExporter(GraphConnection conn,
-                              File colorPropsFile) throws IOException {
-    if (colorPropsFile != null) {
-      this.colorMapping.putAll(loadColorMappings(colorPropsFile));
+                              Map<String, Color> colorMapping) throws IOException {
+    if (colorMapping != null) {
+      this.colorMapping = colorMapping;
     } else {
-      // use the default mappings found in the resources within this project
-//      File aaa = new File(MongoToGephiExporter.class.getResource("color.properties").getFile());
-//      System.err.println("file: " + aaa.toString());
-//      this.colorMapping.putAll(loadColorMappings(aaa));
-      // if cannot be loaded, issue a notice but continue;
-//      logger.log(Level.INFO, "Default color properties file not loaded");
       this.colorMapping = new HashMap<>();
-
     }
     this.nodeDao = conn.getNodeDao();
     this.edgeDao = conn.getEdgeDao();
@@ -149,7 +142,8 @@ public class MongoToGephiExporter {
         + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + object);
   }
 
-  private static Map<String, Color> loadColorMappings(File propFile)
+  @SuppressWarnings("UnusedDeclaration")
+  public static Map<String, Color> loadColorMappings(File propFile)
       throws IOException {
     Properties props;
     try (FileInputStream is = new FileInputStream(propFile)) {
