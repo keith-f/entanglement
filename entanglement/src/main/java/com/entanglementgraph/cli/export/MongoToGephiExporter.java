@@ -104,12 +104,12 @@ public class MongoToGephiExporter {
       this.colorMapping.putAll(loadColorMappings(colorPropsFile));
     } else {
       // use the default mappings found in the resources within this project
-      File aaa = new File(MongoToGephiExporter.class.getResource("color.properties").getFile());
-      System.err.println("file: " + aaa.toString());
-      this.colorMapping.putAll(loadColorMappings(aaa));
+//      File aaa = new File(MongoToGephiExporter.class.getResource("color.properties").getFile());
+//      System.err.println("file: " + aaa.toString());
+//      this.colorMapping.putAll(loadColorMappings(aaa));
       // if cannot be loaded, issue a notice but continue;
 //      logger.log(Level.INFO, "Default color properties file not loaded");
-//      this.colorMapping = new HashMap<>();
+      this.colorMapping = new HashMap<>();
 
     }
     this.nodeDao = conn.getNodeDao();
@@ -376,7 +376,7 @@ public class MongoToGephiExporter {
             if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
               if (nestedObj.get(keysAttrName) instanceof Set) {
                 Set names = (Set) nestedObj.get(keysAttrName);
-                logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
+                logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
                 gephiNode.getNodeData().setLabel(names.toString()); //TODO ugly name
               }
             } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
