@@ -376,8 +376,16 @@ public class MongoToGephiExporter {
             if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
               if (nestedObj.get(keysAttrName) instanceof BasicDBList) {
                 BasicDBList list = (BasicDBList) nestedObj.get(keysAttrName);
-                logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, list.toString()});
-                gephiNode.getNodeData().setLabel(list.toString());
+                logger.log(Level.FINE, "Nested value for attribute {0} is {1}",
+                    new String[]{keysAttrName, list.toString()});
+                if (list.size() == 1) {
+                  gephiNode.getNodeData().setLabel((String) list.iterator().next());
+                } else {
+                  gephiNode.getNodeData().setLabel(list.toString());
+                }
+              } else {
+                logger.log(Level.WARNING,
+                    "Nested value for attribute {0} is not a BasicDBList as expected. Not parsing.", keysAttrName);
               }
             } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
               // save the type of the node while we're at it
