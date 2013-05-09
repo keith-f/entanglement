@@ -374,14 +374,10 @@ public class MongoToGephiExporter {
           DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
           for (String keysAttrName : nestedObj.keySet()) {
             if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
-              if (nestedObj.get(keysAttrName) instanceof Set) {
-                Set names = (Set) nestedObj.get(keysAttrName);
-                logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, names.toString()});
-                gephiNode.getNodeData().setLabel(names.toString());
-              } else {
-                // if there is just one gene
-                logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, nestedObj.get(keysAttrName).toString()});
-                gephiNode.getNodeData().setLabel(nestedObj.get(keysAttrName).toString());
+              if (nestedObj.get(keysAttrName) instanceof BasicDBList) {
+                BasicDBList list = (BasicDBList) nestedObj.get(keysAttrName);
+                logger.log(Level.INFO, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, list.toString()});
+                gephiNode.getNodeData().setLabel(list.toString());
               }
             } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
               // save the type of the node while we're at it
