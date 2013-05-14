@@ -35,6 +35,8 @@ import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.util.UidGenerator;
+
+import java.awt.*;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -45,6 +47,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -317,7 +320,8 @@ public class EntanglementShell
       @Param(name="nodeToColorMapping")
       File nodeToColorMapping)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
-    MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, nodeToColorMapping);
+    Map<String, Color> nodeToColors = MongoToGephiExporter.loadColorMappings(nodeToColorMapping);
+    MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, nodeToColors);
     exporter.exportAll(outputFile);
     System.out.println("Done.");
   }
