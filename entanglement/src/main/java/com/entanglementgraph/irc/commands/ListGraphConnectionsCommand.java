@@ -61,7 +61,7 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
       for (Map.Entry<String, GraphConnection> entry : userObject.getGraphConnections().entrySet()) {
         GraphConnection conn = entry.getValue();
         String currentText = current == conn ? CURRENT_GRAPH_TXT : "";
-        msg.println("  %s => hostname: %s; database: %s; graph: %s; branch: %s %s", entry.getKey(),
+        msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
             conn.getMongo().getAddress().getHost(),
             conn.getDb().getName(),
             conn.getGraphName(), conn.getGraphBranch(),

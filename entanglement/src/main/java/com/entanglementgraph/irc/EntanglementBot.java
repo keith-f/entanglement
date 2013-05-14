@@ -18,9 +18,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
-import com.entanglementgraph.irc.commands.ConnectGraphCommand;
-import com.entanglementgraph.irc.commands.ListGraphConnectionsCommand;
-import com.entanglementgraph.irc.commands.UseGraphCommand;
+import com.entanglementgraph.irc.commands.*;
 import com.halfspinsoftware.uibot.GenericIrcBot;
 
 import java.net.InetAddress;
@@ -90,7 +88,11 @@ public class EntanglementBot extends GenericIrcBot {
     this.runtime = runtime;
 
     addCommand("connect-graph", ConnectGraphCommand.class);
+    addCommand("create-node", CreateNodeCommand.class);
+    addCommand("export-gephi", ExportGephiCommand.class);
     addCommand("list-connections", ListGraphConnectionsCommand.class);
+    addCommand("list-nodes", ListNodesCommand.class);
     addCommand("use", UseGraphCommand.class);
+
   }
 }
