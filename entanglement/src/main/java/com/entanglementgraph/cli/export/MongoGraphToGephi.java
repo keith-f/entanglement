@@ -152,7 +152,7 @@ public class MongoGraphToGephi {
 
 
     MongoToGephiExporter exporter = new MongoToGephiExporter(conn,
-        new File(colorPropsFile));
+        MongoToGephiExporter.loadColorMappings(new File(colorPropsFile)));
     exporter.exportAll(new File(outputFilename));
     System.out.println("\n\nDone.");
   }
