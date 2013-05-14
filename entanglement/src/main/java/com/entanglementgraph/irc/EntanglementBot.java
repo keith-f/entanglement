@@ -18,11 +18,12 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.irc.commands.ConnectGraphCommand;
+import com.entanglementgraph.irc.commands.ListGraphConnectionsCommand;
+import com.entanglementgraph.irc.commands.UseGraphCommand;
 import com.halfspinsoftware.uibot.GenericIrcBot;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 
 import java.net.InetAddress;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -66,7 +67,7 @@ public class EntanglementBot extends GenericIrcBot {
     ClassLoader classLoader = EntanglementBot.class.getClassLoader();
     EntanglementRuntime runtime = new EntanglementRuntime(
         classLoader, ObjectMarshallerFactory.create(classLoader));
-    GenericIrcBot bot = new GenericIrcBot(nick, runtime);
+    EntanglementBot bot = new EntanglementBot(nick, runtime);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -88,8 +89,8 @@ public class EntanglementBot extends GenericIrcBot {
     super(nickname, runtime);
     this.runtime = runtime;
 
-//    this.exe = new ScheduledThreadPoolExecutor(10);
-//    classLoader = EntanglementBot.class.getClassLoader();
-//    marshaller = ObjectMarshallerFactory.create(classLoader);
+    addCommand("connect-graph", ConnectGraphCommand.class);
+    addCommand("list-connections", ListGraphConnectionsCommand.class);
+    addCommand("use", UseGraphCommand.class);
   }
 }
