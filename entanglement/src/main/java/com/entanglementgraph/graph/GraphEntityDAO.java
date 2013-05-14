@@ -190,11 +190,13 @@ public interface GraphEntityDAO
   
   public List<String> listTypes()
       throws GraphModelException;
-  
+
+  public Iterable<EntityKeys> iterateKeys(int offset, int limit)
+      throws GraphModelException;
+
   public Iterable<DBObject> iterateByType(String typeName)
       throws GraphModelException;
 
-  //  public Iterable<String> iterateIdsByType(String typeName, int offset, int limit)
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
       throws GraphModelException;
   

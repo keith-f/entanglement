@@ -542,7 +542,24 @@ abstract public class AbstractGraphEntityDAO
           "Failed to perform database operation\n", e);
     }    
   }
-  
+
+  @Override
+  public Iterable<EntityKeys> iterateKeys(int offset, int limit)
+      throws GraphModelException
+  {
+    DBObject query = new BasicDBObject();
+    DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the key subdocument
+    try {
+      DBCursor cursor = col.find(query, keys).skip(offset).limit(limit);
+      return new KeyExtractingIterable<>(cursor, marshaller, FIELD_KEYS, EntityKeys.class);
+    }
+    catch(Exception e) {
+      throw new GraphModelException(
+          "Failed to perform database operation.\nQuery was: "+query, e);
+    }
+  }
+
+
   @Override
   public Iterable<DBObject> iterateByType(String typeName)
       throws GraphModelException
