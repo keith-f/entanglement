@@ -22,11 +22,16 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.OptionalParam;
+import com.halfspinsoftware.uibot.Param;
 import com.halfspinsoftware.uibot.ParamParser;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,21 +45,16 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("Lists edge(s) in the currently active graph.");
-    return txt.toString();
+    return "Lists edge(s) in the currently active graph.";
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("The following key=value parameter pairs are supported:\n");
-    txt.append("  * type=<type name> - Specifies the type of graph entity to display (optional)\n");
-    txt.append("  * offset=<Integer> - Specifies the number of entities to skip (optional)\n");
-    txt.append("  * limit=<Integer> - Specifies the maximum number of entities to display (optional)\n");
-
-    return txt.toString();
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    params.add(new OptionalParam("type", String.class, "Specifies the type of graph entity to display"));
+    params.add(new OptionalParam("offset", Integer.class, "Specifies the number of entities to skip"));
+    params.add(new OptionalParam("limit", Integer.class, "Specifies the maximum number of entities to display"));
+    return params;
   }
 
   @Override
@@ -66,7 +66,7 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
     // The parameters parsed (above) are all optional, so no need to throw a UserException(s) if one or more are null.
 
     GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
+    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     int count = 0;
     try {

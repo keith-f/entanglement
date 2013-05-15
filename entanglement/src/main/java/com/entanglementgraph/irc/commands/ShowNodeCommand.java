@@ -27,7 +27,9 @@ import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.Param;
 import com.halfspinsoftware.uibot.ParamParser;
+import com.halfspinsoftware.uibot.RequiredParam;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
@@ -54,13 +56,11 @@ public class ShowNodeCommand extends AbstractCommand<EntanglementRuntime> {
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("  * type=<name> [The type name of the node to display]\n");
-    txt.append("  * entityName=<name> [A unique name of the node to display]\n");
-
-    return txt.toString();
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    params.add(new RequiredParam("type", String.class, "The type name of the node to display"));
+    params.add(new RequiredParam("entityName", Integer.class, "A unique name of the node to display"));
+    return params;
   }
 
   @Override
@@ -69,11 +69,11 @@ public class ShowNodeCommand extends AbstractCommand<EntanglementRuntime> {
     String type = ParamParser.findStringValueOf(args, "type");
     String entityName = ParamParser.findStringValueOf(args, "entityName");
 
-    if (type == null) throw new UserException("You forgot to specify a entity type.");
-    if (entityName == null) throw new UserException("You forgot to specify a entity name.");
+    if (type == null) throw new UserException(sender, "You forgot to specify a entity type.");
+    if (entityName == null) throw new UserException(sender, "You forgot to specify a entity name.");
 
     GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
+    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
 
     try {

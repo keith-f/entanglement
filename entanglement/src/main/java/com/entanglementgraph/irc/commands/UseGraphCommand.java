@@ -25,11 +25,16 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.Param;
 import com.halfspinsoftware.uibot.ParamParser;
+import com.halfspinsoftware.uibot.RequiredParam;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,18 +48,14 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("Sets the currently active graph connection for shell commands.");
-    return txt.toString();
+    return "Sets the currently active graph connection for shell commands.";
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("  * conn=<name> [The name of the connection that is to be set 'active'.]\n");
-
-    return txt.toString();
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    params.add(new RequiredParam("conn", String.class, "The name of the connection that is to be set 'active'"));
+    return params;
   }
 
   @Override
@@ -62,12 +63,12 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
     String connectionName = ParamParser.findStringValueOf(args, "conn");
 
-    if (connectionName == null) throw new UserException("You forgot to specify a connection name.");
+    if (connectionName == null) throw new UserException(sender, "You forgot to specify a connection name.");
 
     try {
       GraphConnection conn = userObject.getGraphConnections().get(connectionName);
       if (conn == null) {
-        throw new UserException("No graph connection exists with the name: "+connectionName);
+        throw new UserException(sender, "No graph connection exists with the name: "+connectionName);
       }
 
       userObject.setCurrentConnection(conn);

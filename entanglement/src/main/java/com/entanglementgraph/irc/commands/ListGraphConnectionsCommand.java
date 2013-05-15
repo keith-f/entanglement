@@ -20,11 +20,14 @@ package com.entanglementgraph.irc.commands;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.Param;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,18 +43,13 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
 
   @Override
   public String getDescription() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("Lists known graph connections.");
-    return txt.toString();
+    return "Lists known graph connections.";
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("No parameters required.\n");
-
-    return txt.toString();
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    return params;
   }
 
   @Override

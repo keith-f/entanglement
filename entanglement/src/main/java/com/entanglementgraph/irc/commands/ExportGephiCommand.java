@@ -26,6 +26,9 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.OptionalParam;
+import com.halfspinsoftware.uibot.Param;
+import com.halfspinsoftware.uibot.RequiredParam;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
@@ -34,6 +37,8 @@ import com.torrenttamer.mongodb.MongoDbFactoryException;
 import java.awt.*;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,18 +56,16 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("Exports the current graph to Gephi format.");
-    return txt.toString();
+    return "Exports the current graph to Gephi format.";
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("No parameters required.\n");
-
-    return txt.toString();
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
+    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
+    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
+    return params;
   }
 
   @Override
@@ -70,7 +73,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
     Message result = new Message(channel);
 
     GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
+    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     Map<String, Color> colorMappings = parseColoursFromEnvironment();
     bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);

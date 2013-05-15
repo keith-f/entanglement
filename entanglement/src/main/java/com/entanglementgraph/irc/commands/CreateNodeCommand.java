@@ -26,8 +26,7 @@ import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.halfspinsoftware.uibot.Message;
-import com.halfspinsoftware.uibot.ParamParser;
+import com.halfspinsoftware.uibot.*;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
@@ -48,20 +47,17 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("Creates or updates a node in the currently active graph.");
-    return txt.toString();
+    return "Creates or updates a node in the currently active graph.";
   }
 
   @Override
-  public String getHelpText() {
-    StringBuilder txt = new StringBuilder();
-    txt.append("USAGE:\n");
-    txt.append("  * type=<name> [The type name of the node to create/modify]\n");
-    txt.append("  * entityName=<name> [A unique name for the node to create/modify]\n");
-    txt.append("  * { key=value pairs } [(Optional) A set of key=value pairs that will be added to the Node as attributes]\n");
+  public List<Param> getParams() {
+    List<Param> params = new LinkedList<>();
+    params.add(new RequiredParam("type", String.class, "The type name of the node to create/modify"));
+    params.add(new RequiredParam("entityName", String.class, "A unique name for the node to create/modify"));
+    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the node as attributes"));
 
-    return txt.toString();
+    return params;
   }
 
   @Override
@@ -70,12 +66,12 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
     String type = ParamParser.findStringValueOf(args, "type");
     String entityName = ParamParser.findStringValueOf(args, "entityName");
 
-    if (type == null) throw new UserException("You forgot to specify a entity type.");
-    if (entityName == null) throw new UserException("You forgot to specify a entity name.");
+    if (type == null) throw new UserException(sender, "You forgot to specify a entity type.");
+    if (entityName == null) throw new UserException(sender, "You forgot to specify a entity name.");
 
 
     GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
+    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     // Parse annotations
     Map<String, String> attributes = parseAttributes(args);
