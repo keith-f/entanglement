@@ -17,13 +17,14 @@
 
 package com.entanglementgraph.irc.commands;
 
+import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.Message;
@@ -32,7 +33,6 @@ import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
-import com.torrenttamer.util.UidGenerator;
 
 import java.util.*;
 
@@ -43,13 +43,13 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Creates or updates a node in the currently active graph.");
+    txt.append("Creates or updates an edge in the currently active graph.");
     return txt.toString();
   }
 
@@ -57,9 +57,9 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("  * type=<name> [The type name of the node to create/modify]\n");
-    txt.append("  * entityName=<name> [A unique name for the node to create/modify]\n");
-    txt.append("  * { key=value pairs } [(Optional) A set of key=value pairs that will be added to the Node as attributes]\n");
+    txt.append("  * type=<name> [The type name of the edge to create/modify]\n");
+    txt.append("  * entityName=<name> [A unique name for the edge to create/modify]\n");
+    txt.append("  * { key=value pairs } [(Optional) A set of key=value pairs that will be added to the edge as attributes]\n");
 
     return txt.toString();
   }
@@ -84,26 +84,26 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
     attributes.remove("entityName");
 
     try {
-      bot.infoln(channel, "Going to create a node: %s/%s with properties: %s", type, entityName, attributes);
+      bot.infoln(channel, "Going to create an edge: %s/%s with properties: %s", type, entityName, attributes);
 
-      Node node = new Node();
-      node.getKeys().setType(type);
-      node.getKeys().addName(entityName);
+      Edge edge = new Edge();
+      edge.getKeys().setType(type);
+      edge.getKeys().addName(entityName);
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject nodeObj = userObject.getMarshaller().serialize(node);
+      BasicDBObject edgeObj = userObject.getMarshaller().serialize(edge);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
-        nodeObj.append(attr.getKey(), attr.getValue());
+        edgeObj.append(attr.getKey(), attr.getValue());
       }
 
-      NodeModification nodeCommand = new NodeModification();
-      nodeCommand.setNode(nodeObj);
-      nodeCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
+      EdgeModification edgeUpdateCommand = new EdgeModification();
+      edgeUpdateCommand.setEdge(edgeObj);
+      edgeUpdateCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
 
-      writeOperation(graphConn, nodeCommand);
+      writeOperation(graphConn, edgeUpdateCommand);
       Message result = new Message(channel);
-      result.println("Node created/updated: %s", entityName);
+      result.println("Edge created/updated: %s", entityName);
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);

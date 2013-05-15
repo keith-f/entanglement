@@ -25,7 +25,10 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.ParamParser;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
+import com.halfspinsoftware.uibot.commands.BotCommandException;
+import com.halfspinsoftware.uibot.commands.UserException;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 
 /**
@@ -49,30 +52,31 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("  * Graph connection name\n");
+    txt.append("  * conn=<name> [The name of the connection that is to be set 'active'.]\n");
 
     return txt.toString();
   }
 
   @Override
-  public Message call() throws Exception {
-    Message result = new Message(channel);
-    String connectionName = null;
-    try {
-      connectionName = args[0];
+  protected Message _processLine() throws UserException, BotCommandException {
 
+    String connectionName = ParamParser.findStringValueOf(args, "conn");
+
+    if (connectionName == null) throw new UserException("You forgot to specify a connection name.");
+
+    try {
       GraphConnection conn = userObject.getGraphConnections().get(connectionName);
       if (conn == null) {
-        bot.errln(errChannel, "No such graph connection: %s", connectionName);
-        return result;
+        throw new UserException("No graph connection exists with the name: "+connectionName);
       }
 
       userObject.setCurrentConnection(conn);
+
+      Message result = new Message(channel);
       result.println("Current graph set to: %s", connectionName);
-    } catch (Exception e) {
-      bot.printException(errChannel, "WARNING: an Exception occurred while processing.", e);
-    } finally {
       return result;
+    } catch (Exception e) {
+      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 

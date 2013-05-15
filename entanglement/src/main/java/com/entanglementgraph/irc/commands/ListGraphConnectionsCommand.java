@@ -21,6 +21,8 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
+import com.halfspinsoftware.uibot.commands.BotCommandException;
+import com.halfspinsoftware.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
 import java.util.Map;
@@ -47,17 +49,17 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("No parameters required.");
+    txt.append("No parameters required.\n");
 
     return txt.toString();
   }
 
   @Override
-  public Message call() throws Exception {
+  protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
     try {
       GraphConnection current = userObject.getCurrentConnection();
-      msg.println("Graph connections [", channel);
+      msg.println("Graph connections [");
       for (Map.Entry<String, GraphConnection> entry : userObject.getGraphConnections().entrySet()) {
         GraphConnection conn = entry.getValue();
         String currentText = current == conn ? CURRENT_GRAPH_TXT : "";
@@ -68,10 +70,9 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
             currentText);
       }
       msg.println("]");
-    } catch (Exception e) {
-      bot.printException(errChannel, "WARNING: an Exception occurred while processing.", e);
-    } finally {
       return msg;
+    } catch (Exception e) {
+      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 

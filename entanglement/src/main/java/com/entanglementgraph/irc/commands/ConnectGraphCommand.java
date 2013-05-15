@@ -24,11 +24,10 @@ import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.halfspinsoftware.uibot.BotCommand;
-import com.halfspinsoftware.uibot.BotState;
-import com.halfspinsoftware.uibot.GenericIrcBot;
-import com.halfspinsoftware.uibot.Message;
+import com.halfspinsoftware.uibot.*;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
+import com.halfspinsoftware.uibot.commands.BotCommandException;
+import com.halfspinsoftware.uibot.commands.UserException;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 import com.torrenttamer.util.ExceptionUtils;
 
@@ -53,57 +52,37 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("Either:\n");
-    txt.append("  * Graph connection name\n");
-    txt.append("  * Hostname\n");
-    txt.append("  * Database name\n");
-    txt.append("  * Graph name\n");
-    txt.append("  * Graph branch\n");
-    txt.append("Or:\n");
-    txt.append("  * Graph connection name\n");
-    txt.append("  * Graph name\n");
-    txt.append("  * Graph branch\n");
-    txt.append("  (in this case, MongoDB hostname and database values are assumed to be in environment properties.\n");
+    txt.append("  * conn=<name> [A unique name to use for this connection object]\n");
+    txt.append("  * hostname=<MongoDB hostname> [Optional, if you have set the environment variable: "+EntanglementStatePropertyNames.PROP_HOSTNAME+"]\n");
+    txt.append("  * database=<MongoDB database> [Optional, if you have set the environment variable: "+EntanglementStatePropertyNames.PROP_DB_NAME+"]\n");
+    txt.append("  * graph=<name> [Name of the Entanglement graph to use]\n");
+    txt.append("  * branch=<name> [Name of the branch to use (defaults to 'trunk', if not specified)]\n");
 
     return txt.toString();
   }
 
   @Override
-  public Message call() throws Exception {
-    Message result = new Message(channel);
-    String connectionName = null;
-    String hostname = null;
-    String database = null;
-    String graph = null;
-    String branch = null;
-    try {
-      if (args.length == 3) {
-        hostname = state.getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME);
-        database = state.getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME);
-        if (hostname == null) {
-          throw new EntanglementBotException("Environment variable was not set: "+EntanglementStatePropertyNames.PROP_HOSTNAME);
-        }
-        if (database == null) {
-          throw new EntanglementBotException("Environment variable was not set: "+EntanglementStatePropertyNames.PROP_DB_NAME);
-        }
-        connectionName = args[0];
-        graph = args[1];
-        branch = args[2];
-      } else {
-        connectionName = args[0];
-        hostname = args[1];
-        database = args[2];
-        graph = args[3];
-        branch = args[4];
-      }
+  protected Message _processLine() throws UserException, BotCommandException {
+    String connectionName = ParamParser.findStringValueOf(args, "conn");
+    String hostname = ParamParser.findStringValueOf(args, "hostname", state.getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME));
+    String database = ParamParser.findStringValueOf(args, "database", state.getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME));
+    String graph = ParamParser.findStringValueOf(args, "graph");
+    String branch = ParamParser.findStringValueOf(args, "branch", "trunk");
 
+    if (connectionName == null) throw new UserException("You forgot to specify a name for this connection.");
+    if (hostname == null) throw new UserException("You forgot to specify a hostname to your MongoDB server.");
+    if (database == null) throw new UserException("You forgot to specify a database name on your MongoDB server.");
+    if (graph == null) throw new UserException("You forgot to specify an Entanglement graph to connect to.");
+    if (branch == null) throw new UserException("You forgot to specify an Entanglement graph branch name.");
+
+    try {
       GraphConnection connection = connect(hostname, database, graph, branch);
       userObject.addGraphConnection(connectionName, connection);
+      Message result = new Message(channel);
       result.println("Graph %s on %s is now available with connection name: %s", graph, hostname, connectionName);
-    } catch (Exception e) {
-      bot.printException(errChannel, "WARNING: an Exception occurred while processing.", e);
-    } finally {
       return result;
+    } catch (Exception e) {
+      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 

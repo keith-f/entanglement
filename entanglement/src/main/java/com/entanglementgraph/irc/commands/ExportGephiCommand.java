@@ -27,6 +27,8 @@ import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
+import com.halfspinsoftware.uibot.commands.BotCommandException;
+import com.halfspinsoftware.uibot.commands.UserException;
 import com.torrenttamer.mongodb.MongoDbFactoryException;
 
 import java.awt.*;
@@ -58,37 +60,36 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("No parameters required.");
+    txt.append("No parameters required.\n");
 
     return txt.toString();
   }
 
   @Override
-  public Message call() throws Exception {
+  protected Message _processLine() throws UserException, BotCommandException {
     Message result = new Message(channel);
 
     GraphConnection graphConn = userObject.getCurrentConnection();
+    if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
+
+    Map<String, Color> colorMappings = parseColoursFromEnvironment();
+    bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
+
+
     try {
-      if (graphConn == null) {
-        bot.errln(errChannel, "No graph was set as the 'current' connection.");
-        return result;
-      }
       File outputFile = new File(graphConn.getGraphName()+".gexf");
 
-      Map<String, Color> colorMappings = parseColoursFromEnvironment();
       MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, colorMappings);
       exporter.exportAll(outputFile);
 
       result.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
-    } catch (Exception e) {
-      bot.printException(errChannel, "WARNING: an Exception occurred while processing.", e);
-    } finally {
       return result;
+    } catch (Exception e) {
+      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 
-  public Map<String, Color> parseColoursFromEnvironment()
-      throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
+  public Map<String, Color> parseColoursFromEnvironment() {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();

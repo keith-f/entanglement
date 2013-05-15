@@ -88,10 +88,14 @@ public class EntanglementBot extends GenericIrcBot {
     this.runtime = runtime;
 
     addCommand("connect-graph", ConnectGraphCommand.class);
+    addCommand("create-edge", CreateEdgeCommand.class);
     addCommand("create-node", CreateNodeCommand.class);
     addCommand("export-gephi", ExportGephiCommand.class);
+    addCommand("list-edges", ListEdgesCommand.class);
     addCommand("list-connections", ListGraphConnectionsCommand.class);
     addCommand("list-nodes", ListNodesCommand.class);
+    addCommand("show-edge", ShowEdgeCommand.class);
+    addCommand("show-node", ShowNodeCommand.class);
     addCommand("use", UseGraphCommand.class);
 
   }

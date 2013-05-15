@@ -32,6 +32,7 @@ import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
+import org.jibble.pircbot.Colors;
 
 import java.util.*;
 
@@ -42,13 +43,13 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
+public class ShowNodeCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Lists node(s) in the currently active graph.");
+    txt.append("Pretty-prints a specified node in the currently active graph.");
     return txt.toString();
   }
 
@@ -56,46 +57,53 @@ public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("The following key=value parameter pairs are supported:\n");
-    txt.append("  * type=<type name> - Specifies the type of graph entity to display (optional)\n");
-    txt.append("  * offset=<Integer> - Specifies the number of entities to skip (optional)\n");
-    txt.append("  * limit=<Integer> - Specifies the maximum number of entities to display (optional)\n");
+    txt.append("  * type=<name> [The type name of the node to display]\n");
+    txt.append("  * entityName=<name> [A unique name of the node to display]\n");
 
     return txt.toString();
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String type = ParamParser.findStringValueOf(args, "type", null);
-    Integer offset = ParamParser.findIntegerValueOf(args, "offset", 0);
-    Integer limit = ParamParser.findIntegerValueOf(args, "limit", Integer.MAX_VALUE);
 
-    // The parameters parsed (above) are all optional, so no need to throw a UserException(s) if one or more are null.
+    String type = ParamParser.findStringValueOf(args, "type");
+    String entityName = ParamParser.findStringValueOf(args, "entityName");
+
+    if (type == null) throw new UserException("You forgot to specify a entity type.");
+    if (entityName == null) throw new UserException("You forgot to specify a entity name.");
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
 
-    int count = 0;
+
     try {
-      if (type == null) {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeys(offset, limit)) {
-          count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
-        }
-      } else {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeysByType(type, offset, limit)) {
-          count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
-        }
-      }
+      // Create a keyset in order to query the database
+      EntityKeys keyset = new EntityKeys(type, entityName);
+      // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
+      BasicDBObject node = graphConn.getNodeDao().getByKey(keyset);
 
       Message result = new Message(channel);
-      result.println("Printed %d nodes.", count);
+      if (node == null) {
+        result.println("A graph entity of type %s with name %s could not be found!", type, entityName);
+      } else {
+        result.println("Found the following entity with properties:");
+        result.println("[");
+        Map nodeAsMap = node.toMap();
+        for (Object key : nodeAsMap.keySet()) {
+          Object val = nodeAsMap.get(key);
+          String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
+          String valStr = val.toString();
+          result.println("  %s => %s", keyStr, valStr);
+        }
+        result.println("]");
+
+      }
+
+
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
-
 
 }

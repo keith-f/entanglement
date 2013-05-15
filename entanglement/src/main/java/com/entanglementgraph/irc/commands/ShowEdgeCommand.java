@@ -18,22 +18,17 @@
 package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.ParamParser;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
+import org.jibble.pircbot.Colors;
 
-import java.util.*;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,13 +37,13 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
+public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Lists node(s) in the currently active graph.");
+    txt.append("Pretty-prints a specified edge in the currently active graph.");
     return txt.toString();
   }
 
@@ -56,46 +51,53 @@ public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
   public String getHelpText() {
     StringBuilder txt = new StringBuilder();
     txt.append("USAGE:\n");
-    txt.append("The following key=value parameter pairs are supported:\n");
-    txt.append("  * type=<type name> - Specifies the type of graph entity to display (optional)\n");
-    txt.append("  * offset=<Integer> - Specifies the number of entities to skip (optional)\n");
-    txt.append("  * limit=<Integer> - Specifies the maximum number of entities to display (optional)\n");
+    txt.append("  * type=<name> [The type name of the edge to display]\n");
+    txt.append("  * entityName=<name> [A unique name of the edge to display]\n");
 
     return txt.toString();
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String type = ParamParser.findStringValueOf(args, "type", null);
-    Integer offset = ParamParser.findIntegerValueOf(args, "offset", 0);
-    Integer limit = ParamParser.findIntegerValueOf(args, "limit", Integer.MAX_VALUE);
 
-    // The parameters parsed (above) are all optional, so no need to throw a UserException(s) if one or more are null.
+    String type = ParamParser.findStringValueOf(args, "type");
+    String entityName = ParamParser.findStringValueOf(args, "entityName");
+
+    if (type == null) throw new UserException("You forgot to specify a entity type.");
+    if (entityName == null) throw new UserException("You forgot to specify a entity name.");
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException("No graph was set as the 'current' connection.");
 
-    int count = 0;
+
     try {
-      if (type == null) {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeys(offset, limit)) {
-          count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
-        }
-      } else {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeysByType(type, offset, limit)) {
-          count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
-        }
-      }
+      // Create a keyset in order to query the database
+      EntityKeys keyset = new EntityKeys(type, entityName);
+      // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
+      BasicDBObject edge = graphConn.getEdgeDao().getByKey(keyset);
 
       Message result = new Message(channel);
-      result.println("Printed %d nodes.", count);
+      if (edge == null) {
+        result.println("A graph entity of type %s with name %s could not be found!", type, entityName);
+      } else {
+        result.println("Found the following entity with properties:");
+        result.println("[");
+        Map edgeAsMap = edge.toMap();
+        for (Object key : edgeAsMap.keySet()) {
+          Object val = edgeAsMap.get(key);
+          String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
+          String valStr = val.toString();
+          result.println("  %s => %s", keyStr, valStr);
+        }
+        result.println("]");
+
+      }
+
+
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
-
 
 }

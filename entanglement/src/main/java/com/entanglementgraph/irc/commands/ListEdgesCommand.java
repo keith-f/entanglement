@@ -17,23 +17,16 @@
 
 package com.entanglementgraph.irc.commands;
 
+import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.ParamParser;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
-
-import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,13 +35,13 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
+public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Lists node(s) in the currently active graph.");
+    txt.append("Lists edge(s) in the currently active graph.");
     return txt.toString();
   }
 
@@ -78,14 +71,26 @@ public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
     int count = 0;
     try {
       if (type == null) {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeys(offset, limit)) {
+        for (EntityKeys keys : graphConn.getEdgeDao().iterateKeys(offset, limit)) {
           count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
+          BasicDBObject edgeObj = graphConn.getEdgeDao().getByKey(keys);
+          Edge edge = graphConn.getMarshaller().deserialize(edgeObj, Edge.class);
+
+          String fromStr = edge.getFrom().getType()+"/"+edge.getFrom().getNames();
+          String toStr = edge.getTo().getType()+"/"+edge.getTo().getNames();
+
+          bot.debugln(channel, "  * "+fromStr+"   ------ "+edge.getKeys().getType() + " ----->> " + toStr);
         }
       } else {
         for (EntityKeys keys : graphConn.getNodeDao().iterateKeysByType(type, offset, limit)) {
           count++;
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
+          BasicDBObject edgeObj = graphConn.getEdgeDao().getByKey(keys);
+          Edge edge = graphConn.getMarshaller().deserialize(edgeObj, Edge.class);
+
+          String fromStr = edge.getFrom().getType()+"/"+edge.getFrom().getNames();
+          String toStr = edge.getTo().getType()+"/"+edge.getTo().getNames();
+
+          bot.debugln(channel, "  * "+fromStr+"   ------ "+edge.getKeys().getType() + " ----->> " + toStr);
         }
       }
 
