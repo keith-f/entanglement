@@ -18,7 +18,11 @@
 
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.torrenttamer.util.UidGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogException;
@@ -33,6 +37,35 @@ import com.entanglementgraph.revlog.commands.TransactionRollback;
 public class TxnUtils
 {
   private static final Logger logger = Logger.getLogger(TxnUtils.class.getName());
+
+  public static void writeOperationAsPatch(GraphConnection conn, GraphOperation graphOp) throws RevisionLogException {
+    List<GraphOperation> ops = new ArrayList<>(1);
+    ops.add(graphOp);
+    writeOperationsAsPatch(conn, ops);
+  }
+
+  /**
+   * Convenience method that takes a list of graph operations, wraps them in a transaction and submits it to the
+   * revision log. This method is useful if you have a relatively small number of graph operations to submit as part
+   * of a single transaction; you don't need to deal with creating / committing transactions manually in this case.
+   * @param conn
+   * @param ops
+   * @throws RevisionLogException
+   */
+  public static void writeOperationsAsPatch(GraphConnection conn, List<GraphOperation> ops) throws RevisionLogException {
+    String txnId = null;
+    try {
+      txnId = TxnUtils.beginNewTransaction(conn);
+      conn.getRevisionLog().submitRevisions(conn.getGraphName(), conn.getGraphBranch(), txnId, 1, ops);
+      ops.clear();
+      TxnUtils.commitTransaction(conn, txnId);
+    } catch (Exception e) {
+      TxnUtils.silentRollbackTransaction(conn, txnId);
+      throw new RevisionLogException("Failed to perform graph operations on "
+          +conn.getGraphBranch()+"/"+conn.getGraphBranch()
+          +". Exception attached.", e);
+    }
+  }
 
   public static String beginNewTransaction(GraphConnection conn)
       throws RevisionLogException
