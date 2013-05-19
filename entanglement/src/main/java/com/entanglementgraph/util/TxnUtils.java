@@ -54,6 +54,9 @@ public class TxnUtils
    */
   public static void writeOperationsAsPatch(GraphConnection conn, List<GraphOperation> ops) throws RevisionLogException {
     String txnId = null;
+    if (ops.isEmpty()) {
+      return;
+    }
     try {
       txnId = TxnUtils.beginNewTransaction(conn);
       conn.getRevisionLog().submitRevisions(conn.getGraphName(), conn.getGraphBranch(), txnId, 1, ops);
