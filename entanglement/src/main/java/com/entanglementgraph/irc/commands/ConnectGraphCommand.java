@@ -74,7 +74,7 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String hostname = parsedArgs.get("hostname").getStringValue();
     String database = parsedArgs.get("database").getStringValue();
     String graph = parsedArgs.get("graph").getStringValue();
-    String branch = ParamParser.findStringValueOf(args, "branch", "trunk");
+    String branch = parsedArgs.get("trunk").getStringValue();
 
     try {
       GraphConnection connection = connect(hostname, database, graph, branch);
