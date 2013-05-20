@@ -52,18 +52,18 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new OptionalParam("type", String.class, "Specifies the type of graph entity to display"));
-    params.add(new OptionalParam("offset", Integer.class, "Specifies the number of entities to skip"));
-    params.add(new OptionalParam("limit", Integer.class, "Specifies the maximum number of entities to display"));
+    params.add(new OptionalParam("offset", Integer.class, "0", "Specifies the number of entities to skip"));
+    params.add(new OptionalParam("limit", Integer.class,
+        String.valueOf(Integer.MAX_VALUE),
+        "Specifies the maximum number of entities to display"));
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String type = ParamParser.findStringValueOf(args, "type", null);
-    Integer offset = ParamParser.findIntegerValueOf(args, "offset", 0);
-    Integer limit = ParamParser.findIntegerValueOf(args, "limit", Integer.MAX_VALUE);
-
-    // The parameters parsed (above) are all optional, so no need to throw a UserException(s) if one or more are null.
+    String type = parsedArgs.get("type").getStringValue();
+    int offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
+    int limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");

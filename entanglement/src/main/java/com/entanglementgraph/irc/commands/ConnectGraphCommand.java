@@ -33,6 +33,7 @@ import com.torrenttamer.util.ExceptionUtils;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -52,29 +53,28 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
-    params.add(new OptionalParam("hostname", String.class, "The hostname of a MongoDB server. Optional if you have " +
+    params.add(new OptionalParam("hostname", String.class,
+        state.getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
+        "The hostname of a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_HOSTNAME));
-    params.add(new OptionalParam("database", String.class, "A database located on a MongoDB server. Optional if you have " +
+    params.add(new OptionalParam("database", String.class,
+        state.getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
+        "A database located on a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_DB_NAME));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
-    params.add(new OptionalParam("branch", String.class, "Name of the branch to use (defaults to 'trunk', if not specified)"));
+    params.add(new OptionalParam("branch", String.class, "trunk",
+        "Name of the branch to use (defaults to 'trunk', if not specified)"));
     return params;
   }
 
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connectionName = ParamParser.findStringValueOf(args, "conn");
-    String hostname = ParamParser.findStringValueOf(args, "hostname", state.getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME));
-    String database = ParamParser.findStringValueOf(args, "database", state.getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME));
-    String graph = ParamParser.findStringValueOf(args, "graph");
+    String connectionName = parsedArgs.get("conn").getStringValue();
+    String hostname = parsedArgs.get("hostname").getStringValue();
+    String database = parsedArgs.get("database").getStringValue();
+    String graph = parsedArgs.get("graph").getStringValue();
     String branch = ParamParser.findStringValueOf(args, "branch", "trunk");
-
-    if (connectionName == null) throw new UserException(sender, "You forgot to specify a name for this connection.");
-    if (hostname == null) throw new UserException(sender, "You forgot to specify a hostname to your MongoDB server.");
-    if (database == null) throw new UserException(sender, "You forgot to specify a database name on your MongoDB server.");
-    if (graph == null) throw new UserException(sender, "You forgot to specify an Entanglement graph to connect to.");
-    if (branch == null) throw new UserException(sender, "You forgot to specify an Entanglement graph branch name.");
 
     try {
       GraphConnection connection = connect(hostname, database, graph, branch);

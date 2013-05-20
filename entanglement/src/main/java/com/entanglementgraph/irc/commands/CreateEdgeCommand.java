@@ -56,19 +56,18 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
     List<Param> params = new LinkedList<>();
     params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
     params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
+    params.add(new RequiredParam("fromNodeType", String.class, "The type name of the 'from' node that this edge should connect to"));
+    params.add(new RequiredParam("fromNodeName", String.class, "The type-unique name of the 'from' node that this edge should connect to"));
+    params.add(new RequiredParam("toNodeType", String.class, "The type name of the 'to' node that this edge should connect to"));
+    params.add(new RequiredParam("toNodeName", String.class, "The type-unique name of the 'to' node that this edge should connect to"));
     params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-
-    String type = ParamParser.findStringValueOf(args, "type");
-    String entityName = ParamParser.findStringValueOf(args, "entityName");
-
-    if (type == null) throw new UserException(sender, "You forgot to specify a entity type.");
-    if (entityName == null) throw new UserException(sender, "You forgot to specify a entity name.");
-
+    String type = parsedArgs.get("type").getStringValue();
+    String entityName = parsedArgs.get("entityName").getStringValue();
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");

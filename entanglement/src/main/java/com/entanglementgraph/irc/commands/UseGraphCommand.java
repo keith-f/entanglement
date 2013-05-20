@@ -60,10 +60,7 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-
-    String connectionName = ParamParser.findStringValueOf(args, "conn");
-
-    if (connectionName == null) throw new UserException(sender, "You forgot to specify a connection name.");
+    String connectionName = parsedArgs.get("conn").getStringValue();
 
     try {
       GraphConnection conn = userObject.getGraphConnections().get(connectionName);

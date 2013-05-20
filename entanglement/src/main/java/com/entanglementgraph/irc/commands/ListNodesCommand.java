@@ -65,11 +65,9 @@ public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String type = ParamParser.findStringValueOf(args, "type", null);
-    Integer offset = ParamParser.findIntegerValueOf(args, "offset", 0);
-    Integer limit = ParamParser.findIntegerValueOf(args, "limit", Integer.MAX_VALUE);
-
-    // The parameters parsed (above) are all optional, so no need to throw a UserException(s) if one or more are null.
+    String type = parsedArgs.get("type").getStringValue();
+    int offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
+    int limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");

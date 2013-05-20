@@ -62,16 +62,14 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
-    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
-    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
-    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
+//    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
+//    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
+//    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    Message result = new Message(channel);
-
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
@@ -85,6 +83,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
       MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, colorMappings);
       exporter.exportAll(outputFile);
 
+      Message result = new Message(channel);
       result.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
       return result;
     } catch (Exception e) {

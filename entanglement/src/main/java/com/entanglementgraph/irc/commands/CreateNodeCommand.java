@@ -62,13 +62,8 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-
-    String type = ParamParser.findStringValueOf(args, "type");
-    String entityName = ParamParser.findStringValueOf(args, "entityName");
-
-    if (type == null) throw new UserException(sender, "You forgot to specify a entity type.");
-    if (entityName == null) throw new UserException(sender, "You forgot to specify a entity name.");
-
+    String type = parsedArgs.get("type").getStringValue();
+    String entityName = parsedArgs.get("entityName").getStringValue();
 
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
@@ -98,9 +93,9 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
       nodeCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
 
       writeOperation(graphConn, nodeCommand);
-      Message result = new Message(channel);
-      result.println("Node created/updated: %s", entityName);
-      return result;
+      Message msg = new Message(channel);
+      msg.println("Node created/updated: %s", entityName);
+      return msg;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
