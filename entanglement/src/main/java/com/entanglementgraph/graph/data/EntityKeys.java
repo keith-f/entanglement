@@ -32,7 +32,7 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 public class EntityKeys<E>
-  implements Serializable {
+  implements Serializable, Cloneable {
 
   public static Iterable<DBObject> buildKeyIndexes(String prefix) {
     List<DBObject> indexes = new ArrayList<>(3);
@@ -95,6 +95,15 @@ public class EntityKeys<E>
     this.type = type;
     uids.add(uid);
     names.add(name);
+  }
+
+  @Override
+  protected EntityKeys<E> clone() throws CloneNotSupportedException {
+    EntityKeys<E> clone = new EntityKeys<>();
+    clone.setType(getType());
+    clone.getUids().addAll(getUids());
+    clone.getNames().addAll(getNames());
+    return clone;
   }
 
   @Override
