@@ -23,7 +23,6 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.*;
@@ -31,7 +30,6 @@ import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
-import com.torrenttamer.util.UidGenerator;
 
 import java.util.*;
 

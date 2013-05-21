@@ -18,22 +18,14 @@
 package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.OptionalParam;
 import com.halfspinsoftware.uibot.Param;
-import com.halfspinsoftware.uibot.ParamParser;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
-import com.mongodb.BasicDBObject;
 
 import java.util.*;
 

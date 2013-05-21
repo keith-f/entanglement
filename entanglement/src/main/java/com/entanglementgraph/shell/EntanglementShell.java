@@ -52,7 +52,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import com.entanglementgraph.ObjectMarshallerFactory;
-import com.entanglementgraph.cli.export.MongoGraphToGephi;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;

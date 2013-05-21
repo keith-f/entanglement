@@ -18,13 +18,11 @@
 package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.halfspinsoftware.uibot.*;
