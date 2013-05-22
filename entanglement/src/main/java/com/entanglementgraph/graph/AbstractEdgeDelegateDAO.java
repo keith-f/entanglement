@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.Node;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -67,6 +68,11 @@ import java.util.Set;
   @Override
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from) throws GraphModelException {
     return delegate.iterateEdgesFromNode(edgeType, from);
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<Node> from, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
+    return iterateEdgesFromNode(edgeType, from, offset, limit, customQuery, sort);
   }
 
   @Override

@@ -19,6 +19,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.*;
 
@@ -103,6 +104,7 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
+  @Override
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
@@ -112,6 +114,23 @@ public class EdgeDAOSeparateDocImpl
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
       return col.find(query);
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
+    }
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<Node> from,
+                                                 Integer offset, Integer limit, DBObject customQuery, DBObject sort)
+      throws GraphModelException {
+    logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
+    DBObject query = buildFromNodeQuery(from);
+    //Add a restriction on the type of edge returned
+    query.put(FIELD_KEYS_TYPE, edgeType);
+    query.putAll(customQuery);
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
+    try {
+      return col.find(query).skip(offset).limit(limit).sort(sort);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }

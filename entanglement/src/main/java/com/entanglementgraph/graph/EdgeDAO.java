@@ -19,6 +19,7 @@
 package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.Node;
 import com.mongodb.DBObject;
 
 import java.util.Map;
@@ -88,6 +89,10 @@ public interface EdgeDAO
    * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
+      throws GraphModelException;
+
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<Node> from,
+                                                 Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
   /**
