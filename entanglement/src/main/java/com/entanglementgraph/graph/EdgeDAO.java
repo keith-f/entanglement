@@ -91,7 +91,7 @@ public interface EdgeDAO
   public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException;
 
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<Node> from,
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
                                                  Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
@@ -113,6 +113,10 @@ public interface EdgeDAO
    * @throws GraphModelException
    */
   public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
+      throws GraphModelException;
+
+  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
+                                                 Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
   /**

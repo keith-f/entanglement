@@ -120,7 +120,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<Node> from,
+  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
                                                  Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
@@ -162,6 +162,21 @@ public class EdgeDAOSeparateDocImpl
 
     try {
       return col.find(query);
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
+    }
+  }
+
+  @Override
+  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
+    logger.log(Level.FINE, "Iterating edges of type: {0} ending at node: {1}", new Object[]{edgeType, to});
+    DBObject query = buildToNodeQuery(to);
+    //Add a restriction on the type of edge returned
+    query.put(FIELD_KEYS_TYPE, edgeType);
+    query.putAll(customQuery);
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
+    try {
+      return col.find(query).skip(offset).limit(limit).sort(sort);
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
