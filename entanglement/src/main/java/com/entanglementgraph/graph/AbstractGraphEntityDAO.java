@@ -603,13 +603,12 @@ abstract public class AbstractGraphEntityDAO
     DBObject query = new BasicDBObject();
     query.put(FIELD_KEYS_TYPE, typeName);
     query.putAll(customQuery);
-    DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
     try {
       DBCursor cursor;
       if (sort != null) {
-        cursor = col.find(query, keys).skip(offset).limit(limit).sort(sort);
+        cursor = col.find(query).skip(offset).limit(limit).sort(sort);
       } else {
-        cursor = col.find(query, keys).skip(offset).limit(limit);
+        cursor = col.find(query).skip(offset).limit(limit);
       }
       return cursor;
     }
