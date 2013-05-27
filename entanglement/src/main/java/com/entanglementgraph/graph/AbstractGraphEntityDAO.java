@@ -596,6 +596,28 @@ abstract public class AbstractGraphEntityDAO
           + "Query was: "+query, e);
     }
   }
+
+  public Iterable<DBObject> iterateByType(String typeName, Integer offset, Integer limit,
+                                              DBObject customQuery, DBObject sort)
+      throws GraphModelException {
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_KEYS_TYPE, typeName);
+    query.putAll(customQuery);
+    DBObject keys = new BasicDBObject(FIELD_KEYS, 1); // Return the entire key subdocument
+    try {
+      DBCursor cursor;
+      if (sort != null) {
+        cursor = col.find(query, keys).skip(offset).limit(limit).sort(sort);
+      } else {
+        cursor = col.find(query, keys).skip(offset).limit(limit);
+      }
+      return cursor;
+    }
+    catch(Exception e) {
+      throw new GraphModelException(
+          "Failed to perform database operation. Type was: "+typeName+"\nQuery was: "+query, e);
+    }
+  }
   
   
   @Override

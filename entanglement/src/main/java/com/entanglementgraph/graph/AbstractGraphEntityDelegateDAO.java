@@ -161,6 +161,13 @@ abstract public class AbstractGraphEntityDelegateDAO
   }
 
   @Override
+  public Iterable<DBObject> iterateByType(String typeName, Integer offset, Integer limit,
+                                          DBObject customQuery, DBObject sort)
+      throws GraphModelException {
+    return delegate.iterateByType(typeName, offset, limit, customQuery,sort);
+  }
+
+  @Override
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit) throws GraphModelException {
     return delegate.iterateKeysByType(typeName, offset, limit);
   }

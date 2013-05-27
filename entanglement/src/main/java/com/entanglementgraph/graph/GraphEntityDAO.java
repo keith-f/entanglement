@@ -197,11 +197,12 @@ public interface GraphEntityDAO
   public Iterable<DBObject> iterateByType(String typeName)
       throws GraphModelException;
 
+  public Iterable<DBObject> iterateByType(String typeName, Integer offset, Integer limit,
+                                              DBObject customQuery, DBObject sort)
+      throws GraphModelException;
+
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
       throws GraphModelException;
-  
-//  public Iterable<String> iterateNamesByType(String typeName, int offset, int limit)
-//      throws GraphModelException;
   
   public long countByType(String typeName)
       throws GraphModelException;
