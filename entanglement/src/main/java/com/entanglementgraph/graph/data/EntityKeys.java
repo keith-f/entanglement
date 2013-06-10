@@ -127,7 +127,9 @@ public class EntityKeys<E>
 
   public void addName(String name)
   {
-    names.add(name);
+    if (name != null) {
+      names.add(name);
+    }
   }
 
   public void addNames(Collection<String> newNames)

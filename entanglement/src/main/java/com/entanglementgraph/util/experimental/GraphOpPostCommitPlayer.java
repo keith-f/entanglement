@@ -19,6 +19,8 @@ package com.entanglementgraph.util.experimental;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.entanglementgraph.revlog.RevisionLogListenerException;
 import org.openide.util.Exceptions;
 import com.entanglementgraph.player.LogPlayer;
 import com.entanglementgraph.player.LogPlayerException;
@@ -49,38 +51,39 @@ public class GraphOpPostCommitPlayer
   
   @Override
   public void notifyRevisionsSubmitted(String graphId, String graphBranchId, 
-      String txnId, int txnSubmitId, int numRevisions) {
+      String txnId, int txnSubmitId, int numRevisions) throws RevisionLogListenerException {
   }
 
   @Override
-  public void notifyPreCommit(TransactionCommit op) {
+  public void notifyPreCommit(TransactionCommit op) throws RevisionLogListenerException {
   }
 
   @Override
-  public void notifyPostCommit(TransactionCommit op) {
+  public void notifyPostCommit(TransactionCommit op) throws RevisionLogListenerException {
     try {
       logger.log(Level.INFO, "Received notification of transaction commit: {0}", op.getUid());
       player.playRevisionsForTransaction(op.getUid());
       logger.info("Playback of this transaction is now complete");
     } catch (LogPlayerException ex) {
-      Exceptions.printStackTrace(ex);
+//      Exceptions.printStackTrace(ex);
+      throw new RevisionLogListenerException("Failed to play back a one or more revisions.", ex);
     }
   }
 
   @Override
-  public void notifyCommitFailed(TransactionCommit op) {
+  public void notifyCommitFailed(TransactionCommit op) throws RevisionLogListenerException {
   }
 
   @Override
-  public void notifyPreRollback(TransactionRollback op) {
+  public void notifyPreRollback(TransactionRollback op) throws RevisionLogListenerException {
   }
 
   @Override
-  public void notifyPostRollback(TransactionRollback op) {
+  public void notifyPostRollback(TransactionRollback op) throws RevisionLogListenerException {
   }
 
   @Override
-  public void notifyRollbackFailed(TransactionRollback op) {
+  public void notifyRollbackFailed(TransactionRollback op) throws RevisionLogListenerException {
   }
 
 }
