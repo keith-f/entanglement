@@ -27,15 +27,22 @@ import com.entanglementgraph.revlog.commands.TransactionRollback;
 public interface RevisionLogListener 
 {
   public void notifyRevisionsSubmitted(String graphId, String graphBranchId,
-      String txnId, int txnSubmitId, int numRevisions);
+      String txnId, int txnSubmitId, int numRevisions)
+      throws RevisionLogListenerException;
   
-  public void notifyPreCommit(TransactionCommit op);
-  public void notifyPostCommit(TransactionCommit op);
-  public void notifyCommitFailed(TransactionCommit op);
+  public void notifyPreCommit(TransactionCommit op)
+      throws RevisionLogListenerException;
+  public void notifyPostCommit(TransactionCommit op)
+      throws RevisionLogListenerException;
+  public void notifyCommitFailed(TransactionCommit op)
+      throws RevisionLogListenerException;
   
-  public void notifyPreRollback(TransactionRollback op);
-  public void notifyPostRollback(TransactionRollback op);
-  public void notifyRollbackFailed(TransactionRollback op);
+  public void notifyPreRollback(TransactionRollback op)
+      throws RevisionLogListenerException;
+  public void notifyPostRollback(TransactionRollback op)
+      throws RevisionLogListenerException;
+  public void notifyRollbackFailed(TransactionRollback op)
+      throws RevisionLogListenerException;
   
   
 }

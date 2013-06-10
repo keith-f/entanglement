@@ -132,8 +132,7 @@ public class RevisionLogDirectToMongoDbImpl
     listeners.remove(listener);
   }
   
-  private void notifyPostCommit(TransactionCommit op)
-  {
+  private void notifyPostCommit(TransactionCommit op) throws RevisionLogListenerException {
     for (RevisionLogListener listener : listeners) {
       listener.notifyPostCommit(op);
     }
