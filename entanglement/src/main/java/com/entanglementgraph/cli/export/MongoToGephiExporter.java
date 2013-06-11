@@ -73,47 +73,6 @@ public class MongoToGephiExporter {
   public static final String LABEL_LIST_START = "[ \"";
   public static final String LABEL_LIST_END = "\"]";
 
-//  private static ProjectController pc;
-//  private static Project project;
-//  private static Workspace workspace;
-
-  /**
-   * There have been problems with Gephi exports where more than one workspace was initialized. In such cases,
-   * it can sometimes be difficult to find which workspace has your graph. To solve this, the following static
-   * method should be used to retrieve a single workspace which can be used from both within this class and within
-   * calling methods. When using this class in your own code, please use this workspace instead of instatiating your
-   * own.
-   *
-   * @return a single workspace where the requested graphs are made.
-   */
-//  public static synchronized Workspace getWorkspace() {
-//    //Init a project - and therefore a workspace. This must only be done once per JVM
-//    if (workspace == null) {
-//      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
-//      pc.newProject();
-//      workspace = pc.getCurrentWorkspace();
-//    }
-//    return workspace;
-//  }
-//
-//  public static synchronized void ensureProjectInitialised() {
-//    //Init a project - and therefore a workspace. This must only be done once per JVM
-//    if (pc == null) {
-//      pc = Lookup.getDefault().lookup(ProjectController.class);
-//      pc.newProject();
-//      project = pc.getCurrentProject();
-//    }
-//  }
-
-//  public static synchronized Workspace getWorkspace() {
-//    //Init a project - and therefore a workspace. This must only be done once per JVM
-//
-//      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
-//      pc.newProject();
-//
-//      Workspace workspace = pc.getCurrentWorkspace();
-//    return workspace;
-//  }
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
@@ -144,24 +103,13 @@ public class MongoToGephiExporter {
     this.edgeDao = conn.getEdgeDao();
     this.investigatedEdges = new HashSet<>();
 
-    // Ensure that we have a Gephi Workspace
-//    getWorkspace();
-//    ensureProjectInitialised();
-
-    // Get a graph model - it exists because we have a workspace
-//    this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
-
     pc = new ProjectControllerImpl();
     pc.newProject();
     project= pc.getCurrentProject();
     workspace = pc.getCurrentWorkspace();
-    System.out.println("Project: "+project);
-    System.out.println("Workspace: "+workspace);
 
-//    this.graphModel = workspace.getLookup().lookup(GraphController.class).getModel(); /NULLPointerException
     GraphController gc = new DhnsGraphController();
     this.graphModel = gc.getModel(workspace);
-
 
     // Create a directed graph based on this graph model
     this.directedGraph = graphModel.getDirectedGraph();
