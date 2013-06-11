@@ -82,6 +82,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
 
       MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, colorMappings);
       exporter.exportAll(outputFile);
+      exporter.close();
 
       Message result = new Message(channel);
       result.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());

@@ -33,18 +33,23 @@ import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
+import org.gephi.data.attributes.AttributeControllerImpl;
 import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.data.attributes.api.AttributeType;
+import org.gephi.dynamic.DynamicControllerImpl;
 import org.gephi.dynamic.api.DynamicController;
 import org.gephi.dynamic.api.DynamicModel;
 import org.gephi.graph.api.DirectedGraph;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
+import org.gephi.graph.dhns.DhnsGraphController;
 import org.gephi.io.exporter.api.ExportController;
+import org.gephi.project.api.Project;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
+import org.gephi.project.impl.ProjectControllerImpl;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -67,7 +72,9 @@ public class MongoToGephiExporter {
   public static final String LABEL_LIST_START = "[ \"";
   public static final String LABEL_LIST_END = "\"]";
 
-  private static Workspace workspace;
+//  private static ProjectController pc;
+//  private static Project project;
+//  private static Workspace workspace;
 
   /**
    * There have been problems with Gephi exports where more than one workspace was initialized. In such cases,
@@ -78,15 +85,34 @@ public class MongoToGephiExporter {
    *
    * @return a single workspace where the requested graphs are made.
    */
-  public static synchronized Workspace getWorkspace() {
-    //Init a project - and therefore a workspace. This must only be done once per JVM
-    if (workspace == null) {
-      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
-      pc.newProject();
-      workspace = pc.getCurrentWorkspace();
-    }
-    return workspace;
-  }
+//  public static synchronized Workspace getWorkspace() {
+//    //Init a project - and therefore a workspace. This must only be done once per JVM
+//    if (workspace == null) {
+//      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+//      pc.newProject();
+//      workspace = pc.getCurrentWorkspace();
+//    }
+//    return workspace;
+//  }
+//
+//  public static synchronized void ensureProjectInitialised() {
+//    //Init a project - and therefore a workspace. This must only be done once per JVM
+//    if (pc == null) {
+//      pc = Lookup.getDefault().lookup(ProjectController.class);
+//      pc.newProject();
+//      project = pc.getCurrentProject();
+//    }
+//  }
+
+//  public static synchronized Workspace getWorkspace() {
+//    //Init a project - and therefore a workspace. This must only be done once per JVM
+//
+//      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+//      pc.newProject();
+//
+//      Workspace workspace = pc.getCurrentWorkspace();
+//    return workspace;
+//  }
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
@@ -98,6 +124,9 @@ public class MongoToGephiExporter {
   private GraphModel graphModel;
   private DirectedGraph directedGraph;
 
+  private ProjectController pc;
+  private Project project;
+  private Workspace workspace;
 
   /**
    * @param conn         set up node and edge DAOs
@@ -115,13 +144,31 @@ public class MongoToGephiExporter {
     this.investigatedEdges = new HashSet<>();
 
     // Ensure that we have a Gephi Workspace
-    getWorkspace();
+//    getWorkspace();
+//    ensureProjectInitialised();
 
     // Get a graph model - it exists because we have a workspace
-    this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
+//    this.graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
+
+    pc = new ProjectControllerImpl();
+    pc.newProject();
+    project= pc.getCurrentProject();
+    workspace = pc.getCurrentWorkspace();
+    System.out.println("Project: "+project);
+    System.out.println("Workspace: "+workspace);
+
+//    this.graphModel = workspace.getLookup().lookup(GraphController.class).getModel(); /NULLPointerException
+    GraphController gc = new DhnsGraphController();
+    this.graphModel = gc.getModel(workspace);
+
 
     // Create a directed graph based on this graph model
     this.directedGraph = graphModel.getDirectedGraph();
+  }
+
+  public void close() {
+    pc.closeCurrentWorkspace();
+    pc.closeCurrentProject();
   }
 
   /**
@@ -236,8 +283,10 @@ public class MongoToGephiExporter {
     // which crops up when exporting to GEXF. See url below for details:
     // https://forum.gephi.org/viewtopic.php?f=27&t=2337
     //noinspection UnusedDeclaration
-    DynamicModel dynamicModel = Lookup.getDefault().lookup(
-        DynamicController.class).getModel();
+//    DynamicModel dynamicModel = Lookup.getDefault().lookup(
+//        DynamicController.class).getModel();
+    DynamicController dc = new DynamicControllerImpl();
+    DynamicModel dynamicModel = dc.getModel(workspace);
 
     //Export full graph
     ExportController ec = Lookup.getDefault().lookup(ExportController.class);
@@ -267,9 +316,11 @@ public class MongoToGephiExporter {
       DbObjectMarshallerException {
 
     // Add column for node type
-    AttributeController ac = Lookup.getDefault().
-        lookup(AttributeController.class);
-    AttributeModel attributeModel = ac.getModel();
+//    AttributeController ac = Lookup.getDefault().
+//        lookup(AttributeController.class);
+//    AttributeModel attributeModel = ac.getModel();
+    AttributeController ac = new AttributeControllerImpl();
+    AttributeModel attributeModel = ac.getModel(workspace);
     // ensure the current graph is empty
     directedGraph.clear();
 
@@ -304,9 +355,11 @@ public class MongoToGephiExporter {
   public void exportAll(File outputFile)
       throws IOException, GraphModelException, RevisionLogException {
 
-    AttributeController ac = Lookup.getDefault().
-        lookup(AttributeController.class);
-    AttributeModel attributeModel = ac.getModel();
+//    AttributeController ac = workspace.getLookup().lookup(AttributeController.class);
+    AttributeController ac = new AttributeControllerImpl();
+    AttributeModel attributeModel = ac.getModel(workspace);
+//    AttributeController ac = Lookup.getDefault().lookup(AttributeController.class);
+//    AttributeModel attributeModel = ac.getModel();
 
     // Create Gephi nodes
     for (DBObject node : nodeDao.iterateAll()) {
@@ -315,8 +368,7 @@ public class MongoToGephiExporter {
 
     // Create Gephi edges; currently with a standard weight of 1
     // and no set color
-    Iterable<Edge> edgeItr = new DeserialisingIterable<>(
-        edgeDao.iterateAll(), marshaller, Edge.class);
+    Iterable<Edge> edgeItr = new DeserialisingIterable<>(edgeDao.iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
       org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(edge);
       if (gephiEdge != null) {
@@ -332,12 +384,12 @@ public class MongoToGephiExporter {
     // which crops up when exporting to gexf. See url below for details:
     // https://forum.gephi.org/viewtopic.php?f=27&t=2337
     //noinspection UnusedDeclaration
-    DynamicModel dynamicModel = Lookup.getDefault().lookup(
-        DynamicController.class).getModel();
+    DynamicModel dynamicModel = workspace.getLookup().lookup(DynamicController.class).getModel();
+//    DynamicModel dynamicModel = Lookup.getDefault().lookup(DynamicController.class).getModel();
 
     // Export full graph in GEXF format
-    ExportController ec = Lookup.getDefault().
-        lookup(ExportController.class);
+    ExportController ec = workspace.getLookup().lookup(ExportController.class);
+//    ExportController ec = Lookup.getDefault().lookup(ExportController.class);
     logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
     ec.exportFile(outputFile);
 
@@ -351,10 +403,8 @@ public class MongoToGephiExporter {
    * @param attributeModel the Gephi AttributeModel to use when adding new column types to Gephi
    * @return the populated Gephi node
    */
-  public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
+  private org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
                                                         AttributeModel attributeModel) {
-
-
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
     logger.log(Level.FINE, "Parsing Entanglement node with a constructed Gephi node id of {0}",
