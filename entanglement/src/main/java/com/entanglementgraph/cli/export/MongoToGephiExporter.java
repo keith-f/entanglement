@@ -391,10 +391,13 @@ public class MongoToGephiExporter {
 //    DynamicModel dynamicModel = Lookup.getDefault().lookup(DynamicController.class).getModel();
 
     // Export full graph in GEXF format
-    ExportController ec = workspace.getLookup().lookup(ExportController.class);
+    ExportController ec2 = new ExportControllerImpl();
+
+//    ExportController ec = workspace.getLookup().lookup(ExportController.class);
 //    ExportController ec = Lookup.getDefault().lookup(ExportController.class);
     logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
-    ec.exportFile(outputFile);
+//    ec.exportFile(outputFile);
+    ec2.exportFile(outputFile, workspace);
 
   }
 
