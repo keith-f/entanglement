@@ -46,6 +46,7 @@ import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.dhns.DhnsGraphController;
 import org.gephi.io.exporter.api.ExportController;
+import org.gephi.io.exporter.impl.ExportControllerImpl;
 import org.gephi.project.api.Project;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
@@ -384,7 +385,9 @@ public class MongoToGephiExporter {
     // which crops up when exporting to gexf. See url below for details:
     // https://forum.gephi.org/viewtopic.php?f=27&t=2337
     //noinspection UnusedDeclaration
-    DynamicModel dynamicModel = workspace.getLookup().lookup(DynamicController.class).getModel();
+    DynamicController dc = new DynamicControllerImpl();
+    DynamicModel dynamicModel = dc.getModel(workspace);
+//    DynamicModel dynamicModel = workspace.getLookup().lookup(DynamicController.class).getModel();
 //    DynamicModel dynamicModel = Lookup.getDefault().lookup(DynamicController.class).getModel();
 
     // Export full graph in GEXF format
@@ -662,5 +665,9 @@ public class MongoToGephiExporter {
 
     // split the label
     return label.split(LABEL_SPLIT_REGEX);
+  }
+
+  public Workspace getWorkspace() {
+    return workspace;
   }
 }
