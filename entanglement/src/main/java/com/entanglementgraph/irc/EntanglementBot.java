@@ -98,5 +98,7 @@ public class EntanglementBot extends GenericIrcBot {
     addCommand("show-node", ShowNodeCommand.class);
     addCommand("use", UseGraphCommand.class);
 
+    addCommand("import-graph", ImportGraphCommand.class);
+
   }
 }
