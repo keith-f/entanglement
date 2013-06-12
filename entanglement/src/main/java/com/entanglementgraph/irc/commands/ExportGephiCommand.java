@@ -25,10 +25,7 @@ import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.halfspinsoftware.uibot.Message;
-import com.halfspinsoftware.uibot.OptionalParam;
-import com.halfspinsoftware.uibot.Param;
-import com.halfspinsoftware.uibot.RequiredParam;
+import com.halfspinsoftware.uibot.*;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
@@ -73,7 +70,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
-    Map<String, Color> colorMappings = parseColoursFromEnvironment();
+    Map<String, Color> colorMappings = parseColoursFromEnvironment(state);
     bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
 
 
@@ -94,7 +91,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
     }
   }
 
-  public Map<String, Color> parseColoursFromEnvironment() {
+  public static Map<String, Color> parseColoursFromEnvironment(BotState state) {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();

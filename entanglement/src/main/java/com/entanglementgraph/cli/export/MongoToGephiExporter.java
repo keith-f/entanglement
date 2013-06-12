@@ -129,8 +129,8 @@ public class MongoToGephiExporter {
     DynamicModel dynamicModel = dc.getModel(workspace);
 
     // Export workspace in GEXF format
-    ExportController ec2 = new ExportControllerImpl();
-    ec2.exportFile(outputFile, workspace);
+    ExportController ec = new ExportControllerImpl();
+    ec.exportFile(outputFile, workspace);
     logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
   }
 
