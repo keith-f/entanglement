@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 import org.apache.commons.cli.*;
 
@@ -150,10 +151,12 @@ public class MongoGraphToGephi {
         classLoader, mongoHost, mongoDatabaseName);
     GraphConnection conn = connFact.connect(graphName, graphBranch);
 
-
-    MongoToGephiExporter exporter = new MongoToGephiExporter(conn,
-        MongoToGephiExporter.loadColorMappings(new File(colorPropsFile)));
-    exporter.exportAll(new File(outputFilename));
+    Map<String, Color> entityToColor = ColorLoader.loadColorMappings(new File(colorPropsFile));
+    MongoToGephiExporter exporter = new MongoToGephiExporter();
+    exporter.addColourMappings(entityToColor);
+    exporter.addEntireGraph(conn);
+    exporter.writeToFile(new File(outputFilename));
+    exporter.close();
     System.out.println("\n\nDone.");
   }
 }

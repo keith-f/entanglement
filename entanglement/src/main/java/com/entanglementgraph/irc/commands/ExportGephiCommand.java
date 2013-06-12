@@ -80,8 +80,10 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
     try {
       File outputFile = new File(graphConn.getGraphName()+".gexf");
 
-      MongoToGephiExporter exporter = new MongoToGephiExporter(graphConn, colorMappings);
-      exporter.exportAll(outputFile);
+      MongoToGephiExporter exporter = new MongoToGephiExporter();
+      exporter.addColourMappings(colorMappings);
+      exporter.addEntireGraph(graphConn);
+      exporter.writeToFile(outputFile);
       exporter.close();
 
       Message result = new Message(channel);

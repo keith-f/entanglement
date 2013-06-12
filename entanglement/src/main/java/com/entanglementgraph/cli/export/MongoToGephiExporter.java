@@ -77,31 +77,21 @@ public class MongoToGephiExporter {
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToGephiExporter.class.getClassLoader());
-  private final NodeDAO nodeDao;
-  private final EdgeDAO edgeDao;
-  private Map<String, Color> colorMapping;
-  private HashSet<String> investigatedEdges;
-  private GraphModel graphModel;
-  private DirectedGraph directedGraph;
+
+  private final Map<String, Color> colorMapping;
+
+
 
   private ProjectController pc;
   private Project project;
   private Workspace workspace;
 
-  /**
-   * @param conn         set up node and edge DAOs
-   * @param colorMapping the optional color mapping for node types
-   */
-  public MongoToGephiExporter(GraphConnection conn,
-                              Map<String, Color> colorMapping) throws IOException {
-    if (colorMapping != null) {
-      this.colorMapping = colorMapping;
-    } else {
-      this.colorMapping = new HashMap<>();
-    }
-    this.nodeDao = conn.getNodeDao();
-    this.edgeDao = conn.getEdgeDao();
-    this.investigatedEdges = new HashSet<>();
+  private GraphModel graphModel;
+  private DirectedGraph directedGraph;
+
+
+  public MongoToGephiExporter() {
+    colorMapping = new HashMap<>();
 
     pc = new ProjectControllerImpl();
     pc.newProject();
@@ -115,9 +105,33 @@ public class MongoToGephiExporter {
     this.directedGraph = graphModel.getDirectedGraph();
   }
 
+  /**
+   * Call this when you're done with exporting the graph to ensure that all Gephi objects are tidied up.
+   */
   public void close() {
     pc.closeCurrentWorkspace();
     pc.closeCurrentProject();
+  }
+
+  public void clearWorkspace() {
+    directedGraph.clear();
+    pc.cleanWorkspace(workspace);
+  }
+
+  public void writeToFile(File outputFile) throws IOException {
+    // This line is a hack to get around a weird NullPointerException
+    // which crops up when exporting to GEXF. See url below for details:
+    // https://forum.gephi.org/viewtopic.php?f=27&t=2337
+    //noinspection UnusedDeclaration
+//    DynamicModel dynamicModel = Lookup.getDefault().lookup(
+//        DynamicController.class).getModel();
+    DynamicController dc = new DynamicControllerImpl();
+    DynamicModel dynamicModel = dc.getModel(workspace);
+
+    // Export workspace in GEXF format
+    ExportController ec2 = new ExportControllerImpl();
+    ec2.exportFile(outputFile, workspace);
+    logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
   }
 
   /**
@@ -143,111 +157,11 @@ public class MongoToGephiExporter {
         + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + object);
   }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public static Map<String, Color> loadColorMappings(File propFile)
-      throws IOException {
-    Properties props;
-    try (FileInputStream is = new FileInputStream(propFile)) {
-      props = new Properties();
-      props.load(is);
-    }
+//  @SuppressWarnings("UnusedDeclaration")
+//  public DirectedGraph getDirectedGraph() {
+//    return directedGraph;
+//  }
 
-    Map<String, Color> nodeTypeToColour = new HashMap<>();
-    for (String nodeType : props.stringPropertyNames()) {
-      String colorString = props.getProperty(nodeType);
-      Color color;
-
-      switch (colorString) {
-        case "BLACK":
-          color = Color.BLACK;
-          break;
-        case "BLUE":
-          color = Color.BLUE;
-          break;
-        case "CYAN":
-          color = Color.CYAN;
-          break;
-        case "DARK_GRAY":
-          color = Color.DARK_GRAY;
-          break;
-        case "GRAY":
-          color = Color.GRAY;
-          break;
-        case "GREEN":
-          color = Color.GREEN;
-          break;
-        case "LIGHT_GRAY":
-          color = Color.LIGHT_GRAY;
-          break;
-        case "MAGENTA":
-          color = Color.MAGENTA;
-          break;
-        case "ORANGE":
-          color = Color.ORANGE;
-          break;
-        case "PINK":
-          color = Color.PINK;
-          break;
-        case "RED":
-          color = Color.RED;
-          break;
-        case "WHITE":
-          color = Color.WHITE;
-          break;
-        case "YELLOW":
-          color = Color.YELLOW;
-          break;
-        default:
-          color = DEFAULT_COLOR;
-      }
-
-
-      nodeTypeToColour.put(nodeType, color);
-    }
-    return nodeTypeToColour;
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public DirectedGraph getDirectedGraph() {
-    return directedGraph;
-  }
-
-  /**
-   * Export a subgraph to a file rather just populating the Gephi graph.
-   *
-   * @param entityKey  The EntityKey to begin the subgraph with
-   * @param stopTypes  a list of node types which will stop the progression of
-   *                   the query
-   * @param outputFile the file to export the subgraph to
-   */
-  @SuppressWarnings("UnusedDeclaration")
-  public void exportSubgraph(EntityKeys entityKey,
-                             Set<String> stopTypes,
-                             File outputFile) throws GraphModelException,
-      DbObjectMarshallerException, IOException {
-
-    buildSubgraph(entityKey, stopTypes);
-
-    // This line is a hack to get around a weird NullPointerException
-    // which crops up when exporting to GEXF. See url below for details:
-    // https://forum.gephi.org/viewtopic.php?f=27&t=2337
-    //noinspection UnusedDeclaration
-//    DynamicModel dynamicModel = Lookup.getDefault().lookup(
-//        DynamicController.class).getModel();
-    DynamicController dc = new DynamicControllerImpl();
-    DynamicModel dynamicModel = dc.getModel(workspace);
-
-    //Export full graph
-    ExportController ec = Lookup.getDefault().lookup(ExportController.class);
-    try {
-      ec.exportFile(outputFile);
-    } catch (IOException ex) {
-      ex.printStackTrace();
-      return;
-    }
-    logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
-
-  }
 
   /**
    * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
@@ -260,8 +174,8 @@ public class MongoToGephiExporter {
    * @param stopTypes a list of node types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
-  public boolean buildSubgraph(EntityKeys entityKey,
-                               Set<String> stopTypes) throws GraphModelException,
+  public boolean addSubgraph(GraphConnection graphConn,
+                             EntityKeys entityKey, Set<String> stopTypes) throws GraphModelException,
       DbObjectMarshallerException {
 
     // Add column for node type
@@ -271,19 +185,23 @@ public class MongoToGephiExporter {
     AttributeController ac = new AttributeControllerImpl();
     AttributeModel attributeModel = ac.getModel(workspace);
     // ensure the current graph is empty
-    directedGraph.clear();
+    //directedGraph.clear();
 
     // Start with the core node
-    BasicDBObject coreNode = nodeDao.getByKey(entityKey);
+    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
     }
     directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
 
+    // A temporary place to store IDs of edges that we've aleady seen as we step through the graph.
+    //TODO do we need to define this here? Or would we move this into addChildNodes()?
+    Set<String> investigatedEdges = new HashSet<>();
+
     // Export subgraph into gephi directed graph
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodes(coreAriesNode.getKeys(), stopTypes, attributeModel);
+    addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopTypes, attributeModel);
 
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
@@ -294,32 +212,27 @@ public class MongoToGephiExporter {
   }
 
   /**
-   * Export all nodes and edges in the Entanglement graph to the output file specified.
-   *
-   * @param outputFile the file to export the graph to
+   * Adds all the nodes and eddges in the specified Entanglement graph to the in-memory Gephi workspace.
+   * @param graphConn the Entanglement graph to be added
    * @throws IOException
    * @throws GraphModelException
    * @throws RevisionLogException
    */
-  public void exportAll(File outputFile)
+  public void addEntireGraph(GraphConnection graphConn)
       throws IOException, GraphModelException, RevisionLogException {
-
-//    AttributeController ac = workspace.getLookup().lookup(AttributeController.class);
     AttributeController ac = new AttributeControllerImpl();
     AttributeModel attributeModel = ac.getModel(workspace);
-//    AttributeController ac = Lookup.getDefault().lookup(AttributeController.class);
-//    AttributeModel attributeModel = ac.getModel();
 
     // Create Gephi nodes
-    for (DBObject node : nodeDao.iterateAll()) {
+    for (DBObject node : graphConn.getNodeDao().iterateAll()) {
       directedGraph.addNode(parseEntanglementNode(node, attributeModel));
     }
 
     // Create Gephi edges; currently with a standard weight of 1
     // and no set color
-    Iterable<Edge> edgeItr = new DeserialisingIterable<>(edgeDao.iterateAll(), marshaller, Edge.class);
+    Iterable<Edge> edgeItr = new DeserialisingIterable<>(graphConn.getEdgeDao().iterateAll(), marshaller, Edge.class);
     for (Edge edge : edgeItr) {
-      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(edge);
+      org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(graphConn, edge);
       if (gephiEdge != null) {
         directedGraph.addEdge(gephiEdge);
       }
@@ -328,25 +241,6 @@ public class MongoToGephiExporter {
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
         new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
-
-    // This line is a hack to get around a weird NullPointerException
-    // which crops up when exporting to gexf. See url below for details:
-    // https://forum.gephi.org/viewtopic.php?f=27&t=2337
-    //noinspection UnusedDeclaration
-    DynamicController dc = new DynamicControllerImpl();
-    DynamicModel dynamicModel = dc.getModel(workspace);
-//    DynamicModel dynamicModel = workspace.getLookup().lookup(DynamicController.class).getModel();
-//    DynamicModel dynamicModel = Lookup.getDefault().lookup(DynamicController.class).getModel();
-
-    // Export full graph in GEXF format
-    ExportController ec2 = new ExportControllerImpl();
-
-//    ExportController ec = workspace.getLookup().lookup(ExportController.class);
-//    ExportController ec = Lookup.getDefault().lookup(ExportController.class);
-    logger.log(Level.INFO, "Output file: {0}", outputFile.getAbsoluteFile());
-//    ec.exportFile(outputFile);
-    ec2.exportFile(outputFile, workspace);
-
   }
 
   /**
@@ -459,9 +353,10 @@ public class MongoToGephiExporter {
    * @return the new Gephi edge
    * @throws GraphModelException if there is a problem retrieving the from/to nodes from Entanglement
    */
-  private org.gephi.graph.api.Edge parseEntanglementEdge(Edge edge) throws
+  private org.gephi.graph.api.Edge parseEntanglementEdge(GraphConnection graphConn, Edge edge) throws
       GraphModelException {
 
+    NodeDAO nodeDao = graphConn.getNodeDao();
     BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
     BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
 
@@ -492,18 +387,18 @@ public class MongoToGephiExporter {
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
-  private void addChildNodes(EntityKeys parentKeys, Set<String> stopTypes,
+  private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys, Set<String> stopTypes,
                              AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
-
+    EdgeDAO edgeDao = graphConn.getEdgeDao();
     /*
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
     logger.log(Level.FINE, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
-    iterateEdges(edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
+    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
     logger.log(Level.FINE, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
-    iterateEdges(edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
+    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
   }
 
   /**
@@ -519,7 +414,8 @@ public class MongoToGephiExporter {
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
-  private void iterateEdges(Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
+  private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
+                            Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
                             AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
 
     for (DBObject obj : edgeIterator) {
@@ -545,7 +441,7 @@ public class MongoToGephiExporter {
       logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
-      DBObject currentNodeObject = nodeDao.getByKey(opposingNodeKeys);
+      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
       if (currentNodeObject != null) {
         org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
 
@@ -562,7 +458,7 @@ public class MongoToGephiExporter {
         }
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(currentEdge);
+        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(graphConn, currentEdge);
         if (gephiEdge != null) {
           directedGraph.addEdge(gephiEdge);
           logger.log(Level.FINE, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
@@ -582,17 +478,12 @@ public class MongoToGephiExporter {
           continue;
         }
         logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
-        addChildNodes(currentNode.getKeys(), stopTypes, attributeModel);
+        addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopTypes, attributeModel);
       } else {
         logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }
     }
 
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public NodeDAO getNodeDao() {
-    return nodeDao;
   }
 
   /**
@@ -618,7 +509,25 @@ public class MongoToGephiExporter {
     return label.split(LABEL_SPLIT_REGEX);
   }
 
+
+  public void addColourMapping(String entityType, Color color) {
+    colorMapping.put(entityType, color);
+  }
+
+  public void addColourMappings(Map<String, Color> mappings) {
+    colorMapping.putAll(mappings);
+  }
+
+  public void clearColourMappings() {
+    colorMapping.clear();
+  }
+
+  public Map<String, Color> getColorMapping() {
+    return colorMapping;
+  }
+
   public Workspace getWorkspace() {
     return workspace;
   }
+
 }
