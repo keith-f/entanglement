@@ -289,15 +289,15 @@ public class RevisionLogDirectToMongoDbImpl
   @Override
   public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(
       String graphId, String branchId)
-  {    
-    DBObject[] andArgs = new BasicDBObject[] {
-        new BasicDBObject(FIELD_GRPH_UID, graphId),
-        new BasicDBObject(FIELD_GRPH_BRANCH, branchId),
-        new BasicDBObject(FIELD_COMMITTED, true)
-    };
-    DBObject query = new BasicDBObject("$and", Arrays.asList(andArgs));
-    
+  {
+    DBObject query = new BasicDBObject();
+    query.put(FIELD_GRPH_UID, graphId);
+    query.put(FIELD_GRPH_BRANCH, branchId);
+    query.put(FIELD_COMMITTED, true);
+
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_DATE_COMMITTED).sort(SORT_BY_TXN_SUBMIT_ID);
+    cursor.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
+
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
 
