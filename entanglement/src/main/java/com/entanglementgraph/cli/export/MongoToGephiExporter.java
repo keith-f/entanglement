@@ -157,6 +157,28 @@ public class MongoToGephiExporter {
         + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + object);
   }
 
+  /**
+   * This method will create an id appropriate to a gephi node from the EntityKeys object.
+   * Only use this method if you have already deserialized the Entanglement DBObject, otherwise use the
+   * other form of this method to save deserialization.
+   *
+   * @param keys the EntityKeys object to examine
+   * @return an appropriate *unique* string for that object
+   */
+  private static String keysetToId(EntityKeys keys) {
+
+    if (!keys.getUids().isEmpty()) {
+      // just return the first UID.
+      return (String) keys.getUids().iterator().next();
+    }
+
+    if (!keys.getNames().isEmpty() && !keys.getType().isEmpty()) {
+      return keys.getType() + keys.getNames();
+    }
+    throw new IllegalArgumentException("An entity must have at least "
+        + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + keys);
+  }
+
 //  @SuppressWarnings("UnusedDeclaration")
 //  public DirectedGraph getDirectedGraph() {
 //    return directedGraph;
@@ -363,8 +385,7 @@ public class MongoToGephiExporter {
 
     // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
     if (fromObj == null || toObj == null) {
-      logger.log(Level.FINE, "Edge {0} is hanging and will not be propagated to Gephi.",
-          edge.getKeys().getUids().iterator().next());
+      logger.log(Level.FINE, "Edge {0} is hanging and will not be propagated to Gephi.", keysetToId(edge.getKeys()));
       return null;
     }
 
@@ -396,9 +417,9 @@ public class MongoToGephiExporter {
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
-    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", parentKeys);
+    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", keysetToId(parentKeys));
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
-    logger.log(Level.FINE, "Iterating over incoming edges of {0}", parentKeys);
+    logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
   }
 
@@ -423,7 +444,7 @@ public class MongoToGephiExporter {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       logger.log(Level.FINE, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
-          currentEdge.getKeys().getUids().toString()});
+          keysetToId(currentEdge.getKeys())});
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
       // we want to do this before we start parsing entanglement nodes and edges, which is why
       // directedGraph.contains(Edge) isn't being used.
@@ -466,9 +487,8 @@ public class MongoToGephiExporter {
         }
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
-        logger.log(Level.FINE, "Edge {0} links to node {1}",
-            new String[]{currentEdge.getKeys().getUids().iterator().next().toString(),
-                currentNode.getKeys().getUids().iterator().next().toString()});
+        logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{keysetToId(currentEdge.getKeys()),
+            keysetToId(currentNode.getKeys())});
         /*
          * if the node is a stop type, then don't drill down further
          * into the subgraph. Otherwise, continue until there are no
@@ -478,10 +498,10 @@ public class MongoToGephiExporter {
           logger.log(Level.FINE, "Stopping at pre-defined stop node of type {0}", currentNode.getKeys().getType());
           continue;
         }
-        logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().getUids().toString());
+        logger.log(Level.FINE, "Finding children of node {0}", keysetToId(currentNode.getKeys()));
         addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopTypes, attributeModel);
       } else {
-        logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
+        logger.log(Level.FINE, "Edge {0} is a hanging edge", keysetToId(currentEdge.getKeys()));
       }
     }
 
