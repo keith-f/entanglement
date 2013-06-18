@@ -51,13 +51,14 @@ import org.gephi.project.api.Project;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.project.impl.ProjectControllerImpl;
-import org.openide.util.Lookup;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,7 +82,6 @@ public class MongoToGephiExporter {
   private final Map<String, Color> colorMapping;
 
 
-
   private ProjectController pc;
   private Project project;
   private Workspace workspace;
@@ -95,7 +95,7 @@ public class MongoToGephiExporter {
 
     pc = new ProjectControllerImpl();
     pc.newProject();
-    project= pc.getCurrentProject();
+    project = pc.getCurrentProject();
     workspace = pc.getCurrentWorkspace();
 
     GraphController gc = new DhnsGraphController();
@@ -213,6 +213,7 @@ public class MongoToGephiExporter {
 
   /**
    * Adds all the nodes and eddges in the specified Entanglement graph to the in-memory Gephi workspace.
+   *
    * @param graphConn the Entanglement graph to be added
    * @throws IOException
    * @throws GraphModelException
@@ -252,7 +253,7 @@ public class MongoToGephiExporter {
    * @return the populated Gephi node
    */
   private org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
-                                                        AttributeModel attributeModel) {
+                                                         AttributeModel attributeModel) {
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
     logger.log(Level.FINE, "Parsing Entanglement node with a constructed Gephi node id of {0}",
@@ -395,9 +396,9 @@ public class MongoToGephiExporter {
      * Start with the provided node, and iterate through all
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
-    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", parentKeys.getUids().iterator().next());
+    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", parentKeys);
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
-    logger.log(Level.FINE, "Iterating over incoming edges of {0}", parentKeys.getUids().iterator().next());
+    logger.log(Level.FINE, "Iterating over incoming edges of {0}", parentKeys);
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
   }
 
