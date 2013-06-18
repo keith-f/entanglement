@@ -192,13 +192,14 @@ public class MongoToGephiExporter {
    * <p/>
    * The subgraph is stored in the class variable directedGraph.
    *
-   * @param entityKey The entity key set to begin the subgraph with
-   * @param stopTypes a list of node types which will stop the progression of the query
+   * @param entityKey     The entity key set to begin the subgraph with
+   * @param stopNodeTypes a list of node types which will stop the progression of the query
+   * @param stopEdgeTypes a list of edge types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
   public boolean addSubgraph(GraphConnection graphConn,
-                             EntityKeys entityKey, Set<String> stopTypes) throws GraphModelException,
-      DbObjectMarshallerException {
+                             EntityKeys entityKey, Set<String> stopNodeTypes, Set<String> stopEdgeTypes)
+      throws GraphModelException, DbObjectMarshallerException {
 
     // Add column for node type
 //    AttributeController ac = Lookup.getDefault().
@@ -217,13 +218,14 @@ public class MongoToGephiExporter {
     }
     directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
 
-    // A temporary place to store IDs of edges that we've aleady seen as we step through the graph.
-    //TODO do we need to define this here? Or would we move this into addChildNodes()?
+    // Store the IDs of edges that we've already seen as we step through the graph.
+    // investigatedEdges needs to be created here, as addChildNodes is called many times in the subgraph
+    // algorithm and we can't have investigatedEdges being cleared partway through subgraph creation.
     Set<String> investigatedEdges = new HashSet<>();
 
     // Export subgraph into gephi directed graph
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopTypes, attributeModel);
+    addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
 
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
@@ -404,13 +406,14 @@ public class MongoToGephiExporter {
    * there are either no more edges, or until a stop node is reached.
    *
    * @param parentKeys     the EntityKeys which define the node to start at (the parent node)
-   * @param stopTypes      the node types which determine where a subgraph should stop
+   * @param stopNodeTypes  the node types which determine where a subgraph should stop
+   * @param stopEdgeTypes  the edge types which determine where a subgraph should stop
    * @param attributeModel helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
-  private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys, Set<String> stopTypes,
-                             AttributeModel attributeModel)
+  private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys, Set<String> stopNodeTypes,
+                             Set<String> stopEdgeTypes, AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
     EdgeDAO edgeDao = graphConn.getEdgeDao();
     /*
@@ -418,9 +421,9 @@ public class MongoToGephiExporter {
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
     logger.log(Level.FINE, "Iterating over outgoing edges of {0}", keysetToId(parentKeys));
-    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopTypes, attributeModel);
+    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopNodeTypes, stopEdgeTypes, attributeModel);
     logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
-    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopTypes, attributeModel);
+    iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopNodeTypes, stopEdgeTypes, attributeModel);
   }
 
   /**
@@ -431,20 +434,26 @@ public class MongoToGephiExporter {
    * @param iterateOverOutgoing if true, the iterator is looking at outgoing edges, and so the opposing node is
    *                            retrieved via getTo(). If false, the iterator is looking at incoming edges, and
    *                            so the opposing node is retrieved via getFrom().
-   * @param stopTypes           the node types which determine where a subgraph should stop
+   * @param stopNodeTypes       the node types which determine where a subgraph should stop
+   * @param stopEdgeTypes       the edge types which determine where a subgraph should stop
    * @param attributeModel      helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
-                            Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopTypes,
-                            AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
+                            Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopNodeTypes,
+                            Set<String> stopEdgeTypes, AttributeModel attributeModel) throws DbObjectMarshallerException, GraphModelException {
 
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
       logger.log(Level.FINE, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
           keysetToId(currentEdge.getKeys())});
+      // ignore any edges whose type matches those found within the edge stop types.
+      if (stopEdgeTypes.contains(currentEdge.getKeys().getType())) {
+        logger.log(Level.FINE, "Stopping at pre-defined stop edge of type {0}", currentEdge.getKeys().getType());
+        continue;
+      }
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
       // we want to do this before we start parsing entanglement nodes and edges, which is why
       // directedGraph.contains(Edge) isn't being used.
@@ -494,12 +503,12 @@ public class MongoToGephiExporter {
          * into the subgraph. Otherwise, continue until there are no
          * further edges.
          */
-        if (stopTypes.contains(currentNode.getKeys().getType())) {
+        if (stopNodeTypes.contains(currentNode.getKeys().getType())) {
           logger.log(Level.FINE, "Stopping at pre-defined stop node of type {0}", currentNode.getKeys().getType());
           continue;
         }
         logger.log(Level.FINE, "Finding children of node {0}", keysetToId(currentNode.getKeys()));
-        addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopTypes, attributeModel);
+        addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
       } else {
         logger.log(Level.FINE, "Edge {0} is a hanging edge", keysetToId(currentEdge.getKeys()));
       }
