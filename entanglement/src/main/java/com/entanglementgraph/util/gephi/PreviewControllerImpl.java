@@ -50,7 +50,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * FIXME we will need to remove this file before release (Gephi seems to be GPL, and we want Apache)
  */
-@ServiceProvider(service = PreviewController.class)
+//@ServiceProvider(service = PreviewController.class)
 public class PreviewControllerImpl
   implements PreviewController {
 
@@ -62,7 +62,9 @@ public class PreviewControllerImpl
     private Renderer[] registeredRenderers = null;
     private Boolean anyPluginRendererRegistered = null;
 
-    public PreviewControllerImpl() {
+  // ****** Had to add a new constructor here, since Gephi wasn't finding ProjectController properly ******
+  // ****** This needs to be passed to PreviewControllerImpl, below. ******
+    public PreviewControllerImpl(final ProjectController pc) {
       // ****** Replaced original code (commented) ******
 //      graphController = Lookup.getDefault().lookup(GraphController.class);
 //      attributeController = Lookup.getDefault().lookup(AttributeController.class);
@@ -73,7 +75,7 @@ public class PreviewControllerImpl
       //Workspace events
       // ****** Replaced original code (commented) ******
 //      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
-      ProjectController pc = new ProjectControllerImpl();
+//      ProjectController pc = new ProjectControllerImpl();
       // ^^^^^^ Replaced original code (commented above) ^^^^^^
       pc.addWorkspaceListener(new WorkspaceListener() {
 
@@ -83,7 +85,9 @@ public class PreviewControllerImpl
 
         @Override
         public void select(Workspace workspace) {
-          model = workspace.getLookup().lookup(PreviewModelImpl.class);
+          // ****** Not sure we need this, but replaced anyway... ******
+          model = new PreviewModelImpl(workspace);
+//          model = workspace.getLookup().lookup(PreviewModelImpl.class);
           if (model == null) {
             model = new PreviewModelImpl(workspace);
             workspace.add(model);
@@ -122,6 +126,8 @@ public class PreviewControllerImpl
     @Override
     public synchronized void refreshPreview(Workspace workspace) {
       GraphModel graphModel = graphController.getModel(workspace);
+      System.out.println("Attribute controller: "+attributeController);
+      System.out.println("Model: "+model);
       AttributeModel attributeModel = attributeController.getModel(model.getWorkspace());
       PreviewModelImpl previewModel = getModel(workspace);
       previewModel.clear();

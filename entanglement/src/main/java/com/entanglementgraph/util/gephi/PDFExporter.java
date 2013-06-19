@@ -30,12 +30,8 @@ import java.io.OutputStream;
 import org.gephi.io.exporter.spi.ByteExporter;
 import org.gephi.io.exporter.spi.VectorExporter;
 import org.gephi.preview.*;
-import org.gephi.preview.PreviewControllerImpl;
-import org.gephi.preview.api.PDFTarget;
-import org.gephi.preview.api.PreviewController;
-import org.gephi.preview.api.PreviewProperties;
-import org.gephi.preview.api.PreviewProperty;
-import org.gephi.preview.api.RenderTarget;
+import org.gephi.preview.api.*;
+import org.gephi.project.api.ProjectController;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
@@ -54,6 +50,8 @@ import org.openide.util.Lookup;
  */
 public class PDFExporter  implements ByteExporter, VectorExporter, LongTask {
 
+  private final ProjectController projectController;
+
   private ProgressTicket progress;
   private Workspace workspace;
   private OutputStream stream;
@@ -67,12 +65,18 @@ public class PDFExporter  implements ByteExporter, VectorExporter, LongTask {
   private boolean landscape = false;
   private Rectangle pageSize = PageSize.A4;
 
+  // ****** Had to add a new constructor here, since Gephi wasn't finding ProjectController properly ******
+  // ****** This needs to be passed to PreviewControllerImpl, below. ******
+  public PDFExporter(ProjectController projectController) {
+    this.projectController = projectController;
+  }
+
   public boolean execute() {
     Progress.start(progress);
 
     // ****** Replaced original code (commented) ******
 //    PreviewController controller = Lookup.getDefault().lookup(PreviewController.class);
-    PreviewController controller = new PreviewControllerImpl();
+    PreviewController controller = new PreviewControllerImpl(projectController);
     // ^^^^^^ Replaced original code (commented above) ^^^^^^
     controller.getModel(workspace).getProperties().putValue(PreviewProperty.VISIBILITY_RATIO, 1.0);
     controller.refreshPreview(workspace);

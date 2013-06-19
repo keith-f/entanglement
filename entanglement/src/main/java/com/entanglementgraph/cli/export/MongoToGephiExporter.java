@@ -82,7 +82,7 @@ public class MongoToGephiExporter {
   private final Map<String, Color> colorMapping;
 
 
-  private ProjectController pc;
+  private ProjectController projectController;
   private Project project;
   private Workspace workspace;
 
@@ -93,10 +93,10 @@ public class MongoToGephiExporter {
   public MongoToGephiExporter() {
     colorMapping = new HashMap<>();
 
-    pc = new ProjectControllerImpl();
-    pc.newProject();
-    project = pc.getCurrentProject();
-    workspace = pc.getCurrentWorkspace();
+    projectController = new ProjectControllerImpl();
+    projectController.newProject();
+    project = projectController.getCurrentProject();
+    workspace = projectController.getCurrentWorkspace();
 
     GraphController gc = new DhnsGraphController();
     this.graphModel = gc.getModel(workspace);
@@ -109,13 +109,13 @@ public class MongoToGephiExporter {
    * Call this when you're done with exporting the graph to ensure that all Gephi objects are tidied up.
    */
   public void close() {
-    pc.closeCurrentWorkspace();
-    pc.closeCurrentProject();
+    projectController.closeCurrentWorkspace();
+    projectController.closeCurrentProject();
   }
 
   public void clearWorkspace() {
     directedGraph.clear();
-    pc.cleanWorkspace(workspace);
+    projectController.cleanWorkspace(workspace);
   }
 
   public void writeToFile(File outputFile) throws IOException {
@@ -560,4 +560,7 @@ public class MongoToGephiExporter {
     return workspace;
   }
 
+  public ProjectController getProjectController() {
+    return projectController;
+  }
 }
