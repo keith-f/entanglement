@@ -43,11 +43,6 @@ Portions Copyrighted 2011 Gephi Consortium.
 
 package com.entanglementgraph.util.gephi;
 
-import java.awt.Dimension;
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-
 import org.gephi.data.attributes.AttributeControllerImpl;
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
@@ -60,170 +55,172 @@ import org.gephi.preview.spi.*;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.project.api.WorkspaceListener;
-import org.gephi.project.impl.ProjectControllerImpl;
 import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
-import org.openide.util.lookup.ServiceProvider;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 /**
  * This class is essentially a clone of <code>org.gephi.preview.PreviewControllerImpl</code> (version 0.8.2).
  * Static references to singleton objects have been replaced.
- *
+ * <p/>
  * See:
  * https://github.com/gephi/gephi/blob/0.8.2/modules/PreviewAPI/src/main/java/org/gephi/preview/PreviewControllerImpl.java
- *
+ * <p/>
  * FIXME we will need to remove this file before release (Gephi seems to be GPL, and we want Apache)
  */
 //@ServiceProvider(service = PreviewController.class)
 public class PreviewControllerImpl
-  implements PreviewController {
+    implements PreviewController {
 
-    private PreviewModelImpl model;
-    //Other controllers
-    private final GraphController graphController;
-    private final AttributeController attributeController;
-    //Registered renderers
-    private Renderer[] registeredRenderers = null;
-    private Boolean anyPluginRendererRegistered = null;
+  private PreviewModelImpl model;
+  //Other controllers
+  private final GraphController graphController;
+  private final AttributeController attributeController;
+  //Registered renderers
+  private Renderer[] registeredRenderers = null;
+  private Boolean anyPluginRendererRegistered = null;
 
   // ****** Had to add a new constructor here, since Gephi wasn't finding ProjectController properly ******
   // ****** This needs to be passed to PreviewControllerImpl, below. ******
-    public PreviewControllerImpl(final ProjectController pc) {
-      // ****** Replaced original code (commented) ******
+  public PreviewControllerImpl(final ProjectController pc) {
+    // ****** Replaced original code (commented) ******
 //      graphController = Lookup.getDefault().lookup(GraphController.class);
 //      attributeController = Lookup.getDefault().lookup(AttributeController.class);
-      graphController = new DhnsGraphController();
-      attributeController = new AttributeControllerImpl();
-      // ^^^^^^ Replaced original code (commented above) ^^^^^^
+    graphController = new DhnsGraphController();
+    attributeController = new AttributeControllerImpl();
+    // ^^^^^^ Replaced original code (commented above) ^^^^^^
 
-      //Workspace events
-      // ****** Replaced original code (commented) ******
+    //Workspace events
+    // ****** Replaced original code (commented) ******
 //      ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
 //      ProjectController pc = new ProjectControllerImpl();
-      // ^^^^^^ Replaced original code (commented above) ^^^^^^
-      pc.addWorkspaceListener(new WorkspaceListener() {
+    // ^^^^^^ Replaced original code (commented above) ^^^^^^
+    pc.addWorkspaceListener(new WorkspaceListener() {
 
-        @Override
-        public void initialize(Workspace workspace) {
-        }
+      @Override
+      public void initialize(Workspace workspace) {
+      }
 
-        @Override
-        public void select(Workspace workspace) {
-          // ****** Not sure we need this, but replaced anyway... ******
-          model = new PreviewModelImpl(workspace);
+      @Override
+      public void select(Workspace workspace) {
+        // ****** Not sure we need this, but replaced anyway... ******
+        model = new PreviewModelImpl(workspace);
 //          model = workspace.getLookup().lookup(PreviewModelImpl.class);
-          if (model == null) {
-            model = new PreviewModelImpl(workspace);
-            workspace.add(model);
-          }
-        }
-
-        @Override
-        public void unselect(Workspace workspace) {
-          model = null;
-        }
-
-        @Override
-        public void close(Workspace workspace) {
-        }
-
-        @Override
-        public void disable() {
-          model = null;
-        }
-      });
-
-      if (pc.getCurrentWorkspace() != null) {
-        model = pc.getCurrentWorkspace().getLookup().lookup(PreviewModelImpl.class);
         if (model == null) {
-          model = new PreviewModelImpl(pc.getCurrentWorkspace(), this);
-          pc.getCurrentWorkspace().add(model);
+          model = new PreviewModelImpl(workspace);
+          workspace.add(model);
+        }
+      }
+
+      @Override
+      public void unselect(Workspace workspace) {
+        model = null;
+      }
+
+      @Override
+      public void close(Workspace workspace) {
+      }
+
+      @Override
+      public void disable() {
+        model = null;
+      }
+    });
+
+    if (pc.getCurrentWorkspace() != null) {
+      model = pc.getCurrentWorkspace().getLookup().lookup(PreviewModelImpl.class);
+      if (model == null) {
+        model = new PreviewModelImpl(pc.getCurrentWorkspace(), this);
+        pc.getCurrentWorkspace().add(model);
+      }
+    }
+  }
+
+  @Override
+  public void refreshPreview() {
+    refreshPreview(model.getWorkspace());
+  }
+
+  @Override
+  public synchronized void refreshPreview(Workspace workspace) {
+    GraphModel graphModel = graphController.getModel(workspace);
+//      System.out.println("Attribute controller: "+attributeController);
+//      System.out.println("Model: "+model);
+    AttributeModel attributeModel = attributeController.getModel(model.getWorkspace());
+    PreviewModelImpl previewModel = getModel(workspace);
+    previewModel.clear();
+
+    //Directed graph?
+    previewModel.getProperties().putValue(PreviewProperty.DIRECTED, graphModel.isDirected() || graphModel.isMixed());
+
+    //Graph
+    Graph graph = graphModel.getGraphVisible();
+    if (previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO) < 1f) {
+      float visibilityRatio = previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO);
+      GraphView reducedView = graphModel.copyView(graph.getView());
+      graph = graphModel.getGraph(reducedView);
+      Node[] nodes = graph.getNodes().toArray();
+      for (int i = 0; i < nodes.length; i++) {
+        float r = (float) i / (float) nodes.length;
+        if (r > visibilityRatio) {
+          graph.removeNode(nodes[i]);
         }
       }
     }
 
-    @Override
-    public void refreshPreview() {
-      refreshPreview(model.getWorkspace());
+    Renderer[] renderers;
+    if (!mousePressed) {
+      renderers = model.getManagedEnabledRenderers();
+    } else {
+      ArrayList<Renderer> renderersList = new ArrayList<Renderer>();
+      for (Renderer renderer : model.getManagedEnabledRenderers()) {
+        //Only mouse responsive renderers will be called while mouse is pressed
+        if (renderer instanceof MouseResponsiveRenderer) {
+          renderersList.add(renderer);
+        }
+      }
+
+      renderers = renderersList.toArray(new Renderer[0]);
     }
 
-    @Override
-    public synchronized void refreshPreview(Workspace workspace) {
-      GraphModel graphModel = graphController.getModel(workspace);
-      System.out.println("Attribute controller: "+attributeController);
-      System.out.println("Model: "+model);
-      AttributeModel attributeModel = attributeController.getModel(model.getWorkspace());
-      PreviewModelImpl previewModel = getModel(workspace);
-      previewModel.clear();
+    if (renderers == null) {
+      renderers = getRegisteredRenderers();
+    }
 
-      //Directed graph?
-      previewModel.getProperties().putValue(PreviewProperty.DIRECTED, graphModel.isDirected() || graphModel.isMixed());
-
-      //Graph
-      Graph graph = graphModel.getGraphVisible();
-      if (previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO) < 1f) {
-        float visibilityRatio = previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO);
-        GraphView reducedView = graphModel.copyView(graph.getView());
-        graph = graphModel.getGraph(reducedView);
-        Node[] nodes = graph.getNodes().toArray();
-        for (int i = 0; i < nodes.length; i++) {
-          float r = (float) i / (float) nodes.length;
-          if (r > visibilityRatio) {
-            graph.removeNode(nodes[i]);
+    //Build items
+    for (ItemBuilder b : Lookup.getDefault().lookupAll(ItemBuilder.class)) {
+      //Only build items of this builder if some renderer needs it:
+      if (isItemBuilderNeeded(b, previewModel.getProperties(), renderers)) {
+        try {
+          Item[] items = b.getItems(graph, attributeModel);
+          if (items != null) {
+            previewModel.loadItems(b.getType(), items);
           }
+        } catch (Exception e) {
+          Exceptions.printStackTrace(e);
         }
-      }
-
-      Renderer[] renderers;
-      if (!mousePressed) {
-        renderers = model.getManagedEnabledRenderers();
-      } else {
-        ArrayList<Renderer> renderersList = new ArrayList<Renderer>();
-        for(Renderer renderer: model.getManagedEnabledRenderers()){
-          //Only mouse responsive renderers will be called while mouse is pressed
-          if(renderer instanceof MouseResponsiveRenderer){
-            renderersList.add(renderer);
-          }
-        }
-
-        renderers = renderersList.toArray(new Renderer[0]);
-      }
-
-      if (renderers == null) {
-        renderers = getRegisteredRenderers();
-      }
-
-      //Build items
-      for (ItemBuilder b : Lookup.getDefault().lookupAll(ItemBuilder.class)) {
-        //Only build items of this builder if some renderer needs it:
-        if (isItemBuilderNeeded(b, previewModel.getProperties(), renderers)) {
-          try {
-            Item[] items = b.getItems(graph, attributeModel);
-            if (items != null) {
-              previewModel.loadItems(b.getType(), items);
-            }
-          } catch (Exception e) {
-            Exceptions.printStackTrace(e);
-          }
-        }
-      }
-
-      //Destrow view
-      if (previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO) < 1f) {
-        graphModel.destroyView(graph.getView());
-      }
-
-      //Refresh dimensions
-      updateDimensions(previewModel, previewModel.getItems(Item.NODE));
-
-
-      //Pre process renderers
-      for (Renderer r : renderers) {
-        r.preProcess(model);
       }
     }
+
+    //Destrow view
+    if (previewModel.getProperties().getFloatValue(PreviewProperty.VISIBILITY_RATIO) < 1f) {
+      graphModel.destroyView(graph.getView());
+    }
+
+    //Refresh dimensions
+    updateDimensions(previewModel, previewModel.getItems(Item.NODE));
+
+
+    //Pre process renderers
+    for (Renderer r : renderers) {
+      r.preProcess(model);
+    }
+  }
 
   private boolean isItemBuilderNeeded(ItemBuilder itemBuilder, PreviewProperties properties, Renderer[] renderers) {
     for (Renderer r : renderers) {
@@ -414,16 +411,17 @@ public class PreviewControllerImpl
     }
     return anyPluginRendererRegistered;
   }
+
   private boolean mousePressed = false;
 
   @Override
-  public boolean sendMouseEvent(PreviewMouseEvent event){
+  public boolean sendMouseEvent(PreviewMouseEvent event) {
     return sendMouseEvent(event, Lookup.getDefault().lookup(ProjectController.class).getCurrentWorkspace());
   }
 
   @Override
   public boolean sendMouseEvent(PreviewMouseEvent event, Workspace workspace) {
-    if(workspace == null){
+    if (workspace == null) {
       return false;
     }
 
