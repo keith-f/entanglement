@@ -51,6 +51,7 @@ import org.gephi.project.api.Project;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.project.impl.ProjectControllerImpl;
+import org.openide.util.Lookup;
 
 import java.awt.*;
 import java.io.File;
@@ -83,7 +84,7 @@ public class MongoToGephiExporter {
 
 
   private ProjectController projectController;
-  private Project project;
+//  private Project project;
   private Workspace workspace;
 
   private GraphModel graphModel;
@@ -93,10 +94,20 @@ public class MongoToGephiExporter {
   public MongoToGephiExporter() {
     colorMapping = new HashMap<>();
 
-    projectController = new ProjectControllerImpl();
-    projectController.newProject();
-    project = projectController.getCurrentProject();
-    workspace = projectController.getCurrentWorkspace();
+//    projectController = new ProjectControllerImpl();
+    projectController = Lookup.getDefault().lookup(ProjectController.class);
+    synchronized (projectController) {
+//      projectController.newProject();
+      Project project = projectController.getCurrentProject();
+      if (project == null) {
+        logger.info("Creating a new Gephi project");
+        projectController.newProject();
+        project = projectController.getCurrentProject();
+        logger.info("Project: "+project);
+      }
+//      workspace = projectController.getCurrentWorkspace();
+      workspace = projectController.newWorkspace(project);
+    }
 
     GraphController gc = new DhnsGraphController();
     this.graphModel = gc.getModel(workspace);
@@ -109,8 +120,9 @@ public class MongoToGephiExporter {
    * Call this when you're done with exporting the graph to ensure that all Gephi objects are tidied up.
    */
   public void close() {
-    projectController.closeCurrentWorkspace();
-    projectController.closeCurrentProject();
+//    projectController.closeCurrentWorkspace();
+//    projectController.closeCurrentProject();
+    projectController.deleteWorkspace(workspace);
   }
 
   public void clearWorkspace() {
