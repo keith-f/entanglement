@@ -68,7 +68,7 @@ import java.util.logging.Logger;
  */
 public class MongoToGephiExporter {
 
-  private static final Logger logger = Logger.getLogger(MongoGraphToGephi.class.getName());
+  private static final Logger logger = Logger.getLogger(MongoToGephiExporter.class.getName());
   // a Gephi label string will use the value below to separate alternative labels.
   private static final String LABEL_SPLIT_REGEX = "\" , \"";
   // A Gephi label string will start and end with the following values
