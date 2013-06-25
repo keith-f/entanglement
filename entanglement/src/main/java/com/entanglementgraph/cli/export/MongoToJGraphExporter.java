@@ -99,6 +99,9 @@ public class MongoToJGraphExporter {
   public void clearGraph() {
     graph = new mxGraph();
     parentContainer = graph.getDefaultParent();
+
+    uidToNode.clear();
+    typeToNameToNode.clear();
   }
 
 
@@ -244,6 +247,7 @@ public class MongoToJGraphExporter {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
     }
+    graph.getModel().beginUpdate();
 //    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
     addNode(coreNode);
 
@@ -259,7 +263,7 @@ public class MongoToJGraphExporter {
     // Print out a summary of the full graph
 //    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
 //        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
-
+    graph.getModel().endUpdate();
     return true;
 
   }
@@ -273,6 +277,7 @@ public class MongoToJGraphExporter {
    * @throws DbObjectMarshallerException
    */
   private Object addNode(DBObject nodeObj) throws DbObjectMarshallerException {
+//    logger.info("Adding node: "+nodeObj);
     EntityKeys<?> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
@@ -286,6 +291,7 @@ public class MongoToJGraphExporter {
   }
 
   private Object addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
+    logger.info("Adding edge: "+edgeObj);
     Edge edge = marshaller.deserialize(edgeObj, Edge.class);
     Object jgraphFromNode = getJGraphNodeFromCache(edge.getFrom());
     Object jgraphToNode = getJGraphNodeFromCache(edge.getTo());
@@ -305,6 +311,7 @@ public class MongoToJGraphExporter {
    */
   public void addEntireGraph(GraphConnection graphConn)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
+    graph.getModel().beginUpdate();
     for (DBObject node : graphConn.getNodeDao().iterateAll()) {
       addNode(node);
     }
@@ -314,7 +321,7 @@ public class MongoToJGraphExporter {
     for (DBObject edgeObj : graphConn.getEdgeDao().iterateAll()) {
       addEdge(edgeObj);
     }
-
+    graph.getModel().endUpdate();
   }
 
 
