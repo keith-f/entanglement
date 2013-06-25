@@ -147,7 +147,7 @@ public class MongoToJGraphExporter {
 //
 //  }
 
-  public void toPdf(File outputFile) throws IOException {
+  public void writeToPdfFile(File outputFile) throws IOException {
     logger.info("Writing to file: "+outputFile.getAbsolutePath());
     FileOutputStream fos = new FileOutputStream(outputFile);
     try {
