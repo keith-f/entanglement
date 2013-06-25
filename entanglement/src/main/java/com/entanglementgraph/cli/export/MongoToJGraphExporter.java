@@ -103,6 +103,7 @@ public class MongoToJGraphExporter {
 
 
   public void writeToJGraphXmlFile(File outputFile) throws IOException {
+    logger.info("Writing to file: "+outputFile.getAbsolutePath());
     mxCodec codec = new mxCodec();
     String xml = mxXmlUtils.getXml(codec.encode(graph.getModel()));
 
@@ -110,17 +111,20 @@ public class MongoToJGraphExporter {
   }
 
   public void writeToHtmlFile(File outputFile) throws IOException {
+    logger.info("Writing to file: "+outputFile.getAbsolutePath());
     mxUtils.writeFile(mxXmlUtils.getXml(mxCellRenderer
         .createHtmlDocument(graph, null, 1, null, null)
         .getDocumentElement()), outputFile.getAbsolutePath());
   }
 
   public void writeToTextFile(File outputFile) throws IOException {
+    logger.info("Writing to file: "+outputFile.getAbsolutePath());
     String content = mxGdCodec.encode(graph);
     mxUtils.writeFile(content, outputFile.getAbsolutePath());
   }
 
   public void writeToSvgFile(File outputFile) throws IOException {
+    logger.info("Writing to file: "+outputFile.getAbsolutePath());
     mxSvgCanvas canvas = (mxSvgCanvas) mxCellRenderer
         .drawCells(graph, null, 1, null,
             new mxCellRenderer.CanvasFactory()
@@ -141,6 +145,7 @@ public class MongoToJGraphExporter {
 //  }
 
   public void toPdf(File outputFile) throws IOException {
+    logger.info("Writing to file: "+outputFile.getAbsolutePath());
     FileOutputStream fos = new FileOutputStream(outputFile);
     try {
       mxRectangle bounds = graph.getGraphBounds();
@@ -199,6 +204,10 @@ public class MongoToJGraphExporter {
     }
 
     Map<String, Object> nameToJGraphNode = typeToNameToNode.get(keyset.getType());
+    if (nameToJGraphNode == null) {
+      //No nodes of this type at all, so don't even need to check the name
+      return null;
+    }
     for (String name : keyset.getNames()) {
       Object jgraphNode = nameToJGraphNode.get(name);
       if (jgraphNode != null) {
