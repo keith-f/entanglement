@@ -291,7 +291,7 @@ public class MongoToJGraphExporter {
   }
 
   private Object addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
-    logger.info("Adding edge: "+edgeObj);
+//    logger.info("Adding edge: "+edgeObj);
     Edge edge = marshaller.deserialize(edgeObj, Edge.class);
     Object jgraphFromNode = getJGraphNodeFromCache(edge.getFrom());
     Object jgraphToNode = getJGraphNodeFromCache(edge.getTo());
