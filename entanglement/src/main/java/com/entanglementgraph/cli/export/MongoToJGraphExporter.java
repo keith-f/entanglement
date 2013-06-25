@@ -28,12 +28,19 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mxgraph.canvas.mxGraphics2DCanvas;
+import com.mxgraph.canvas.mxICanvas;
+import com.mxgraph.canvas.mxSvgCanvas;
 import com.mxgraph.io.mxCodec;
-import com.mxgraph.util.mxUtils;
-import com.mxgraph.util.mxXmlUtils;
+import com.mxgraph.io.mxGdCodec;
+import com.mxgraph.util.*;
 import com.mxgraph.view.mxGraph;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
@@ -41,6 +48,7 @@ import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -94,14 +102,67 @@ public class MongoToJGraphExporter {
   }
 
 
-  public void writeToFile(File outputFile) throws IOException {
+  public void writeToJGraphXmlFile(File outputFile) throws IOException {
     mxCodec codec = new mxCodec();
     String xml = mxXmlUtils.getXml(codec.encode(graph.getModel()));
 
     mxUtils.writeFile(xml, outputFile.getAbsolutePath());
-
   }
 
+  public void writeToHtmlFile(File outputFile) throws IOException {
+    mxUtils.writeFile(mxXmlUtils.getXml(mxCellRenderer
+        .createHtmlDocument(graph, null, 1, null, null)
+        .getDocumentElement()), outputFile.getAbsolutePath());
+  }
+
+  public void writeToTextFile(File outputFile) throws IOException {
+    String content = mxGdCodec.encode(graph);
+    mxUtils.writeFile(content, outputFile.getAbsolutePath());
+  }
+
+  public void writeToSvgFile(File outputFile) throws IOException {
+    mxSvgCanvas canvas = (mxSvgCanvas) mxCellRenderer
+        .drawCells(graph, null, 1, null,
+            new mxCellRenderer.CanvasFactory()
+            {
+              public mxICanvas createCanvas(int width, int height)
+              {
+                mxSvgCanvas canvas = new mxSvgCanvas(mxDomUtils.createSvgDocument(width, height));
+                canvas.setEmbedded(true);
+                return canvas;
+              }
+            });
+
+    mxUtils.writeFile(mxXmlUtils.getXml(canvas.getDocument()), outputFile.getAbsolutePath());
+  }
+
+//  public void writeToPngFile(File outputFile) throws IOException {
+//
+//  }
+
+  public void toPdf(File outputFile) throws IOException {
+    FileOutputStream fos = new FileOutputStream(outputFile);
+    try {
+      mxRectangle bounds = graph.getGraphBounds();
+      Rectangle rectangle = new Rectangle((float) bounds.getWidth(), (float) bounds.getHeight());
+      Document document = new Document(rectangle);
+      PdfWriter writer = PdfWriter.getInstance(document, fos);
+      document.open();
+      PdfCanvasFactory pdfCanvasFactory = new PdfCanvasFactory(writer.getDirectContent());
+      mxGraphics2DCanvas canvas = (mxGraphics2DCanvas) mxCellRenderer
+          .drawCells(graph, null, 1, null, pdfCanvasFactory);
+      canvas.getGraphics().dispose();
+      document.close();
+    }
+    catch (DocumentException e) {
+      throw new IOException(e.getLocalizedMessage());
+    }
+    finally {
+      if (fos != null) {
+        fos.close();
+      }
+    }
+  }
 
   /**
    *
@@ -465,5 +526,9 @@ public class MongoToJGraphExporter {
 
   public mxGraph getGraph() {
     return graph;
+  }
+
+  public Object getParentContainer() {
+    return parentContainer;
   }
 }

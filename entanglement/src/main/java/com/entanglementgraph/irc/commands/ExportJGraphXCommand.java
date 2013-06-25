@@ -77,7 +77,7 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
       MongoToJGraphExporter exporter = new MongoToJGraphExporter();
       exporter.addColourMappings(colorMappings);
       exporter.addEntireGraph(graphConn);
-      exporter.writeToFile(outputFile);
+      exporter.writeToJGraphXmlFile(outputFile);
       exporter.clearGraph();
 
       Message result = new Message(channel);
