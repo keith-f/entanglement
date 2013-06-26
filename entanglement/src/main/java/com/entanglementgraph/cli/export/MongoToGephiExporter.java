@@ -524,7 +524,7 @@ public class MongoToGephiExporter {
         logger.log(Level.FINE, "Edge {0} is a hanging edge", keysetToId(currentEdge.getKeys()));
       }
     }
-
+    logger.fine("Counter: nodes = " + directedGraph.getNodeCount() + " edges = " + directedGraph.getEdgeCount());
   }
 
   /**
