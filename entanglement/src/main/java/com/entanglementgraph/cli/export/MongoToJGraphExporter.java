@@ -45,6 +45,7 @@ import com.mxgraph.view.mxGraph;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
+import org.w3c.dom.Element;
 
 import java.awt.*;
 import java.io.File;
@@ -94,6 +95,7 @@ public class MongoToJGraphExporter {
     uidToNode = new HashMap<>();
     typeToNameToNode = new HashMap<>();
     clearGraph();
+
   }
 
   public void clearGraph() {
@@ -285,10 +287,13 @@ public class MongoToJGraphExporter {
     }
 
     String id = parseIdStringFromKeyset(keyset);
-    Object jgraphNode = graph.insertVertex(parentContainer, id, nodeObj, 0, 0, 20, 10);
+    Element userObject = createXmlUserObject(keyset, nodeObj);
+    Object jgraphNode = graph.insertVertex(parentContainer, id, userObject, 0, 0, 20, 10);
     cacheJGraphXNode(keyset, jgraphNode);
     return jgraphNode;
   }
+
+
 
   private Object addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
 //    logger.info("Adding edge: "+edgeObj);
@@ -299,6 +304,20 @@ public class MongoToJGraphExporter {
     String id = parseIdStringFromKeyset(edge.getKeys());
     Object graphEdge = graph.insertEdge(parentContainer, id, edge, jgraphFromNode, jgraphToNode);
     return graphEdge;
+  }
+
+  private Element createXmlUserObject(EntityKeys<?> keyset, DBObject obj) {
+    org.w3c.dom.Document doc = mxDomUtils.createDocument();
+    Element element = doc.createElement(keyset.getType());
+    for (Object entryObj : obj.toMap().entrySet()) {
+      Map.Entry entry = (Map.Entry) entryObj;
+      element.setAttribute(entry.getKey().toString(), entry.getValue().toString());
+    }
+//    Element person1 = doc.createElement("Person");
+//    person1.setAttribute("firstName", "Daffy");
+//    person1.setAttribute("lastName", "Duck");
+
+    return element;
   }
 
   /**
