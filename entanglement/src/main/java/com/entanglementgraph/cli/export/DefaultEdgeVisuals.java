@@ -46,7 +46,6 @@ public class DefaultEdgeVisuals implements EdgeVisuals {
   @Override
   public String toBasicString(EntityKeys<Edge> keys, DBObject rawObject) {
     //Returns the edge type, plus first name or UID.
-
     StringBuilder sb = new StringBuilder();
     sb.append(keys.getType()).append("\n");
     if (!keys.getNames().isEmpty()) {

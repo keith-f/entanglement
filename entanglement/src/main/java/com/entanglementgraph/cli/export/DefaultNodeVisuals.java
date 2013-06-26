@@ -62,6 +62,15 @@ public class DefaultNodeVisuals implements NodeVisuals {
 
   @Override
   public String toBasicString(EntityKeys<Node> keys, DBObject rawObject) {
-    return String.format("%s\n%s", keys.getType(), rawObject.toString());
+    //Returns the node type, plus first name or UID.
+    StringBuilder sb = new StringBuilder();
+    sb.append(keys.getType()).append("\n");
+    if (!keys.getNames().isEmpty()) {
+      sb.append(keys.getNames().iterator().next());
+    } else {
+      sb.append(keys.getUids().iterator().next());
+    }
+
+    return sb.toString();
   }
 }
