@@ -50,7 +50,6 @@ import org.gephi.io.exporter.impl.ExportControllerImpl;
 import org.gephi.project.api.Project;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
-import org.gephi.project.impl.ProjectControllerImpl;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -84,7 +83,7 @@ public class MongoToGephiExporter {
 
 
   private ProjectController projectController;
-//  private Project project;
+  //  private Project project;
   private Workspace workspace;
 
   private GraphModel graphModel;
@@ -103,7 +102,7 @@ public class MongoToGephiExporter {
         logger.info("Creating a new Gephi project");
         projectController.newProject();
         project = projectController.getCurrentProject();
-        logger.info("Project: "+project);
+        logger.info("Project: " + project);
       }
 //      workspace = projectController.getCurrentWorkspace();
       workspace = projectController.newWorkspace(project);
@@ -153,7 +152,7 @@ public class MongoToGephiExporter {
    * @param object the entanglement object to examine
    * @return an appropriate *unique* string for that object
    */
-  private static String keysetToId(DBObject object) {
+  public static String keysetToId(DBObject object) {
 
     if (!((BasicDBList) ((BasicDBObject) object.get("keys")).get("uids")).isEmpty()) {
       // just return the first UID.
@@ -177,7 +176,7 @@ public class MongoToGephiExporter {
    * @param keys the EntityKeys object to examine
    * @return an appropriate *unique* string for that object
    */
-  private static String keysetToId(EntityKeys keys) {
+  public static String keysetToId(EntityKeys keys) {
 
     if (!keys.getUids().isEmpty()) {
       // just return the first UID.
