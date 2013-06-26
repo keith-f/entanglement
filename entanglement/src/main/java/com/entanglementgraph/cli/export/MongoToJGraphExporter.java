@@ -42,6 +42,7 @@ import com.mxgraph.io.mxCodec;
 import com.mxgraph.io.mxGdCodec;
 import com.mxgraph.util.*;
 import com.mxgraph.view.mxGraph;
+import com.mxgraph.view.mxStylesheet;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
@@ -72,11 +73,11 @@ public class MongoToJGraphExporter {
   public static final String LABEL_LIST_END = "\"]";
 
 
-  private static final Color DEFAULT_COLOR = Color.BLACK;
+  private static final NodeVisuals DEFAULT_NODE_STYLE_INFO = new DefaultNodeVisuals();
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToJGraphExporter.class.getClassLoader());
 
-  private final Map<String, Color> colorMapping;
+  private final Map<String, NodeVisuals> nodeTypeToStyleInfo;
 
 
 
@@ -91,9 +92,9 @@ public class MongoToJGraphExporter {
 
 
   public MongoToJGraphExporter() {
-    colorMapping = new HashMap<>();
     uidToNode = new HashMap<>();
     typeToNameToNode = new HashMap<>();
+    nodeTypeToStyleInfo = new HashMap<>();
     clearGraph();
 
   }
@@ -102,8 +103,15 @@ public class MongoToJGraphExporter {
     graph = new mxGraph();
     parentContainer = graph.getDefaultParent();
 
+    // Clear caches of 'seen' nodes.
     uidToNode.clear();
     typeToNameToNode.clear();
+
+    //Reset style info
+    mxStylesheet stylesheet = graph.getStylesheet();
+    for (Map.Entry<String, NodeVisuals> entry : nodeTypeToStyleInfo.entrySet()) {
+      stylesheet.putCellStyle(entry.getKey(), entry.getValue().getStyle());
+    }
   }
 
 
@@ -280,15 +288,21 @@ public class MongoToJGraphExporter {
    */
   private Object addNode(DBObject nodeObj) throws DbObjectMarshallerException {
 //    logger.info("Adding node: "+nodeObj);
-    EntityKeys<?> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
+
+    EntityKeys<Node> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
       return existingNode;
     }
 
+    NodeVisuals visualInfo = nodeTypeToStyleInfo.get(keyset.getType());
+    if (visualInfo == null) {
+      visualInfo = DEFAULT_NODE_STYLE_INFO;
+    }
+
     String id = parseIdStringFromKeyset(keyset);
-    Element userObject = createXmlUserObject(keyset, nodeObj);
-    Object jgraphNode = graph.insertVertex(parentContainer, id, userObject, 0, 0, 20, 10);
+    Object jgraphNode = graph.insertVertex(parentContainer, id, visualInfo.toBasicString(keyset, nodeObj), 0, 0,
+        visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
     cacheJGraphXNode(keyset, jgraphNode);
     return jgraphNode;
   }
@@ -543,21 +557,14 @@ public class MongoToJGraphExporter {
 //  }
 
 
-  public void addColourMapping(String entityType, Color color) {
-    colorMapping.put(entityType, color);
+  public void addNodeVisualInfo(String nodeTypeName, NodeVisuals visualInfo) {
+    nodeTypeToStyleInfo.put(nodeTypeName, visualInfo);
+
+    mxStylesheet stylesheet = graph.getStylesheet();
+    stylesheet.putCellStyle(nodeTypeName, visualInfo.getStyle());
+
   }
 
-  public void addColourMappings(Map<String, Color> mappings) {
-    colorMapping.putAll(mappings);
-  }
-
-  public void clearColourMappings() {
-    colorMapping.clear();
-  }
-
-  public Map<String, Color> getColorMapping() {
-    return colorMapping;
-  }
 
   public mxGraph getGraph() {
     return graph;
