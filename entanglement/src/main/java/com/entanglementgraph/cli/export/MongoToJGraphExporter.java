@@ -74,10 +74,12 @@ public class MongoToJGraphExporter {
 
 
   private static final NodeVisuals DEFAULT_NODE_STYLE_INFO = new DefaultNodeVisuals();
+  private static final EdgeVisuals DEFAULT_EDGE_STYLE_INFO = new DefaultEdgeVisuals();
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToJGraphExporter.class.getClassLoader());
 
   private final Map<String, NodeVisuals> nodeTypeToStyleInfo;
+  private final Map<String, EdgeVisuals> edgeTypeToStyleInfo;
 
 
 
@@ -95,6 +97,7 @@ public class MongoToJGraphExporter {
     uidToNode = new HashMap<>();
     typeToNameToNode = new HashMap<>();
     nodeTypeToStyleInfo = new HashMap<>();
+    edgeTypeToStyleInfo = new HashMap<>();
     clearGraph();
 
   }
@@ -315,8 +318,14 @@ public class MongoToJGraphExporter {
     Object jgraphFromNode = getJGraphNodeFromCache(edge.getFrom());
     Object jgraphToNode = getJGraphNodeFromCache(edge.getTo());
 
+    EdgeVisuals visualInfo = edgeTypeToStyleInfo.get(edge.getKeys().getType());
+    if (visualInfo == null) {
+      visualInfo = DEFAULT_EDGE_STYLE_INFO;
+    }
+
     String id = parseIdStringFromKeyset(edge.getKeys());
-    Object graphEdge = graph.insertEdge(parentContainer, id, edge, jgraphFromNode, jgraphToNode);
+    Object graphEdge = graph.insertEdge(parentContainer, id,
+        visualInfo.toBasicString(edge.getKeys(), edgeObj), jgraphFromNode, jgraphToNode);
     return graphEdge;
   }
 
@@ -562,6 +571,14 @@ public class MongoToJGraphExporter {
 
     mxStylesheet stylesheet = graph.getStylesheet();
     stylesheet.putCellStyle(nodeTypeName, visualInfo.getStyle());
+
+  }
+
+  public void addEdgeVisualInfo(String edgeTypeName, EdgeVisuals visualInfo) {
+    edgeTypeToStyleInfo.put(edgeTypeName, visualInfo);
+
+    mxStylesheet stylesheet = graph.getStylesheet();
+    stylesheet.putCellStyle(edgeTypeName, visualInfo.getStyle());
 
   }
 
