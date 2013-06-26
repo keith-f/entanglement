@@ -74,7 +74,7 @@ public class MongoToJGraphExporter {
 
 
   private static final NodeVisuals DEFAULT_NODE_STYLE_INFO = new DefaultNodeVisuals();
-  private static final EdgeVisuals DEFAULT_EDGE_STYLE_INFO = new DefaultEdgeVisuals();
+  private static final EdgeVisuals DEFAULT_EDGE_STYLE_INFO = new DefaultEdgeNoNamesVisuals();
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToJGraphExporter.class.getClassLoader());
 
