@@ -16,13 +16,12 @@
  * File created: 15-Nov-2012, 12:29:45
  */
 
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.misc;
 
 import com.entanglementgraph.shell.gdfexport.GdfWriter;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 import java.awt.Color;
@@ -38,15 +37,9 @@ import java.util.Properties;
 
 import org.apache.commons.cli.*;
 import com.entanglementgraph.ObjectMarshallerFactory;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.player.GraphCheckoutNamingScheme;
-import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.GraphDAOFactory;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.revlog.RevisionLogException;
 
 /**

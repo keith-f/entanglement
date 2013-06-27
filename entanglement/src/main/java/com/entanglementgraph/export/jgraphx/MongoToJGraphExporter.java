@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.jgraphx;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;

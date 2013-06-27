@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.jgraphx;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;

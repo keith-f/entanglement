@@ -1,4 +1,4 @@
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.gephi;
 
 import java.awt.*;
 import java.io.File;
