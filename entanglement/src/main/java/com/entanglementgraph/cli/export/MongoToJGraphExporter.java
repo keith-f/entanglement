@@ -32,7 +32,6 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mxgraph.canvas.mxGraphics2DCanvas;
@@ -45,17 +44,12 @@ import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
-import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
 import org.w3c.dom.Element;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,7 +74,6 @@ public class MongoToJGraphExporter {
 
   private final Map<String, NodeVisuals> nodeTypeToStyleInfo;
   private final Map<String, EdgeVisuals> edgeTypeToStyleInfo;
-
 
 
   private mxGraph graph;
@@ -119,7 +112,7 @@ public class MongoToJGraphExporter {
 
 
   public void writeToJGraphXmlFile(File outputFile) throws IOException {
-    logger.info("Writing to file: "+outputFile.getAbsolutePath());
+    logger.info("Writing to file: " + outputFile.getAbsolutePath());
     mxCodec codec = new mxCodec();
     String xml = mxXmlUtils.getXml(codec.encode(graph.getModel()));
 
@@ -127,26 +120,24 @@ public class MongoToJGraphExporter {
   }
 
   public void writeToHtmlFile(File outputFile) throws IOException {
-    logger.info("Writing to file: "+outputFile.getAbsolutePath());
+    logger.info("Writing to file: " + outputFile.getAbsolutePath());
     mxUtils.writeFile(mxXmlUtils.getXml(mxCellRenderer
         .createHtmlDocument(graph, null, 1, null, null)
         .getDocumentElement()), outputFile.getAbsolutePath());
   }
 
   public void writeToTextFile(File outputFile) throws IOException {
-    logger.info("Writing to file: "+outputFile.getAbsolutePath());
+    logger.info("Writing to file: " + outputFile.getAbsolutePath());
     String content = mxGdCodec.encode(graph);
     mxUtils.writeFile(content, outputFile.getAbsolutePath());
   }
 
   public void writeToSvgFile(File outputFile) throws IOException {
-    logger.info("Writing to file: "+outputFile.getAbsolutePath());
+    logger.info("Writing to file: " + outputFile.getAbsolutePath());
     mxSvgCanvas canvas = (mxSvgCanvas) mxCellRenderer
         .drawCells(graph, null, 1, null,
-            new mxCellRenderer.CanvasFactory()
-            {
-              public mxICanvas createCanvas(int width, int height)
-              {
+            new mxCellRenderer.CanvasFactory() {
+              public mxICanvas createCanvas(int width, int height) {
                 mxSvgCanvas canvas = new mxSvgCanvas(mxDomUtils.createSvgDocument(width, height));
                 canvas.setEmbedded(true);
                 return canvas;
@@ -161,7 +152,7 @@ public class MongoToJGraphExporter {
 //  }
 
   public void writeToPdfFile(File outputFile) throws IOException {
-    logger.info("Writing to file: "+outputFile.getAbsolutePath());
+    logger.info("Writing to file: " + outputFile.getAbsolutePath());
     FileOutputStream fos = new FileOutputStream(outputFile);
     try {
       mxRectangle bounds = graph.getGraphBounds();
@@ -174,11 +165,9 @@ public class MongoToJGraphExporter {
           .drawCells(graph, null, 1, null, pdfCanvasFactory);
       canvas.getGraphics().dispose();
       document.close();
-    }
-    catch (DocumentException e) {
+    } catch (DocumentException e) {
       throw new IOException(e.getLocalizedMessage());
-    }
-    finally {
+    } finally {
       if (fos != null) {
         fos.close();
       }
@@ -186,7 +175,6 @@ public class MongoToJGraphExporter {
   }
 
   /**
-   *
    * @param keyset
    * @param jgraphNode
    */
@@ -207,6 +195,7 @@ public class MongoToJGraphExporter {
 
   /**
    * Lookup a cached node based on a keyset. This is useful when adding edges to a graph.
+   *
    * @param keyset
    * @return
    */
@@ -282,6 +271,53 @@ public class MongoToJGraphExporter {
   }
 
   /**
+   * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
+   * provided. It will continue exploring all edges irrespective of directionality only to the depth
+   * provided in traversalDepth until reaching a "stop" node or edge of one the types provided. Specific stop
+   * nodes and edges can be provided for each level of the traversal depth using the stopEdgeTypes and stopNodeTypes
+   * parameters.
+   * <p/>
+   * The subgraph is stored in the class variable directedGraph.
+   *
+   * @param entityKey     The entity key set to begin the subgraph with
+   * @param stopNodeTypes a list of node types which will stop the progression of the query
+   * @param stopEdgeTypes a list of edge types which will stop the progression of the query
+   * @return true if a node with the given EntityKey was found, false otherwise.
+   */
+  public boolean addDepthBasedSubgraph(GraphConnection graphConn,
+                                       EntityKeys entityKey, int traversalDepth,
+                                       ArrayList<Set<String>> stopNodeTypes, ArrayList<Set<String>> stopEdgeTypes)
+      throws GraphModelException, DbObjectMarshallerException {
+
+    // Start with the core node
+    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    if (coreNode == null) {
+      logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
+      return false;
+    }
+    graph.getModel().beginUpdate();
+//    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
+    addNode(coreNode);
+
+    // Store the IDs of edges that we've already seen as we step through the graph.
+    // investigatedEdges needs to be created here, as addChildNodes is called many times in the subgraph
+    // algorithm and we can't have investigatedEdges being cleared partway through subgraph creation.
+    Set<String> investigatedEdges = new HashSet<>();
+
+    // Export subgraph into the current JGraphX graph model
+    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
+    addChildNodesAtDepth(graphConn, investigatedEdges, coreAriesNode.getKeys(), 0, traversalDepth,
+        stopNodeTypes, stopEdgeTypes);
+
+    // Print out a summary of the full graph
+//    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
+//        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
+    graph.getModel().endUpdate();
+    return true;
+
+  }
+
+  /**
    * Adds a new node to a JGraphX graph, or, if at least one of the items in the <code>nodeObj</code> keyset matches
    * an entry in the node cache, returns the existing object instead.
    *
@@ -309,7 +345,6 @@ public class MongoToJGraphExporter {
     cacheJGraphXNode(keyset, jgraphNode);
     return jgraphNode;
   }
-
 
 
   private Object addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
@@ -349,7 +384,9 @@ public class MongoToJGraphExporter {
    * @param graphConn the Entanglement graph to be added
    * @throws java.io.IOException
    * @throws com.entanglementgraph.graph.GraphModelException
+   *
    * @throws com.entanglementgraph.revlog.RevisionLogException
+   *
    */
   public void addEntireGraph(GraphConnection graphConn)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
@@ -430,11 +467,13 @@ public class MongoToJGraphExporter {
    * Adds all child nodes and the edges between them (irrespective of directionality) until
    * there are either no more edges, or until a stop node is reached.
    *
-   * @param parentKeys     the EntityKeys which define the node to start at (the parent node)
-   * @param stopNodeTypes  the node types which determine where a subgraph should stop
-   * @param stopEdgeTypes  the edge types which determine where a subgraph should stop
-   * @throws com.entanglementgraph.graph.GraphModelException         if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   * @param parentKeys    the EntityKeys which define the node to start at (the parent node)
+   * @param stopNodeTypes the node types which determine where a subgraph should stop
+   * @param stopEdgeTypes the edge types which determine where a subgraph should stop
+   * @throws com.entanglementgraph.graph.GraphModelException
+   *          if there is a problem retrieving part of an entanglement graph
+   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   *          if there is a problem deserializing an entanglement database object
    */
   private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
                              Set<String> stopNodeTypes, Set<String> stopEdgeTypes)
@@ -451,6 +490,40 @@ public class MongoToJGraphExporter {
   }
 
   /**
+   * Adds all child nodes and the edges between them (irrespective of directionality) until
+   * there are either no more edges, or until a stop node is reached. Current depth is monitored, and the subgraph
+   * will stop when the appropriate depth is reached.
+   *
+   * @param graphConn         the connection to the database
+   * @param investigatedEdges the edges which have already been checked in the subgraph
+   * @param parentKeys        the EntityKeys which define the node to start at (the parent node)
+   * @param currentDepth      the current depth we are investigating for the subgraph
+   * @param traversalDepth    the maximum depth we are allowing for the subgraph
+   * @param stopNodeTypes     the node types which determine where a subgraph should stop at each traversal depth
+   * @param stopEdgeTypes     the edge types which determine where a subgraph should stop at each traversal depth
+   * @throws com.entanglementgraph.graph.GraphModelException
+   *          if there is a problem retrieving part of an entanglement graph
+   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   *          if there is a problem deserializing an entanglement database object
+   */
+  private void addChildNodesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
+                                    int currentDepth, int traversalDepth, ArrayList<Set<String>> stopNodeTypes,
+                                    ArrayList<Set<String>> stopEdgeTypes)
+      throws GraphModelException, DbObjectMarshallerException {
+    EdgeDAO edgeDao = graphConn.getEdgeDao();
+    /*
+     * Start with the provided node, and iterate through all
+     * edges for that node and down through the nodes attached to those edges until you have to stop.
+     */
+//    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", keysetToId(parentKeys));
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, currentDepth,
+        traversalDepth, stopNodeTypes, stopEdgeTypes);
+//    logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, currentDepth,
+        traversalDepth, stopNodeTypes, stopEdgeTypes);
+  }
+
+  /**
    * Adds all edges associated with the particular Iterable until there are either no more edges, or until a stop
    * node is reached.
    *
@@ -460,8 +533,10 @@ public class MongoToJGraphExporter {
    *                            so the opposing node is retrieved via getFrom().
    * @param stopNodeTypes       the node types which determine where a subgraph should stop
    * @param stopEdgeTypes       the edge types which determine where a subgraph should stop
-   * @throws com.entanglementgraph.graph.GraphModelException         if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   * @throws com.entanglementgraph.graph.GraphModelException
+   *          if there is a problem retrieving part of an entanglement graph
+   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
                             Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopNodeTypes,
@@ -535,6 +610,115 @@ public class MongoToJGraphExporter {
         }
         logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().toString());
         addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopNodeTypes, stopEdgeTypes);
+      } else {
+        logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
+      }
+    }
+
+  }
+
+
+  /**
+   * Adds all edges associated with the particular Iterable until there are either no more edges, or until a stop
+   * node is reached.
+   *
+   * @param edgeIterator        the iterator which define the set of edges to add
+   * @param iterateOverOutgoing if true, the iterator is looking at outgoing edges, and so the opposing node is
+   *                            retrieved via getTo(). If false, the iterator is looking at incoming edges, and
+   *                            so the opposing node is retrieved via getFrom().
+   * @param currentDepth        the current depth we are investigating for the subgraph
+   * @param traversalDepth      the maximum depth we are allowing for the subgraph
+   * @param stopNodeTypes       the node types which determine where a subgraph should stop at each traversal depth
+   * @param stopEdgeTypes       the edge types which determine where a subgraph should stop at each traversal depth
+   * @throws com.entanglementgraph.graph.GraphModelException
+   *          if there is a problem retrieving part of an entanglement graph
+   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   *          if there is a problem deserializing an entanglement database object
+   */
+  private void iterateEdgesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges,
+                                   Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, int currentDepth,
+                                   int traversalDepth, ArrayList<Set<String>> stopNodeTypes,
+                                   ArrayList<Set<String>> stopEdgeTypes)
+      throws DbObjectMarshallerException, GraphModelException {
+
+    logger.fine("At traversal depth " + currentDepth + "/" + traversalDepth);
+
+    for (DBObject edgeObj : edgeIterator) {
+      // deserialize the DBObject to get all Edge properties.
+      Edge currentEdge = marshaller.deserialize(edgeObj, Edge.class);
+      logger.log(Level.FINE, "Found {0} edge with uid {1}",
+          new String[]{currentEdge.getKeys().getType(), currentEdge.getKeys().toString()});
+      // ignore any edges whose type matches those found within the edge stop types.
+      if (stopEdgeTypes.get(currentDepth).contains(currentEdge.getKeys().getType())) {
+        logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal " +
+            "depth of " + currentDepth + "/" + traversalDepth);
+        continue;
+      }
+      // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
+      // we want to do this before we start parsing entanglement nodes and edges, which is why
+      // directedGraph.contains(Edge) isn't being used.
+      if (investigatedEdges.containsAll(currentEdge.getKeys().getUids())) {
+        logger.log(Level.FINE, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
+        continue;
+      } else {
+        //noinspection unchecked
+        investigatedEdges.addAll(currentEdge.getKeys().getUids());
+      }
+
+      EntityKeys opposingNodeKeys = currentEdge.getFrom();
+      if (iterateOverOutgoing) {
+        opposingNodeKeys = currentEdge.getTo();
+      }
+      logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
+
+      // add the node that the current edge is pointing to, if it hasn't already been added.
+      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+
+      //Add a new JGraphX node or retrieve reference to existing node (if we've seen this node before)
+      if (currentNodeObject != null) {
+        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject);
+        if (nodeExistsInCache(currentNodeKeyset)) {
+          // this node may have been added previously. If it has been, then we know that we may actually be in
+          // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
+          // don't add the current edge, and move on to the next one without investigating further children.
+          logger.log(Level.FINE,
+              "JGraphX node {0} already present. Skipping entire edge and node addition.",
+              currentNodeKeyset.toString());
+          continue;
+        }
+        Object jgraphNode = addNode(currentNodeObject);
+        logger.log(Level.FINE, "Added node to JGraphX: {0}", currentNodeKeyset.toString());
+//        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
+
+
+        // add the current edge's information. This cannot be added until nodes at both ends have been added.
+        Object jgraphEdge = addEdge(edgeObj);
+        if (jgraphEdge != null) {
+          logger.log(Level.FINE, "Added edge to JGraphX: {0}", currentEdge.getKeys().toString());
+        }
+
+        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+        logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(),
+            currentNode.getKeys().toString()});
+        /*
+         * if the node is a stop type, then don't drill down further
+         * into the subgraph. Otherwise, continue until there are no
+         * further edges.
+         */
+        if (stopNodeTypes.get(currentDepth).contains(currentNode.getKeys().getType())) {
+          logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal " +
+              "depth of " + currentDepth + "/" + traversalDepth);
+          continue;
+        }
+        // only add the next level of child nodes if its depth value is less than the total traversal depth
+        if (currentDepth + 1 < traversalDepth) {
+          logger.log(Level.FINE, "Finding children of node {0}", currentNode.getKeys().toString());
+          addChildNodesAtDepth(graphConn, investigatedEdges, currentNode.getKeys(), currentDepth + 1, traversalDepth,
+              stopNodeTypes, stopEdgeTypes);
+        } else {
+          logger.fine("Stopping traversal of graph at traversal depth of " + currentDepth + 1 + "/" + traversalDepth);
+          continue;
+        }
       } else {
         logger.log(Level.FINE, "Edge {0} is a hanging edge", currentEdge.getKeys().toString());
       }

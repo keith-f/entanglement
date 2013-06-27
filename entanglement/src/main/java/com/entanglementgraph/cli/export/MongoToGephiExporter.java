@@ -248,7 +248,7 @@ public class MongoToGephiExporter {
    * provided. It will continue exploring all edges irrespective of directionality only to the depth
    * provided in traversalDepth until reaching a "stop" node or edge of one the types provided. Specific stop
    * nodes and edges can be provided for each level of the traversal depth using the stopEdgeTypes and stopNodeTypes
-   * parameters. An exception will be thrown .
+   * parameters.
    * <p/>
    * The subgraph is stored in the class variable directedGraph.
    *
@@ -517,9 +517,11 @@ public class MongoToGephiExporter {
      * edges for that node and down through the nodes attached to those edges until you have to stop.
      */
     logger.log(Level.FINE, "Iterating over outgoing edges of {0}", keysetToId(parentKeys));
-    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, 0, traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, currentDepth,
+        traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
     logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
-    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, 0, traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, currentDepth,
+        traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
   }
 
   /**
@@ -634,6 +636,8 @@ public class MongoToGephiExporter {
                                    ArrayList<Set<String>> stopEdgeTypes, AttributeModel attributeModel)
       throws DbObjectMarshallerException, GraphModelException {
 
+    logger.fine("At traversal depth " + currentDepth + "/" + traversalDepth);
+
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
       Edge currentEdge = marshaller.deserialize(obj, Edge.class);
@@ -641,7 +645,7 @@ public class MongoToGephiExporter {
           keysetToId(currentEdge.getKeys())});
       // ignore any edges whose type matches those found within the edge stop types.
       if (stopEdgeTypes.get(currentDepth).contains(currentEdge.getKeys().getType())) {
-        logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal" +
+        logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal " +
             "depth of " + currentDepth + "/" + traversalDepth);
         continue;
       }
@@ -695,7 +699,7 @@ public class MongoToGephiExporter {
          * further edges.
          */
         if (stopNodeTypes.get(currentDepth).contains(currentNode.getKeys().getType())) {
-          logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal" +
+          logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal " +
               "depth of " + currentDepth + "/" + traversalDepth);
           continue;
         }
