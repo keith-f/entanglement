@@ -641,7 +641,7 @@ public class MongoToJGraphExporter {
                                    ArrayList<Set<String>> stopEdgeTypes)
       throws DbObjectMarshallerException, GraphModelException {
 
-    logger.fine("At traversal depth " + currentDepth + "/" + traversalDepth);
+    logger.fine("At traversal depth " + currentDepth + 1 + "/" + traversalDepth);
 
     for (DBObject edgeObj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
@@ -651,7 +651,7 @@ public class MongoToJGraphExporter {
       // ignore any edges whose type matches those found within the edge stop types.
       if (stopEdgeTypes.get(currentDepth).contains(currentEdge.getKeys().getType())) {
         logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal " +
-            "depth of " + currentDepth + "/" + traversalDepth);
+            "depth of " + currentDepth + 1 + "/" + traversalDepth);
         continue;
       }
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
@@ -707,7 +707,7 @@ public class MongoToJGraphExporter {
          */
         if (stopNodeTypes.get(currentDepth).contains(currentNode.getKeys().getType())) {
           logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal " +
-              "depth of " + currentDepth + "/" + traversalDepth);
+              "depth of " + currentDepth + 1 + "/" + traversalDepth);
           continue;
         }
         // only add the next level of child nodes if its depth value is less than the total traversal depth

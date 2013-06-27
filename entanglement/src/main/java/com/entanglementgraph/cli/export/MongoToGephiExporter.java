@@ -636,7 +636,7 @@ public class MongoToGephiExporter {
                                    ArrayList<Set<String>> stopEdgeTypes, AttributeModel attributeModel)
       throws DbObjectMarshallerException, GraphModelException {
 
-    logger.fine("At traversal depth " + currentDepth + "/" + traversalDepth);
+    logger.fine("At traversal depth " + currentDepth + 1 + "/" + traversalDepth);
 
     for (DBObject obj : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
@@ -646,7 +646,7 @@ public class MongoToGephiExporter {
       // ignore any edges whose type matches those found within the edge stop types.
       if (stopEdgeTypes.get(currentDepth).contains(currentEdge.getKeys().getType())) {
         logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal " +
-            "depth of " + currentDepth + "/" + traversalDepth);
+            "depth of " + currentDepth + 1 + "/" + traversalDepth);
         continue;
       }
       // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
@@ -700,7 +700,7 @@ public class MongoToGephiExporter {
          */
         if (stopNodeTypes.get(currentDepth).contains(currentNode.getKeys().getType())) {
           logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal " +
-              "depth of " + currentDepth + "/" + traversalDepth);
+              "depth of " + currentDepth + 1 + "/" + traversalDepth);
           continue;
         }
 
