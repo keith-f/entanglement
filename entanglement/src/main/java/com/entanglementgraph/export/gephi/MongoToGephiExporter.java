@@ -343,8 +343,8 @@ public class MongoToGephiExporter {
    * @param attributeModel the Gephi AttributeModel to use when adding new column types to Gephi
    * @return the populated Gephi node
    */
-  private org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
-                                                         AttributeModel attributeModel) {
+  public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
+                                                        AttributeModel attributeModel) {
     // create the gephi node object after creating a unique identifier using available key attributes.
     org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
     logger.log(Level.FINE, "Parsing Entanglement node with a constructed Gephi node id of {0}",
