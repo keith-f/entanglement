@@ -60,7 +60,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(EntityKeys from, EntityKeys to)
+  public DBCursor iterateEdgesBetweenNodes(EntityKeys from, EntityKeys to)
       throws GraphModelException {
     DBObject query = buildFromToNodeQuery(from, to);
     logger.log(Level.FINE, "Iterating edges between nodes: {0} --> {1}.\nQuery: {2}", new Object[]{from, to, query});
@@ -74,7 +74,7 @@ public class EdgeDAOSeparateDocImpl
 
 
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to)
+  public DBCursor iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException {
     // Build a query to find edges between nodes, regardless of whether UID or type+name is used.
     DBObject query = buildFromToNodeQuery(from, to);
@@ -92,7 +92,7 @@ public class EdgeDAOSeparateDocImpl
 
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
+  public DBCursor iterateEdgesFromNode(EntityKeys from)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges starting from node: {0}", new Object[]{from});
     DBObject query = buildFromNodeQuery(from);
@@ -105,7 +105,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
     DBObject query = buildFromNodeQuery(from);
@@ -120,7 +120,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
                                                  Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type: {0} starting from node: {1}", new Object[]{edgeType, from});
@@ -138,7 +138,7 @@ public class EdgeDAOSeparateDocImpl
 
 
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
+  public DBCursor iterateEdgesToNode(EntityKeys to)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges ending at node: {0}", new Object[]{to});
     DBObject query = buildToNodeQuery(to);
@@ -152,7 +152,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
+  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type {0} ending at node: {1}", new Object[]{edgeType, to});
     DBObject query = buildToNodeQuery(to);
@@ -168,7 +168,7 @@ public class EdgeDAOSeparateDocImpl
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
+  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges of type: {0} ending at node: {1}", new Object[]{edgeType, to});
     DBObject query = buildToNodeQuery(to);
     //Add a restriction on the type of edge returned

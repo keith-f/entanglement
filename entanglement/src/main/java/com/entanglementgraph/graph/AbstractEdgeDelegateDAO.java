@@ -51,37 +51,37 @@ import java.util.Set;
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(EntityKeys fromNode, EntityKeys to) throws GraphModelException {
+  public DBCursor iterateEdgesBetweenNodes(EntityKeys fromNode, EntityKeys to) throws GraphModelException {
     return delegate.iterateEdgesBetweenNodes(fromNode, to);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
+  public DBCursor iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
     return delegate.iterateEdgesBetweenNodes(edgeType, from, to);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from) throws GraphModelException {
+  public DBCursor iterateEdgesFromNode(EntityKeys from) throws GraphModelException {
     return delegate.iterateEdgesFromNode(from);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from) throws GraphModelException {
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys from) throws GraphModelException {
     return delegate.iterateEdgesFromNode(edgeType, from);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
     return iterateEdgesFromNode(edgeType, from, offset, limit, customQuery, sort);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to) throws GraphModelException {
+  public DBCursor iterateEdgesToNode(EntityKeys to) throws GraphModelException {
     return delegate.iterateEdgesToNode(to);
   }
 
   @Override
-  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
+  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
     return delegate.iterateEdgesToNode(edgeType, to);
   }
 

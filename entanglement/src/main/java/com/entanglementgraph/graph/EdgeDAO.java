@@ -20,6 +20,7 @@ package com.entanglementgraph.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 import java.util.Map;
@@ -51,7 +52,7 @@ public interface EdgeDAO
    * @return an iterable list of edge instances.
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesBetweenNodes(
+  public DBCursor iterateEdgesBetweenNodes(
       EntityKeys fromNode, EntityKeys to)
       throws GraphModelException;
 
@@ -66,7 +67,7 @@ public interface EdgeDAO
    *         link the two specified nodes.
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesBetweenNodes(
+  public DBCursor iterateEdgesBetweenNodes(
       String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException;
 
@@ -77,7 +78,7 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesFromNode(EntityKeys from)
+  public DBCursor iterateEdgesFromNode(EntityKeys from)
       throws GraphModelException;
 
   /**
@@ -88,10 +89,10 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys from)
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException;
 
-  public Iterable<DBObject> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
+  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
                                                  Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
@@ -102,7 +103,7 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesToNode(EntityKeys to)
+  public DBCursor iterateEdgesToNode(EntityKeys to)
       throws GraphModelException;
 
   /**
@@ -112,7 +113,7 @@ public interface EdgeDAO
    * @return
    * @throws GraphModelException
    */
-  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys to)
+  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
   public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
