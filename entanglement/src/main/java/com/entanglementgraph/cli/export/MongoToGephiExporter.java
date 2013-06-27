@@ -79,7 +79,7 @@ public class MongoToGephiExporter {
   private final Map<String, Color> colorMapping;
 
 
-  private ProjectController projectController;
+  private final ProjectController projectController;
   //  private Project project;
   private Workspace workspace;
 
@@ -121,6 +121,7 @@ public class MongoToGephiExporter {
     projectController.deleteWorkspace(workspace);
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void clearWorkspace() {
     directedGraph.clear();
     projectController.cleanWorkspace(workspace);
@@ -134,6 +135,7 @@ public class MongoToGephiExporter {
 //    DynamicModel dynamicModel = Lookup.getDefault().lookup(
 //        DynamicController.class).getModel();
     DynamicController dc = new DynamicControllerImpl();
+    //noinspection UnusedDeclaration
     DynamicModel dynamicModel = dc.getModel(workspace);
 
     // Export workspace in GEXF format
@@ -205,6 +207,7 @@ public class MongoToGephiExporter {
    * @param stopEdgeTypes a list of edge types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
+  @SuppressWarnings("UnusedDeclaration")
   public boolean addSubgraph(GraphConnection graphConn,
                              EntityKeys entityKey, Set<String> stopNodeTypes, Set<String> stopEdgeTypes)
       throws GraphModelException, DbObjectMarshallerException {
@@ -258,6 +261,7 @@ public class MongoToGephiExporter {
    * @return true if a node with the given EntityKey was found, false otherwise (e.g. if query node not found, or
    *         if the traversalDepth does not match the size of the stop type arrays.
    */
+  @SuppressWarnings("UnusedDeclaration")
   public boolean addDepthBasedSubgraph(GraphConnection graphConn,
                                        EntityKeys entityKey, int traversalDepth,
                                        ArrayList<Set<String>> stopNodeTypes, ArrayList<Set<String>> stopEdgeTypes)
@@ -712,6 +716,7 @@ public class MongoToGephiExporter {
         } else {
           logger.fine("Stopping traversal of graph at traversal depth of " + currentDepth + 1 + "/" + traversalDepth +
               " for node " + keysetToId(currentNode.getKeys()));
+          //noinspection UnnecessaryContinue
           continue;
         }
       } else {
@@ -745,6 +750,7 @@ public class MongoToGephiExporter {
   }
 
 
+  @SuppressWarnings("UnusedDeclaration")
   public void addColourMapping(String entityType, Color color) {
     colorMapping.put(entityType, color);
   }
@@ -753,18 +759,22 @@ public class MongoToGephiExporter {
     colorMapping.putAll(mappings);
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void clearColourMappings() {
     colorMapping.clear();
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public Map<String, Color> getColorMapping() {
     return colorMapping;
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public Workspace getWorkspace() {
     return workspace;
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public ProjectController getProjectController() {
     return projectController;
   }
