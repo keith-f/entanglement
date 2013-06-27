@@ -17,19 +17,13 @@
 
 package com.entanglementgraph.irc.commands;
 
-import com.entanglementgraph.cli.export.MongoToGephiExporter;
-import com.entanglementgraph.irc.EntanglementBotException;
+import com.entanglementgraph.export.gephi.MongoToGephiExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.*;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
-import com.torrenttamer.mongodb.MongoDbFactoryException;
 
 import java.awt.*;
 import java.io.File;

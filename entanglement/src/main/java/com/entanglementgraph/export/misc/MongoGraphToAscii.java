@@ -16,7 +16,7 @@
  * File created: 15-Nov-2012, 12:29:45
  */
 
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.misc;
 
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
@@ -29,13 +29,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 
 import org.apache.commons.cli.*;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.player.GraphCheckoutNamingScheme;
-import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.GraphDAOFactory;
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.revlog.RevisionLogException;
 
 /**

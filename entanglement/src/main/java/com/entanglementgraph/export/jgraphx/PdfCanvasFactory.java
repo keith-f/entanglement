@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.jgraphx;
 
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.mxgraph.canvas.mxGraphics2DCanvas;

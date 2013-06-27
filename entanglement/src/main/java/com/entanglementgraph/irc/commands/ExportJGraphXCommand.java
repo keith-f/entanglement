@@ -17,8 +17,7 @@
 
 package com.entanglementgraph.irc.commands;
 
-import com.entanglementgraph.cli.export.MongoToGephiExporter;
-import com.entanglementgraph.cli.export.MongoToJGraphExporter;
+import com.entanglementgraph.export.jgraphx.MongoToJGraphExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.halfspinsoftware.uibot.BotState;

@@ -15,7 +15,7 @@
  * 
  * File created: 15-Nov-2012, 12:29:45
  */
-package com.entanglementgraph.cli.export;
+package com.entanglementgraph.export.gephi;
 
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.revlog.RevisionLogException;
