@@ -55,10 +55,7 @@ import org.openide.util.Lookup;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -199,7 +196,7 @@ public class MongoToGephiExporter {
   /**
    * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
    * provided. It will continue exploring all edges irrespective of directionality until reaching a
-   * "stop" node of one the types provided.
+   * "stop" node or edge of one the types provided.
    * <p/>
    * The subgraph is stored in the class variable directedGraph.
    *
@@ -237,6 +234,61 @@ public class MongoToGephiExporter {
     // Export subgraph into gephi directed graph
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
     addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
+
+    // Print out a summary of the full graph
+    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
+        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
+
+    return true;
+
+  }
+
+  /**
+   * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
+   * provided. It will continue exploring all edges irrespective of directionality only to the depth
+   * provided in traversalDepth until reaching a "stop" node or edge of one the types provided. Specific stop
+   * nodes and edges can be provided for each level of the traversal depth using the stopEdgeTypes and stopNodeTypes
+   * parameters. An exception will be thrown .
+   * <p/>
+   * The subgraph is stored in the class variable directedGraph.
+   *
+   * @param entityKey     The entity key set to begin the subgraph with
+   * @param stopNodeTypes a list of node types which will stop the progression of the query
+   * @param stopEdgeTypes a list of edge types which will stop the progression of the query
+   * @return true if a node with the given EntityKey was found, false otherwise (e.g. if query node not found, or
+   *         if the traversalDepth does not match the size of the stop type arrays.
+   */
+  public boolean addDepthBasedSubgraph(GraphConnection graphConn,
+                                       EntityKeys entityKey, int traversalDepth,
+                                       ArrayList<Set<String>> stopNodeTypes, ArrayList<Set<String>> stopEdgeTypes)
+      throws GraphModelException, DbObjectMarshallerException {
+
+    if (stopNodeTypes.size() != traversalDepth || stopEdgeTypes.size() != traversalDepth) {
+      logger.warning("traversal depth of " + traversalDepth + " does not match the stop edge (" + stopEdgeTypes.size() +
+          ") or node (" + stopNodeTypes.size() + ") list size");
+      return false;
+    }
+
+    AttributeController ac = new AttributeControllerImpl();
+    AttributeModel attributeModel = ac.getModel(workspace);
+
+    // Start with the core node
+    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    if (coreNode == null) {
+      logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
+      return false;
+    }
+    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
+
+    // Store the IDs of edges that we've already seen as we step through the graph.
+    // investigatedEdges needs to be created here, as addChildNodes is called many times in the subgraph
+    // algorithm and we can't have investigatedEdges being cleared partway through subgraph creation.
+    Set<String> investigatedEdges = new HashSet<>();
+
+    // Export subgraph into gephi directed graph
+    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
+    addChildNodesAtDepth(graphConn, investigatedEdges, coreAriesNode.getKeys(), 0, traversalDepth,
+        stopNodeTypes, stopEdgeTypes, attributeModel);
 
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
@@ -416,15 +468,17 @@ public class MongoToGephiExporter {
    * Adds all child nodes and the edges between them (irrespective of directionality) until
    * there are either no more edges, or until a stop node is reached.
    *
-   * @param parentKeys     the EntityKeys which define the node to start at (the parent node)
-   * @param stopNodeTypes  the node types which determine where a subgraph should stop
-   * @param stopEdgeTypes  the edge types which determine where a subgraph should stop
-   * @param attributeModel helps to store the known attribute columns for the current node
+   * @param graphConn         the connection to the database
+   * @param investigatedEdges the edges which have already been checked in the subgraph
+   * @param parentKeys        the EntityKeys which define the node to start at (the parent node)
+   * @param stopNodeTypes     the node types which determine where a subgraph should stop
+   * @param stopEdgeTypes     the edge types which determine where a subgraph should stop
+   * @param attributeModel    helps to store the known attribute columns for the current node
    * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
    * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
    */
-  private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys, Set<String> stopNodeTypes,
-                             Set<String> stopEdgeTypes, AttributeModel attributeModel)
+  private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
+                             Set<String> stopNodeTypes, Set<String> stopEdgeTypes, AttributeModel attributeModel)
       throws GraphModelException, DbObjectMarshallerException {
     EdgeDAO edgeDao = graphConn.getEdgeDao();
     /*
@@ -435,6 +489,37 @@ public class MongoToGephiExporter {
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, stopNodeTypes, stopEdgeTypes, attributeModel);
     logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
     iterateEdges(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, stopNodeTypes, stopEdgeTypes, attributeModel);
+  }
+
+  /**
+   * Adds all child nodes and the edges between them (irrespective of directionality) until
+   * there are either no more edges, or until a stop node is reached. Current depth is monitored, and the subgraph
+   * will stop when the appropriate depth is reached.
+   *
+   * @param graphConn         the connection to the database
+   * @param investigatedEdges the edges which have already been checked in the subgraph
+   * @param parentKeys        the EntityKeys which define the node to start at (the parent node)
+   * @param currentDepth      the current depth we are investigating for the subgraph
+   * @param traversalDepth    the maximum depth we are allowing for the subgraph
+   * @param stopNodeTypes     the node types which determine where a subgraph should stop at each traversal depth
+   * @param stopEdgeTypes     the edge types which determine where a subgraph should stop at each traversal depth
+   * @param attributeModel    helps to store the known attribute columns for the current node
+   * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
+   * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   */
+  private void addChildNodesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
+                                    int currentDepth, int traversalDepth, ArrayList<Set<String>> stopNodeTypes,
+                                    ArrayList<Set<String>> stopEdgeTypes, AttributeModel attributeModel)
+      throws GraphModelException, DbObjectMarshallerException {
+    EdgeDAO edgeDao = graphConn.getEdgeDao();
+    /*
+     * Start with the provided node, and iterate through all
+     * edges for that node and down through the nodes attached to those edges until you have to stop.
+     */
+    logger.log(Level.FINE, "Iterating over outgoing edges of {0}", keysetToId(parentKeys));
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesFromNode(parentKeys), true, 0, traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
+    logger.log(Level.FINE, "Iterating over incoming edges of {0}", keysetToId(parentKeys));
+    iterateEdgesAtDepth(graphConn, investigatedEdges, edgeDao.iterateEdgesToNode(parentKeys), false, 0, traversalDepth, stopNodeTypes, stopEdgeTypes, attributeModel);
   }
 
   /**
@@ -520,6 +605,111 @@ public class MongoToGephiExporter {
         }
         logger.log(Level.FINE, "Finding children of node {0}", keysetToId(currentNode.getKeys()));
         addChildNodes(graphConn, investigatedEdges, currentNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
+      } else {
+        logger.log(Level.FINE, "Edge {0} is a hanging edge", keysetToId(currentEdge.getKeys()));
+      }
+    }
+    logger.fine("Counter: nodes = " + directedGraph.getNodeCount() + " edges = " + directedGraph.getEdgeCount());
+  }
+
+  /**
+   * Adds all edges associated with the particular Iterable until there are either no more edges, or until a stop
+   * node is reached.
+   *
+   * @param edgeIterator        the iterator which define the set of edges to add
+   * @param iterateOverOutgoing if true, the iterator is looking at outgoing edges, and so the opposing node is
+   *                            retrieved via getTo(). If false, the iterator is looking at incoming edges, and
+   *                            so the opposing node is retrieved via getFrom().
+   * @param currentDepth        the current depth we are investigating for the subgraph
+   * @param traversalDepth      the maximum depth we are allowing for the subgraph
+   * @param stopNodeTypes       the node types which determine where a subgraph should stop at each traversal depth
+   * @param stopEdgeTypes       the edge types which determine where a subgraph should stop at each traversal depth
+   * @param attributeModel      helps to store the known attribute columns for the current node
+   * @throws GraphModelException         if there is a problem retrieving part of an entanglement graph
+   * @throws DbObjectMarshallerException if there is a problem deserializing an entanglement database object
+   */
+  private void iterateEdgesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges,
+                                   Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing,
+                                   int currentDepth, int traversalDepth, ArrayList<Set<String>> stopNodeTypes,
+                                   ArrayList<Set<String>> stopEdgeTypes, AttributeModel attributeModel)
+      throws DbObjectMarshallerException, GraphModelException {
+
+    for (DBObject obj : edgeIterator) {
+      // deserialize the DBObject to get all Edge properties.
+      Edge currentEdge = marshaller.deserialize(obj, Edge.class);
+      logger.log(Level.FINE, "Found {0} edge with uid {1}", new String[]{currentEdge.getKeys().getType(),
+          keysetToId(currentEdge.getKeys())});
+      // ignore any edges whose type matches those found within the edge stop types.
+      if (stopEdgeTypes.get(currentDepth).contains(currentEdge.getKeys().getType())) {
+        logger.fine("Stopping at pre-defined stop edge of type " + currentEdge.getKeys().getType() + " at traversal" +
+            "depth of " + currentDepth + "/" + traversalDepth);
+        continue;
+      }
+      // to ensure we don't traverse the same edge twice, check to see if it has already been investigated.
+      // we want to do this before we start parsing entanglement nodes and edges, which is why
+      // directedGraph.contains(Edge) isn't being used.
+      if (investigatedEdges.containsAll(currentEdge.getKeys().getUids())) {
+        logger.log(Level.FINE, "Edge {0} already investigated. Skipping.", currentEdge.getKeys().getUids().toString());
+        continue;
+      } else {
+        //noinspection unchecked
+        investigatedEdges.addAll(currentEdge.getKeys().getUids());
+      }
+
+      EntityKeys opposingNodeKeys = currentEdge.getFrom();
+      if (iterateOverOutgoing) {
+        opposingNodeKeys = currentEdge.getTo();
+      }
+      logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
+
+      // add the node that the current edge is pointing to, if it hasn't already been added.
+      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+      if (currentNodeObject != null) {
+        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
+
+        // this node may have been added previously. If it has been, then we know that we may actually be in
+        // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
+        // don't add the current edge, and move on to the next one without investigating further children.
+        if (directedGraph.getNode(gNode.getNodeData().getId()) == null) {
+          directedGraph.addNode(gNode);
+          logger.log(Level.FINE, "Added node to Gephi: {0}", gNode.getNodeData().getId());
+        } else {
+          logger.log(Level.FINE, "Gephi node {0} already present. Skipping entire edge and node addition.",
+              gNode.getNodeData().getId());
+          continue;
+        }
+
+        // add the current edge's information. This cannot be added until nodes at both ends have been added.
+        org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(graphConn, currentEdge);
+        if (gephiEdge != null) {
+          directedGraph.addEdge(gephiEdge);
+          logger.log(Level.FINE, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
+        }
+
+        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+        logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{keysetToId(currentEdge.getKeys()),
+            keysetToId(currentNode.getKeys())});
+        /*
+         * if the node is a stop type, then don't drill down further
+         * into the subgraph. Otherwise, continue until there are no
+         * further edges.
+         */
+        if (stopNodeTypes.get(currentDepth).contains(currentNode.getKeys().getType())) {
+          logger.fine("Stopping at pre-defined stop node of type " + currentNode.getKeys().getType() + " at traversal" +
+              "depth of " + currentDepth + "/" + traversalDepth);
+          continue;
+        }
+
+        // only add the next level of child nodes if its depth value is less than the total traversal depth
+        if (currentDepth + 1 < traversalDepth) {
+          logger.log(Level.FINE, "Finding children of node {0}", keysetToId(currentNode.getKeys()));
+          addChildNodesAtDepth(graphConn, investigatedEdges, currentNode.getKeys(), currentDepth + 1, traversalDepth,
+              stopNodeTypes, stopEdgeTypes, attributeModel);
+        } else {
+          logger.fine("Stopping traversal of graph at traversal depth of " + currentDepth + 1 + "/" + traversalDepth +
+              " for node " + keysetToId(currentNode.getKeys()));
+          continue;
+        }
       } else {
         logger.log(Level.FINE, "Edge {0} is a hanging edge", keysetToId(currentEdge.getKeys()));
       }
