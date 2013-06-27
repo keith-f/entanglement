@@ -60,12 +60,6 @@ import java.util.logging.Logger;
 public class MongoToJGraphExporter {
 
   private static final Logger logger = Logger.getLogger(MongoToJGraphExporter.class.getName());
-  // a Gephi label string will use the value below to separate alternative labels.
-  private static final String LABEL_SPLIT_REGEX = "\" , \"";
-  // A Gephi label string will start and end with the following values
-  public static final String LABEL_LIST_START = "[ \"";
-  public static final String LABEL_LIST_END = "\"]";
-
 
   private static final NodeVisuals DEFAULT_NODE_STYLE_INFO = new DefaultNodeVisuals();
   private static final EdgeVisuals DEFAULT_EDGE_STYLE_INFO = new DefaultEdgeNoNamesVisuals();
@@ -119,6 +113,7 @@ public class MongoToJGraphExporter {
     mxUtils.writeFile(xml, outputFile.getAbsolutePath());
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void writeToHtmlFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
     mxUtils.writeFile(mxXmlUtils.getXml(mxCellRenderer
@@ -126,12 +121,14 @@ public class MongoToJGraphExporter {
         .getDocumentElement()), outputFile.getAbsolutePath());
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void writeToTextFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
     String content = mxGdCodec.encode(graph);
     mxUtils.writeFile(content, outputFile.getAbsolutePath());
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void writeToSvgFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
     mxSvgCanvas canvas = (mxSvgCanvas) mxCellRenderer
@@ -151,10 +148,10 @@ public class MongoToJGraphExporter {
 //
 //  }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void writeToPdfFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    FileOutputStream fos = new FileOutputStream(outputFile);
-    try {
+    try (FileOutputStream fos = new FileOutputStream(outputFile)) {
       mxRectangle bounds = graph.getGraphBounds();
       Rectangle rectangle = new Rectangle((float) bounds.getWidth(), (float) bounds.getHeight());
       Document document = new Document(rectangle);
@@ -167,16 +164,13 @@ public class MongoToJGraphExporter {
       document.close();
     } catch (DocumentException e) {
       throw new IOException(e.getLocalizedMessage());
-    } finally {
-      if (fos != null) {
-        fos.close();
-      }
     }
+    // no need to check if fos is not null, as it will always be not null
   }
 
   /**
-   * @param keyset
-   * @param jgraphNode
+   * @param keyset     the keyset to use when caching
+   * @param jgraphNode the node to cache
    */
   private void cacheJGraphXNode(EntityKeys<?> keyset, Object jgraphNode) {
     for (String uid : keyset.getUids()) {
@@ -196,8 +190,8 @@ public class MongoToJGraphExporter {
   /**
    * Lookup a cached node based on a keyset. This is useful when adding edges to a graph.
    *
-   * @param keyset
-   * @return
+   * @param keyset the keyset associated with the JGraph node of interest
+   * @return the JGraph node associated with the EntityKey, or null if not found.
    */
   private Object getJGraphNodeFromCache(EntityKeys<?> keyset) {
 
@@ -239,6 +233,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes a list of edge types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
+  @SuppressWarnings("UnusedDeclaration")
   public boolean addSubgraph(GraphConnection graphConn,
                              EntityKeys entityKey, Set<String> stopNodeTypes, Set<String> stopEdgeTypes)
       throws GraphModelException, DbObjectMarshallerException {
@@ -284,6 +279,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes a list of edge types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
+  @SuppressWarnings("UnusedDeclaration")
   public boolean addDepthBasedSubgraph(GraphConnection graphConn,
                                        EntityKeys entityKey, int traversalDepth,
                                        ArrayList<Set<String>> stopNodeTypes, ArrayList<Set<String>> stopEdgeTypes)
@@ -321,13 +317,14 @@ public class MongoToJGraphExporter {
    * Adds a new node to a JGraphX graph, or, if at least one of the items in the <code>nodeObj</code> keyset matches
    * an entry in the node cache, returns the existing object instead.
    *
-   * @param nodeObj
-   * @return
+   * @param nodeObj the DBObject (Entanglement) node to add to the JGraph
+   * @return the newly-created (or already existing matching) JGraph node
    * @throws DbObjectMarshallerException
    */
   private Object addNode(DBObject nodeObj) throws DbObjectMarshallerException {
 //    logger.info("Adding node: "+nodeObj);
 
+    //noinspection unchecked
     EntityKeys<Node> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
@@ -359,9 +356,8 @@ public class MongoToJGraphExporter {
     }
 
     String id = parseIdStringFromKeyset(edge.getKeys());
-    Object graphEdge = graph.insertEdge(parentContainer, id,
+    return graph.insertEdge(parentContainer, id,
         visualInfo.toBasicString(edge.getKeys(), edgeObj), jgraphFromNode, jgraphToNode);
-    return graphEdge;
   }
 
   private Element createXmlUserObject(EntityKeys<?> keyset, DBObject obj) {
@@ -717,6 +713,7 @@ public class MongoToJGraphExporter {
               stopNodeTypes, stopEdgeTypes);
         } else {
           logger.fine("Stopping traversal of graph at traversal depth of " + currentDepth + 1 + "/" + traversalDepth);
+          //noinspection UnnecessaryContinue
           continue;
         }
       } else {
@@ -750,6 +747,7 @@ public class MongoToJGraphExporter {
 //  }
 
 
+  @SuppressWarnings("UnusedDeclaration")
   public void addNodeVisualInfo(String nodeTypeName, NodeVisuals visualInfo) {
     nodeTypeToStyleInfo.put(nodeTypeName, visualInfo);
 
@@ -758,6 +756,7 @@ public class MongoToJGraphExporter {
 
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public void addEdgeVisualInfo(String edgeTypeName, EdgeVisuals visualInfo) {
     edgeTypeToStyleInfo.put(edgeTypeName, visualInfo);
 
@@ -766,11 +765,12 @@ public class MongoToJGraphExporter {
 
   }
 
-
+  @SuppressWarnings("UnusedDeclaration")
   public mxGraph getGraph() {
     return graph;
   }
 
+  @SuppressWarnings("UnusedDeclaration")
   public Object getParentContainer() {
     return parentContainer;
   }
