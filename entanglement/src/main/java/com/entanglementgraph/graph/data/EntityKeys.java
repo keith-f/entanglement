@@ -90,6 +90,12 @@ public class EntityKeys<E>
     names.add(name);
   }
 
+  public EntityKeys(String type, Collection<String> names) {
+    this();
+    this.type = type;
+    names.addAll(names);
+  }
+
   public EntityKeys(String type, String uid, String name) {
     this();
     this.type = type;
