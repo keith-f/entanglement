@@ -417,22 +417,22 @@ public class MongoToGephiExporter {
       gephiNode.getNodeData().setLabel(((Integer) gephiNode.getId()).toString());
     }
 
-    // retrieve the appropriate color based on provided color mappings.
-    Color nodeColour = DEFAULT_COLOR;
-    if (colorMapping.containsKey(type)) {
-      nodeColour = colorMapping.get(type);
-    }
-
+    // retrieve the appropriate color based on provided color mappings
+    float[] rgbColorComp = retrieveMappedColor(type);
     // set the color for the node
-    float[] rgbColorComp = nodeColour.getRGBColorComponents(null);
-    gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1],
-        rgbColorComp[2]);
-//      gephiNode.getNodeData().setColor(nodeColour.getRed(), nodeColour.
-//              getGreen(), nodeColour.getBlue());
-//            gephiNode.getNodeData().getAttributes().setValue( nodeTypeCol.getIndex(), node.getType() );
+    gephiNode.getNodeData().setColor(rgbColorComp[0], rgbColorComp[1], rgbColorComp[2]);
 
     return gephiNode;
 
+  }
+
+  private float[] retrieveMappedColor(String type) {
+    Color color = DEFAULT_COLOR;
+    if (colorMapping.containsKey(type)) {
+      color = colorMapping.get(type);
+    }
+
+    return color.getRGBColorComponents(null);
   }
 
   /**
