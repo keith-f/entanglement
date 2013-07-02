@@ -20,10 +20,8 @@ package com.entanglementgraph.graph;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.entanglementgraph.graph.EdgeDAO.*;
@@ -44,15 +42,15 @@ public class EdgeQueries {
    * of their names. Edge queries involving both the 'from' and 'to' nodes must therefore perform several database
    * queries in order to ensure that all appropriate edge documents are found. These are:
    * <ul>
-   *   <li>from (uid) + to (uid)</li>
-   *   <li>from (uid) + to (type+name)</li>
-   *   <li>from (type+name) + to (uid)</li>
-   *   <li>from (type+name) + to (type+name)</li>
+   * <li>from (uid) + to (uid)</li>
+   * <li>from (uid) + to (type+name)</li>
+   * <li>from (type+name) + to (uid)</li>
+   * <li>from (type+name) + to (type+name)</li>
    * </ul>
-   *
+   * <p/>
    * Helpfully, MongoDB provides the <code>$or</code> operator. Not only does this operator get around the usual
    * limit of one index per query, but each part of the 'or' operation executes in parallel.
-   *
+   * <p/>
    * This method constructs a query along the lines of the following, which can be used to query the edges between two
    * nodes with all possible graph entity addressing combinations:
    * <pre>
@@ -126,11 +124,12 @@ public class EdgeQueries {
     query.put("$or", or);
     or.add(uidQuery);
     or.add(nameQuery);
+    logger.fine("buildToNodeQuery: " + query);
 
     return query;
   }
 
-  public static DBObject buildFromUidToUidQuery(EntityKeys from, EntityKeys to)  {
+  public static DBObject buildFromUidToUidQuery(EntityKeys from, EntityKeys to) {
     DBObject query = new BasicDBObject();
     query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
     query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
