@@ -195,11 +195,12 @@ public class NodeModificationPlayer
       // No - create a new document
       if (!exists) {
         // Create a new node and then exit
+        logger.info("NodeModification refers to a new node. Query keyset was: "+keyset+". Entire document: "+reqSerializedNode);
         createNewNode(command, reqSerializedNode);
       }
       // Yes  - update existing document
       else {
-
+        logger.info("NodeModification matched an existing node. Query keyset was: "+keyset+". Entire document: "+reqSerializedNode);
         updateExistingNode(command, reqSerializedNode);
       }
     }
@@ -222,6 +223,7 @@ public class NodeModificationPlayer
     try {
       // Edit existing node - need to perform a merge based on
       BasicDBObject existing = nodeDao.getByKey(reqKeyset);
+      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database documentwas : "+existing);
       switch(command.getMergePol()) {
         case NONE:
 //          logger.log(Level.INFO, "Ignoring existing node: {0}", reqKeyset);
