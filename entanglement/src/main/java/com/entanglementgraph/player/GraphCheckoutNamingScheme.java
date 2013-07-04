@@ -35,7 +35,7 @@ public class GraphCheckoutNamingScheme
     this.graphName = graphName;
     this.graphBranchName = graphBranchName;
 
-    this.revCollectionName = graphName +"_" + graphBranchName+"_revisions";
+    this.revCollectionName = graphName +"_" +"_revisions";
     this.nodeCollectionName = graphName +"_" + graphBranchName+"_nodes";
     this.edgeCollectionName = graphName +"_" + graphBranchName+"_edges";
   }
