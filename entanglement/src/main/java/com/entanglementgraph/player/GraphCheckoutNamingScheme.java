@@ -26,6 +26,7 @@ public class GraphCheckoutNamingScheme
 {
   private final String graphName;
   private final String graphBranchName;
+  private final String revCollectionName;
   private final String nodeCollectionName;
   private final String edgeCollectionName;
   
@@ -33,7 +34,8 @@ public class GraphCheckoutNamingScheme
   {
     this.graphName = graphName;
     this.graphBranchName = graphBranchName;
-    
+
+    this.revCollectionName = graphName +"_" + graphBranchName+"_revisions";
     this.nodeCollectionName = graphName +"_" + graphBranchName+"_nodes";
     this.edgeCollectionName = graphName +"_" + graphBranchName+"_edges";
   }
@@ -54,5 +56,9 @@ public class GraphCheckoutNamingScheme
   public String getGraphName()
   {
     return graphName;
+  }
+
+  public String getRevCollectionName() {
+    return revCollectionName;
   }
 }

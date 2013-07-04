@@ -71,10 +71,7 @@ public class RevisionLogDirectToMongoDbImpl
    * Pre-defined sort orders
    */
   private static final DBObject SORT_BY_DATE_COMMITTED = new BasicDBObject(FIELD_DATE_COMMITTED, 1);
-  private static final DBObject SORT_BY_TXN_SUBMIT_ID = new BasicDBObject(FIELD_TXN_SUBMIT_ID, 1); 
-  
-//  private static final String REV_COUNTER_NAME = "revision_count";
-  private static final String DEFAULT_COL_REVLOG = "revisions";
+  private static final DBObject SORT_BY_TXN_SUBMIT_ID = new BasicDBObject(FIELD_TXN_SUBMIT_ID, 1);
   
   private final Set<RevisionLogListener> listeners;
 
@@ -85,29 +82,22 @@ public class RevisionLogDirectToMongoDbImpl
   private final DB db;
   
   private final DBCollection revLogCol;
-  
-//  private final Counter nodeCounter;
-  
-  private final String revLogColName;
-  
-//  private final JsonUtils serializer;
+
   private final DbObjectMarshaller marshaller;
 
-  public RevisionLogDirectToMongoDbImpl(GraphConnection graphConn)
+  public RevisionLogDirectToMongoDbImpl(GraphConnection graphConn, DBCollection revLogCol)
       throws RevisionLogException
   {
     this.listeners = new HashSet<>();
-    this.revLogColName = DEFAULT_COL_REVLOG;
 
     this.graphConn = graphConn;
-
     this.m = graphConn.getMongo();
     this.db = graphConn.getDb();
-    this.revLogCol = db.getCollection(revLogColName);
 
     marshaller = ObjectMarshallerFactory.create(graphConn.getClassLoader());
 
     //Create indexes
+    this.revLogCol = revLogCol;
     revLogCol.ensureIndex(IDX__TXN_UID__COMMITTED);
     revLogCol.ensureIndex(IDX__TXN_SUBMIT_ID);
     revLogCol.ensureIndex(IDX__GRPH_UID__GRPH_BRANCH__COMMITTED);

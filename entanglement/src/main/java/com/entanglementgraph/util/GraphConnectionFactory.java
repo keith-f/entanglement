@@ -72,12 +72,13 @@ public class GraphConnectionFactory {
       connection.setGraphName(graphName);
       connection.setMarshaller(marshaller);
 
-      RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(connection);
-      connection.setRevisionLog(revLog);
-
       GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
+      DBCollection revCol = db.getCollection(collectionNamer.getRevCollectionName());
       DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
       DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
+
+      RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(connection, revCol);
+      connection.setRevisionLog(revLog);
       NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol);
       EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, edgeCol);
 
@@ -86,7 +87,7 @@ public class GraphConnectionFactory {
 
       // Connection object is fully populated at this point.
 
-      //Wire up a player by default
+      //Wire up a player by default (source revision log and destination collection are for the same graph in this case)
       LogPlayer logPlayer = new LogPlayerMongoDbImpl(connection, connection);
       GraphOpPostCommitPlayer opPlayer = new GraphOpPostCommitPlayer(logPlayer);
       revLog.addListener(opPlayer);
