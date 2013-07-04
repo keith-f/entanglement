@@ -375,7 +375,7 @@ public class NodeModificationPlayer
 
     // Merge names
     merged.addNames(existingKeyset.getNames());
-    merged.addNames(newKeyset.getUids());
+    merged.addNames(newKeyset.getNames());
 
     return merged;
   }
