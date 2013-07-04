@@ -195,7 +195,7 @@ public class NodeModificationPlayer
       // No - create a new document
       if (!exists) {
         // Create a new node and then exit
-        logger.info("NodeModification refers to a new node. Query keyset was: "+keyset+". Entire document: "+reqSerializedNode);
+        logger.info("NodeModification refers to a new node. Query keyset was: "+keyset);
         createNewNode(command, reqSerializedNode);
       }
       // Yes  - update existing document
