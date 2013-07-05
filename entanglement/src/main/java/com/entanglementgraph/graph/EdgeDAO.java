@@ -93,7 +93,17 @@ public interface EdgeDAO
       throws GraphModelException;
 
   public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
-                                                 Integer offset, Integer limit, DBObject customQuery, DBObject sort)
+                                       Integer offset, Integer limit, DBObject customQuery, DBObject sort)
+      throws GraphModelException;
+
+  /**
+   * Iterates all edges from a specified node that link to a destination node of a specified type.
+   * @param from the source node
+   * @param toNodeType the type of destination node
+   * @return
+   * @throws GraphModelException
+   */
+  public DBCursor iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType)
       throws GraphModelException;
 
   /**

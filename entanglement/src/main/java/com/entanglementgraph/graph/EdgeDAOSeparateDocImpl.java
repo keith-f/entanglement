@@ -136,6 +136,21 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
+  @Override
+  public DBCursor iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType) throws GraphModelException {
+    logger.log(Level.FINE, "Iterating edges from node: {0}, to node of type: {1}", new Object[]{from, toNodeType});
+    DBObject query = buildFromNodeQuery(from);
+    query.put(FIELD_TO_KEYS_TYPE, toNodeType);
+//    query.putAll(customQuery);
+    logger.log(Level.FINE, "Query: {0}", new Object[]{query});
+    try {
+//      return col.find(query).skip(offset).limit(limit).sort(sort);
+      return col.find(query);
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
+    }
+  }
+
 
   @Override
   public DBCursor iterateEdgesToNode(EntityKeys to)

@@ -72,7 +72,12 @@ import java.util.Set;
 
   @Override
   public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
-    return iterateEdgesFromNode(edgeType, from, offset, limit, customQuery, sort);
+    return delegate.iterateEdgesFromNode(edgeType, from, offset, limit, customQuery, sort);
+  }
+
+  @Override
+  public DBCursor iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType) throws GraphModelException {
+    return delegate.iterateEdgesFromNodeToNodeOfType(from, toNodeType);
   }
 
   @Override
@@ -87,7 +92,7 @@ import java.util.Set;
 
   @Override
   public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to, Integer offset, Integer limit, DBObject customQuery, DBObject sort) throws GraphModelException {
-    return iterateEdgesToNode(edgeType, to, offset, limit, customQuery, sort);
+    return delegate.iterateEdgesToNode(edgeType, to, offset, limit, customQuery, sort);
   }
 
   @Override
