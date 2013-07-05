@@ -99,6 +99,7 @@ public class EntanglementBot extends GenericIrcBot {
     addCommand("list-edges", ListEdgesCommand.class);
     addCommand("list-connections", ListGraphConnectionsCommand.class);
     addCommand("list-nodes", ListNodesCommand.class);
+    addCommand("playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
     addCommand("show-edge", ShowEdgeCommand.class);
     addCommand("show-node", ShowNodeCommand.class);
     addCommand("use", UseGraphCommand.class);
