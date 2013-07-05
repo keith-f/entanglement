@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.irc;
 
+import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.util.GraphConnection;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 
@@ -35,13 +36,16 @@ public class EntanglementRuntime {
   private final DbObjectMarshaller marshaller;
 
   private final Map<String, GraphConnection> graphConnections;
-
   private GraphConnection currentConnection;
+
+  private final Map<String, GraphCursor> graphCursors;
+  private GraphCursor currentCursor;
 
   public EntanglementRuntime(ClassLoader classLoader, DbObjectMarshaller marshaller) {
     this.classLoader = classLoader;
     this.marshaller = marshaller;
     this.graphConnections = new HashMap<>();
+    this.graphCursors = new HashMap<>();
   }
 
   public void addGraphConnection(String connName, GraphConnection conn) {
@@ -66,5 +70,17 @@ public class EntanglementRuntime {
 
   public void setCurrentConnection(GraphConnection currentConnection) {
     this.currentConnection = currentConnection;
+  }
+
+  public Map<String, GraphCursor> getGraphCursors() {
+    return graphCursors;
+  }
+
+  public GraphCursor getCurrentCursor() {
+    return currentCursor;
+  }
+
+  public void setCurrentCursor(GraphCursor currentCursor) {
+    this.currentCursor = currentCursor;
   }
 }
