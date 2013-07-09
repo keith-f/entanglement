@@ -50,17 +50,6 @@ public class NodeModificationPlayer
 {
   private static final Logger logger = Logger.getLogger(NodeModificationPlayer.class.getName());
 
-//  private static final String FIELD_KEYS = "keys";
-  
-  /*
-   * These are set for every time <code>playItem</code> is called.
-   */
-  // The currently playing revision item
-//  private RevisionItem item;
-  // The command wrapped by the RevisionItem
-//  private NodeModification command;
-  // A MongoDB document embedded within the command that represents the graph entity being updated.
-//  private BasicDBObject reqSerializedNode;
   // The deserialized key field from the reqSerializedNode. This identifies the object to be created/updated.
   private EntityKeys reqKeyset;
   
@@ -98,18 +87,6 @@ public class NodeModificationPlayer
       }
       // ^^^ Quick hack end
 
-//      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
-//      System.out.println(" +++++++++++++++++++++ Type: "+reqSerializedNode.get(FIELD_KEYS).getClass().getName());
-//      System.out.println(" +++++++++++++++++++++ toString: "+reqSerializedNode.get(FIELD_KEYS).toString());
-//      System.out.println(" +++++++++++++++++++++ getString: "+reqSerializedNode.getString(FIELD_KEYS));
-//      System.out.println(" +++++ node doc: " + reqSerializedNode.toString());
-//      System.out.println(" +++++ node doc: "+ reqSerializedNode.getString(FIELD_KEYS));
-//      StringMap sm = (StringMap) reqSerializedNode.get(FIELD_KEYS);
-//      for (Object key : sm.keySet()) {
-//        System.out.println("  - "+key+"   val_type:"+sm.get(key).getClass().getName()+"   value: "+sm.get(key));
-//      }
-//      EntityKeys reqKeyset = MongoUtils.parseKeyset(marshaller, (DBObject) reqSerializedNode.get(FIELD_KEYS));
-
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
 
@@ -120,55 +97,6 @@ public class NodeModificationPlayer
     }
   }
 
-  private static class BatchItem {
-    private BatchItem(NodeModification command, BasicDBObject reqSerializedNode, EntityKeys keyset) {
-      this.command = command;
-      this.reqSerializedNode = reqSerializedNode;
-      this.keyset = keyset;
-    }
-
-    NodeModification command;
-    BasicDBObject reqSerializedNode;
-    EntityKeys keyset;
-  }
-
-//  @Override
-//  public void playBatch(List<RevisionItem> items) throws LogPlayerException {
-//    try {
-//      logger.info("Playing batch of " + items.size() + " items.");
-//      List<DBObject> newItems = new LinkedList<>();
-//      List<BatchItem> existingItems = new LinkedList<>();
-//      for (RevisionItem item : items) {
-//
-//        NodeModification command = (NodeModification) item.getOp();
-//        BasicDBObject reqSerializedNode = command.getNode();
-//
-//        EntityKeys reqKeyset = MongoObjectParsers.parseKeyset(marshaller, reqSerializedNode.getString(FIELD_KEYS));
-//
-//        //The reference field should contain at least one identification key
-//        validateKeyset(reqKeyset);
-//
-//        if (nodeDao.existsByKey(reqKeyset)) {
-//          existingItems.add(new BatchItem(command, reqSerializedNode, reqKeyset));
-//        } else {
-//          newItems.add(reqSerializedNode);
-//        }
-//      }
-//      logger.info("Items to create " + newItems.size() + ". Items to update: " + existingItems.size());
-//      nodeDao.storeBatch(newItems);
-//
-//      logger.info("Created " + newItems.size());
-//
-//      for (BatchItem item : existingItems) {
-//        updateExistingNode(item.command, item.reqSerializedNode);
-//      }
-//
-//      logger.info("Updated " + existingItems.size());
-//
-//    } catch (Exception e) {
-//      throw new LogPlayerException("Failed to play command", e);
-//    }
-//  }
 
   /*
    * To create or update an entity, then there must be at least one UID and/or at least one name.
