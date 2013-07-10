@@ -104,7 +104,7 @@ public class EntityKeys<E>
   }
 
   @Override
-  protected EntityKeys<E> clone() throws CloneNotSupportedException {
+  public EntityKeys<E> clone() {
     EntityKeys<E> clone = new EntityKeys<>();
     clone.setType(getType());
     clone.getUids().addAll(getUids());
