@@ -43,7 +43,6 @@ public class NodeMerger {
   public BasicDBObject mergeNodes(MergePolicy mergePolicy, BasicDBObject existingNode, BasicDBObject nodeToMerge)
       throws GraphModelException {
     try {
-      BasicDBObject merged;
       switch(mergePolicy) {
         case NONE:
           return existingNode;
@@ -59,7 +58,6 @@ public class NodeMerger {
         default:
           throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
       }
-//      return merged;
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform merge between nodes: "+existingNode+" and: "+nodeToMerge, e);
     }

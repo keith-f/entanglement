@@ -20,6 +20,7 @@ package com.entanglementgraph.player.spi;
 
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.jiti.NodeMerger;
 import com.entanglementgraph.util.MongoUtils;
 import com.google.gson.internal.StringMap;
 import com.mongodb.*;
@@ -151,163 +152,15 @@ public class NodeModificationPlayer
     try {
       // Edit existing node - need to perform a merge based on
       BasicDBObject existing = nodeDao.getByKey(reqKeyset);
-      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database documentwas : "+existing);
-      switch(command.getMergePol()) {
-        case NONE:
-//          logger.log(Level.INFO, "Ignoring existing node: {0}", reqKeyset);
-          break;
-        case ERR:
-          throw new LogPlayerException("A node with one or more items in the following keyset already exists: "+reqKeyset);
-        case APPEND_NEW__LEAVE_EXISTING:
-          doAppendNewLeaveExisting(reqSerializedNode, existing);
-          break;
-        case APPEND_NEW__OVERWRITE_EXSITING:
-          doAppendNewOverwriteExisting(reqSerializedNode, existing);
-          break;
-        case OVERWRITE_ALL:
-          doOverwriteAll(reqSerializedNode, existing);
-          break;
-        default:
-          throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
-      }
+      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
+
+      NodeMerger merger = new NodeMerger(marshaller);
+      BasicDBObject updated = merger.mergeNodes(command.getMergePol(), existing, reqSerializedNode);
+      nodeDao.update(updated);
+
     } catch (Exception e) {
       throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);
     }
   }
 
-
-  
-  /**
-   * This method adds new properties to an existing node. Where there are
-   * properties on the existing node with the same name as the ones specified
-   * in the update command, we leave the existing values as they are.
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doAppendNewLeaveExisting(BasicDBObject reqSerializedNode, BasicDBObject existing)
-          throws GraphModelException
-  {
-    try {
-      // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(existing.toMap());
-
-      for (String key : reqSerializedNode.keySet()) {
-        if (updated.containsField(key)) {
-          continue; //Don't overwrite existing properties
-        }
-        //Set fields that exist in the request, but not in the existing object
-        updated.put(key, reqSerializedNode.get(key));
-      }
-
-      // Allow new keys to be added, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      nodeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, leave existing' operation on existing node: "+existing, e);
-    }
-  }
-  
-  /**
-   * This method adds new properties to an existing node and overwrites the
-   * values of existing properties. 
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doAppendNewOverwriteExisting(BasicDBObject reqSerializedNode, BasicDBObject existing)
-          throws GraphModelException
-  {
-    try {
-      // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
-
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(existing.toMap());
-
-      for (String key : reqSerializedNode.keySet()) {
-        //Set all fields that exist in the request, regardless of whether they're present in the existing object
-        updated.put(key, reqSerializedNode.get(key));
-      }
-
-      // Allow new keys to be added, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      nodeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, overwrite existing' operation on existing node: "+existing, e);
-    }
-  }
-
-  /**
-   * This method adds new properties to an existing node and overwrites the
-   * values of existing properties. 
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doOverwriteAll(BasicDBObject reqSerializedNode, BasicDBObject existing)
-          throws GraphModelException
-  {
-    /*
-     * In this case, we can simply use the new DBObject from the command.
-     * We just need to merge keys from the existing object.
-     */
-    try {
-      // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existing.getString(FIELD_KEYS));
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(reqSerializedNode.toMap());
-
-      // Allow new keys to be added, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      nodeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existing, e);
-    }
-  }
-
-  private static EntityKeys _mergeKeys(EntityKeys existingKeyset, EntityKeys newKeyset)
-      throws DbObjectMarshallerException, GraphModelException {
-
-    //If entity types mismatch, then we have a problem.
-    if (newKeyset.getType() != null && existingKeyset.getType() != null &&
-        !newKeyset.getType().equals(existingKeyset.getType())) {
-      throw new GraphModelException("Attempt to merge existing keyset with keyset from current request failed. " +
-          "The type fields are non-null and mismatch. Existing keyset: "+existingKeyset
-          +". Request keyset: "+newKeyset);
-    }
-
-    EntityKeys merged = new EntityKeys();
-    // Set entity type. Here, existing 'type' gets priority, followed by new type (just to be sure...)
-    if (existingKeyset.getType() != null) {
-      merged.setType(existingKeyset.getType());
-    } else if (newKeyset.getType() != null) {
-      merged.setType(newKeyset.getType());
-    }
-
-    // Merge UIDs
-    merged.addUids(existingKeyset.getUids());
-    merged.addUids(newKeyset.getUids());
-
-    // Merge names
-    merged.addNames(existingKeyset.getNames());
-    merged.addNames(newKeyset.getNames());
-
-    return merged;
-  }
-  
 }
