@@ -99,6 +99,11 @@ public class MongoUtils {
    * Extracts an EntityKeys object from a user-specified field of a DBObject. The value of the DBObject field is
    * assumed to be a JSON text String that encodes an EntityKeys object. This deserialised object obtained from this
    * JSON value is then returned.
+   *
+   * This method is convenient when extracting a specific EntityKey instance from objects with multiple EntityKeys
+   * instances, such as edge documents. Here, suitable values for <code>fieldName</code> include:
+   * <code>EdgeDAO.FIELD_FROM_KEYS</code> and <code>EdgeDAO.FIELD_TO_KEYS</code>
+   *
    * @param marshaller the object marshaller to use for deserialisation.
    * @param dbObject the database object from which the <code>fieldName</code> field should be extracted, and its value parsed.
    * @param fieldName the name of the DBObject field whose value is to be used when parsing the <code>EntityKeys</code>.
