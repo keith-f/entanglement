@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.jiti;
 
+import static com.entanglementgraph.util.MongoUtils.parseKeyset;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.player.LogPlayerException;
@@ -32,6 +33,11 @@ import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 /**
  * A convenience class for merging two BasicDBObject instances that represent graph nodes. This functionality is
  * required in several places so has been extracted from its original location within NodeModificationPlayer.
+ *
+ * Nodes may be merged according to a <code>MergePolicy</code>, which determines which data fields are ignored,
+ * overwritten, or combined. Elements of the object's identifier (UIDs and names of EntityKeys) are always merged.
+ *
+ * @author Keith Flanagan
  */
 public class NodeMerger {
 
@@ -40,26 +46,26 @@ public class NodeMerger {
     this.marshaller = marshaller;
   }
 
-  public BasicDBObject mergeNodes(MergePolicy mergePolicy, BasicDBObject existingNode, BasicDBObject nodeToMerge)
+  public BasicDBObject merge(MergePolicy mergePolicy, BasicDBObject existingNode, BasicDBObject newNode)
       throws GraphModelException {
     try {
       switch(mergePolicy) {
         case NONE:
           return existingNode;
         case ERR:
-          EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existingNode.getString(FIELD_KEYS));
+          EntityKeys existingKeyset = parseKeyset(marshaller, existingNode, FIELD_KEYS);
           throw new LogPlayerException("Attempt to merge nodes with one or more keyset items in common: "+existingKeyset);
         case APPEND_NEW__LEAVE_EXISTING:
-          return doAppendNewLeaveExisting(existingNode, nodeToMerge);
+          return doAppendNewLeaveExisting(existingNode, newNode);
         case APPEND_NEW__OVERWRITE_EXSITING:
-          return doAppendNewOverwriteExisting(existingNode, nodeToMerge);
+          return doAppendNewOverwriteExisting(existingNode, newNode);
         case OVERWRITE_ALL:
-          return doOverwriteAll(existingNode, nodeToMerge);
+          return doOverwriteAll(existingNode, newNode);
         default:
           throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
       }
     } catch (Exception e) {
-      throw new GraphModelException("Failed to perform merge between nodes: "+existingNode+" and: "+nodeToMerge, e);
+      throw new GraphModelException("Failed to perform merge between nodes: "+existingNode+" and: "+newNode, e);
     }
   }
 
@@ -76,8 +82,8 @@ public class NodeMerger {
   {
     try {
       // Deserialize the keyset fields of each object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existingNode.getString(FIELD_KEYS));
-      EntityKeys newNodeKeyset = MongoUtils.parseKeyset(marshaller, newNode.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = parseKeyset(marshaller, existingNode, FIELD_KEYS);
+      EntityKeys newNodeKeyset = parseKeyset(marshaller, newNode, FIELD_KEYS);
 
       BasicDBObject merged = new BasicDBObject();
       merged.putAll(existingNode.toMap());
@@ -113,8 +119,8 @@ public class NodeMerger {
   {
     try {
       // Deserialize the keyset fields of each object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existingNode.getString(FIELD_KEYS));
-      EntityKeys newNodeKeyset = MongoUtils.parseKeyset(marshaller, newNode.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = parseKeyset(marshaller, existingNode, FIELD_KEYS);
+      EntityKeys newNodeKeyset = parseKeyset(marshaller, newNode, FIELD_KEYS);
 
 
       BasicDBObject merged = new BasicDBObject();
@@ -153,8 +159,8 @@ public class NodeMerger {
      */
     try {
       // Deserialize the keyset fields of each object.
-      EntityKeys existingKeyset = MongoUtils.parseKeyset(marshaller, existingNode.getString(FIELD_KEYS));
-      EntityKeys newNodeKeyset = MongoUtils.parseKeyset(marshaller, newNode.getString(FIELD_KEYS));
+      EntityKeys existingKeyset = parseKeyset(marshaller, existingNode, FIELD_KEYS);
+      EntityKeys newNodeKeyset = parseKeyset(marshaller, newNode, FIELD_KEYS);
 
       BasicDBObject merged = new BasicDBObject();
       merged.putAll(newNode.toMap());
