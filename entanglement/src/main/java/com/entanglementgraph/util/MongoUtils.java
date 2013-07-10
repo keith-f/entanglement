@@ -20,6 +20,7 @@ package com.entanglementgraph.util;
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
@@ -62,15 +63,52 @@ public class MongoUtils {
     return list;
   }
 
+  /**
+   * Extracts an EntityKeys object by directly parsing the JSON-format string, <code>jsonKeyset</code>.
+   *
+   * @param marshaller the object marshaller to use for deserialisation.
+   * @param jsonKeyset the JSON String that encodes an <code>EntityKeys</code> bean.
+   * @return an <code>EntityKeys</code> object parsed from the JSON text.
+   * @throws DbObjectMarshallerException
+   */
   public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, String jsonKeyset)
       throws DbObjectMarshallerException {
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }
 
-  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject)
+  /**
+   * Extracts an EntityKeys object from a DBObject. The value of <code>FIELD_KEYS</code> (usually "keys") is
+   * obtained from the DBObject. This value is assumed to be a JSON text String that encodes an EntityKeys object.
+   * The deserialised object is then returned.
+   * @param marshaller the object marshaller to use for deserialisation.
+   * @param dbObject the database object from which the "keys" field should be extracted, and its value parsed.
+   * @return an <code>EntityKeys</code> object parsed from a JSON string obtained from the "keys" field of the specified
+   * database object.
+   * @throws DbObjectMarshallerException
+   */
+  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, BasicDBObject dbObject)
       throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(FIELD_KEYS).toString();
+//    String jsonKeyset = dbObject.get(FIELD_KEYS).toString();
+    String jsonKeyset = dbObject.getString(FIELD_KEYS);
+    EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
+    return keyset;
+  }
+
+  /**
+   * Extracts an EntityKeys object from a user-specified field of a DBObject. The value of the DBObject field is
+   * assumed to be a JSON text String that encodes an EntityKeys object. This deserialised object obtained from this
+   * JSON value is then returned.
+   * @param marshaller the object marshaller to use for deserialisation.
+   * @param dbObject the database object from which the <code>fieldName</code> field should be extracted, and its value parsed.
+   * @param fieldName the name of the DBObject field whose value is to be used when parsing the <code>EntityKeys</code>.
+   * @return an <code>EntityKeys</code> object parsed from a JSON string obtained from the <code>fieldName</code> field
+   * of the specified database object.
+   * @throws DbObjectMarshallerException
+   */
+  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject, String fieldName)
+      throws DbObjectMarshallerException {
+    String jsonKeyset = dbObject.get(fieldName).toString();
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }
