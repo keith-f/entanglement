@@ -21,6 +21,7 @@ package com.entanglementgraph.player.spi;
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.jiti.EdgeMerger;
 import com.google.gson.internal.StringMap;
 import com.mongodb.*;
 import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
@@ -64,12 +65,6 @@ public class EdgeModificationPlayer
   public String getSupportedLogItemType()
   {
     return EdgeModification.class.getSimpleName();
-  }
-
-  private EntityKeys parseKeyset(DBObject dbObject, String fieldName) throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(fieldName).toString();
-    EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
-    return keyset;
   }
 
   @Override
@@ -142,7 +137,7 @@ public class EdgeModificationPlayer
       }
       // Yes  - update existing document
       else {
-        updateExistingEdge();
+        updateExistingEdge(command, reqSerializedEdge);
       }
     }
     catch(Exception e) {
@@ -161,201 +156,21 @@ public class EdgeModificationPlayer
     }
   }
 
-  private void updateExistingEdge() throws LogPlayerException {
+
+  private void updateExistingEdge(EdgeModification command, BasicDBObject reqSerializedNode)
+      throws LogPlayerException {
     try {
-      // Edit existing edge
+      // Edit existing node - need to perform a merge based on
       BasicDBObject existing = edgeDao.getByKey(reqKeyset);
-      switch(command.getMergePol()) {
-        case NONE:
-//          logger.log(Level.INFO, "Ignoring existing edge: {0}", reqKeyset);
-          break;
-        case ERR:
-          throw new LogPlayerException("An edge with one or more items in the following keyset already exists: "+reqKeyset);
-        case APPEND_NEW__LEAVE_EXISTING:
-          doAppendNewLeaveExisting(existing);
-          break;
-        case APPEND_NEW__OVERWRITE_EXSITING:
-          doAppendNewOverwriteExisting(existing);
-          break;
-        case OVERWRITE_ALL:
-          doOverwriteAll(existing);
-          break;
-        default:
-          throw new LogPlayerException("Unsupported merge policy type: "+command.getMergePol());
-      }
+      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
+
+      EdgeMerger merger = new EdgeMerger(marshaller);
+      BasicDBObject updated = merger.merge(command.getMergePol(), existing, reqSerializedNode);
+      edgeDao.update(updated);
+
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to perform update on edge with keyset: "+reqKeyset, e);
+      throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);
     }
-  }
-
-  
-  /**
-   * This method adds new properties to an existing edge. Where there are
-   * properties on the existing edge with the same name as the ones specified
-   * in the update command, we leave the existing values as they are.
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doAppendNewLeaveExisting(BasicDBObject existing)
-          throws GraphModelException
-  {
-    try {
-      // Deserialize the keyset field of the existing object.
-      EntityKeys existingKeyset = parseKeyset(existing, FIELD_KEYS);
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(existing.toMap());
-
-      for (String key : reqSerializedEdge.keySet()) {
-        if (updated.containsField(key)) {
-          continue; //Don't overwrite existing properties
-        }
-        //Set fields that exist in the request, but not in the existing object
-        updated.put(key, reqSerializedEdge.get(key));
-      }
-
-      // Allow new keys to be added to identify the edge, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
-
-      // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
-
-
-      edgeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, leave existing' operation on existing node: "+existing, e);
-    }
-  }
-  
-  /**
-   * This method adds new properties to an existing edge and overwrites the
-   * values of existing properties. 
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doAppendNewOverwriteExisting(BasicDBObject existing)
-          throws GraphModelException
-  {
-    try {
-      // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
-      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(existing.toMap());
-
-      for (String key : reqSerializedEdge.keySet()) {
-        //Set all fields that exist in the request, regardless of whether they're present in the existing object
-        updated.put(key, reqSerializedEdge.get(key));
-      }
-
-      // Allow new keys to be added, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
-
-      // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
-
-      edgeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'append new, overwrite existing' operation on existing node: "+existing, e);
-    }
-  }
-
-  /**
-   * This method adds new properties to an existing edge and overwrites the
-   * values of existing properties. 
-   * Immutable properties (UID, type and name) are, of course, ignored.
-   */
-  private void doOverwriteAll(BasicDBObject existing)
-          throws GraphModelException
-  {
-    /*
-     * In this case, we can simply use the new DBObject from the command.
-     * We just need to merge keys from the existing object.
-     */
-    try {
-      // Deserialize the keyset field of the existing object.
-      String jsonExistingKeyset = existing.get(FIELD_KEYS).toString();
-      EntityKeys existingKeyset = marshaller.deserialize(jsonExistingKeyset, EntityKeys.class);
-
-      BasicDBObject updated = new BasicDBObject();
-      updated.putAll(reqSerializedEdge.toMap());
-
-      // Allow new keys to be added, but disallow editing type of the entity
-      EntityKeys mergedKeys = _mergeKeys(existingKeyset, reqKeyset);
-      // Replace the 'keys' field with the merged keys sub-document.
-      updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
-
-      // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
-
-      // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(existing, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(reqSerializedEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
-
-      edgeDao.update(updated);
-    }
-    catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existing, e);
-    }
-  }
-
-
-  private static EntityKeys _mergeKeys(EntityKeys existingKeyset, EntityKeys newKeyset)
-      throws DbObjectMarshallerException, GraphModelException {
-
-    //If entity types mismatch, then we have a problem.
-    if (newKeyset.getType() != null && existingKeyset.getType() != null &&
-        !newKeyset.getType().equals(existingKeyset.getType())) {
-      throw new GraphModelException("Attempt to merge existing keyset with keyset from current request failed. " +
-          "The type fields are non-null and mismatch. Existing keyset: "+existingKeyset
-          +". Request keyset: "+newKeyset);
-    }
-
-    EntityKeys merged = new EntityKeys();
-    // Set entity type. Here, existing 'type' gets priority, followed by new type (just to be sure...)
-    if (existingKeyset.getType() != null) {
-      merged.setType(existingKeyset.getType());
-    } else if (newKeyset.getType() != null) {
-      merged.setType(newKeyset.getType());
-    }
-
-    // Merge UIDs
-    merged.addUids(existingKeyset.getUids());
-    merged.addUids(newKeyset.getUids());
-
-    // Merge names
-    merged.addNames(existingKeyset.getNames());
-    merged.addNames(newKeyset.getNames());
-
-    return merged;
   }
 
 }

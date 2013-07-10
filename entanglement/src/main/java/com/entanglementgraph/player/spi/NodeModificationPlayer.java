@@ -155,7 +155,7 @@ public class NodeModificationPlayer
       logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       NodeMerger merger = new NodeMerger(marshaller);
-      BasicDBObject updated = merger.mergeNodes(command.getMergePol(), existing, reqSerializedNode);
+      BasicDBObject updated = merger.merge(command.getMergePol(), existing, reqSerializedNode);
       nodeDao.update(updated);
 
     } catch (Exception e) {
