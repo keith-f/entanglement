@@ -20,7 +20,6 @@ package com.entanglementgraph.jiti;
 
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.jiti.NodeMerger;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
@@ -33,6 +32,7 @@ import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Provides a single Iterable over multiple DBCursors, for use in the case where we're integrating over several
@@ -60,13 +60,24 @@ import java.util.*;
 public class MultiDBCursorIterable
     implements Iterable<DBObject>, Closeable
 {
+  private static final Logger logger = Logger.getLogger(MultiDBCursorIterable.class.getName());
+  private static final MergePolicy DEFAULT_MERGE_POLICY = MergePolicy.APPEND_NEW__LEAVE_EXISTING;
+
   public static enum EntityType {
     NODE, EDGE;
   }
 
-
+  /**
+   * the set of graphs that must be integrated
+   */
   private final SortedSet<GraphConnection> graphs;
+
+  /**
+   * Where documents in different graphs need to be merged, AND those documents contain the same fields, then this
+   * policy specifies which conflict resolution strategy is used.
+   */
   private MergePolicy mergePolicy;
+  private final EntityKeysMerger keyMerger;
   private final NodeMerger nodeMerger;
 
   private final Set<DBCursor> dbCursors;
@@ -81,20 +92,113 @@ public class MultiDBCursorIterable
   private final Map<String, Set<String>> typeToNames;
 
 
+  /**
+   * An Iterable that is capable of providing an integrated view of graph entities whose content may be spread across
+   * multiple documents stored in multiple independent graphs.
+   *
+   * @param marshaller a marshaller to use for serialising/deserialising objects/JSON strings.
+   * @param graphs the independent graphs containing data to be integrated. These graph connections are queried while
+   *               iterating the source DBCursors in order to obtain and merge relevant documents.
+   * @param dbCursors a set of MongoDB DBCursor objects, one for each independent graph forming the integrated view.
+   *                  We assume that each item in the <code>dbCursors</code> set is a result set of the <i>same</i>
+   *                  query, executed over <i>different</i> independent graphs.
+   */
   public MultiDBCursorIterable(DbObjectMarshaller marshaller, SortedSet<GraphConnection> graphs,
-                               Set<DBCursor> dbCursors, EntityType type )
-//                               Class<T> type)
+                               Set<DBCursor> dbCursors, EntityType type)
   {
     this.graphs = graphs;
     this.dbCursors = dbCursors;
     this.marshaller = marshaller;
     nodeMerger = new NodeMerger(marshaller);
+    keyMerger = new EntityKeysMerger();
 
     this.type = type;
 
 //    this.seenKeys = new HashSet<>();
     this.seenUids = new HashSet<>();
     this.typeToNames = new HashMap<>();
+
+    this.mergePolicy = DEFAULT_MERGE_POLICY;
+  }
+
+//  private EntityKeys findAndMergeEntityKeys(EntityKeys initialKeys) {
+//    // Query all connections for this key. Merge results
+//  }
+
+  /**
+   * This method takes a keyset (<code>initialKeys</code>), which is presumably an item of a result set.
+   * The purpose of this method is to present a unified view of the graph entity identified by <code>initialKeys</code>.
+   * To construct this view, multiple documents from the set of graphs that form the integrated view may need to be
+   * combined where there is UID or name overlap between the entities.
+   *
+   * However, as documents from different graphs are merged together, it is possible that new UIDs and/or names for the
+   * entity are found (IDs that weren't in the original <code>initialKeys</code> keyset. If new forms of identification
+   * are found, we must then go back and repeat the lookup over all graphs with these new names. If new documents are
+   * found as a result of adding these new names, then these documents must also be merged into the view. Again, if
+   * new IDs/names are found along with the new documents, we need to iteratively query and merge until no more documents
+   * and no more IDs/names are found.
+   *
+   * In the most extreme case, it is possible that several documents from the <b>same</b> graph may need to be
+   * combined, due to UID or name overlap. This occurs when the integrated set of graphs give us increased information.
+   * Two or more documents in a given collection that, when examined in isolation, appear as separate graph entities may
+   * in fact be merged into a single object when data from an additional graph provides a link between the documents.
+   *
+   * @param initialKeys the initial EntityKeys to search for. This initial keyset might get merged with other keysets
+   *                    if results from querying find new IDs or names that refer to the same graph entity.
+   * @return a merged graph entity that represents an integration of all appropriate documents stored in all the graphs
+   * that are currently being integrated.
+   * @throws GraphModelException
+   * @throws DbObjectMarshallerException
+   */
+  private BasicDBObject findAndMergeAllMatchingObjects(EntityKeys initialKeys) throws GraphModelException, DbObjectMarshallerException {
+    // Query all connections for this key. Merge results
+    boolean done = false; // Set true when all documents have been retrieved and merged.
+
+    EntityKeys currentKeyset = initialKeys.clone();
+    BasicDBObject mergedNode = null;
+    startAgainWithMergedKeyset:
+    while (!done) {
+      /*
+       * For each graph to be integrated in this view, find and merge documents matching 'currentKeyset'. During this
+       * process, if new entity identification keys are found then we need to merge the EntityKeys, and retry the
+       * document queries from the beginning.
+       */
+      for (GraphConnection graphConn : graphs) {
+        BasicDBObject graphDocument = graphConn.getNodeDao().getByKey(currentKeyset);
+        EntityKeys graphKeyset = MongoUtils.parseKeyset(marshaller, graphDocument);
+        if (!areKeysetsIdentical(currentKeyset, graphKeyset)) {
+          mergedNode = null; // Reset document
+          currentKeyset = keyMerger.merge(currentKeyset, graphKeyset); //Merge keysets
+          logger.info("Found new keys for this graph entity, repeating query from the start with the new, merged " +
+              "EntityKeys to be sure we integrate everything: "+currentKeyset);
+          continue startAgainWithMergedKeyset;
+        } else {
+          logger.info("Found new document for the current keyset. Merging this document for the integrated view.");
+          if (mergedNode == null) {
+            mergedNode = graphDocument;
+          } else {
+            mergedNode = nodeMerger.merge(mergePolicy, mergedNode, graphDocument);
+          }
+        }
+      }
+      done = true; // We successfully queried all graphs, and didn't find any new keyset items.
+    }
+    return mergedNode;
+  }
+
+  /**
+   * Returns true if two keysets are of the same type, and have identical UID and name content.
+   * @param first
+   * @param second
+   * @return
+   */
+  private boolean areKeysetsIdentical(EntityKeys first, EntityKeys second) throws IllegalArgumentException {
+    if (!first.getType().equals(second.getType())) {
+      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
+    }
+    return first.getUids().equals(second.getUids())
+        && first.getNames().equals(second.getNames());
+
   }
 
   @Override

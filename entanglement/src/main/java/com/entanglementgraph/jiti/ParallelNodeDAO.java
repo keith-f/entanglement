@@ -131,7 +131,7 @@ public class ParallelNodeDAO implements NodeDAO {
         merged = result;
       } else {
         //Further results need to be merged into the existing result.
-        merged = nodeMerger.mergeNodes(mergePolicy, merged, result);
+        merged = nodeMerger.merge(mergePolicy, merged, result);
       }
     }
     return merged;
