@@ -18,8 +18,10 @@
 
 package com.entanglementgraph.jiti;
 
+import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.GraphEntity;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
@@ -274,7 +276,7 @@ public class MultiDBCursorIterable
        */
       private DBObject searchAndMergeNextElement(DBObject next) throws DbObjectMarshallerException, GraphModelException {
         // i. Extract the EntityKeys from the DBObject returned from the current DBCursor
-        EntityKeys nextKeyset = MongoUtils.parseKeyset(marshaller, next);
+        EntityKeys nextKeyset = MongoUtils.parseKeyset(marshaller, next, GraphEntityDAO.FIELD_KEYS);
 
         // ii. Check the current (unmerged) EntityKeys to see if we've encountered at least one of its IDs before
         if (keyElementsSeenBefore(nextKeyset)) {
@@ -324,7 +326,7 @@ public class MultiDBCursorIterable
             merged = result;
           } else {
             //Further results need to be merged into the existing result.
-            merged = nodeMerger.mergeNodes(mergePolicy, merged, result);
+            merged = nodeMerger.merge(mergePolicy, merged, result);
           }
         }
         return merged;
