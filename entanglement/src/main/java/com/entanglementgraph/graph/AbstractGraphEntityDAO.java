@@ -260,7 +260,7 @@ abstract public class AbstractGraphEntityDAO
         return null;
       }
 
-      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result);
+      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result, GraphEntityDAO.FIELD_KEYS);
       return keyset;
     }
     catch(Exception e) {
@@ -279,7 +279,7 @@ abstract public class AbstractGraphEntityDAO
         return null;
       }
 
-      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result);
+      EntityKeys keyset = MongoUtils.parseKeyset(marshaller, result, GraphEntityDAO.FIELD_KEYS);
       return keyset;
     }
     catch(Exception e) {

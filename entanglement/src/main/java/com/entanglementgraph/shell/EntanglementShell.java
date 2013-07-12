@@ -57,7 +57,6 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;
 import com.entanglementgraph.shell.gdfexport.GraphToGDFExporter;
-import com.entanglementgraph.shell.navigator.NavigatorShell;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
@@ -172,24 +171,6 @@ public class EntanglementShell
     graphConn = connection;
 
     logger.info("Connected to "+graphName+"/"+branchName+"!");
-  }
-  
-  @Command
-  public void startNavigator(String nodeUid)
-          throws IOException, GraphModelException {
-    NavigatorShell navShell = new NavigatorShell(graphConn, nodeUid);
-    NavigatorShell.startSubShell(navShell);
-  }
-  @Command
-  public void startNavigator(String nodeType, String nodeName) 
-          throws IOException, GraphModelException {
-    //FIXME - we need to go through this code and use keys instead of UIDs.
-    graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName).getUids().iterator().next();
-    EntityKeys nodeKeyset = graphConn.getNodeDao().getEntityKeysetForName(nodeType, nodeName);
-    Set<String> uids = nodeKeyset.getUids();
-    String nodeUid = uids.iterator().next();
-    NavigatorShell navShell = new NavigatorShell(graphConn, nodeUid);
-    NavigatorShell.startSubShell(navShell);
   }
   
   @Command

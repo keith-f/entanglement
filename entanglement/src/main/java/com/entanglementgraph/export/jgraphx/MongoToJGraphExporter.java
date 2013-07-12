@@ -20,6 +20,7 @@ package com.entanglementgraph.export.jgraphx;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
+import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.data.Edge;
@@ -571,7 +572,7 @@ public class MongoToJGraphExporter {
 
       //Add a new JGraphX node or retrieve reference to existing node (if we've seen this node before)
       if (currentNodeObject != null) {
-        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject);
+        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
         if (nodeExistsInCache(currentNodeKeyset)) {
           // this node may have been added previously. If it has been, then we know that we may actually be in
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
@@ -672,7 +673,7 @@ public class MongoToJGraphExporter {
 
       //Add a new JGraphX node or retrieve reference to existing node (if we've seen this node before)
       if (currentNodeObject != null) {
-        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject);
+        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
         if (nodeExistsInCache(currentNodeKeyset)) {
           // this node may have been added previously. If it has been, then we know that we may actually be in
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
