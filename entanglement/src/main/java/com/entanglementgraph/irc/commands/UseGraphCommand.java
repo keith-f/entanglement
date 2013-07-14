@@ -19,11 +19,7 @@ package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.halfspinsoftware.uibot.Message;
 import com.halfspinsoftware.uibot.Param;
 import com.halfspinsoftware.uibot.ParamParser;
@@ -31,7 +27,6 @@ import com.halfspinsoftware.uibot.RequiredParam;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
-import com.torrenttamer.mongodb.MongoDbFactoryException;
 
 import java.util.LinkedList;
 import java.util.List;

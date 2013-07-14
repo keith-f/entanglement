@@ -18,26 +18,19 @@
 
 package com.entanglementgraph.player.spi;
 
-import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
-
+import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.jiti.EdgeMerger;
-import com.google.gson.internal.StringMap;
-import com.mongodb.*;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.player.LogPlayerException;
-import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.data.RevisionItem;
+import com.google.gson.internal.StringMap;
+import com.mongodb.BasicDBObject;
+
+import java.util.List;
+import java.util.logging.Logger;
+
+import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 
 /**
  * Creates an edge.

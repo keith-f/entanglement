@@ -43,8 +43,8 @@ import com.mxgraph.io.mxGdCodec;
 import com.mxgraph.util.*;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import org.w3c.dom.Element;
 
 import java.io.File;
@@ -469,7 +469,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes the edge types which determine where a subgraph should stop
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   * @throws DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
@@ -500,7 +500,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes     the edge types which determine where a subgraph should stop at each traversal depth
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   * @throws DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void addChildNodesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
@@ -532,7 +532,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes       the edge types which determine where a subgraph should stop
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   * @throws DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
@@ -629,7 +629,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes       the edge types which determine where a subgraph should stop at each traversal depth
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException
+   * @throws DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdgesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges,

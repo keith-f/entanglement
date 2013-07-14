@@ -22,7 +22,7 @@ import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.awt.Color;
 import java.io.File;

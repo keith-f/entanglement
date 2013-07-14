@@ -31,10 +31,10 @@ import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
-import com.torrenttamer.mongodb.MongoDbFactory;
-import com.torrenttamer.mongodb.MongoDbFactoryException;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.MongoDbFactory;
+import com.scalesinformatics.mongodb.MongoDbFactoryException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.torrenttamer.util.UidGenerator;
 
 import java.awt.*;

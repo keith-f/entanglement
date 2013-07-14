@@ -19,7 +19,6 @@
 package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.util.GraphConnection;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;

@@ -19,7 +19,7 @@ package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.util.GraphConnection;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
 import java.util.HashMap;
 import java.util.Map;

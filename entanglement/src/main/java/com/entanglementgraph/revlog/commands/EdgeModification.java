@@ -21,7 +21,7 @@ package com.entanglementgraph.revlog.commands;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.ArrayList;
 import java.util.Collection;

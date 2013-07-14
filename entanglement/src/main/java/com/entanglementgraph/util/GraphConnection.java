@@ -19,7 +19,7 @@ package com.entanglementgraph.util;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.revlog.RevisionLog;

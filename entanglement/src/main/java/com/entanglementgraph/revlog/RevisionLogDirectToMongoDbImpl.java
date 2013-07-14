@@ -20,8 +20,8 @@ package com.entanglementgraph.revlog;
 
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.*;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DeserialisingIterable;
 import com.torrenttamer.util.UidGenerator;
 import java.util.Arrays;
 import java.util.Date;

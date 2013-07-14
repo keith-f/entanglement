@@ -20,9 +20,8 @@ package com.entanglementgraph.player.spi;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.player.LogPlayerException;
-import com.entanglementgraph.revlog.data.RevisionItem;
 import com.entanglementgraph.util.GraphConnection;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
 import java.util.List;
 

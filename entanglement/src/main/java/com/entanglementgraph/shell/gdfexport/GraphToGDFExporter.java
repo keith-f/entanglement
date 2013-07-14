@@ -19,8 +19,8 @@
 package com.entanglementgraph.shell.gdfexport;
 
 import com.entanglementgraph.util.GraphConnection;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DeserialisingIterable;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DeserialisingIterable;
 
 import java.awt.Color;
 import java.io.BufferedWriter;

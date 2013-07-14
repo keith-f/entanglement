@@ -28,8 +28,8 @@ import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.io.Closeable;
 import java.io.IOException;

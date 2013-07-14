@@ -21,14 +21,10 @@ package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.jiti.NodeMerger;
-import com.entanglementgraph.util.MongoUtils;
 import com.google.gson.internal.StringMap;
 import com.mongodb.*;
 
 import static com.entanglementgraph.graph.AbstractGraphEntityDAO.FIELD_KEYS;
-
-import com.mongodb.util.JSON;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.HashSet;
 import java.util.List;

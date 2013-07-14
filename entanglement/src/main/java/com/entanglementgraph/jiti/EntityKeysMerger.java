@@ -22,8 +22,8 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.player.LogPlayerException;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.mongodb.BasicDBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.Set;
 

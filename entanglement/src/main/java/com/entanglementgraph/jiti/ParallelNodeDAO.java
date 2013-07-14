@@ -27,7 +27,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;

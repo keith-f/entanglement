@@ -28,8 +28,8 @@ import com.halfspinsoftware.uibot.*;
 import com.halfspinsoftware.uibot.commands.AbstractCommand;
 import com.halfspinsoftware.uibot.commands.BotCommandException;
 import com.halfspinsoftware.uibot.commands.UserException;
-import com.torrenttamer.mongodb.MongoDbFactoryException;
-import com.torrenttamer.util.ExceptionUtils;
+import com.scalesinformatics.mongodb.MongoDbFactoryException;
+import com.scalesinformatics.util.ExceptionUtils;
 
 import java.util.LinkedList;
 import java.util.List;

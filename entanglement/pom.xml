@@ -17,6 +17,22 @@
     </license>
   </licenses>
 
+  <properties>
+    <!-- Environment -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+    <encoding>UTF-8</encoding>
+
+    <!-- version constants -->
+    <uiBot.version>1.0-SNAPSHOT</uiBot.version>
+    <scales-common.version>SC-SNAPSHOT</scales-common.version>
+    <cliche.version>1.0-SNAPSHOT</cliche.version>
+    <gephi.version>0.8.2</gephi.version>
+    <jgraphx.version>2.0.0.1</jgraphx.version>
+    <jfreechart.version>1.0.14</jfreechart.version>
+  </properties>
+
 
   <!-- Build options -->
   <build>
@@ -104,6 +120,14 @@
   <!-- Remote repository info -->
   <repositories>
     <repository>
+      <id>scalesinformatics-snapshot</id>
+      <url>http://scalesinformatics.maven.s3.amazonaws.com/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
       <id>intbio-snapshot</id>
       <url>http://intbio.maven.s3.amazonaws.com/snapshot</url>
       <snapshots>
@@ -132,6 +156,43 @@
 
 
   <dependencies>
+    <dependency>
+      <groupId>com.scalesinformatics</groupId>
+      <artifactId>util</artifactId>
+      <version>${scales-common.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.scalesinformatics</groupId>
+      <artifactId>mongodb-util</artifactId>
+      <version>${scales-common.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.scalesinformatics</groupId>
+      <artifactId>hazelcast-util</artifactId>
+      <version>${scales-common.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- IRC bot library -->
+    <dependency>
+      <groupId>com.halfspinsoftware.uibot</groupId>
+      <artifactId>uibot</artifactId>
+      <version>${uiBot.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- Command line / shell libraries -->
+
+    <dependency>
+      <groupId>com.googlecode.cliche</groupId>
+      <artifactId>cliche</artifactId>
+      <version>${cliche.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
     <!-- Required for the Apache command line parser library -->
     <dependency>
       <groupId>commons-cli</groupId>
@@ -139,69 +200,14 @@
       <version>1.2</version>
     </dependency>
 
-    <!--        <dependency>
-        <groupId>org.mongodb</groupId>
-        <artifactId>mongo-java-driver</artifactId>
-        <version>2.9.1</version>
-    </dependency>-->
-
-    <!--
-        <dependency>
-          <groupId>net.sourceforge.ondex.core</groupId>
-          <artifactId>api</artifactId>
-          <version>0.5.0-SNAPSHOT</version>
-        </dependency>
-    -->
-
-    <dependency>
-      <groupId>com.torrent-tamer</groupId>
-      <artifactId>util</artifactId>
-      <version>TC-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.torrent-tamer</groupId>
-      <artifactId>mongodb-util</artifactId>
-      <version>TC-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
 
 
-    <!-- Temporarilly required for a re-used JSON serialiser utility -->
-    <!--        <dependency>
-        <groupId>uk.org.microbase</groupId>
-        <artifactId>utils</artifactId>
-        <version>MB-SNAPSHOT</version>
-        <scope>compile</scope>
-    </dependency>-->
-
+    <!-- ***** Graph libraries ***** -->
     <!-- Required for the creation of files in GEXF format for Gephi -->
     <dependency>
       <groupId>org.gephi</groupId>
       <artifactId>gephi-toolkit</artifactId>
-      <version>0.8.2</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.googlecode.cliche</groupId>
-      <artifactId>cliche</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.torrenttamer</groupId>
-      <artifactId>hazelcast-util</artifactId>
-      <version>TC-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- Pircbot -->
-    <dependency>
-      <groupId>com.halfspinsoftware.uibot</groupId>
-      <artifactId>uibot</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>${gephi.version}</version>
       <scope>compile</scope>
     </dependency>
 
@@ -209,20 +215,16 @@
     <dependency>
       <groupId>org.tinyjee.jgraphx</groupId>
       <artifactId>jgraphx</artifactId>
-      <version>2.0.0.1</version>
+      <version>${jgraphx.version}</version>
     </dependency>
 
     <!-- JFree chart -->
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>
-      <version>1.0.14</version>
+      <version>${jfreechart.version}</version>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>org.jfree</groupId>-->
-      <!--<artifactId>jcommon</artifactId>-->
-      <!--<version>1.0.17</version>-->
-    <!--</dependency>-->
+
 
   </dependencies>
 

@@ -25,8 +25,8 @@ import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
 

@@ -30,8 +30,8 @@ import com.entanglementgraph.util.experimental.GraphOpPostCommitPlayer;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
-import com.torrenttamer.mongodb.MongoDbFactory;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.MongoDbFactory;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
 import java.util.logging.Logger;
 

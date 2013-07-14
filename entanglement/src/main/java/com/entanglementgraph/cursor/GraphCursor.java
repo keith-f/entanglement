@@ -27,9 +27,9 @@ import com.entanglementgraph.util.GraphConnection;
 import com.halfspinsoftware.uibot.BotLogger;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshallerException;
-import com.torrenttamer.mongodb.dbobject.KeyExtractingIterable;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.dbobject.KeyExtractingIterable;
 import com.torrenttamer.util.generics.MakeIterable;
 
 import java.util.*;

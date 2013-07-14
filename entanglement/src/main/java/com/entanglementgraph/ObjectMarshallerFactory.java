@@ -17,8 +17,8 @@
 
 package com.entanglementgraph;
 
-import com.torrenttamer.mongodb.dbobject.DbObjectMarshaller;
-import com.torrenttamer.mongodb.gson.GsonDBObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.gson.GsonDBObjectMarshaller;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
