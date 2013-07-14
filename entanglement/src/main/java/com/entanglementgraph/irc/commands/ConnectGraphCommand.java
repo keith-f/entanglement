@@ -24,10 +24,10 @@ import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.halfspinsoftware.uibot.*;
-import com.halfspinsoftware.uibot.commands.AbstractCommand;
-import com.halfspinsoftware.uibot.commands.BotCommandException;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.scalesinformatics.uibot.commands.BotCommandException;
+import com.scalesinformatics.uibot.commands.UserException;
 import com.scalesinformatics.mongodb.MongoDbFactoryException;
 import com.scalesinformatics.util.ExceptionUtils;
 

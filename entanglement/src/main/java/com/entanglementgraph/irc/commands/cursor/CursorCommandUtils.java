@@ -22,7 +22,7 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
 /**

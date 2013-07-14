@@ -28,7 +28,7 @@ import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
-import com.torrenttamer.util.UidGenerator;
+import com.scalesinformatics.util.UidGenerator;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;

@@ -19,11 +19,11 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.halfspinsoftware.uibot.Message;
-import com.halfspinsoftware.uibot.Param;
-import com.halfspinsoftware.uibot.commands.AbstractCommand;
-import com.halfspinsoftware.uibot.commands.BotCommandException;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.Message;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.scalesinformatics.uibot.commands.BotCommandException;
+import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
 import java.util.LinkedList;

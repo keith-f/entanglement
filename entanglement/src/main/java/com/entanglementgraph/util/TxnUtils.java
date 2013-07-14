@@ -19,7 +19,7 @@
 package com.entanglementgraph.util;
 
 import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.torrenttamer.util.UidGenerator;
+import com.scalesinformatics.util.UidGenerator;
 
 import java.util.ArrayList;
 import java.util.List;

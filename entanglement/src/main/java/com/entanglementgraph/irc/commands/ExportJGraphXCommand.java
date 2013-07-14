@@ -20,12 +20,12 @@ package com.entanglementgraph.irc.commands;
 import com.entanglementgraph.export.jgraphx.MongoToJGraphExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.halfspinsoftware.uibot.BotState;
-import com.halfspinsoftware.uibot.Message;
-import com.halfspinsoftware.uibot.Param;
-import com.halfspinsoftware.uibot.commands.AbstractCommand;
-import com.halfspinsoftware.uibot.commands.BotCommandException;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.BotState;
+import com.scalesinformatics.uibot.Message;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.scalesinformatics.uibot.commands.BotCommandException;
+import com.scalesinformatics.uibot.commands.UserException;
 
 import java.awt.*;
 import java.io.File;

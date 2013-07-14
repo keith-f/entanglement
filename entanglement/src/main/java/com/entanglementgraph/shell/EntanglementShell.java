@@ -35,7 +35,7 @@ import com.scalesinformatics.mongodb.MongoDbFactory;
 import com.scalesinformatics.mongodb.MongoDbFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
-import com.torrenttamer.util.UidGenerator;
+import com.scalesinformatics.util.UidGenerator;
 
 import java.awt.*;
 import java.beans.BeanInfo;

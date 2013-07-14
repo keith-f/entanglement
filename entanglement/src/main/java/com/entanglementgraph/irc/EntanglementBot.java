@@ -23,7 +23,7 @@ import com.entanglementgraph.irc.commands.cursor.CreateCursorCommand;
 import com.entanglementgraph.irc.commands.cursor.CursorGoto;
 import com.entanglementgraph.irc.commands.cursor.ListGraphCursorsCommand;
 import com.entanglementgraph.irc.commands.cursor.UseCursorCommand;
-import com.halfspinsoftware.uibot.GenericIrcBot;
+import com.scalesinformatics.uibot.GenericIrcBot;
 
 import java.net.InetAddress;
 

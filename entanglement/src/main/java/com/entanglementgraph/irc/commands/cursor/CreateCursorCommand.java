@@ -24,10 +24,10 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.halfspinsoftware.uibot.*;
-import com.halfspinsoftware.uibot.commands.AbstractCommand;
-import com.halfspinsoftware.uibot.commands.BotCommandException;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.scalesinformatics.uibot.commands.BotCommandException;
+import com.scalesinformatics.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
 
 import java.util.LinkedList;

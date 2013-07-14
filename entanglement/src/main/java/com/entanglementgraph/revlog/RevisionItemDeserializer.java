@@ -22,7 +22,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.torrenttamer.util.GenericServiceLoader;
+import com.scalesinformatics.util.GenericServiceLoader;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;

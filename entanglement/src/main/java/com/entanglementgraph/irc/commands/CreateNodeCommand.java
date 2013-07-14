@@ -25,10 +25,10 @@ import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.halfspinsoftware.uibot.*;
-import com.halfspinsoftware.uibot.commands.AbstractCommand;
-import com.halfspinsoftware.uibot.commands.BotCommandException;
-import com.halfspinsoftware.uibot.commands.UserException;
+import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.scalesinformatics.uibot.commands.BotCommandException;
+import com.scalesinformatics.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
 
 import java.util.*;

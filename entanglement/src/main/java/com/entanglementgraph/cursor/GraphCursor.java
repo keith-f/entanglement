@@ -24,13 +24,13 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.GraphConnection;
-import com.halfspinsoftware.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLogger;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.dbobject.KeyExtractingIterable;
-import com.torrenttamer.util.generics.MakeIterable;
+import com.scalesinformatics.util.generics.MakeIterable;
 
 import java.util.*;
 import java.util.logging.Logger;

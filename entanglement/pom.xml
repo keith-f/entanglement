@@ -178,7 +178,7 @@
 
     <!-- IRC bot library -->
     <dependency>
-      <groupId>com.halfspinsoftware.uibot</groupId>
+      <groupId>com.scalesinformatics.uibot</groupId>
       <artifactId>uibot</artifactId>
       <version>${uiBot.version}</version>
       <scope>compile</scope>

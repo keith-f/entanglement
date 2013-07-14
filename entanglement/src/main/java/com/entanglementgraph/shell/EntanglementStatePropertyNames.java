@@ -17,7 +17,7 @@
 
 package com.entanglementgraph.shell;
 
-import com.torrenttamer.util.UidGenerator;
+import com.scalesinformatics.util.UidGenerator;
 import java.util.HashMap;
 import java.util.Map;
 
