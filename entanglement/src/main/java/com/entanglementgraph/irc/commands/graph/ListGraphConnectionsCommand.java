@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands;
+package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
