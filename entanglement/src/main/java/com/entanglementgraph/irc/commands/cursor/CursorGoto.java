@@ -36,11 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * A command that sets a new graph cursor to a specified node. The new position can be completely unrelated to the
+ * existing position. This command is effectively a 'goto' statement for a cursor.
  */
 public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
 
