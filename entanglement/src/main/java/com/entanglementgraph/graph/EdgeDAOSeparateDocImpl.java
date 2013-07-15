@@ -311,21 +311,21 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from)
       throws GraphModelException {
-//    DBObject query = new BasicDBObject();
-//    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
-
     DBObject query = buildFromNodeQuery(from);
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
 
     DBObject fields = new BasicDBObject();
     fields.put(FIELD_KEYS_TYPE, 1);
-    try {
-      Map<DBObject, Long> counts = count(col.find(query, fields));
+    try (DBCursor cursor = col.find(query, fields)){
       Map<String, Long> edgeTypeToCount = new HashMap<>();
-
-      for (Map.Entry<DBObject, Long> entry : counts.entrySet()) {
-        edgeTypeToCount.put((String) entry.getKey().get(FIELD_KEYS_TYPE), entry.getValue());
+      for (DBObject edgeObj : cursor) {
+        String nextType = (String) ((BasicDBObject) edgeObj.get("keys")).get("type");
+        Long count = edgeTypeToCount.get(nextType);
+        if (count == null) {
+          count = 0l;
+        }
+        edgeTypeToCount.put(nextType, count + 1);
       }
 
       return edgeTypeToCount;
@@ -335,38 +335,26 @@ public class EdgeDAOSeparateDocImpl
     }
   }
 
-  private static <T> Map<T, Long> count(Iterable<T> items) {
-    Map<T, Long> counts = new HashMap<>();
-    for (T item : items) {
-      Long c = counts.get(item);
-      if (c == null) {
-        c = 0l;
-      }
-      counts.put(item, c + 1);
-    }
-    return counts;
-  }
 
 
   @Override
   public Map<String, Long> countEdgesByTypeToNode(EntityKeys to)
       throws GraphModelException {
-//    DBObject query = new BasicDBObject();
-//    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
     DBObject query = buildToNodeQuery(to);
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
 
-
     DBObject fields = new BasicDBObject();
     fields.put(FIELD_KEYS_TYPE, 1);
-    try {
-      Map<DBObject, Long> counts = count(col.find(query, fields));
+    try (DBCursor cursor = col.find(query, fields)){
       Map<String, Long> edgeTypeToCount = new HashMap<>();
-
-      for (Map.Entry<DBObject, Long> entry : counts.entrySet()) {
-        edgeTypeToCount.put((String) entry.getKey().get(FIELD_KEYS_TYPE), entry.getValue());
+      for (DBObject edgeObj : cursor) {
+        String nextType = (String) ((BasicDBObject) edgeObj.get("keys")).get("type");
+        Long count = edgeTypeToCount.get(nextType);
+        if (count == null) {
+          count = 0l;
+        }
+        edgeTypeToCount.put(nextType, count + 1);
       }
-
       return edgeTypeToCount;
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\n"
