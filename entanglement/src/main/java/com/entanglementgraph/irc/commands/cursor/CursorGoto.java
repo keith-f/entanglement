@@ -38,6 +38,8 @@ import java.util.List;
 /**
  * A command that sets a new graph cursor to a specified node. The new position can be completely unrelated to the
  * existing position. This command is effectively a 'goto' statement for a cursor.
+ *
+ * @author Keith Flanagan
  */
 public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
 

@@ -45,6 +45,8 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
 
 /**
  * A command for printing information about the cursor's current position.
+ *
+ * @author Keith Flanagan
  */
 public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
 

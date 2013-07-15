@@ -36,11 +36,15 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 02/07/2013
- * Time: 22:13
- * To change this template use File | Settings | File Templates.
+ * This class implements a 'cursor' that is able to walk through a graph from node to node. This class may be more
+ * convenient that using the low-level <code>NodeDAO</code> and <code>EdgeDAO</code> means of accessing a graph since
+ * it makes the process of stepping between nodes much smoother and less disjoint.
+ *
+ * Cursor objects represent a particular step through a graph and are immutable once created. This approach allows for
+ * a history of graph movement operations to be logged. Graph histories may be useful for a number of applications
+ * including: logging and debugging, graphical display, or even motif pattern matching operations.
+ *
+ * @author Keith Flanagan
  */
 public class GraphCursor {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());

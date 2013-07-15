@@ -31,11 +31,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * Lists the currently configured graph cursors. Marks the current 'default' cursor,
+ *
+ * @author Keith Flanagan
  */
 public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime> {
   private static final String CURRENT_CURSOR_TXT = Colors.BROWN + "[Active]" + Colors.NORMAL;

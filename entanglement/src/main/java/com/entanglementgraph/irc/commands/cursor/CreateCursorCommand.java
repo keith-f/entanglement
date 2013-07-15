@@ -34,11 +34,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * Creates a new named graph cursor object.
+ *
+ * @author Keith Flanagan
  */
 public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
