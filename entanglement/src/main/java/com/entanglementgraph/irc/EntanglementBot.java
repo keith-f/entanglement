@@ -19,10 +19,7 @@ package com.entanglementgraph.irc;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.irc.commands.*;
-import com.entanglementgraph.irc.commands.cursor.CreateCursorCommand;
-import com.entanglementgraph.irc.commands.cursor.CursorGoto;
-import com.entanglementgraph.irc.commands.cursor.ListGraphCursorsCommand;
-import com.entanglementgraph.irc.commands.cursor.UseCursorCommand;
+import com.entanglementgraph.irc.commands.cursor.*;
 import com.scalesinformatics.uibot.GenericIrcBot;
 
 import java.net.InetAddress;
@@ -112,6 +109,7 @@ public class EntanglementBot extends GenericIrcBot {
     addCommand("create-cursor", CreateCursorCommand.class);
     addCommand("list-cursors", ListGraphCursorsCommand.class);
     addCommand("use-cursor", UseCursorCommand.class);
+    addCommand("cDescribe", CursorDescribe.class);
     addCommand("cGoto", CursorGoto.class);
 
   }
