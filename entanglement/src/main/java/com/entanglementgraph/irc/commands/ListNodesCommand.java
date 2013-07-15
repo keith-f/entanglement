@@ -50,8 +50,8 @@ public class ListNodesCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new OptionalParam("type", String.class, "Specifies the type of graph entity to display"));
-    params.add(new OptionalParam("offset", Integer.class, "Specifies the number of entities to skip"));
-    params.add(new OptionalParam("limit", Integer.class, "Specifies the maximum number of entities to display"));
+    params.add(new OptionalParam("offset", Integer.class, "0", "Specifies the number of entities to skip"));
+    params.add(new OptionalParam("limit", Integer.class, String.valueOf(Integer.MAX_VALUE), "Specifies the maximum number of entities to display"));
     return params;
   }
 

@@ -52,7 +52,7 @@ public class ShowNodeCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new RequiredParam("type", String.class, "The type name of the node to display"));
-    params.add(new RequiredParam("entityName", Integer.class, "A unique name of the node to display"));
+    params.add(new RequiredParam("entityName", String.class, "A unique name of the node to display"));
     return params;
   }
 
