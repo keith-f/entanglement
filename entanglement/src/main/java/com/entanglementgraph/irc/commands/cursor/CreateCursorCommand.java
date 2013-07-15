@@ -80,7 +80,7 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
 
     try {
-      GraphCursor newCursor = new GraphCursor(logger, graphConn, nodeLocation);
+      GraphCursor newCursor = new GraphCursor(logger, cursorName, graphConn, nodeLocation);
       userObject.getGraphCursors().put(cursorName, newCursor);
 
       String outputText = String.format("New cursor %s created at node: %s",

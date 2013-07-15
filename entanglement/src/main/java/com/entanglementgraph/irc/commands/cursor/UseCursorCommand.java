@@ -30,6 +30,8 @@ import com.scalesinformatics.uibot.commands.UserException;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -65,7 +67,7 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
       userObject.setCurrentCursor(cursor);
 
       Message result = new Message(channel);
-      result.println("Current cursor set to: %s", cursorName);
+      result.println("Current cursor set to: %s", formatCursorName(cursorName));
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
