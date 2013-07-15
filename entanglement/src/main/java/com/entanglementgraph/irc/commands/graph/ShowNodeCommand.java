@@ -15,14 +15,13 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands;
+package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -30,9 +29,7 @@ import com.scalesinformatics.uibot.commands.UserException;
 import com.mongodb.BasicDBObject;
 import org.jibble.pircbot.Colors;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,21 +38,21 @@ import java.util.Map;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
+public class ShowNodeCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Pretty-prints a specified edge in the currently active graph.");
+    txt.append("Pretty-prints a specified node in the currently active graph.");
     return txt.toString();
   }
 
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
-    params.add(new RequiredParam("type", String.class, "The type name of the edge to display"));
-    params.add(new RequiredParam("entityName", String.class, "A unique name of the edge to display"));
+    params.add(new RequiredParam("type", String.class, "The type name of the node to display"));
+    params.add(new RequiredParam("entityName", String.class, "A unique name of the node to display"));
     return params;
   }
 
@@ -67,21 +64,22 @@ public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
     GraphConnection graphConn = userObject.getCurrentConnection();
     if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
+
     try {
       // Create a keyset in order to query the database
       EntityKeys keyset = new EntityKeys(type, entityName);
       // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
-      BasicDBObject edge = graphConn.getEdgeDao().getByKey(keyset);
+      BasicDBObject node = graphConn.getNodeDao().getByKey(keyset);
 
       Message result = new Message(channel);
-      if (edge == null) {
+      if (node == null) {
         result.println("A graph entity of type %s with name %s could not be found!", type, entityName);
       } else {
         result.println("Found the following entity with properties:");
         result.println("[");
-        Map edgeAsMap = edge.toMap();
-        for (Object key : edgeAsMap.keySet()) {
-          Object val = edgeAsMap.get(key);
+        Map nodeAsMap = node.toMap();
+        for (Object key : nodeAsMap.keySet()) {
+          Object val = nodeAsMap.get(key);
           String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
           String valStr = val.toString();
           result.println("  %s => %s", keyStr, valStr);

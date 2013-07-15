@@ -15,14 +15,14 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands;
+package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.scalesinformatics.uibot.*;
@@ -40,21 +40,25 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
   public String getDescription() {
-    return "Creates or updates a node in the currently active graph.";
+    return "Creates or updates an edge in the currently active graph.";
   }
+
 
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
-    params.add(new RequiredParam("type", String.class, "The type name of the node to create/modify"));
-    params.add(new RequiredParam("entityName", String.class, "A unique name for the node to create/modify"));
-    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the node as attributes"));
-
+    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
+    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
+    params.add(new RequiredParam("fromNodeType", String.class, "The type name of the 'from' node that this edge should connect to"));
+    params.add(new RequiredParam("fromNodeName", String.class, "The type-unique name of the 'from' node that this edge should connect to"));
+    params.add(new RequiredParam("toNodeType", String.class, "The type name of the 'to' node that this edge should connect to"));
+    params.add(new RequiredParam("toNodeName", String.class, "The type-unique name of the 'to' node that this edge should connect to"));
+    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
     return params;
   }
 
@@ -73,27 +77,27 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
     attributes.remove("entityName");
 
     try {
-      bot.infoln(channel, "Going to create a node: %s/%s with properties: %s", type, entityName, attributes);
+      bot.infoln(channel, "Going to create an edge: %s/%s with properties: %s", type, entityName, attributes);
 
-      Node node = new Node();
-      node.getKeys().setType(type);
-      node.getKeys().addName(entityName);
+      Edge edge = new Edge();
+      edge.getKeys().setType(type);
+      edge.getKeys().addName(entityName);
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject nodeObj = userObject.getMarshaller().serialize(node);
+      BasicDBObject edgeObj = userObject.getMarshaller().serialize(edge);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
-        nodeObj.append(attr.getKey(), attr.getValue());
+        edgeObj.append(attr.getKey(), attr.getValue());
       }
 
-      NodeModification nodeCommand = new NodeModification();
-      nodeCommand.setNode(nodeObj);
-      nodeCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
+      EdgeModification edgeUpdateCommand = new EdgeModification();
+      edgeUpdateCommand.setEdge(edgeObj);
+      edgeUpdateCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
 
-      writeOperation(graphConn, nodeCommand);
-      Message msg = new Message(channel);
-      msg.println("Node created/updated: %s", entityName);
-      return msg;
+      writeOperation(graphConn, edgeUpdateCommand);
+      Message result = new Message(channel);
+      result.println("Edge created/updated: %s", entityName);
+      return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

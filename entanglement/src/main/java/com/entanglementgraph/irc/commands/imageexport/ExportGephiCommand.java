@@ -15,14 +15,12 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands;
+package com.entanglementgraph.irc.commands.imageexport;
 
-import com.entanglementgraph.export.jgraphx.MongoToJGraphExporter;
+import com.entanglementgraph.export.gephi.MongoToGephiExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.BotState;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -41,7 +39,7 @@ import java.util.Map;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
+public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
@@ -49,7 +47,7 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    return "Exports the current graph to JGraphX XML format.";
+    return "Exports the current graph to Gephi format.";
   }
 
   @Override
@@ -71,15 +69,16 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
 
 
     try {
-      File outputFile = new File(graphConn.getGraphName()+".xml");
+      File outputFile = new File(graphConn.getGraphName()+".gexf");
 
-      MongoToJGraphExporter exporter = new MongoToJGraphExporter();
+      MongoToGephiExporter exporter = new MongoToGephiExporter();
+      exporter.addColourMappings(colorMappings);
       exporter.addEntireGraph(graphConn);
-      exporter.writeToJGraphXmlFile(outputFile);
-      exporter.clearGraph();
+      exporter.writeToFile(outputFile);
+      exporter.close();
 
       Message result = new Message(channel);
-      result.println("Graph %s has been exported to a JGraphX file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
+      result.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
