@@ -20,6 +20,8 @@ package com.entanglementgraph.irc.commands.cursor;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -58,13 +60,16 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
   protected Message _processLine() throws UserException, BotCommandException {
     String cursorName = parsedArgs.get("cursor").getStringValue();
 
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+
     try {
-      GraphCursor cursor = userObject.getGraphCursors().get(cursorName);
+      GraphCursor cursor = runtime.getGraphCursors().get(cursorName);
       if (cursor == null) {
         throw new UserException(sender, "No graph cursor exists with the name: "+cursorName);
       }
 
-      userObject.setCurrentCursor(cursor);
+      runtime.setCurrentCursor(cursor);
 
       Message result = new Message(channel);
       result.println("Current cursor set to: %s", formatCursorName(cursorName));

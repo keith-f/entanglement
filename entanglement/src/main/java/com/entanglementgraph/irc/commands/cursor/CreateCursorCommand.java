@@ -52,8 +52,8 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new RequiredParam("cursor", String.class, "Name of the new cursor"));
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, " +
-        "the 'current' connection will use."));
+    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, "
+        + "the 'current' connection will be used."));
     params.add(new OptionalParam("node-type", String.class, "Type of initial node"));
     params.add(new OptionalParam("node-name", String.class, "Name of initial node"));
     params.add(new OptionalParam("node-uid", String.class, "UID of initial node"));
@@ -70,7 +70,9 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     String nodeName = parsedArgs.get("node-name").getStringValue();
     String nodeUid = parsedArgs.get("node-uid").getStringValue();
 
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(userObject, connName);
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
@@ -78,8 +80,8 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
 
     try {
-      GraphCursor newCursor = new GraphCursor(logger, cursorName, graphConn, nodeLocation);
-      userObject.getGraphCursors().put(cursorName, newCursor);
+      GraphCursor newCursor = new GraphCursor(cursorName, nodeLocation);
+      runtime.getGraphCursors().put(cursorName, newCursor);
 
       String outputText = String.format("New cursor %s created at node: %s",
           formatCursorName(cursorName),

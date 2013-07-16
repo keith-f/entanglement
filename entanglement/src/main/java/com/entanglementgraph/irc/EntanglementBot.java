@@ -23,9 +23,15 @@ import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.imageexport.ExportJGraphXCommand;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.GenericIrcBot;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,10 +40,11 @@ import java.net.InetAddress;
  * Time: 16:59
  * To change this template use File | Settings | File Templates.
  */
-public class EntanglementBot extends GenericIrcBot {
+public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
   private static final String USAGE = "Usage:\n"
       + "  * Nickname\n"
       + "  * Server\n"
+      + "  * Hazelcast cluster name\n"
       + "  * Channel (optional)\n";
 
   public static void main(String[] args) throws Exception {
@@ -48,9 +55,10 @@ public class EntanglementBot extends GenericIrcBot {
 
     String nick = args[0];
     String server = args[1];
+    String hazelcastClusterName = args[2];
     String channel = null;
-    if (args.length == 3) {
-      channel = args[2];
+    if (args.length == 4) {
+      channel = args[3];
     }
 
     String hostname = InetAddress.getLocalHost().getHostName();
@@ -59,17 +67,13 @@ public class EntanglementBot extends GenericIrcBot {
 //    StringTokenizer st = new StringTokenizer(InetAddress.getLocalHost().getHostName(), ".");
 //    String hostname = st.nextToken();
 
-    System.out.println("Hostname: "+hostname);
-    System.out.println("Nick: "+nick);
-    System.out.println("Server: "+server);
-    System.out.println("Channel: "+channel);
+    System.out.println("Hostname: " + hostname);
+    System.out.println("Nick: " + nick);
+    System.out.println("Server: " + server);
+    System.out.println("Channel: " + channel);
 
 
-    // Now start our bot up.
-    ClassLoader classLoader = EntanglementBot.class.getClassLoader();
-    EntanglementRuntime runtime = new EntanglementRuntime(
-        classLoader, ObjectMarshallerFactory.create(classLoader));
-    EntanglementBot bot = new EntanglementBot(nick, runtime);
+    EntanglementBot bot = new EntanglementBot(nick, hazelcastClusterName);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -84,12 +88,20 @@ public class EntanglementBot extends GenericIrcBot {
     bot.setMessageDelay(5); // 5 MS between messages - effectively no delay
   }
 
-//  private final ScheduledThreadPoolExecutor exe;
-  private final EntanglementRuntime runtime;
+  private final String hazelcastClusterName;
+  private HazelcastInstance hzInstance = null;
 
-  public EntanglementBot(String nickname, EntanglementRuntime runtime) {
-    super(nickname, runtime);
-    this.runtime = runtime;
+  public EntanglementBot(String nickname, String hazelcastClusterName) throws UnknownHostException {
+    super(nickname);
+
+    //Regenerate global config object
+    this.hazelcastClusterName = hazelcastClusterName;
+    if (hazelcastClusterName != null) {
+      DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
+      String hostname = InetAddress.getLocalHost().getHostName();
+      hzConfig.specifyNetworkInterfaces(hostname);
+      hzInstance = Hazelcast.newHazelcastInstance(hzConfig);
+    }
 
     addCommand("connect-graph", ConnectGraphCommand.class);
     addCommand("create-edge", CreateEdgeCommand.class);
@@ -115,5 +127,21 @@ public class EntanglementBot extends GenericIrcBot {
     addCommand("cDescribe", CursorDescribe.class);
     addCommand("cGoto", CursorGoto.class);
 
+  }
+
+
+  @Override
+  protected void createCustomUserObjectForBotState(String channel, BotState<EntanglementRuntime> newBotState) {
+    ClassLoader cl = EntanglementBot.class.getClassLoader();
+    DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
+    EntanglementRuntime runtime;
+    if (hzInstance == null) {
+      // Local storage
+      runtime = EntanglementRuntime.createLocalRuntime(cl, m);
+    } else {
+      // Cluster distributed memory storage
+      runtime = EntanglementRuntime.createDistributedRuntime(cl, m, hzInstance);
+    }
+    newBotState.setUserObject(runtime);
   }
 }

@@ -33,6 +33,8 @@ import com.mongodb.BasicDBObject;
 
 import java.util.*;
 
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -52,6 +54,8 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
+
+    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
     params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
     params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
     params.add(new RequiredParam("fromNodeType", String.class, "The type name of the 'from' node that this edge should connect to"));
@@ -64,11 +68,13 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
+    String connName = parsedArgs.get("conn").getStringValue();
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     // Parse annotations
     Map<String, String> attributes = parseAttributes(args);
@@ -84,7 +90,7 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
       edge.getKeys().addName(entityName);
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject edgeObj = userObject.getMarshaller().serialize(edge);
+      BasicDBObject edgeObj = runtime.getMarshaller().serialize(edge);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
         edgeObj.append(attr.getKey(), attr.getValue());

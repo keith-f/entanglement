@@ -23,9 +23,7 @@ import com.entanglementgraph.player.LogPlayerMongoDbImpl;
 import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.RequiredParam;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -33,6 +31,8 @@ import org.jibble.pircbot.Colors;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * This command takes the revision history of the specified graph and plays back all revisions marked as 'complete'.
@@ -54,13 +54,17 @@ public class PlaybackCommittedLogItemsCommand extends AbstractCommand<Entangleme
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
+    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    String connName = parsedArgs.get("conn").getStringValue();
+
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
       bot.infoln("Starting to replay committed revisions in: %s/%s",

@@ -21,10 +21,7 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.OptionalParam;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -32,6 +29,8 @@ import com.mongodb.BasicDBObject;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
@@ -51,6 +50,7 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
+    params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
     params.add(new OptionalParam("type", String.class, "Specifies the type of graph entity to display"));
     params.add(new OptionalParam("offset", Integer.class, "0", "Specifies the number of entities to skip"));
     params.add(new OptionalParam("limit", Integer.class,
@@ -60,12 +60,14 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
+    String connName = parsedArgs.get("conn").getStringValue();
     String type = parsedArgs.get("type").getStringValue();
     int offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
     int limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     int count = 0;
     try {

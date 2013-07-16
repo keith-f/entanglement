@@ -24,10 +24,8 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.OptionalParam;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.RequiredParam;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -53,6 +51,8 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
     params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
+    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, "
+        + "the 'current' connection will be used."));
     params.add(new OptionalParam("node-type", String.class, "The type name of the node to jump to."));
     params.add(new OptionalParam("node-name", String.class, "The unique name of the node to jump to."));
     params.add(new OptionalParam("node-uid", String.class, "The UID of the node to jump to."));
@@ -62,11 +62,17 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String cursorName = parsedArgs.get("cursor").getStringValue();
+    String connName = parsedArgs.get("conn").getStringValue();
     String nodeType = parsedArgs.get("node-type").getStringValue();
     String nodeName = parsedArgs.get("node-name").getStringValue();
     String nodeUid = parsedArgs.get("node-uid").getStringValue();
 
-    GraphCursor cursor = getSpecifiedCursorOrDefault(userObject, cursorName);
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
+    DbObjectMarshaller m = graphConn.getMarshaller();
+
+    GraphCursor cursor = getSpecifiedCursorOrDefault(runtime, cursorName);
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {

@@ -54,11 +54,11 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     List<Param> params = new LinkedList<>();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
     params.add(new OptionalParam("hostname", String.class,
-        state.getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
+        getChannelState().getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
         "The hostname of a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_HOSTNAME));
     params.add(new OptionalParam("database", String.class,
-        state.getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
+        getChannelState().getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
         "A database located on a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_DB_NAME));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
@@ -76,9 +76,12 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String graph = parsedArgs.get("graph").getStringValue();
     String branch = parsedArgs.get("branch").getStringValue();
 
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+
     try {
-      GraphConnection connection = connect(hostname, database, graph, branch);
-      userObject.addGraphConnection(connectionName, connection);
+      GraphConnection connection = connect(runtime, hostname, database, graph, branch);
+      runtime.addGraphConnection(connectionName, connection);
       Message result = new Message(channel);
       result.println("Graph %s on %s is now available with connection name: %s", graph, hostname, connectionName);
       return result;
@@ -87,9 +90,10 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     }
   }
 
-  public GraphConnection connect(String hostname, String database, String graphName, String branchName)
+  public GraphConnection connect(EntanglementRuntime runtime,
+                                 String hostname, String database, String graphName, String branchName)
       throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
-    ClassLoader classLoader = userObject.getClassLoader();
+    ClassLoader classLoader = runtime.getClassLoader();
 
     GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
     GraphConnection connection = factory.connect(graphName, branchName);

@@ -19,6 +19,9 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -29,6 +32,8 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Lists the currently configured graph cursors. Marks the current 'default' cursor,
@@ -53,10 +58,14 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
+
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+
     try {
-      GraphCursor current = userObject.getCurrentCursor();
+      GraphCursor current = runtime.getCurrentCursor();
       msg.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : userObject.getGraphCursors().entrySet()) {
+      for (Map.Entry<String, GraphCursor> entry : runtime.getGraphCursors().entrySet()) {
         GraphCursor cursor = entry.getValue();
         String currentText = current == current ? CURRENT_CURSOR_TXT : "";
         msg.println("  %s => %s %s",

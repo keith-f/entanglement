@@ -21,6 +21,7 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -62,8 +63,10 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String destinationConnName = parsedArgs.get("destination").getStringValue();
 
     try {
-      GraphConnection sourceConn = userObject.getGraphConnections().get(sourceConnName);
-      GraphConnection destinationConn = userObject.getGraphConnections().get(destinationConnName);
+      BotState<EntanglementRuntime> state = channelState;
+      EntanglementRuntime runtime = state.getUserObject();
+      GraphConnection sourceConn = runtime.getGraphConnections().get(sourceConnName);
+      GraphConnection destinationConn = runtime.getGraphConnections().get(destinationConnName);
       if (sourceConn == null) throw new UserException(sender, "No graph connection exists with the name: "+sourceConnName);
       if (destinationConn == null) throw new UserException(sender, "No graph connection exists with the name: "+destinationConnName);
 

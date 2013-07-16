@@ -20,10 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
-import com.scalesinformatics.uibot.RequiredParam;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -33,6 +30,8 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
@@ -54,6 +53,7 @@ public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   public List<Param> getParams() {
     List<Param> params = new LinkedList<>();
+    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
     params.add(new RequiredParam("type", String.class, "The type name of the edge to display"));
     params.add(new RequiredParam("entityName", String.class, "A unique name of the edge to display"));
     return params;
@@ -61,11 +61,13 @@ public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
+    String connName = parsedArgs.get("conn").getStringValue();
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    BotState<EntanglementRuntime> state = channelState;
+    EntanglementRuntime runtime = state.getUserObject();
+    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
       // Create a keyset in order to query the database

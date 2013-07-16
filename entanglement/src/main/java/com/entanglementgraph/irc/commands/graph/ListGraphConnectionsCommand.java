@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -29,6 +30,8 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
@@ -56,9 +59,12 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
   protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
     try {
-      GraphConnection current = userObject.getCurrentConnection();
+      BotState<EntanglementRuntime> state = channelState;
+      EntanglementRuntime runtime = state.getUserObject();
+
+      GraphConnection current = runtime.getCurrentConnection();
       msg.println("Graph connections [");
-      for (Map.Entry<String, GraphConnection> entry : userObject.getGraphConnections().entrySet()) {
+      for (Map.Entry<String, GraphConnection> entry : runtime.getGraphConnections().entrySet()) {
         GraphConnection conn = entry.getValue();
         String currentText = current == conn ? CURRENT_GRAPH_TXT : "";
         msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
