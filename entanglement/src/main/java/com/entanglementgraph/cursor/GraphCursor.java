@@ -196,43 +196,23 @@ public class GraphCursor {
   }
 
   private final String name;
-  private final BotLogger botLogger;
-  private final GraphConnection conn;
-  private final DbObjectMarshaller m;
   private final List<HistoryItem> history;
   private final int cursorHistoryIdx;
   private final EntityKeys<? extends Node> currentNode;
 
-  public GraphCursor(String cursorName, GraphConnection conn, EntityKeys<? extends Node> startNode)
+  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
       throws GraphCursorException {
     this.name = cursorName;
-    this.botLogger = new BotLogger();
-    this.conn = conn;
-    this.m = conn.getMarshaller();
     this.currentNode = startNode;
     this.history = new LinkedList<>();
     cursorHistoryIdx = 0;
     addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
   }
 
-  public GraphCursor(BotLogger logger, String cursorName, GraphConnection conn, EntityKeys<? extends Node> startNode)
-      throws GraphCursorException {
-    this.name = cursorName;
-    this.botLogger = logger;
-    this.conn = conn;
-    this.m = conn.getMarshaller();
-    this.currentNode = startNode;
-    this.history = new LinkedList<>();
-    cursorHistoryIdx = 0;
-    addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
-  }
 
   protected GraphCursor(String cursorName, GraphCursor previousLocation, HistoryItem currentLocation)
       throws GraphCursorException {
     this.name = cursorName;
-    this.botLogger = previousLocation.getBotLogger();
-    this.conn = previousLocation.getConn();
-    this.m = conn.getMarshaller();
     this.currentNode = currentLocation.getDestination();
     this.history = previousLocation.getHistory();
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
@@ -255,14 +235,14 @@ public class GraphCursor {
   /*
    * Utilities
    */
-  public <T> T deserialise(DBObject rawObject, Class<T> beanType) throws GraphCursorException {
-    try {
-      return m.deserialize(rawObject, beanType);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to deserialise to type: "
-          +beanType.getName()+" from doc: "+rawObject.toString(), e);
-    }
-  }
+//  public <T> T deserialise(DBObject rawObject, Class<T> beanType) throws GraphCursorException {
+//    try {
+//      return m.deserialize(rawObject, beanType);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to deserialise to type: "
+//          +beanType.getName()+" from doc: "+rawObject.toString(), e);
+//    }
+//  }
 
   /*
    * Cursor movement
@@ -275,7 +255,8 @@ public class GraphCursor {
 
   }
 
-  public GraphCursor stepToFirstNodeOfType(String nodeType) throws GraphCursorException {
+  public GraphCursor stepToFirstNodeOfType(GraphConnection conn, String nodeType) throws GraphCursorException {
+    DbObjectMarshaller m = conn.getMarshaller();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("nodeType", nodeType);
     HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, parameters);
@@ -298,7 +279,8 @@ public class GraphCursor {
     }
   }
 
-  public GraphCursor stepViaFirstEdgeOfType(String edgeType) throws GraphCursorException {
+  public GraphCursor stepViaFirstEdgeOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
+    DbObjectMarshaller m = conn.getMarshaller();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("edgeType", edgeType);
     HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, parameters);
@@ -329,7 +311,7 @@ public class GraphCursor {
     return currentNode == null;
   }
 
-  public boolean exists() throws GraphCursorException {
+  public boolean exists(GraphConnection conn) throws GraphCursorException {
     try {
       return conn.getNodeDao().existsByKey(currentNode);
     } catch (GraphModelException e) {
@@ -337,7 +319,7 @@ public class GraphCursor {
     }
   }
 
-  public DBObject resolve()  throws GraphCursorException {
+  public DBObject resolve(GraphConnection conn)  throws GraphCursorException {
     try {
       DBObject nodeDoc = conn.getNodeDao().getByKey(currentNode);
       return nodeDoc;
@@ -346,37 +328,41 @@ public class GraphCursor {
     }
   }
 
-  public <T> T resolveAndDeserialise(Class<T> javaBeanType)  throws GraphCursorException {
-    DBObject rawNodeDoc = resolve();
-    return deserialise(rawNodeDoc, javaBeanType);
+  public <T> T resolveAndDeserialise(GraphConnection conn, Class<T> javaBeanType)  throws GraphCursorException {
+    DBObject rawNodeDoc = resolve(conn);
+    try {
+      return conn.getMarshaller().deserialize(rawNodeDoc, javaBeanType);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphCursorException("Failed to deserialise to type: "+javaBeanType+". Document was: "+rawNodeDoc);
+    }
   }
 
 
   /*
    * Generic edge queries
    */
-  public DBCursor iterateIncomingEdges() throws GraphCursorException {
+  public DBCursor iterateIncomingEdges(GraphConnection conn) throws GraphCursorException {
     try {
       return conn.getEdgeDao().iterateEdgesToNode(currentNode);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
-  public long countIncomingEdges() throws GraphCursorException {
+  public long countIncomingEdges(GraphConnection conn) throws GraphCursorException {
     try {
       return conn.getEdgeDao().countEdgesToNode(currentNode);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
-  public DBCursor iterateOutgoingEdges() throws GraphCursorException {
+  public DBCursor iterateOutgoingEdges(GraphConnection conn) throws GraphCursorException {
     try {
       return conn.getEdgeDao().iterateEdgesFromNode(currentNode);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
-  public long countOutgoingEdges() throws GraphCursorException {
+  public long countOutgoingEdges(GraphConnection conn) throws GraphCursorException {
     try {
       return conn.getEdgeDao().countEdgesFromNode(currentNode);
     } catch (GraphModelException e) {
@@ -387,7 +373,7 @@ public class GraphCursor {
   /*
    * Edge by type queries
    */
-  public DBCursor iterateOutgoingEdgesOfType(String edgeType) throws GraphCursorException {
+  public DBCursor iterateOutgoingEdgesOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
     try {
       return conn.getEdgeDao().iterateEdgesFromNode(edgeType, currentNode);
     } catch (GraphModelException e) {
@@ -396,8 +382,9 @@ public class GraphCursor {
   }
 
 
-  public Iterable<EntityKeys<? extends Node>> iterateOutgoingNodeRefs() throws GraphCursorException {
+  public Iterable<EntityKeys<? extends Node>> iterateOutgoingNodeRefs(GraphConnection conn) throws GraphCursorException {
     try {
+      DbObjectMarshaller m = conn.getMarshaller();
       DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(currentNode);
 //      return new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class);
       /*
@@ -411,12 +398,9 @@ public class GraphCursor {
     }
   }
 
-  public Iterable<EdgeDestPair> iterateAndResolveOutgoingEdgeDestPairs() throws GraphCursorException {
-//    try {
-//      DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(currentNode);
-//    } catch (GraphModelException e) {
-//      throw new GraphCursorException("Failed to query graph.", e);
-//    }
+  public Iterable<EdgeDestPair> iterateAndResolveOutgoingEdgeDestPairs(final GraphConnection conn)
+      throws GraphCursorException {
+    final DbObjectMarshaller m = conn.getMarshaller();
     return new Iterable<EdgeDestPair>() {
       @Override
       public Iterator<EdgeDestPair> iterator() {
@@ -460,26 +444,40 @@ public class GraphCursor {
     };
   }
 
+  /**
+   * Returns the EntityKeys that represent the node that this cursor is currently located at. Note that the returned
+   * EntityKeys contains only the UIDs and names that were originally specified in the constructor of this
+   * <code>GraphCursor</code>. Therefore, the UIDs and names may be a subset of the actual EntityKeys for the node
+   * as stored in the database.
+   *
+   * @return the EntityKeys object originally specified in the constructor for this GraphCursor.
+   */
   public EntityKeys<? extends Node> getCurrentNode() {
     return currentNode;
   }
 
-  public BotLogger getBotLogger() {
-    return botLogger;
-  }
-
-  public GraphConnection getConn() {
-    return conn;
-  }
-
+  /**
+   * Returns the entire path that the named cursor has taken.
+   *
+   * @return
+   */
   public List<HistoryItem> getHistory() {
     return history;
   }
 
+  /**
+   * Returns the position within the graph cursor history that this GraphCursor instance is located at.
+   *
+   * @return
+   */
   public int getCursorHistoryIdx() {
     return cursorHistoryIdx;
   }
 
+  /**
+   * The name of this graph cursor.
+   * @return
+   */
   public String getName() {
     return name;
   }
