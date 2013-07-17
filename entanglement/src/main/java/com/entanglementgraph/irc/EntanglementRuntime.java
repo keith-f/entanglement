@@ -64,6 +64,7 @@ public class EntanglementRuntime {
     IMap<String, GraphConnectionDetails> graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);
     graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
     IMap<String, GraphCursor > graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
+    graphCursors.addEntryListener(new GraphCursorListenerLogger(bot, channel), true);
     EntanglementRuntime runtime = new EntanglementRuntime(bot, channel, classLoader, marshaller, graphConnectionDetails, graphCursors);
     return runtime;
   }

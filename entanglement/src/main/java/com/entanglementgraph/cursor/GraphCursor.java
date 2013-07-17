@@ -32,6 +32,7 @@ import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.dbobject.KeyExtractingIterable;
 import com.scalesinformatics.util.generics.MakeIterable;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -46,10 +47,10 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class GraphCursor {
+public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
 
-  public static class EdgeDestPair {
+  public static class EdgeDestPair implements Serializable {
     private DBObject rawEdge;
     private DBObject rawDestNode;
 
@@ -101,7 +102,7 @@ public class GraphCursor {
    *   <li>associatedCursor (optional) - the GraphCursor object associated with this move.</li>
    * </ul>
    */
-  public static class HistoryItem {
+  public static class HistoryItem implements Serializable {
     private MovementTypes movementType;
     private Map<String, Object> parameters;
     private EntityKeys<? extends Edge> via;

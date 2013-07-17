@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  */
 public class GraphConnectionListenerLogger implements EntryListener<String, GraphConnectionDetails> {
   private static final Logger logger = Logger.getLogger(GraphConnectionListenerLogger.class.getName());
-  private static final String LOGGER_PREFIX = "Graph connection listener: ";
+  private static final String LOGGER_PREFIX = "Graph connection listener";
 
   private final BotLogger botLogger;
   public GraphConnectionListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
