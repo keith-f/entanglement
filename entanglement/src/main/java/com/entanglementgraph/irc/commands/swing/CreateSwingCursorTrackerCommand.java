@@ -37,6 +37,7 @@ import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
+import javax.swing.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class SwingCursorTracker extends AbstractCommand<EntanglementRuntime> {
+public class CreateSwingCursorTrackerCommand extends AbstractCommand<EntanglementRuntime> {
 
 
   @Override
@@ -94,6 +95,9 @@ public class SwingCursorTracker extends AbstractCommand<EntanglementRuntime> {
     int historyIdx = cursor.getCursorHistoryIdx();
 
     try {
+
+
+
 
       Message msg = new Message(channel);
 

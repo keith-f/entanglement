@@ -56,15 +56,17 @@ public class TestAriesMxGraph extends JFrame {
       graph.getModel().endUpdate();
     }
 
-    mxGraphComponent graphComponent = new mxGraphComponent(graph)
-    {
-      private static final long serialVersionUID = 4683716829748931448L;
+    EntanglementMXGraphComponent graphComponent = new EntanglementMXGraphComponent(graph);
 
-      public mxInteractiveCanvas createCanvas()
-      {
-        return new AriesCustomBorderLayoutCanvas(this);
-      }
-    };
+//    mxGraphComponent graphComponent = new mxGraphComponent(graph)
+//    {
+//      private static final long serialVersionUID = 4683716829748931448L;
+//
+//      public mxInteractiveCanvas createCanvas()
+//      {
+//        return new EntanglementPassThroughCanvas(this);
+//      }
+//    };
 
 
 

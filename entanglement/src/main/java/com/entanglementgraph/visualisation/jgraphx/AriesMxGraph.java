@@ -43,7 +43,8 @@ public class AriesMxGraph extends mxGraph {
   private final Map<Class, Class<? extends CustomCellRenderer>> beanTypeToCustomRendererType;
 
 //  /**
-//   * A map of bean instance to cell renderer type
+//   * A map of bean instance to cell renderer type - useful for overriding the bean class mappings for particular
+//   * bean instances.
 //   */
 //  private final Map<Class, CustomCellRenderer> beanInstanceToCustomRendererType;
 
@@ -85,16 +86,16 @@ public class AriesMxGraph extends mxGraph {
     // the preview image when cells are dragged)
     if (customCellRenderer != null && getModel().isVertex(cellValue)
         && canvas instanceof mxImageCanvas
-        && ((mxImageCanvas) canvas).getGraphicsCanvas() instanceof AriesCustomBorderLayoutCanvas)
+        && ((mxImageCanvas) canvas).getGraphicsCanvas() instanceof EntanglementPassThroughCanvas)
     {
-      ((AriesCustomBorderLayoutCanvas) ((mxImageCanvas) canvas).getGraphicsCanvas()).drawVertex(state, label, centralContent);
+      ((EntanglementPassThroughCanvas) ((mxImageCanvas) canvas).getGraphicsCanvas()).drawVertex(state, label, centralContent);
     }
     // Redirection of drawing vertices in SwingCanvas
     else if (customCellRenderer != null
         && getModel().isVertex(state.getCell())
-        && canvas instanceof AriesCustomBorderLayoutCanvas)
+        && canvas instanceof EntanglementPassThroughCanvas)
     {
-      ((AriesCustomBorderLayoutCanvas) canvas).drawVertex(state, label, centralContent);
+      ((EntanglementPassThroughCanvas) canvas).drawVertex(state, label, centralContent);
     }
     else
     {

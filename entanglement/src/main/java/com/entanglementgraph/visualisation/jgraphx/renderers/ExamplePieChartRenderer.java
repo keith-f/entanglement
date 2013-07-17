@@ -16,6 +16,9 @@
  */
 package com.entanglementgraph.visualisation.jgraphx.renderers;
 
+import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.swing.view.mxInteractiveCanvas;
+import com.mxgraph.view.mxCellState;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -25,6 +28,8 @@ import org.jfree.data.general.PieDataset;
 import org.jfree.util.Rotation;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,18 +40,55 @@ import java.util.Map;
  * Time: 14:36
  * To change this template use File | Settings | File Templates.
  */
-public class ExamplePieChartRenderer implements CustomCellRenderer {
+public class ExamplePieChartRenderer<T> implements CustomCellRenderer<T> {
+
+  private ChartPanel chartPanel;
 
   public ExamplePieChartRenderer() {
   }
 
+
+
   @Override
-  public JComponent renderCellContent(Object value) {
+  public void renderCellContentToCanvas(mxCellState state, T value, mxGraphComponent parentGraphComponent, mxInteractiveCanvas canvas) {
+    Graphics2D g = canvas.getGraphics();
+    Point translate = canvas.getTranslate();
+    CellRendererPane rendererPane = canvas.getRendererPane();
+
+    JLabel backgroundLabel = new JLabel(value.toString());
+    JComponent mainComponent = renderCellContent(value);
+
+    backgroundLabel.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+    backgroundLabel.setHorizontalAlignment(JLabel.CENTER);
+    backgroundLabel.setVerticalAlignment(JLabel.TOP);
+    backgroundLabel.setBackground(parentGraphComponent.getBackground().darker());
+    backgroundLabel.setOpaque(true);
+
+//    System.out.println("StateX: "+state.getX()+", StateY: "+state.getY()+"; translation: "+translate.getX()+", "+translate.getY()
+//        + "; dimensions: "+state.getWidth()+", "+state.getHeight());
+
+//    System.out.println("Components: "+centralContent.getComponents().length);
+
+    rendererPane.paintComponent(g, backgroundLabel, parentGraphComponent,
+        (int) state.getX() + translate.x, (int) state.getY() + translate.y,
+        (int) state.getWidth(), (int) state.getHeight(), true);
+
+    rendererPane.paintComponent(g, mainComponent, parentGraphComponent,
+        (int) state.getX() + translate.x, (int) (state.getY() + translate.y + backgroundLabel.getPreferredSize().getHeight()),
+        (int) state.getWidth(), (int) (state.getHeight() - backgroundLabel.getPreferredSize().getHeight()), true);
+  }
+
+  @Override
+  public JComponent renderCellContent(T value) {
+    if (chartPanel != null) {
+      return chartPanel;
+    }
+
     PieDataset dataset = createDataset();
     // based on the dataset we create the chart
     JFreeChart chart = createChart(dataset, "Title... " + value);
     // we put the chart into a panel
-    ChartPanel chartPanel = new ChartPanel(chart);
+    chartPanel = new ChartPanel(chart);
     // default size
 //  chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
 
