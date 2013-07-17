@@ -65,8 +65,8 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
     try {
       BotState<EntanglementRuntime> state = channelState;
       EntanglementRuntime runtime = state.getUserObject();
-      GraphConnection sourceConn = runtime.getGraphConnections().get(sourceConnName);
-      GraphConnection destinationConn = runtime.getGraphConnections().get(destinationConnName);
+      GraphConnection sourceConn = runtime.createGraphConnectionFor(sourceConnName);
+      GraphConnection destinationConn = runtime.createGraphConnectionFor(destinationConnName);
       if (sourceConn == null) throw new UserException(sender, "No graph connection exists with the name: "+sourceConnName);
       if (destinationConn == null) throw new UserException(sender, "No graph connection exists with the name: "+destinationConnName);
 

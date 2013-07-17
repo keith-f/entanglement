@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -60,12 +61,12 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
     GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
-      GraphConnection conn = runtime.getGraphConnections().get(connName);
-      if (conn == null) {
-        throw new UserException(sender, "No graph connection exists with the name: "+connName);
+      GraphConnectionDetails details = runtime.getGraphConnectionDetails().get(connName);
+      if (details == null) {
+        throw new UserException(sender, "No graph connection information exists with the name: "+connName);
       }
 
-      runtime.setCurrentConnection(conn);
+      runtime.setCurrentConnectionName(connName);
 
       Message result = new Message(channel);
       result.println("Current graph set to: %s", connName);

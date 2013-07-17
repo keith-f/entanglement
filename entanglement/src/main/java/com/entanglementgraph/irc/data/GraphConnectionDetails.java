@@ -35,11 +35,26 @@ public class GraphConnectionDetails implements Serializable {
   private String graphName;
   private String graphBranch;
 
+  public GraphConnectionDetails() {
+  }
+
   public GraphConnectionDetails(String hostname, String database, String graphName, String graphBranch) {
     this.hostname = hostname;
     this.database = database;
     this.graphName = graphName;
     this.graphBranch = graphBranch;
+  }
+
+  @Override
+  public String toString() {
+    return "GraphConnectionDetails{" +
+        "hostname='" + hostname + '\'' +
+        ", database='" + database + '\'' +
+        ", username='" + username + '\'' +
+        ", password='" + password + '\'' +
+        ", graphName='" + graphName + '\'' +
+        ", graphBranch='" + graphBranch + '\'' +
+        '}';
   }
 
   public String getHostname() {

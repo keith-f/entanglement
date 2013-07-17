@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.shell.EntanglementStatePropertyNames;
 import com.entanglementgraph.util.GraphConnection;
@@ -47,7 +48,8 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
-    return "Creates a new named connection entry in the Entanglement runtime object.";
+    return "Registers a named set of graph connection details. These details may be used by other commands to create " +
+        "graph connections when required";
   }
 
   public List<Param> getParams() {
@@ -80,8 +82,9 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     EntanglementRuntime runtime = state.getUserObject();
 
     try {
-      GraphConnection connection = connect(runtime, hostname, database, graph, branch);
-      runtime.addGraphConnection(connectionName, connection);
+      GraphConnectionDetails details = new GraphConnectionDetails(hostname, database, graph, branch);
+//      GraphConnection connection = connect(runtime, hostname, database, graph, branch);
+      runtime.registerGraphConnectionDetails(connectionName, details);
       Message result = new Message(channel);
       result.println("Graph %s on %s is now available with connection name: %s", graph, hostname, connectionName);
       return result;
@@ -90,14 +93,14 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     }
   }
 
-  public GraphConnection connect(EntanglementRuntime runtime,
-                                 String hostname, String database, String graphName, String branchName)
-      throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
-    ClassLoader classLoader = runtime.getClassLoader();
-
-    GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
-    GraphConnection connection = factory.connect(graphName, branchName);
-    bot.debugln(channel, "Connected to: %s/%s!", graphName, branchName);
-    return connection;
-  }
+//  public GraphConnection connect(EntanglementRuntime runtime,
+//                                 String hostname, String database, String graphName, String branchName)
+//      throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
+//    ClassLoader classLoader = runtime.getClassLoader();
+//
+//    GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
+//    GraphConnection connection = factory.connect(graphName, branchName);
+//    bot.debugln(channel, "Connected to: %s/%s!", graphName, branchName);
+//    return connection;
+//  }
 }

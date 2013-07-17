@@ -96,12 +96,12 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
 
     //Regenerate global config object
     this.hazelcastClusterName = hazelcastClusterName;
-    if (hazelcastClusterName != null) {
-      DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
-      String hostname = InetAddress.getLocalHost().getHostName();
-      hzConfig.specifyNetworkInterfaces(hostname);
-      hzInstance = Hazelcast.newHazelcastInstance(hzConfig);
-    }
+    DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
+    String hostname = InetAddress.getLocalHost().getHostName();
+    hzConfig.specifyNetworkInterfaces(hostname);
+    hzInstance = Hazelcast.newHazelcastInstance(hzConfig);
+    createCustomUserObjectForBotState(null, getGlobalState());
+
 
     addCommand("connect-graph", ConnectGraphCommand.class);
     addCommand("create-edge", CreateEdgeCommand.class);
@@ -134,14 +134,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
   protected void createCustomUserObjectForBotState(String channel, BotState<EntanglementRuntime> newBotState) {
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
-    EntanglementRuntime runtime;
-    if (hzInstance == null) {
-      // Local storage
-      runtime = EntanglementRuntime.createLocalRuntime(cl, m);
-    } else {
-      // Cluster distributed memory storage
-      runtime = EntanglementRuntime.createDistributedRuntime(cl, m, hzInstance);
-    }
+    EntanglementRuntime runtime = EntanglementRuntime.createRuntime(this, channel, cl, m, hzInstance);
     newBotState.setUserObject(runtime);
   }
 }

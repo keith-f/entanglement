@@ -20,6 +20,7 @@ package com.entanglementgraph.irc.commands;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
 /**
@@ -27,20 +28,11 @@ import com.scalesinformatics.uibot.commands.UserException;
  */
 public class EntanglementIrcCommandUtils {
   public static GraphConnection getSpecifiedGraphOrDefault(EntanglementRuntime runtime, String connName)
-      throws UserException {
-
-    GraphConnection graphConn = null;
+      throws UserException, BotCommandException {
     if (connName != null) {
-      graphConn = runtime.getGraphConnections().get(connName);
+      return runtime.createGraphConnectionFor(connName);
     }
-    if (graphConn == null) {
-      graphConn = runtime.getCurrentConnection();
-    }
-    if (graphConn == null) {
-      throw new UserException("Either (no graph connection name was specified, or the specified graph " +
-          "connection didn't exist), and no graph was set as the 'current' default connection.");
-    }
-    return graphConn;
+    return runtime.createGraphConnectionForCurrentConnection();
   }
 
   public static GraphCursor getSpecifiedCursorOrDefault(EntanglementRuntime runtime, String cursorName)

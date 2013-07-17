@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
@@ -60,15 +61,15 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
       BotState<EntanglementRuntime> state = channelState;
       EntanglementRuntime runtime = state.getUserObject();
 
-      GraphConnection current = runtime.getCurrentConnection();
+      String current = runtime.getCurrentConnectionName();
       msg.println("Graph connections [");
-      for (Map.Entry<String, GraphConnection> entry : runtime.getGraphConnections().entrySet()) {
-        GraphConnection conn = entry.getValue();
-        String currentText = current == conn ? CURRENT_GRAPH_TXT : "";
+      for (Map.Entry<String, GraphConnectionDetails> entry : runtime.getGraphConnectionDetails().entrySet()) {
+        GraphConnectionDetails details = entry.getValue();
+        String currentText = current == entry.getKey() ? CURRENT_GRAPH_TXT : "";
         msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
-            conn.getMongo().getAddress().getHost(),
-            conn.getDb().getName(),
-            conn.getGraphName(), conn.getGraphBranch(),
+            details.getHostname(),
+            details.getDatabase(),
+            details.getGraphName(), details.getGraphBranch(),
             currentText);
       }
       msg.println("]");
