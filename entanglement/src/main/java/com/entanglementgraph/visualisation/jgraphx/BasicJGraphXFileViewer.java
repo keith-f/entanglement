@@ -29,17 +29,15 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 25/06/2013
- * Time: 11:17
- * To change this template use File | Settings | File Templates.
+ * A very simple JGraphX that takes a JGraphX XML file as input, and renders it to a JFrame.
+ *
+ * @author Keith Flanagan
  */
-public class JGraphXViewer extends JFrame {
+public class BasicJGraphXFileViewer extends JFrame {
 
   private final mxGraph graph;
 
-  public JGraphXViewer()
+  public BasicJGraphXFileViewer()
   {
     super("Graph viewer");
 
@@ -61,7 +59,7 @@ public class JGraphXViewer extends JFrame {
   }
 
   public static void main(String[] args) throws IOException {
-    JGraphXViewer frame = new JGraphXViewer();
+    BasicJGraphXFileViewer frame = new BasicJGraphXFileViewer();
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setSize(400, 320);
     frame.setVisible(true);
