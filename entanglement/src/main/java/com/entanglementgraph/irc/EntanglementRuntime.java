@@ -99,7 +99,7 @@ public class EntanglementRuntime {
    * @param graphConnectionDetails
    * @param graphCursors
    */
-  private EntanglementRuntime(EntanglementBot bot, String channel,
+  protected EntanglementRuntime(EntanglementBot bot, String channel,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               IMap<String, GraphConnectionDetails> graphConnectionDetails, IMap<String, GraphCursor> graphCursors) {
     this.classLoader = classLoader;
