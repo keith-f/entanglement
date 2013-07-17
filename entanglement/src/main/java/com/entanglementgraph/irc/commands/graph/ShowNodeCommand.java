@@ -29,7 +29,7 @@ import org.jibble.pircbot.Colors;
 
 import java.util.*;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.

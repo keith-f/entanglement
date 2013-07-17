@@ -19,8 +19,6 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
@@ -32,8 +30,6 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Lists the currently configured graph cursors. Marks the current 'default' cursor,

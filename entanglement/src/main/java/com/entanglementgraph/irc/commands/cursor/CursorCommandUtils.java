@@ -273,42 +273,4 @@ public class CursorCommandUtils {
   }
 
 
-
-
-
-  public static GraphConnection getSpecifiedGraphOrDefault(EntanglementRuntime runtime, String connName)
-      throws UserException {
-
-    GraphConnection graphConn = null;
-    if (connName != null) {
-      graphConn = runtime.getGraphConnections().get(connName);
-    }
-    if (graphConn == null) {
-      graphConn = runtime.getCurrentConnection();
-    }
-    if (graphConn == null) {
-      throw new UserException("Either (no graph connection name was specified, or the specified graph " +
-          "connection didn't exist), and no graph was set as the 'current' default connection.");
-    }
-    return graphConn;
-  }
-
-  public static GraphCursor getSpecifiedCursorOrDefault(EntanglementRuntime runtime, String cursorName)
-      throws UserException {
-
-    GraphCursor graphCursor = null;
-    if (cursorName != null) {
-      graphCursor = runtime.getGraphCursors().get(cursorName);
-    }
-    if (graphCursor == null) {
-      graphCursor = runtime.getCurrentCursor();
-    }
-    if (graphCursor == null) {
-      throw new UserException("Either (no graph cursor name was specified, or the specified graph " +
-          "cursor didn't exist), and no cursor was set as the 'current' default connection.");
-    }
-    return graphCursor;
-  }
-
-
 }

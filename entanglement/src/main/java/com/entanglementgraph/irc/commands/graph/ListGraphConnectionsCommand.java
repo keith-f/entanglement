@@ -31,8 +31,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
-
 /**
  * Created with IntelliJ IDEA.
  * User: keith

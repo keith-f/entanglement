@@ -18,19 +18,16 @@
 package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.cursor.GraphCursorException;
-import com.entanglementgraph.graph.AbstractGraphEntityDAO;
-import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
@@ -83,10 +80,10 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
+    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
     DbObjectMarshaller m = graphConn.getMarshaller();
 
-    GraphCursor cursor = getSpecifiedCursorOrDefault(runtime, cursorName);
+    GraphCursor cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(runtime, cursorName);
 
 
     boolean isAtDeadEnd = cursor.isAtDeadEnd();

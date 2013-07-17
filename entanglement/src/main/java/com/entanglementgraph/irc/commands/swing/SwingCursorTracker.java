@@ -22,6 +22,7 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
@@ -84,10 +85,10 @@ public class SwingCursorTracker extends AbstractCommand<EntanglementRuntime> {
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
+    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
     DbObjectMarshaller m = graphConn.getMarshaller();
 
-    GraphCursor cursor = getSpecifiedCursorOrDefault(runtime, cursorName);
+    GraphCursor cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(runtime, cursorName);
 
     boolean isAtDeadEnd = cursor.isAtDeadEnd();
     int historyIdx = cursor.getCursorHistoryIdx();

@@ -19,16 +19,15 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.mongodb.BasicDBObject;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -72,7 +71,7 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
+    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 

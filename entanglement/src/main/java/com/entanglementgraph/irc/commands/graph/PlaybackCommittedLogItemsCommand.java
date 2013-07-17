@@ -20,9 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.player.LogPlayer;
 import com.entanglementgraph.player.LogPlayerMongoDbImpl;
-import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.TxnUtils;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -32,7 +30,7 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * This command takes the revision history of the specified graph and plays back all revisions marked as 'complete'.

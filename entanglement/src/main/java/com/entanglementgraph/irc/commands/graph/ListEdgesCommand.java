@@ -30,7 +30,7 @@ import com.mongodb.BasicDBObject;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.

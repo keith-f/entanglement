@@ -23,6 +23,7 @@ import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.*;
@@ -69,10 +70,10 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
+    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
     DbObjectMarshaller m = graphConn.getMarshaller();
 
-    GraphCursor cursor = getSpecifiedCursorOrDefault(runtime, cursorName);
+    GraphCursor cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(runtime, cursorName);
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {

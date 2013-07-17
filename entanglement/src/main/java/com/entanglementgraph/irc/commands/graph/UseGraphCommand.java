@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
@@ -28,7 +27,7 @@ import com.scalesinformatics.uibot.commands.UserException;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.getSpecifiedGraphOrDefault;
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
