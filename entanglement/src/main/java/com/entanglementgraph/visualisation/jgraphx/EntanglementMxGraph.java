@@ -35,7 +35,7 @@ import java.util.Map;
  *
  * @author Keith Flanagan
  */
-public class AriesMxGraph extends mxGraph {
+public class EntanglementMxGraph extends mxGraph {
 
   /**
    * A map of bean type to cell renderer type
@@ -55,7 +55,7 @@ public class AriesMxGraph extends mxGraph {
    */
   private final Map<Object, CustomCellRenderer> beanInstanceToCustomRenderer;
 
-  public AriesMxGraph() {
+  public EntanglementMxGraph() {
     beanTypeToCustomRendererType = new HashMap<>();
     beanInstanceToCustomRenderer = new HashMap<>();
   }

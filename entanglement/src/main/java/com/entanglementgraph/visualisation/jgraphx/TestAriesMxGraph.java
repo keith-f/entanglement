@@ -18,8 +18,6 @@ package com.entanglementgraph.visualisation.jgraphx;
 
 import com.entanglementgraph.visualisation.jgraphx.renderers.ExamplePieChartRenderer;
 import com.mxgraph.swing.handler.mxRubberband;
-import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.swing.view.mxInteractiveCanvas;
 
 import javax.swing.*;
 
@@ -34,7 +32,7 @@ public class TestAriesMxGraph extends JFrame {
 
   public static void main(String[] args)
   {
-    AriesMxGraph graph = new AriesMxGraph();
+    EntanglementMxGraph graph = new EntanglementMxGraph();
     graph.addCustomRendererForBeanType(Integer.class, ExamplePieChartRenderer.class);
 
 
