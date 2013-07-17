@@ -61,6 +61,13 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
       channel = args[3];
     }
 
+    //FIXME this should work for now, but do this better...
+    String[] addresses = new String[] {
+        "192.168.*.*", "10.*.*.*", "128.240.*.*"
+    };
+
+    String address = InetAddress.getLocalHost().getHostAddress();
+    System.out.println("Address: "+address);
     String hostname = InetAddress.getLocalHost().getHostName();
     hostname = hostname.replace('.', '_');
 
@@ -73,7 +80,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
     System.out.println("Channel: " + channel);
 
 
-    EntanglementBot bot = new EntanglementBot(nick, hazelcastClusterName);
+    EntanglementBot bot = new EntanglementBot(nick, hazelcastClusterName, addresses);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -91,14 +98,19 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
   private final String hazelcastClusterName;
   private HazelcastInstance hzInstance = null;
 
-  public EntanglementBot(String nickname, String hazelcastClusterName) throws UnknownHostException {
+  public EntanglementBot(String nickname, String hazelcastClusterName, String... bindAddresses)
+      throws UnknownHostException {
     super(nickname);
 
     //Regenerate global config object
     this.hazelcastClusterName = hazelcastClusterName;
     DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
-    String hostname = InetAddress.getLocalHost().getHostName();
-    hzConfig.specifyNetworkInterfaces(hostname);
+    if (bindAddresses.length == 0) {
+      String hostname = InetAddress.getLocalHost().getHostAddress();
+      hzConfig.specifyNetworkInterfaces(hostname);
+    } else {
+      hzConfig.specifyNetworkInterfaces(bindAddresses);
+    }
     hzInstance = Hazelcast.newHazelcastInstance(hzConfig);
     createCustomUserObjectForBotState(null, getGlobalState());
 
@@ -132,6 +144,10 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
 
   @Override
   protected void createCustomUserObjectForBotState(String channel, BotState<EntanglementRuntime> newBotState) {
+    if (hzInstance == null) {
+      System.out.println("hzInstance is null. Skipping state creation for now.");
+      return;
+    }
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
     EntanglementRuntime runtime = EntanglementRuntime.createRuntime(this, channel, cl, m, hzInstance);
