@@ -88,14 +88,14 @@ public class AriesMxGraph extends mxGraph {
         && canvas instanceof mxImageCanvas
         && ((mxImageCanvas) canvas).getGraphicsCanvas() instanceof EntanglementPassThroughCanvas)
     {
-      ((EntanglementPassThroughCanvas) ((mxImageCanvas) canvas).getGraphicsCanvas()).drawVertex(state, label, centralContent);
+      ((EntanglementPassThroughCanvas) ((mxImageCanvas) canvas).getGraphicsCanvas()).drawVertex(state, cellValue, customCellRenderer);
     }
     // Redirection of drawing vertices in SwingCanvas
     else if (customCellRenderer != null
         && getModel().isVertex(state.getCell())
         && canvas instanceof EntanglementPassThroughCanvas)
     {
-      ((EntanglementPassThroughCanvas) canvas).drawVertex(state, label, centralContent);
+      ((EntanglementPassThroughCanvas) canvas).drawVertex(state, cellValue, customCellRenderer);
     }
     else
     {
