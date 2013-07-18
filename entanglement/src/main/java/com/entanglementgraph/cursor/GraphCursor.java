@@ -303,8 +303,8 @@ public class GraphCursor implements Serializable {
       edge = conn.getMarshaller().deserialize(edgeObj, Edge.class);
 
       // The iterator may return either outgoing or incoming edges. Decide which node to use here.
-      boolean fromContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getFrom(), specifiedDestination, false);
-      boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, false);
+      boolean fromContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getFrom(), specifiedDestination, true);
+      boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, true);
 
       if (fromContainsDestinationSpec && toContainsDestinationSpec) {
         //We couldn't tell the difference between from/to - the specifiedDestination was ambiguous

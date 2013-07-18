@@ -139,6 +139,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
     addCommand("use-cursor", UseCursorCommand.class);
     addCommand("cDescribe", CursorDescribe.class);
     addCommand("cGoto", CursorGoto.class);
+    addCommand("cStep", CursorStepToNode.class);
 
     /*
      * Swing-based commands
