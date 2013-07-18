@@ -50,13 +50,15 @@ import java.util.logging.Logger;
 public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
 
-  public static class EdgeDestPair implements Serializable {
+  public static class NodeEdgeNodeTuple implements Serializable {
+    private DBObject rawSourceNode;
     private DBObject rawEdge;
-    private DBObject rawDestNode;
+    private DBObject rawDestinationNode;
 
-    public EdgeDestPair(DBObject rawEdge, DBObject rawDestNode) {
+    public NodeEdgeNodeTuple(DBObject rawSourceNode, DBObject rawEdge, DBObject rawDestinationNode) {
+      this.rawSourceNode = rawSourceNode;
       this.rawEdge = rawEdge;
-      this.rawDestNode = rawDestNode;
+      this.rawDestinationNode = rawDestinationNode;
     }
 
     public DBObject getRawEdge() {
@@ -67,12 +69,20 @@ public class GraphCursor implements Serializable {
       this.rawEdge = rawEdge;
     }
 
-    public DBObject getRawDestNode() {
-      return rawDestNode;
+    public DBObject getRawSourceNode() {
+      return rawSourceNode;
     }
 
-    public void setRawDestNode(DBObject rawDestNode) {
-      this.rawDestNode = rawDestNode;
+    public void setRawSourceNode(DBObject rawSourceNode) {
+      this.rawSourceNode = rawSourceNode;
+    }
+
+    public DBObject getRawDestinationNode() {
+      return rawDestinationNode;
+    }
+
+    public void setRawDestinationNode(DBObject rawDestinationNode) {
+      this.rawDestinationNode = rawDestinationNode;
     }
   };
 
@@ -399,19 +409,31 @@ public class GraphCursor implements Serializable {
     }
   }
 
-  public Iterable<EdgeDestPair> iterateAndResolveOutgoingEdgeDestPairs(final GraphConnection conn)
+  /**
+   * Using the current cursor position as a starting point, iterates over every outgoing edge and resolves the raw
+   * DBObject representation of the edge and also the DBObject of the destination node. This class is useful when it
+   * is necessary to return node and edge data in a single operation, rather than querying for them individually.
+   *
+   * @param conn the graph database connection to use.
+   * @return an Iterable set of source-edge-destination tuples. In the case where a database entry for a node doesn't
+   * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
+   * but the node document(s) will be NULL.
+   * @throws GraphCursorException
+   */
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveOutgoingEdgeDestPairs(final GraphConnection conn)
       throws GraphCursorException {
     final DbObjectMarshaller m = conn.getMarshaller();
-    return new Iterable<EdgeDestPair>() {
+    final DBObject sourceNode = resolve(conn);
+    return new Iterable<NodeEdgeNodeTuple>() {
       @Override
-      public Iterator<EdgeDestPair> iterator() {
+      public Iterator<NodeEdgeNodeTuple> iterator() {
         final DBCursor edgeItr;
         try {
           edgeItr = conn.getEdgeDao().iterateEdgesFromNode(currentNode);
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to query database", e);
         }
-        return new Iterator<EdgeDestPair>() {
+        return new Iterator<NodeEdgeNodeTuple>() {
 
           @Override
           public boolean hasNext() {
@@ -419,7 +441,7 @@ public class GraphCursor implements Serializable {
           }
 
           @Override
-          public EdgeDestPair next() {
+          public NodeEdgeNodeTuple next() {
             DBObject edgeObj = edgeItr.next();
             try {
               EntityKeys<? extends Node> destinationKeys = m.deserialize(edgeObj, Edge.class).getTo();
@@ -428,8 +450,66 @@ public class GraphCursor implements Serializable {
                 //This is probably a 'hanging' edge - we have the node reference, but no node exists.
                 logger.info("Potential hanging edge found: "+destinationKeys);
               }
-              EdgeDestPair edgeDestPair = new EdgeDestPair(edgeObj, destinationNode);
-              return edgeDestPair;
+              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
+              return nodeEdgeNode;
+            } catch (Exception e) {
+              throw new RuntimeException("Failed to iterate destination nodes for: "+ currentNode, e);
+            }
+
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
+          }
+        };
+      }
+    };
+  }
+
+  /**
+   * Using the current cursor position as a destination, iterates over every incoming edge and resolves the raw
+   * DBObject representation of the edge and also the DBObject of the source node. This class is useful when it
+   * is necessary to return node and edge data in a single operation, rather than querying for them individually.
+   *
+   * @param conn the graph database connection to use.
+   * @return an Iterable set of source-edge-destination tuples. In the case where a database entry for a node doesn't
+   * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
+   * but the node document(s) will be NULL.
+   * @throws GraphCursorException
+   */
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveIncomingEdgeDestPairs(final GraphConnection conn)
+      throws GraphCursorException {
+    final DbObjectMarshaller m = conn.getMarshaller();
+    final DBObject destinationNode = resolve(conn);
+    return new Iterable<NodeEdgeNodeTuple>() {
+      @Override
+      public Iterator<NodeEdgeNodeTuple> iterator() {
+        final DBCursor edgeItr;
+        try {
+          edgeItr = conn.getEdgeDao().iterateEdgesToNode(currentNode);
+        } catch (GraphModelException e) {
+          throw new RuntimeException("Failed to query database", e);
+        }
+        return new Iterator<NodeEdgeNodeTuple>() {
+
+          @Override
+          public boolean hasNext() {
+            return edgeItr.hasNext();
+          }
+
+          @Override
+          public NodeEdgeNodeTuple next() {
+            DBObject edgeObj = edgeItr.next();
+            try {
+              EntityKeys<? extends Node> fromKeys = m.deserialize(edgeObj, Edge.class).getFrom();
+              DBObject sourceNode = conn.getNodeDao().getByKey(fromKeys);
+              if (sourceNode == null) {
+                //This is probably a 'hanging' edge - we have the node reference, but no node exists.
+                logger.info("Potential hanging edge found: "+fromKeys);
+              }
+              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
+              return nodeEdgeNode;
             } catch (Exception e) {
               throw new RuntimeException("Failed to iterate destination nodes for: "+ currentNode, e);
             }
