@@ -16,6 +16,10 @@
  */
 package com.entanglementgraph.visualisation.jgraphx;
 
+import com.mxgraph.swing.handler.mxRubberband;
+
+import javax.swing.*;
+
 /**
  * A JFrame that can be used to visualise JGraphX graphs with custom cell renderers
  *
@@ -25,4 +29,23 @@ package com.entanglementgraph.visualisation.jgraphx;
  * @author Keith Flanagan
  */
 public class GraphFrame {
+  private JFrame frame;
+  private EntanglementMXGraphComponent graphComponent;
+
+  public GraphFrame(String title, EntanglementMxGraph graph) {
+    graphComponent = new EntanglementMXGraphComponent(graph);
+
+    // Adds rubberband selection
+    new mxRubberband(graphComponent);
+
+
+    frame = new JFrame(title);
+    frame.getContentPane().add(graphComponent);
+    frame.setSize(400, 320);
+    frame.setVisible(true);
+  }
+
+  public JFrame getFrame() {
+    return frame;
+  }
 }
