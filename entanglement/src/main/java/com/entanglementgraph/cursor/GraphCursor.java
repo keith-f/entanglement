@@ -231,7 +231,7 @@ public class GraphCursor implements Serializable {
     this.history = previousLocation.getHistory();
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
     addHistoryItemForThisLocation(previousLocation, currentLocation);
-    this.listeners = previousLocation.listeners;
+    listeners = new HashSet<>();
     notifyCursorMoved(previousLocation, currentLocation);
   }
 
