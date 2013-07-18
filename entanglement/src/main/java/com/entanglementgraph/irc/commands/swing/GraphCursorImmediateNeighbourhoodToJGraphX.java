@@ -117,6 +117,13 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
         addEdge(parent, edgeDestPair.getRawEdge());
       }
 
+      for (GraphCursor.EdgeDestPair edgeDestPair : cursor.iterateAndResolveIncomingEdgeDestPairs(graphConn)) {
+//        Edge edge = marshaller.deserialize(edgeDestPair.getRawEdge(), Edge.class);
+//        Node dest = marshaller.deserialize(edgeDestPair.getRawDestNode(), Node.class);
+        addNode(parent, edgeDestPair.getRawDestNode());
+        addEdge(parent, edgeDestPair.getRawEdge());
+      }
+
     }
     catch (GraphCursorException e) {
       throw new JGraphXPopulationException("Failed to populate subgraph around cursor", e);
