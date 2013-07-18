@@ -248,6 +248,7 @@ public class GraphCursor implements Serializable {
   }
 
   public void addListener(GraphCursorListener listener) {
+    System.out.println("Listeners: "+listeners+"; listener: "+listener);
     listeners.add(listener);
   }
 
