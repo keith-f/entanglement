@@ -62,9 +62,8 @@ public class EntanglementRuntime {
 
     // TODO we probably need to configure these datastructures properly - size limits, retention policy, etc.
     IMap<String, GraphConnectionDetails> graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);
-    graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
     IMap<String, GraphCursor > graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
-    graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel), true);
+
     EntanglementRuntime runtime = new EntanglementRuntime(bot, channel, classLoader, marshaller, graphConnectionDetails, graphCursors);
     return runtime;
   }
@@ -113,8 +112,21 @@ public class EntanglementRuntime {
     this.marshaller = marshaller;
     this.graphConnectionDetails = graphConnectionDetails;
     this.graphCursors = graphCursors;
-//    this.graphConnections = new HashMap<>();
+
+    // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
+    this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
+
+    // This GraphCursorListener ensures that GraphCursor instances in the <code>graphCursors</code> map get replaced
+    // when the cursor moves.
     this.cursorPopulatorListener = new GraphCursorListenerEntanglementRuntimePopulator(this);
+
+    /*
+     * This is a Hazelcast listener on graphCursors that gets informed when a GraphCursor is added or updated
+     * on local or remote processes. The purpose of this listener is to ensure that we also receive *local* graph
+     * cursor events by ensuring that newly added GraphCursors are registered with cursorPopulatorListener (above)
+     */
+    this.graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel, this), true);
+
   }
 
   /**
@@ -161,7 +173,6 @@ public class EntanglementRuntime {
    */
   public void addGraphCursor(GraphCursor cursor) {
     cursor.addListener(cursorPopulatorListener);
-    graphCursors.put(cursor.getName(), cursor);
   }
 
   public GraphCursor getGraphCursor(String cursorName) {
@@ -202,5 +213,9 @@ public class EntanglementRuntime {
 
   public IMap<String, GraphConnectionDetails> getGraphConnectionDetails() {
     return graphConnectionDetails;
+  }
+
+  public GraphCursorListenerEntanglementRuntimePopulator getCursorPopulatorListener() {
+    return cursorPopulatorListener;
   }
 }

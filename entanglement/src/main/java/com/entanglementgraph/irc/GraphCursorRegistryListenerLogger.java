@@ -39,7 +39,11 @@ public class GraphCursorRegistryListenerLogger implements EntryListener<String, 
   private static final String LOGGER_PREFIX = "Graph cursor listener";
 
   private final BotLogger botLogger;
-  public GraphCursorRegistryListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
+  private final EntanglementRuntime runtime;
+
+  public GraphCursorRegistryListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel,
+                                           EntanglementRuntime runtime) {
+    this.runtime = runtime;
     if (channel != null) {
       botLogger = new BotLogger(bot, channel, LOGGER_PREFIX, LOGGER_PREFIX);
     } else {
@@ -59,23 +63,35 @@ public class GraphCursorRegistryListenerLogger implements EntryListener<String, 
   public void entryAdded(EntryEvent<String, GraphCursor> event) {
     log(String.format("Acknowledging new GraphCursor object: %s => %s (added by host: %s)",
         event.getName(), event.getValue().toString(), event.getMember()));
+
+    // Ensuring that the local runtime is registered to recieve local events.
+    event.getValue().addListener(runtime.getCursorPopulatorListener());
   }
 
   @Override
   public void entryRemoved(EntryEvent<String, GraphCursor> event) {
     log(String.format("Acknowledging removal of GraphCursor object: %s (removed by host: %s)",
         event.getName(), event.getMember()));
+
+    // Ensuring that the local runtime is de-registered.
+    event.getValue().removeListener(runtime.getCursorPopulatorListener());
   }
 
   @Override
   public void entryUpdated(EntryEvent<String, GraphCursor> event) {
     log(String.format("Acknowledging revised GraphCursor object: %s => %s (updated by host: %s)",
         event.getName(), event.getValue().toString(), event.getMember()));
+
+    // Ensuring that the local runtime is registered to recieve local events.
+    event.getValue().addListener(runtime.getCursorPopulatorListener());
   }
 
   @Override
   public void entryEvicted(EntryEvent<String, GraphCursor> event) {
     log(String.format("Acknowledging eviction GraphCursor object: %s (evicted by host: %s)",
         event.getName(), event.getMember()));
+
+    // Ensuring that the local runtime is de-registered.
+    event.getValue().removeListener(runtime.getCursorPopulatorListener());
   }
 }
