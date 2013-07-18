@@ -89,6 +89,7 @@ public class GraphCursor implements Serializable {
   public static enum MovementTypes {
     START_POSITION,
     JUMP,
+    STEP_TO_NODE,
     STEP_TO_FIRST_NODE_OF_TYPE,
     STEP_VIA_FIRST_EDGE_OF_TYPE;
   }
@@ -105,7 +106,7 @@ public class GraphCursor implements Serializable {
    *   <li>movementType - the reason why this history item exists. Examples: the initial starting point;
    *   a step via a particular edge type; a step to a particular node type.</li>
    *   <li>parameters - any parameters that were specified at the time of the move. This might be a node or edge type
-   *   name, or a custom MongoDB query.</li>
+   *   name, or a custom MongoDB query. Parameters are mostly for debugging/provenance and only need to be human-readable.</li>
    *   <li>destination - the coordinate of the node that we eventually ended up at.</li>
    *   <li>via - the keyset of the Edge that the cursor travelled along in order to reach the <code>destination</code>
    *   (assuming that the cursor travelled via an edge, and didn't 'jump' to its destination).</li>
@@ -259,13 +260,77 @@ public class GraphCursor implements Serializable {
    * Cursor movement
    */
 
+  /**
+   * Causes the cursor to jump to the specified node. The destination node does not have to be related to the current
+   * position in any way.
+   * @param destinationNode
+   * @return
+   * @throws GraphCursorException
+   */
   public GraphCursor jump(EntityKeys<? extends Node> destinationNode) throws GraphCursorException {
     HistoryItem historyItem = new HistoryItem(MovementTypes.JUMP, null, null, destinationNode);
     GraphCursor cursor = new GraphCursor(name, this, historyItem);
     return cursor;
-
   }
 
+  /**
+   * Steps the cursor to the specified directly connected node. Nodes connected to both incoming and outgoing edges
+   * from the current cursor position are considered.
+   *
+   * @param specifiedDestination a specification for the destination node. This may be a complete, fully populated
+   *                        <code>EntityKeys</code> instance, or it may be a partial object. For example, if only a
+   *                        single UID or single type/name combination is specified, this may be enough in most cases.
+   *                        Even specifying a single 'name' may be appropriate as long as the name is unique among
+   *                        directly connected nodes.
+   * @return a new graph cursor representing the new position.
+   * @throws GraphCursorException if the specified node was not directly connected to the current location, or if
+   * <code>destinationNode</code> wsa ambiguous - for instance, if only a node name was specified, and there were two
+   * directly connected nodes with the same name.
+   */
+  public GraphCursor stepToNode(GraphConnection conn, EntityKeys<? extends Node> specifiedDestination)
+      throws GraphCursorException {
+    DBObject edgeObj;
+    Edge edge;
+    EntityKeys<Node> actualDestination;
+    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesBetweenNodes(currentNode, specifiedDestination)) {
+      if (!dbCursor.hasNext()) {
+        // There are no edges between the cursor and the specified destination.
+        throw new GraphCursorException("The following nodes are not directly related: "+currentNode+" and "+specifiedDestination);
+      }
+
+      // If there happen to be multiple destinations, we don't care here - just pick the first one.
+      edgeObj = dbCursor.next();
+      edge = conn.getMarshaller().deserialize(edgeObj, Edge.class);
+
+      // The iterator may return either outgoing or incoming edges. Decide which node to use here.
+      boolean fromContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getFrom(), specifiedDestination, false);
+      boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, false);
+
+      if (fromContainsDestinationSpec && toContainsDestinationSpec) {
+        //We couldn't tell the difference between from/to - the specifiedDestination was ambiguous
+        throw new GraphCursorException("Found an edge between the cursor and the specified node. However, the edge " +
+            "matched both from/to parts of the edge and was therefore ambiguous. Cursor node: "+currentNode +
+            "; Specifed destination node: "+specifiedDestination +
+            "; Edge was: "+edge);
+      }
+      actualDestination = fromContainsDestinationSpec ? edge.getFrom() : edge.getTo();
+    } catch (GraphModelException e) {
+      throw new GraphCursorException("Failed to iterate edges between nodes: "+currentNode+" and "+specifiedDestination, e);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphCursorException("Failed to deserialise an object", e);
+    }
+
+    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+    humanReadableProvenanceParams.put("specifiedDestination", specifiedDestination);
+
+    HistoryItem historyItem = new HistoryItem(
+        MovementTypes.STEP_TO_NODE, humanReadableProvenanceParams, edge.getKeys(), actualDestination);
+    GraphCursor cursor = new GraphCursor(name, this, historyItem);
+    return cursor;
+  }
+
+
+  //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
   public GraphCursor stepToFirstNodeOfType(GraphConnection conn, String nodeType) throws GraphCursorException {
     DbObjectMarshaller m = conn.getMarshaller();
     Map<String, Object> parameters = new HashMap<>();
@@ -290,6 +355,7 @@ public class GraphCursor implements Serializable {
     }
   }
 
+  //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
   public GraphCursor stepViaFirstEdgeOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
     DbObjectMarshaller m = conn.getMarshaller();
     Map<String, Object> parameters = new HashMap<>();
