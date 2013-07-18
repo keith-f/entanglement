@@ -112,18 +112,12 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
       addNode(parent, cursorNode);
 
       for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveOutgoingEdgeDestPairs(graphConn)) {
-//        addNode(parent, nodeEdgeNode.getRawSourceNode());
         addNode(parent, nodeEdgeNode.getRawDestinationNode());
         addEdge(parent, nodeEdgeNode.getRawEdge());
-        System.out.println("Adding outgoing edge: "+nodeEdgeNode.getRawEdge());
       }
 
       for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveIncomingEdgeDestPairs(graphConn)) {
-        System.out.println("Adding incoming edge: "+nodeEdgeNode.getRawEdge());
-        System.out.println("From: "+nodeEdgeNode.getRawSourceNode());
-        System.out.println("To: "+nodeEdgeNode.getRawDestinationNode());
         addNode(parent, nodeEdgeNode.getRawSourceNode());
-//        addNode(parent, nodeEdgeNode.getRawDestinationNode());
         addEdge(parent, nodeEdgeNode.getRawEdge());
       }
 
@@ -153,7 +147,6 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
     EntityKeys<Node> keyset = MongoUtils.parseKeyset(marshaller, nodeObj, NodeDAO.FIELD_KEYS);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
-      logger.info("************************ RETURNED EXISTING NODE: "+nodeObj);
       return existingNode;
     }
 
@@ -166,7 +159,6 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
     Object jgraphNode = mxGraph.insertVertex(parentContainer, id, visualInfo.toBasicString(keyset, nodeObj), 0, 0,
         visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
     cacheJGraphXNode(keyset, jgraphNode);
-    logger.info("************************ ADDED NODE: "+nodeObj);
     return jgraphNode;
   }
 
@@ -183,8 +175,6 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
     }
 
     String id = parseIdStringFromKeyset(edge.getKeys());
-    logger.info("************************ ADDED EDGE. From: "+edge.getFrom()+"; To: "+edge.getTo()+"; From: "+jgraphFromNode+", to: "+jgraphToNode);
-//    logger.info("************************ ADDED EDGE: "+edgeObj);
     return mxGraph.insertEdge(parentContainer, id,
         visualInfo.toBasicString(edge.getKeys(), edgeObj), jgraphFromNode, jgraphToNode);
   }
