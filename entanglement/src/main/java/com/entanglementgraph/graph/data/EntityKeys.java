@@ -80,7 +80,7 @@ public class EntityKeys<E>
   public static boolean areKeysetsIdentical(EntityKeys first, EntityKeys second, boolean ignoreTypeField)
       throws IllegalArgumentException {
     if (!ignoreTypeField && !first.getType().equals(second.getType())) {
-      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
+      throw new IllegalArgumentException("Attempt to compare keysets with different types: "+first+"; "+second);
     }
     return first.getUids().equals(second.getUids())
         && first.getNames().equals(second.getNames());
@@ -99,7 +99,7 @@ public class EntityKeys<E>
   public static boolean doKeysetsReferToSameEntity(EntityKeys first, EntityKeys second, boolean ignoreTypeField)
       throws IllegalArgumentException {
     if (!ignoreTypeField && !first.getType().equals(second.getType())) {
-      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
+      throw new IllegalArgumentException("Attempt to compare keysets with different types: "+first+"; "+second);
     }
     Set<String> uids = new HashSet<String>(first.getUids());
     uids.retainAll(second.getUids());
