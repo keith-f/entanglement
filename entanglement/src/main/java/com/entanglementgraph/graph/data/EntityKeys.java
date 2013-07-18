@@ -69,6 +69,47 @@ public class EntityKeys<E>
     return !keyset.names.isEmpty() || !keyset.uids.isEmpty();
   }
 
+  /**
+   * Returns true if two keysets are of the same type, and have identical UID and name content.
+   * @param first
+   * @param second
+   * @param ignoreTypeField if set to true, ignores the EntityKeys 'type' field. This is useful if one of the keys
+   *                        doesn't specify a type.
+   * @return
+   */
+  public static boolean areKeysetsIdentical(EntityKeys first, EntityKeys second, boolean ignoreTypeField)
+      throws IllegalArgumentException {
+    if (!ignoreTypeField && !first.getType().equals(second.getType())) {
+      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
+    }
+    return first.getUids().equals(second.getUids())
+        && first.getNames().equals(second.getNames());
+  }
+
+  /**
+   * Returns <code>true</code> if two keysets refer to the same graph entity. For this to be the case, the EntityKey's
+   * types must match, and there must be at least one overlapping UID or name.
+   * @param first
+   * @param second
+   * @param ignoreTypeField if set to true, ignores the EntityKeys 'type' field. This is useful if one of the keys
+   *                        doesn't specify a type.
+   * @return
+   * @throws IllegalArgumentException
+   */
+  public static boolean doKeysetsReferToSameEntity(EntityKeys first, EntityKeys second, boolean ignoreTypeField)
+      throws IllegalArgumentException {
+    if (!ignoreTypeField && !first.getType().equals(second.getType())) {
+      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
+    }
+    Set<String> uids = new HashSet<String>(first.getUids());
+    uids.retainAll(second.getUids());
+    if (!uids.isEmpty()) return true;
+
+    Set<String> names = new HashSet<String>(first.getNames());
+    names.retainAll(second.getNames());
+    return !names.isEmpty();
+  }
+
 
   protected String type;
   protected Set<String> uids;

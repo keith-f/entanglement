@@ -168,7 +168,7 @@ public class MultiDBCursorIterable
       for (GraphConnection graphConn : graphs) {
         BasicDBObject graphDocument = graphConn.getNodeDao().getByKey(currentKeyset);
         EntityKeys graphKeyset = MongoUtils.parseKeyset(marshaller, graphDocument);
-        if (!areKeysetsIdentical(currentKeyset, graphKeyset)) {
+        if (!EntityKeys.areKeysetsIdentical(currentKeyset, graphKeyset, false)) {
           mergedNode = null; // Reset document
           currentKeyset = keyMerger.merge(currentKeyset, graphKeyset); //Merge keysets
           logger.info("Found new keys for this graph entity, repeating query from the start with the new, merged " +
@@ -186,21 +186,6 @@ public class MultiDBCursorIterable
       done = true; // We successfully queried all graphs, and didn't find any new keyset items.
     }
     return mergedNode;
-  }
-
-  /**
-   * Returns true if two keysets are of the same type, and have identical UID and name content.
-   * @param first
-   * @param second
-   * @return
-   */
-  private boolean areKeysetsIdentical(EntityKeys first, EntityKeys second) throws IllegalArgumentException {
-    if (!first.getType().equals(second.getType())) {
-      throw new IllegalArgumentException("Attempt to compare keysets with different type names: "+first+"; "+second);
-    }
-    return first.getUids().equals(second.getUids())
-        && first.getNames().equals(second.getNames());
-
   }
 
   @Override
