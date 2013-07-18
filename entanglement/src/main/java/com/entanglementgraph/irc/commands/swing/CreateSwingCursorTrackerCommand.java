@@ -106,7 +106,8 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
       GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
       populator.populateImmediateNeighbourhood(graphConn, cursor);
 
-      doOrganicLayout(mxGraph);
+//      doOrganicLayout(mxGraph);
+      doFastOrganicLayout(mxGraph);
 
       GraphFrame frame = new GraphFrame(cursorName, mxGraph);
       frame.getFrame().setVisible(true);
@@ -136,6 +137,7 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
     // Define layout
     mxOrganicLayout layout = new mxOrganicLayout(graph);
 
+
     // layout graph
     layout.execute(graph.getDefaultParent());
   }
@@ -149,6 +151,10 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
     // set some properties
     layout.setForceConstant(80); // the higher, the more separated
     layout.setDisableEdgeStyle(false); // true transforms the edges and makes them direct lines
+
+    layout.setMinDistanceLimit(10);
+    layout.setInitialTemp(10);
+    layout.setDisableEdgeStyle(true);
 
     // layout graph
     layout.execute(graph.getDefaultParent());
