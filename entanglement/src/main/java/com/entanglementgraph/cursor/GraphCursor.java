@@ -211,7 +211,7 @@ public class GraphCursor implements Serializable {
   private final List<HistoryItem> history;
   private final int cursorHistoryIdx;
   private final EntityKeys<? extends Node> currentNode;
-  private final transient Set<GraphCursorListener> listeners;
+  private final transient Set<GraphCursorListener> listeners = new HashSet<>();
 
   public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
       throws GraphCursorException {
@@ -220,7 +220,7 @@ public class GraphCursor implements Serializable {
     this.history = new LinkedList<>();
     cursorHistoryIdx = 0;
     addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
-    listeners = new HashSet<>();
+//    listeners = new HashSet<>();
   }
 
 
@@ -231,7 +231,7 @@ public class GraphCursor implements Serializable {
     this.history = previousLocation.getHistory();
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
     addHistoryItemForThisLocation(previousLocation, currentLocation);
-    listeners = new HashSet<>();
+//    listeners = new HashSet<>();
     notifyCursorMoved(previousLocation, currentLocation);
   }
 
