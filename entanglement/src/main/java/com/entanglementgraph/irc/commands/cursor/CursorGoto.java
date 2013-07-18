@@ -83,7 +83,7 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
       GraphCursor.HistoryItem previous = cursor.getHistory().get(cursor.getCursorHistoryIdx()-1);
 
       String outputText = String.format("Cursor %s moved from %s to %s. Movement type %s",
-          formatCursorName(cursorName),
+          formatCursorName(cursor.getName()),
           formatNodeKeyset(previous.getDestination()),
           formatNodeKeyset(current.getDestination()),
           formatMovementType(current.getMovementType()));
