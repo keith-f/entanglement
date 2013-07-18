@@ -29,6 +29,10 @@ import com.entanglementgraph.visualisation.jgraphx.EntanglementMxGraph;
 import com.entanglementgraph.visualisation.jgraphx.GraphFrame;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mxgraph.layout.mxFastOrganicLayout;
+import com.mxgraph.layout.mxOrganicLayout;
+import com.mxgraph.layout.orthogonal.mxOrthogonalLayout;
+import com.mxgraph.view.mxGraph;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
@@ -102,6 +106,8 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
       GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
       populator.populateImmediateNeighbourhood(graphConn, cursor);
 
+      doOrganicLayout(mxGraph);
+
       GraphFrame frame = new GraphFrame(cursorName, mxGraph);
       frame.getFrame().setVisible(true);
 
@@ -124,6 +130,37 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
+  }
+
+  private void doOrganicLayout(mxGraph graph) {
+    // Define layout
+    mxOrganicLayout layout = new mxOrganicLayout(graph);
+
+    // layout graph
+    layout.execute(graph.getDefaultParent());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  private void doFastOrganicLayout(mxGraph graph) {
+    // Define layout
+    mxFastOrganicLayout layout = new mxFastOrganicLayout(graph);
+
+    //Layout with single layout
+    // set some properties
+    layout.setForceConstant(80); // the higher, the more separated
+    layout.setDisableEdgeStyle(false); // true transforms the edges and makes them direct lines
+
+    // layout graph
+    layout.execute(graph.getDefaultParent());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  private void doOrthogonalLayout(mxGraph graph) {
+    // Define layout
+    mxOrthogonalLayout layout = new mxOrthogonalLayout(graph);
+
+    // layout graph
+    layout.execute(graph.getDefaultParent());
   }
 
 
