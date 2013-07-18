@@ -17,7 +17,6 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.scalesinformatics.uibot.BotLogger;
@@ -27,19 +26,20 @@ import java.util.logging.Logger;
 
 /**
  * A simple logger that prints out when an Entanglement bot acknowledges a new GraphConnectionDetails object being
- * added to a runtime. This may happen on a local or remote machine.
+ * added to a runtime. This may happen on a local or remote machine. Note that this listener responds to Hazelcast
+ * data structure notifications, rather than events specified by <code>GraphCursorListener</code>.
  *
  * User: keith
  * Date: 17/07/13; 12:15
  *
  * @author Keith Flanagan
  */
-public class GraphCursorListenerLogger implements EntryListener<String, GraphCursor> {
-  private static final Logger logger = Logger.getLogger(GraphCursorListenerLogger.class.getName());
+public class GraphCursorRegistryListenerLogger implements EntryListener<String, GraphCursor> {
+  private static final Logger logger = Logger.getLogger(GraphCursorRegistryListenerLogger.class.getName());
   private static final String LOGGER_PREFIX = "Graph cursor listener";
 
   private final BotLogger botLogger;
-  public GraphCursorListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
+  public GraphCursorRegistryListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
     if (channel != null) {
       botLogger = new BotLogger(bot, channel, LOGGER_PREFIX, LOGGER_PREFIX);
     } else {

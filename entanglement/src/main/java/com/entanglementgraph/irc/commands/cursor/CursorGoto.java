@@ -30,6 +30,7 @@ import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
+import org.jibble.pircbot.Colors;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -87,9 +88,11 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
       GraphCursor.HistoryItem current = cursor.getHistory().get(cursor.getCursorHistoryIdx());
       GraphCursor.HistoryItem previous = cursor.getHistory().get(cursor.getCursorHistoryIdx()-1);
 
-      String outputText = String.format("Cursor %s moved from %s to %s. Movement type %s",
+      String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
           formatCursorName(cursor.getName()),
+          Colors.REVERSE, Colors.NORMAL,
           formatNodeKeysetShort(previous.getDestination(), maxUids, maxNames),
+          Colors.REVERSE, Colors.NORMAL,
           formatNodeKeysetShort(current.getDestination(), maxUids, maxNames),
           formatMovementType(current.getMovementType()));
 

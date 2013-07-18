@@ -64,10 +64,17 @@ public class EntanglementRuntime {
     IMap<String, GraphConnectionDetails> graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);
     graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
     IMap<String, GraphCursor > graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
-    graphCursors.addEntryListener(new GraphCursorListenerLogger(bot, channel), true);
+    graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel), true);
     EntanglementRuntime runtime = new EntanglementRuntime(bot, channel, classLoader, marshaller, graphConnectionDetails, graphCursors);
     return runtime;
   }
+
+  /**
+   * A GraphCursor listener responsible for updating <code>graphCursors</code> when a GraphCursor moves. Since
+   * <code>graphCursors</code> is a Hazelcast datastructure, this update may in turn trigger further events across
+   * multiple machines.
+   */
+  private final GraphCursorListenerEntanglementRuntimePopulator cursorPopulatorListener;
 
 
   private final ClassLoader classLoader;
@@ -107,6 +114,7 @@ public class EntanglementRuntime {
     this.graphConnectionDetails = graphConnectionDetails;
     this.graphCursors = graphCursors;
 //    this.graphConnections = new HashMap<>();
+    this.cursorPopulatorListener = new GraphCursorListenerEntanglementRuntimePopulator(this);
   }
 
   /**
@@ -145,6 +153,15 @@ public class EntanglementRuntime {
     return createGraphConnectionFor(currentConnectionName);
   }
 
+  public void addGraphCursor(GraphCursor cursor) {
+    cursor.addListener(cursorPopulatorListener);
+    graphCursors.put(cursor.getName(), cursor);
+  }
+
+  public Map<String, GraphCursor> getGraphCursorsCopy() {
+    return new HashMap<>(graphCursors);
+  }
+
   public ClassLoader getClassLoader() {
     return classLoader;
   }
@@ -159,10 +176,6 @@ public class EntanglementRuntime {
 
   public void setCurrentConnectionName(String currentConnectionName) {
     this.currentConnectionName = currentConnectionName;
-  }
-
-  public Map<String, GraphCursor> getGraphCursors() {
-    return graphCursors;
   }
 
   public GraphCursor getCurrentCursor() {

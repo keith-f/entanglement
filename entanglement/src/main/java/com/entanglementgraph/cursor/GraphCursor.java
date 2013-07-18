@@ -211,6 +211,7 @@ public class GraphCursor implements Serializable {
   private final List<HistoryItem> history;
   private final int cursorHistoryIdx;
   private final EntityKeys<? extends Node> currentNode;
+  private final Set<GraphCursorListener> listeners;
 
   public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
       throws GraphCursorException {
@@ -219,6 +220,7 @@ public class GraphCursor implements Serializable {
     this.history = new LinkedList<>();
     cursorHistoryIdx = 0;
     addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
+    listeners = new HashSet<>();
   }
 
 
@@ -229,6 +231,8 @@ public class GraphCursor implements Serializable {
     this.history = previousLocation.getHistory();
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
     addHistoryItemForThisLocation(previousLocation, currentLocation);
+    this.listeners = previousLocation.listeners;
+    notifyCursorMoved(previousLocation, currentLocation);
   }
 
   private void addHistoryItemForThisLocation(GraphCursor previousLocation, HistoryItem currentLocation)
@@ -241,6 +245,16 @@ public class GraphCursor implements Serializable {
 
     this.history.add(currentLocation);
     currentLocation.setAssociatedCursor(this);
+  }
+
+  public void addListener(GraphCursorListener listener) {
+    listeners.add(listener);
+  }
+
+  private void notifyCursorMoved(GraphCursor previousLocation, HistoryItem currentLocation) {
+    for (GraphCursorListener listener : listeners) {
+      listener.notifyGraphCursorMoved(previousLocation, this);
+    }
   }
 
 
