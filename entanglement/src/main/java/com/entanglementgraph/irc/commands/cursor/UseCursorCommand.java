@@ -64,7 +64,7 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
     EntanglementRuntime runtime = state.getUserObject();
 
     try {
-      GraphCursor cursor = runtime.getGraphCursors().get(cursorName);
+      GraphCursor cursor = runtime.getGraphCursor(cursorName);
       if (cursor == null) {
         throw new UserException(sender, "No graph cursor exists with the name: "+cursorName);
       }

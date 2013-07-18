@@ -38,11 +38,14 @@ public class GraphCursorListenerEntanglementRuntimePopulator implements GraphCur
 
   @Override
   public void notifyNewGraphCursor(GraphCursor cursor) {
-    runtime.getGraphCursors().put(cursor.getName(), cursor);
+//    runtime.getGraphCursors().put(cursor.getName(), cursor);
   }
 
   @Override
   public void notifyGraphCursorMoved(GraphCursor previous, GraphCursor current) {
-    runtime.getGraphCursors().put(current.getName(), current);
+    /*
+     * All we need to do here is add the graph cursor to the registry. Hazelcast events will take care of the rest.
+     */
+    runtime.addGraphCursor(current);
   }
 }

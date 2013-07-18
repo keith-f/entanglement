@@ -153,11 +153,25 @@ public class EntanglementRuntime {
     return createGraphConnectionFor(currentConnectionName);
   }
 
+  /**
+   * Adds a GraphCursor to the distributed registry. Also ensures that the appropriate <i>local</i> events cause
+   * an update to this data structure, which in turn my propagate to other distributed processes.
+   *
+   * @param cursor
+   */
   public void addGraphCursor(GraphCursor cursor) {
     cursor.addListener(cursorPopulatorListener);
     graphCursors.put(cursor.getName(), cursor);
   }
 
+  public GraphCursor getGraphCursor(String cursorName) {
+    return graphCursors.get(cursorName);
+  }
+
+  /**
+   * Returns a copy of the GraphCursor distributed registry.
+   * @return
+   */
   public Map<String, GraphCursor> getGraphCursorsCopy() {
     return new HashMap<>(graphCursors);
   }

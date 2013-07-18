@@ -61,7 +61,7 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
     try {
       GraphCursor current = runtime.getCurrentCursor();
       msg.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : runtime.getGraphCursors().entrySet()) {
+      for (Map.Entry<String, GraphCursor> entry : runtime.getGraphCursorsCopy().entrySet()) {
         GraphCursor cursor = entry.getValue();
         String currentText = current == current ? CURRENT_CURSOR_TXT : "";
         msg.println("  %s => %s %s",
