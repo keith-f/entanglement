@@ -31,6 +31,7 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
+import org.jibble.pircbot.Colors;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,9 @@ public class CursorStepToNode extends AbstractCommand<EntanglementRuntime> {
     params.add(new OptionalParam("node-type", String.class, "The type name of the node to jump to."));
     params.add(new OptionalParam("node-name", String.class, "The unique name of the node to jump to."));
     params.add(new OptionalParam("node-uid", String.class, "The UID of the node to jump to."));
+
+    params.add(new OptionalParam("display-max-uids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-names", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     return params;
   }
 
@@ -71,6 +75,8 @@ public class CursorStepToNode extends AbstractCommand<EntanglementRuntime> {
     String nodeType = parsedArgs.get("node-type").getStringValue();
     String nodeName = parsedArgs.get("node-name").getStringValue();
     String nodeUid = parsedArgs.get("node-uid").getStringValue();
+    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
@@ -86,10 +92,12 @@ public class CursorStepToNode extends AbstractCommand<EntanglementRuntime> {
       GraphCursor.HistoryItem current = cursor.getHistory().get(cursor.getCursorHistoryIdx());
       GraphCursor.HistoryItem previous = cursor.getHistory().get(cursor.getCursorHistoryIdx()-1);
 
-      String outputText = String.format("Cursor %s moved from %s to %s. Movement type %s",
+      String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
           formatCursorName(cursor.getName()),
-          formatNodeKeyset(previous.getDestination()),
-          formatNodeKeyset(current.getDestination()),
+          Colors.REVERSE, Colors.NORMAL,
+          formatNodeKeysetShort(previous.getDestination(), maxUids, maxNames),
+          Colors.REVERSE, Colors.NORMAL,
+          formatNodeKeysetShort(current.getDestination(), maxUids, maxNames),
           formatMovementType(current.getMovementType()));
 
       Message result = new Message(channel);

@@ -57,6 +57,9 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
     params.add(new OptionalParam("node-type", String.class, "The type name of the node to jump to."));
     params.add(new OptionalParam("node-name", String.class, "The unique name of the node to jump to."));
     params.add(new OptionalParam("node-uid", String.class, "The UID of the node to jump to."));
+
+    params.add(new OptionalParam("display-max-uids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-names", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     return params;
   }
 
@@ -67,6 +70,8 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
     String nodeType = parsedArgs.get("node-type").getStringValue();
     String nodeName = parsedArgs.get("node-name").getStringValue();
     String nodeUid = parsedArgs.get("node-uid").getStringValue();
+    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
@@ -84,8 +89,8 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
 
       String outputText = String.format("Cursor %s moved from %s to %s. Movement type %s",
           formatCursorName(cursor.getName()),
-          formatNodeKeyset(previous.getDestination()),
-          formatNodeKeyset(current.getDestination()),
+          formatNodeKeysetShort(previous.getDestination(), maxUids, maxNames),
+          formatNodeKeysetShort(current.getDestination(), maxUids, maxNames),
           formatMovementType(current.getMovementType()));
 
       Message result = new Message(channel);

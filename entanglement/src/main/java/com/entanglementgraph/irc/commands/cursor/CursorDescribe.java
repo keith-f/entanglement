@@ -62,8 +62,8 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
     params.add(new OptionalParam("display-edge-counts", Boolean.class, "true", "If set 'true', will display incoming/outgoing edge counts."));
     params.add(new OptionalParam("display-edge-types", Boolean.class, "true", "If set 'true', will display edge type information under the edge counts."));
     params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
-    params.add(new OptionalParam("maxUids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
-    params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-uids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-names", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
 
     return params;
   }
@@ -75,8 +75,8 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
     boolean displayEdgeCounts = parsedArgs.get("display-edge-counts").parseValueAsBoolean();
     boolean displayEdgeTypes = parsedArgs.get("display-edge-types").parseValueAsBoolean();
     boolean verbose = parsedArgs.get("verbose").parseValueAsBoolean();
-    int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
+    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
     BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
