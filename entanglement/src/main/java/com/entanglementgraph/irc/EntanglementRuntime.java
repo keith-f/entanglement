@@ -172,6 +172,7 @@ public class EntanglementRuntime {
    * @param cursor
    */
   public void addGraphCursor(GraphCursor cursor) {
+    graphCursors.put(cursor.getName(), cursor);
     cursor.addListener(cursorPopulatorListener);
   }
 
