@@ -156,7 +156,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
     }
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
-    EntanglementRuntime runtime = EntanglementRuntime.createRuntime(this, channel, cl, m, hzInstance);
+    EntanglementRuntime runtime = new EntanglementRuntime(this, channel, cl, m, hzInstance);
     newBotState.setUserObject(runtime);
   }
 }

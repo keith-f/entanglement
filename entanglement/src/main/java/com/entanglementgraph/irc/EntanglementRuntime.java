@@ -49,28 +49,6 @@ public class EntanglementRuntime {
   private static final String HZ_GRAPH_CURSORS = EntanglementRuntime.class.getSimpleName()+".GraphCursors";
 
 
-  /**
-   * Creates an EntanglementRuntime instance where some of the data structures are stored in a distributed memory,
-   * accessible by other bots that join the same Hazelcast cluster.
-   *
-   * @param classLoader
-   * @param marshaller
-   * @param hzInstance
-   * @return
-   */
-  public static EntanglementRuntime createRuntime(
-      EntanglementBot bot, String channel, ClassLoader classLoader, DbObjectMarshaller marshaller, HazelcastInstance hzInstance) {
-
-    // TODO we probably need to configure these datastructures properly - size limits, retention policy, etc.
-    IMap<String, GraphConnectionDetails> graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);
-    IMap<String, IList<GraphCursor.HistoryItem>> graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
-
-    EntanglementRuntime runtime = new EntanglementRuntime(
-        bot, channel, classLoader, marshaller, hzInstance, graphConnectionDetails, graphCursors);
-    return runtime;
-  }
-
-
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
@@ -102,19 +80,15 @@ public class EntanglementRuntime {
    *                global state object for this bot.
    * @param classLoader
    * @param marshaller
-   * @param graphConnectionDetails
-   * @param graphCursors
    */
-  protected EntanglementRuntime(EntanglementBot bot, String channel,
+  public EntanglementRuntime(EntanglementBot bot, String channel,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
-                              HazelcastInstance hzInstance,
-                              IMap<String, GraphConnectionDetails> graphConnectionDetails,
-                              IMap<String, IList<GraphCursor.HistoryItem>> graphCursors) {
+                              HazelcastInstance hzInstance) {
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
-    this.graphConnectionDetails = graphConnectionDetails;
-    this.graphCursors = graphCursors;
+    this.graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);;
+    this.graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
 
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
     this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);

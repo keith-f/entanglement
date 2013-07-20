@@ -27,6 +27,16 @@ import com.scalesinformatics.uibot.commands.UserException;
  * @author Keith Flanagan
  */
 public class EntanglementIrcCommandUtils {
+  /**
+   * A convenience method that returns either a connection named <code>connName</code>, or if <code>connName</code>
+   * is NULL, then returns the current bot's current "active" connection.
+   *
+   * @param runtime
+   * @param connName
+   * @return
+   * @throws UserException
+   * @throws BotCommandException
+   */
   public static GraphConnection getSpecifiedGraphOrDefault(EntanglementRuntime runtime, String connName)
       throws UserException, BotCommandException {
     if (connName != null) {
@@ -35,6 +45,16 @@ public class EntanglementIrcCommandUtils {
     return runtime.createGraphConnectionForCurrentConnection();
   }
 
+  /**
+   * A convenience method that returns either a cursor named <code>cursorName</code>, or if <code>cursorName</code>
+   * is NULL, then returns the current bot's current "active" cursor.
+   *
+   * @param runtime
+   * @param cursorName
+   * @return
+   * @throws UserException
+   * @throws BotCommandException
+   */
   public static GraphCursor getSpecifiedCursorOrDefault(EntanglementRuntime runtime, String cursorName)
       throws UserException {
 
