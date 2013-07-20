@@ -19,31 +19,36 @@ package com.entanglementgraph.irc;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
+import com.hazelcast.core.IList;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.GenericIrcBot;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * A simple logger that prints out when an Entanglement bot acknowledges a new GraphConnectionDetails object being
- * added to a runtime. This may happen on a local or remote machine. Note that this listener responds to Hazelcast
- * data structure notifications, rather than events specified by <code>GraphCursorListener</code>.
+ * A simple logger that prints out when an Entanglement bot acknowledges a new GraphCursor object being
+ * added to an EntanglementRuntime instance. This may happen on a local or remote machine.
  *
  * User: keith
  * Date: 17/07/13; 12:15
  *
  * @author Keith Flanagan
  */
-public class GraphCursorRegistryListenerLogger implements EntryListener<String, GraphCursor> {
+public class GraphCursorRegistryListenerLogger implements EntryListener<String, IList<GraphCursor.HistoryItem>> {
   private static final Logger logger = Logger.getLogger(GraphCursorRegistryListenerLogger.class.getName());
   private static final String LOGGER_PREFIX = "Graph cursor listener";
 
+  private final GenericIrcBot<EntanglementRuntime> bot;
+  private final String channel;
   private final BotLogger botLogger;
-  private final EntanglementRuntime runtime;
+  private final Map<String, GraphCursorHistoryChangeListenerLogger> cursorMovementListeners;
 
-  public GraphCursorRegistryListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel,
-                                           EntanglementRuntime runtime) {
-    this.runtime = runtime;
+  public GraphCursorRegistryListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
+    this.cursorMovementListeners = new HashMap<>();
+    this.bot = bot;
+    this.channel = channel;
     if (channel != null) {
       botLogger = new BotLogger(bot, channel, LOGGER_PREFIX, LOGGER_PREFIX);
     } else {
@@ -60,38 +65,34 @@ public class GraphCursorRegistryListenerLogger implements EntryListener<String, 
   }
 
   @Override
-  public void entryAdded(EntryEvent<String, GraphCursor> event) {
-    log(String.format("Acknowledging new GraphCursor object: %s => %s (added by host: %s)",
-        event.getName(), event.getValue().toString(), event.getMember()));
+  public void entryAdded(EntryEvent<String, IList<GraphCursor.HistoryItem>> event) {
+    log(String.format("Acknowledging new GraphCursor object: %s(%s) with %d history items (added by host: %s)",
+        event.getKey(), event.getName(), event.getValue().size(), event.getMember()));
 
-    // Ensuring that the local runtime is registered to recieve local events.
-    event.getValue().addListener(runtime.getCursorPopulatorListener());
+    // Add a secondary listener to log cursor movements as well
+    GraphCursorHistoryChangeListenerLogger movementLogger = new GraphCursorHistoryChangeListenerLogger(bot, channel);
+    event.getValue().addItemListener(movementLogger, true);
+    cursorMovementListeners.put(event.getKey(), movementLogger);
+
   }
 
   @Override
-  public void entryRemoved(EntryEvent<String, GraphCursor> event) {
-    log(String.format("Acknowledging removal of GraphCursor object: %s (removed by host: %s)",
-        event.getName(), event.getMember()));
-
-    // Ensuring that the local runtime is de-registered.
-    event.getValue().removeListener(runtime.getCursorPopulatorListener());
+  public void entryRemoved(EntryEvent<String, IList<GraphCursor.HistoryItem>> event) {
+    log(String.format("Acknowledging removal of GraphCursor object: %s with %d history items (added by host: %s)",
+        event.getName(), event.getValue().size(), event.getMember()));
+    cursorMovementListeners.remove(event.getKey());
   }
 
   @Override
-  public void entryUpdated(EntryEvent<String, GraphCursor> event) {
-    log(String.format("Acknowledging revised GraphCursor object: %s => %s (updated by host: %s)",
-        event.getName(), event.getValue().toString(), event.getMember()));
-
-    // Ensuring that the local runtime is registered to recieve local events.
-    event.getValue().addListener(runtime.getCursorPopulatorListener());
+  public void entryUpdated(EntryEvent<String, IList<GraphCursor.HistoryItem>> event) {
+    log(String.format("Acknowledging revised GraphCursor object: %s with %d history items (added by host: %s)",
+        event.getName(), event.getValue().size(), event.getMember()));
   }
 
   @Override
-  public void entryEvicted(EntryEvent<String, GraphCursor> event) {
-    log(String.format("Acknowledging eviction GraphCursor object: %s (evicted by host: %s)",
-        event.getName(), event.getMember()));
-
-    // Ensuring that the local runtime is de-registered.
-    event.getValue().removeListener(runtime.getCursorPopulatorListener());
+  public void entryEvicted(EntryEvent<String, IList<GraphCursor.HistoryItem>> event) {
+    log(String.format("Acknowledging eviction GraphCursor object: %s with %d history items (added by host: %s)",
+        event.getName(), event.getValue().size(), event.getMember()));
+    cursorMovementListeners.remove(event.getKey());
   }
 }

@@ -84,7 +84,7 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
 
     try {
-      GraphCursor newCursor = new GraphCursor(cursorName, nodeLocation);
+      GraphCursor newCursor = new GraphCursor(runtime.getHzInstance(), cursorName, nodeLocation);
       /*
        * Add the cursor to the runtime. It will then be accessible to other distributed processes.
        * The EntanglementRuntime will also receive GraphCursorListener updates.

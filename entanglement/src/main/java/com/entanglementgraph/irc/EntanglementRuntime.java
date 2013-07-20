@@ -23,6 +23,7 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -62,22 +63,17 @@ public class EntanglementRuntime {
 
     // TODO we probably need to configure these datastructures properly - size limits, retention policy, etc.
     IMap<String, GraphConnectionDetails> graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);
-    IMap<String, GraphCursor > graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
+    IMap<String, IList<GraphCursor.HistoryItem>> graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
 
-    EntanglementRuntime runtime = new EntanglementRuntime(bot, channel, classLoader, marshaller, graphConnectionDetails, graphCursors);
+    EntanglementRuntime runtime = new EntanglementRuntime(
+        bot, channel, classLoader, marshaller, hzInstance, graphConnectionDetails, graphCursors);
     return runtime;
   }
-
-  /**
-   * A GraphCursor listener responsible for updating <code>graphCursors</code> when a GraphCursor moves. Since
-   * <code>graphCursors</code> is a Hazelcast datastructure, this update may in turn trigger further events across
-   * multiple machines.
-   */
-  private final GraphCursorListenerEntanglementRuntimePopulator cursorPopulatorListener;
 
 
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
+  private final HazelcastInstance hzInstance;
 
   /**
    * Holds objects with actual graph connection objects - real MongoDB objects with open connections to the database.
@@ -88,7 +84,11 @@ public class EntanglementRuntime {
 
   private final IMap<String, GraphConnectionDetails> graphConnectionDetails;
 
-  private final IMap<String, GraphCursor> graphCursors;
+  /**
+   * A map of cursor name to cursor location history.
+   */
+  private final IMap<String, IList<GraphCursor.HistoryItem>> graphCursors;
+//  private final Map<String, GraphCursor> graphCursorPositions;
   private GraphCursor currentCursor;
 
 
@@ -107,8 +107,11 @@ public class EntanglementRuntime {
    */
   protected EntanglementRuntime(EntanglementBot bot, String channel,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
-                              IMap<String, GraphConnectionDetails> graphConnectionDetails, IMap<String, GraphCursor> graphCursors) {
+                              HazelcastInstance hzInstance,
+                              IMap<String, GraphConnectionDetails> graphConnectionDetails,
+                              IMap<String, IList<GraphCursor.HistoryItem>> graphCursors) {
     this.classLoader = classLoader;
+    this.hzInstance = hzInstance;
     this.marshaller = marshaller;
     this.graphConnectionDetails = graphConnectionDetails;
     this.graphCursors = graphCursors;
@@ -116,16 +119,11 @@ public class EntanglementRuntime {
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
     this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
 
-    // This GraphCursorListener ensures that GraphCursor instances in the <code>graphCursors</code> map get replaced
-    // when the cursor moves.
-    this.cursorPopulatorListener = new GraphCursorListenerEntanglementRuntimePopulator(this);
-
     /*
      * This is a Hazelcast listener on graphCursors that gets informed when a GraphCursor is added or updated
-     * on local or remote processes. The purpose of this listener is to ensure that we also receive *local* graph
-     * cursor events by ensuring that newly added GraphCursors are registered with cursorPopulatorListener (above)
+     * on local or remote processes.
      */
-    this.graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel, this), true);
+    this.graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel), true);
 
   }
 
@@ -172,20 +170,21 @@ public class EntanglementRuntime {
    * @param cursor
    */
   public void addGraphCursor(GraphCursor cursor) {
-    graphCursors.put(cursor.getName(), cursor);
-    cursor.addListener(cursorPopulatorListener);
+    graphCursors.put(cursor.getName(), cursor.getHistory());
   }
 
   public GraphCursor getGraphCursor(String cursorName) {
-    return graphCursors.get(cursorName);
+    IList<GraphCursor.HistoryItem> cursorHistory = graphCursors.get(cursorName);
+    return cursorHistory.get(cursorHistory.size() - 1).getAssociatedCursor();
   }
 
-  /**
-   * Returns a copy of the GraphCursor distributed registry.
-   * @return
-   */
-  public Map<String, GraphCursor> getGraphCursorsCopy() {
-    return new HashMap<>(graphCursors);
+
+  public Map<String, GraphCursor> getGraphCursors() {
+    Map<String, GraphCursor> currentPositions = new HashMap<>();
+    for (Map.Entry<String, IList<GraphCursor.HistoryItem>> entry : graphCursors.entrySet()) {
+      currentPositions.put(entry.getKey(), getGraphCursor(entry.getKey()));
+    }
+    return currentPositions;
   }
 
   public ClassLoader getClassLoader() {
@@ -216,7 +215,7 @@ public class EntanglementRuntime {
     return graphConnectionDetails;
   }
 
-  public GraphCursorListenerEntanglementRuntimePopulator getCursorPopulatorListener() {
-    return cursorPopulatorListener;
+  public HazelcastInstance getHzInstance() {
+    return hzInstance;
   }
 }

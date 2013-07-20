@@ -24,6 +24,8 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.GraphConnection;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.scalesinformatics.uibot.BotLogger;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -49,6 +51,7 @@ import java.util.logging.Logger;
  */
 public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
+  private static final String HZ_LIST_PREFIX = GraphCursor.class.getSimpleName() +":";
 
   public static class NodeEdgeNodeTuple implements Serializable {
     private DBObject rawSourceNode;
@@ -208,19 +211,17 @@ public class GraphCursor implements Serializable {
   }
 
   private final String name;
-  private final List<HistoryItem> history;
+  private final IList<HistoryItem> history;
   private final int cursorHistoryIdx;
   private final EntityKeys<? extends Node> currentNode;
-  private final transient Set<GraphCursorListener> listeners = new HashSet<>();
 
-  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
+  public GraphCursor(HazelcastInstance hzInstance, String cursorName, EntityKeys<? extends Node> startNode)
       throws GraphCursorException {
     this.name = cursorName;
     this.currentNode = startNode;
-    this.history = new LinkedList<>();
+    this.history = hzInstance.getList(String.format("%s%s", HZ_LIST_PREFIX, cursorName));
     cursorHistoryIdx = 0;
     addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
-//    listeners = new HashSet<>();
   }
 
 
@@ -231,8 +232,6 @@ public class GraphCursor implements Serializable {
     this.history = previousLocation.getHistory();
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
     addHistoryItemForThisLocation(previousLocation, currentLocation);
-//    listeners = new HashSet<>();
-    notifyCursorMoved(previousLocation, currentLocation);
   }
 
   private void addHistoryItemForThisLocation(GraphCursor previousLocation, HistoryItem currentLocation)
@@ -245,21 +244,6 @@ public class GraphCursor implements Serializable {
 
     this.history.add(currentLocation);
     currentLocation.setAssociatedCursor(this);
-  }
-
-  public void addListener(GraphCursorListener listener) {
-    System.out.println("Listeners: "+listeners+"; listener: "+listener);
-    listeners.add(listener);
-  }
-
-  public void removeListener(GraphCursorListener listener) {
-    listeners.remove(listener);
-  }
-
-  private void notifyCursorMoved(GraphCursor previousLocation, HistoryItem currentLocation) {
-    for (GraphCursorListener listener : listeners) {
-      listener.notifyGraphCursorMoved(previousLocation, this);
-    }
   }
 
 
@@ -627,7 +611,7 @@ public class GraphCursor implements Serializable {
    *
    * @return
    */
-  public List<HistoryItem> getHistory() {
+  public IList<HistoryItem> getHistory() {
     return history;
   }
 
