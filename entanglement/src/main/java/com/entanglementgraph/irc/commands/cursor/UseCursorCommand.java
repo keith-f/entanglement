@@ -51,7 +51,7 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("cursor", String.class, "The name of the cursor that is to be set 'active'"));
     return params;
   }
@@ -60,7 +60,6 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
   protected Message _processLine() throws UserException, BotCommandException {
     String cursorName = parsedArgs.get("cursor").getStringValue();
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
 
     try {

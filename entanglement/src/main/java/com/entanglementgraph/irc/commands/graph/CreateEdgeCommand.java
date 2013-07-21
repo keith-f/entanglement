@@ -20,6 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
@@ -42,7 +43,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateEdgeCommand extends AbstractEntanglementCommand {
 
 
   @Override
@@ -53,9 +54,8 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
 
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
     params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
     params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
     params.add(new RequiredParam("fromNodeType", String.class, "The type name of the 'from' node that this edge should connect to"));
@@ -66,15 +66,16 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
+  public CreateEdgeCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     // Parse annotations
     Map<String, String> attributes = parseAttributes(args);

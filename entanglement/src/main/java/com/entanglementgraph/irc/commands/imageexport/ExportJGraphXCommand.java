@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands.imageexport;
 
 import com.entanglementgraph.export.jgraphx.MongoToJGraphExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
@@ -44,7 +45,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
+public class ExportJGraphXCommand extends AbstractEntanglementCommand {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
@@ -57,18 +58,16 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
+    List<Param> params = super.getParams();
     return params;
+  }
+
+  public ExportJGraphXCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
-
-    BotState<EntanglementRuntime> state = channelState;
-    EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     Map<String, Color> colorMappings = parseColoursFromEnvironment(state);
     bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);

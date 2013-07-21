@@ -49,10 +49,8 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("cursor", String.class, "Name of the new cursor"));
-//    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, "
-//        + "the 'current' connection will be used."));
     params.add(new OptionalParam("node-type", String.class, "Type of initial node"));
     params.add(new OptionalParam("node-name", String.class, "Name of initial node"));
     params.add(new OptionalParam("node-uid", String.class, "UID of initial node"));
@@ -74,7 +72,6 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
     int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
 //    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
 
@@ -101,9 +98,5 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
-
-
   }
-
-
 }

@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.player.LogPlayer;
 import com.entanglementgraph.player.LogPlayerMongoDbImpl;
 import com.entanglementgraph.util.GraphConnection;
@@ -39,7 +40,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  *
  * @author Keith Flanagan
  */
-public class PlaybackCommittedLogItemsCommand extends AbstractCommand<EntanglementRuntime> {
+public class PlaybackCommittedLogItemsCommand extends AbstractEntanglementCommand {
 
 
   @Override
@@ -51,18 +52,16 @@ public class PlaybackCommittedLogItemsCommand extends AbstractCommand<Entangleme
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
+    List<Param> params = super.getParams();
     return params;
+  }
+
+  public PlaybackCommittedLogItemsCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
-
-    BotState<EntanglementRuntime> state = channelState;
-    EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
       bot.infoln("Starting to replay committed revisions in: %s/%s",

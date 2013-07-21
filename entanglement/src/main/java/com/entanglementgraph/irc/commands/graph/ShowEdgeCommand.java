@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -40,7 +41,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
+public class ShowEdgeCommand extends AbstractEntanglementCommand {
 
 
   @Override
@@ -52,22 +53,20 @@ public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("type", String.class, "The type name of the edge to display"));
     params.add(new RequiredParam("entityName", String.class, "A unique name of the edge to display"));
     return params;
   }
 
+  public ShowEdgeCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
-
-    BotState<EntanglementRuntime> state = channelState;
-    EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
       // Create a keyset in order to query the database

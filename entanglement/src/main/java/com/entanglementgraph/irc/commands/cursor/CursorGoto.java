@@ -23,6 +23,7 @@ import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -41,8 +42,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
-
+public class CursorGoto extends AbstractEntanglementCommand {
 
   @Override
   public String getDescription() {
@@ -51,7 +51,7 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
     params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, "
         + "the 'current' connection will be used."));
@@ -64,22 +64,18 @@ public class CursorGoto extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
+  public CursorGoto() {
+    super(AbstractEntanglementCommand.Requirements.GRAPH_CONN_NEEDED, AbstractEntanglementCommand.Requirements.CURSOR_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String cursorName = parsedArgs.get("cursor").getStringValue();
-    String connName = parsedArgs.get("conn").getStringValue();
     String nodeType = parsedArgs.get("node-type").getStringValue();
     String nodeName = parsedArgs.get("node-name").getStringValue();
     String nodeUid = parsedArgs.get("node-uid").getStringValue();
     int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
     int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
-    BotState<EntanglementRuntime> state = channelState;
-    EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
-    DbObjectMarshaller m = graphConn.getMarshaller();
-
-    GraphCursor cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(runtime, cursorName);
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {

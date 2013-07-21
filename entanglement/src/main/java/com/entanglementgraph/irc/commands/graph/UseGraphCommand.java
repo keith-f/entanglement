@@ -47,7 +47,7 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "The name of the connection that is to be set 'active'"));
     return params;
   }
@@ -56,9 +56,7 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
   protected Message _processLine() throws UserException, BotCommandException {
     String connName = parsedArgs.get("conn").getStringValue();
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = getSpecifiedGraphOrDefault(runtime, connName);
 
     try {
       GraphConnectionDetails details = runtime.getGraphConnectionDetails().get(connName);

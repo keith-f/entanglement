@@ -22,6 +22,7 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
@@ -58,7 +59,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class CreateSwingCursorTrackerCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand {
 
 
   @Override
@@ -68,9 +69,7 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
-    params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
+    List<Param> params = super.getParams();
 //    params.add(new OptionalParam("display-edge-counts", Boolean.class, "true", "If set 'true', will display incoming/outgoing edge counts."));
 //    params.add(new OptionalParam("display-edge-types", Boolean.class, "true", "If set 'true', will display edge type information under the edge counts."));
 //    params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
@@ -80,22 +79,18 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
     return params;
   }
 
+  public CreateSwingCursorTrackerCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
-    String cursorName = parsedArgs.get("cursor").getStringValue();
 //    boolean displayEdgeCounts = parsedArgs.get("display-edge-counts").parseValueAsBoolean();
 //    boolean displayEdgeTypes = parsedArgs.get("display-edge-types").parseValueAsBoolean();
 //    boolean verbose = parsedArgs.get("verbose").parseValueAsBoolean();
     int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
     int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
 
-    BotState<EntanglementRuntime> state = channelState;
-    EntanglementRuntime runtime = state.getUserObject();
-    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
-    DbObjectMarshaller m = graphConn.getMarshaller();
-
-    GraphCursor cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(runtime, cursorName);
 
     boolean isAtDeadEnd = cursor.isAtDeadEnd();
     int historyIdx = cursor.getCursorHistoryIdx();
@@ -119,7 +114,7 @@ public class CreateSwingCursorTrackerCommand extends AbstractCommand<Entanglemen
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
-        currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
+        currentPos = MongoUtils.parseKeyset(graphConn.getMarshaller(), (BasicDBObject) currentNodeObj);
       }
 
       msg.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",

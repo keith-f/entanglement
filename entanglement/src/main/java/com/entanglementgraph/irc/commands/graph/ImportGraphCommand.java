@@ -51,7 +51,7 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("source", String.class, "The name of the graph connection to be imported"));
     params.add(new RequiredParam("destination", String.class, "The name of the graph connection that is to recieve imported entities"));
     return params;
@@ -63,7 +63,6 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String destinationConnName = parsedArgs.get("destination").getStringValue();
 
     try {
-      BotState<EntanglementRuntime> state = channelState;
       EntanglementRuntime runtime = state.getUserObject();
       GraphConnection sourceConn = runtime.createGraphConnectionFor(sourceConnName);
       GraphConnection destinationConn = runtime.createGraphConnectionFor(destinationConnName);

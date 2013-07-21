@@ -53,14 +53,14 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   }
 
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
     params.add(new OptionalParam("hostname", String.class,
-        getChannelState().getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
+        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
         "The hostname of a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_HOSTNAME));
     params.add(new OptionalParam("database", String.class,
-        getChannelState().getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
+        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
         "A database located on a MongoDB server. Optional if you have " +
         "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_DB_NAME));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
@@ -78,7 +78,6 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String graph = parsedArgs.get("graph").getStringValue();
     String branch = parsedArgs.get("branch").getStringValue();
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
 
     try {

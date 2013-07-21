@@ -47,7 +47,7 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     return params;
   }
 
@@ -55,7 +55,6 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
   protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
 
-    BotState<EntanglementRuntime> state = channelState;
     EntanglementRuntime runtime = state.getUserObject();
 
     try {
