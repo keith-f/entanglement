@@ -41,7 +41,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ShowEdgeCommand extends AbstractEntanglementCommand {
+public class ShowEdgeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override

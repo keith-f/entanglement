@@ -47,7 +47,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class CursorDescribe extends AbstractEntanglementCommand {
+public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override

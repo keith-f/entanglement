@@ -42,7 +42,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class CursorGoto extends AbstractEntanglementCommand {
+public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime> {
 
   @Override
   public String getDescription() {
@@ -52,9 +52,6 @@ public class CursorGoto extends AbstractEntanglementCommand {
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
-    params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
-    params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, "
-        + "the 'current' connection will be used."));
     params.add(new OptionalParam("node-type", String.class, "The type name of the node to jump to."));
     params.add(new OptionalParam("node-name", String.class, "The unique name of the node to jump to."));
     params.add(new OptionalParam("node-uid", String.class, "The UID of the node to jump to."));

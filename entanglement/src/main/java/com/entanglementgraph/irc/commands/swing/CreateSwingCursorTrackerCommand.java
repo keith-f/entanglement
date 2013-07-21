@@ -59,7 +59,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand {
+public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override

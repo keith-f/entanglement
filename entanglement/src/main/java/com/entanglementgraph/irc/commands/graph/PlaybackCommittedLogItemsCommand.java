@@ -40,7 +40,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  *
  * @author Keith Flanagan
  */
-public class PlaybackCommittedLogItemsCommand extends AbstractEntanglementCommand {
+public class PlaybackCommittedLogItemsCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override

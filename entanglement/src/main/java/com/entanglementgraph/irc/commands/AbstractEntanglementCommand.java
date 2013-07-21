@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-abstract public class AbstractEntanglementCommand extends AbstractCommand<EntanglementRuntime> {
+abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime> extends AbstractCommand<T> {
 
   private boolean graphConnNeeded = false;
   private boolean graphCursorNeeded = false;

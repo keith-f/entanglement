@@ -97,7 +97,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
   }
 
   private final String hazelcastClusterName;
-  private HazelcastInstance hzInstance = null;
+  protected HazelcastInstance hzInstance = null;
 
   public EntanglementBot(String nickname, String hazelcastClusterName, String... bindAddresses)
       throws UnknownHostException {

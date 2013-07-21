@@ -39,7 +39,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ShowNodeCommand extends AbstractEntanglementCommand {
+public class ShowNodeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override

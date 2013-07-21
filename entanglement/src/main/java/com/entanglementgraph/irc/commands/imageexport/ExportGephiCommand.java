@@ -42,7 +42,7 @@ import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.get
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ExportGephiCommand extends AbstractEntanglementCommand {
+public class ExportGephiCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
