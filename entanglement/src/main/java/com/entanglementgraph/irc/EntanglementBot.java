@@ -41,7 +41,7 @@ import java.net.UnknownHostException;
  * Time: 16:59
  * To change this template use File | Settings | File Templates.
  */
-public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
+public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBot<T> {
   private static final String USAGE = "Usage:\n"
       + "  * Nickname\n"
       + "  * Server\n"
@@ -81,7 +81,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
     System.out.println("Channel: " + channel);
 
 
-    EntanglementBot bot = new EntanglementBot(nick, hazelcastClusterName, addresses);
+    EntanglementBot<EntanglementRuntime> bot = new EntanglementBot(nick, hazelcastClusterName, addresses);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -149,7 +149,7 @@ public class EntanglementBot extends GenericIrcBot<EntanglementRuntime> {
 
 
   @Override
-  protected void createCustomUserObjectForBotState(String channel, BotState<EntanglementRuntime> newBotState) {
+  protected void createCustomUserObjectForBotState(String channel, BotState newBotState) {
     if (hzInstance == null) {
       System.out.println("hzInstance is null. Skipping state creation for now.");
       return;
