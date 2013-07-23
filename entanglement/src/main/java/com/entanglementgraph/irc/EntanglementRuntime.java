@@ -152,6 +152,9 @@ public class EntanglementRuntime {
   }
 
   public GraphCursor getCurrentCursor() {
+    if (getCurrentCursorName() == null) {
+      return null;
+    }
     return cursorRegistry.getCursorCurrentPosition(currentCursorName);
   }
 
