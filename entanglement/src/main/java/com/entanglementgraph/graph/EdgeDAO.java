@@ -45,7 +45,7 @@ public interface EdgeDAO
 
   /**
    * Given a 'from' node and a 'to' node, returns an iterator over all the
-   * edges between these nodes.
+   * edges between these nodes, regardless of which of these nodes they originate at.
    *
    * @param fromNode the ID of the 'from' node.
    * @param to       the ID of the 'to' node.
@@ -58,7 +58,8 @@ public interface EdgeDAO
 
   /**
    * Given a 'from' node and a 'to' node, returns an iterator over all the
-   * edges of type <code>edgeType<code> between those nodes.
+   * edges of type <code>edgeType<code> between those nodes, regardless of
+   * which of these nodes they originate at.
    *
    * @param edgeType the type of edge to return
    * @param from     the UID of the 'from' node.
@@ -156,6 +157,14 @@ public interface EdgeDAO
   public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
+  /**
+   * Counts edges of a given type between the specified nodes, regardless of which node the edge starts at.
+   * @param edgeType
+   * @param from
+   * @param to
+   * @return
+   * @throws GraphModelException
+   */
   public Long countEdgesOfTypeBetweenNodes(
       String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException;

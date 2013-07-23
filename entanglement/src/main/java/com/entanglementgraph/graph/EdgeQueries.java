@@ -75,6 +75,35 @@ public class EdgeQueries {
   }
 
   /**
+   * Similar to <code>buildFromToNodeQuery</code> but returns a query that will find edges from <code>first</code>
+   * to <code>second</code> as well as edges from <code>second</code> to <code>first.</code>
+   * @param first the first node
+   * @param second the second node
+   * @return
+   */
+  public static DBObject buildBidirectionalFromToNodeQuery(EntityKeys first, EntityKeys second) {
+    DBObject query = new BasicDBObject();
+
+    //The outer '$or':
+    BasicDBList or = new BasicDBList();
+    query.put("$or", or);
+
+    // From the first node to the second
+    or.add(buildFromUidToUidQuery(first, second));
+    or.add(buildFromUidToNameQuery(first, second));
+    or.add(buildFromNameToUidQuery(first, second));
+    or.add(buildFromNameToNameQuery(first, second));
+
+    // From the second node to the first
+    or.add(buildFromUidToUidQuery(second, first));
+    or.add(buildFromUidToNameQuery(second, first));
+    or.add(buildFromNameToUidQuery(second, first));
+    or.add(buildFromNameToNameQuery(second, first));
+
+    return query;
+  }
+
+  /**
    * There are two ways to address a graph entity - by UID or by type+name. This method builds a query that returns
    * edges starting at a specified <code>from</code> node, using either identification method. MongoDB executes
    * both parts of this $or query in parallel.

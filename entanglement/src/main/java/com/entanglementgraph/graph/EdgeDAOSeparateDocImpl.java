@@ -62,7 +62,7 @@ public class EdgeDAOSeparateDocImpl
   @Override
   public DBCursor iterateEdgesBetweenNodes(EntityKeys from, EntityKeys to)
       throws GraphModelException {
-    DBObject query = buildFromToNodeQuery(from, to);
+    DBObject query = buildBidirectionalFromToNodeQuery(from, to);
     logger.log(Level.FINE, "Iterating edges between nodes: {0} --> {1}.\nQuery: {2}", new Object[]{from, to, query});
     try {
       return col.find(query);
@@ -77,7 +77,7 @@ public class EdgeDAOSeparateDocImpl
   public DBCursor iterateEdgesBetweenNodes(String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException {
     // Build a query to find edges between nodes, regardless of whether UID or type+name is used.
-    DBObject query = buildFromToNodeQuery(from, to);
+    DBObject query = buildBidirectionalFromToNodeQuery(from, to);
     // Also limit by edge type.
     query.put(FIELD_KEYS_TYPE, edgeType);
     logger.log(Level.FINE, "Iterating edges of type {0} between nodes: {1} --> {2}.\nQuery: {3}",
@@ -294,7 +294,7 @@ public class EdgeDAOSeparateDocImpl
 //    query.put(FIELD_TO_KEYS_UIDS, new BasicDBObject("$in", list(to.getUids())));
 //    query.put(FIELD_KEYS_TYPE, edgeType);
 
-    DBObject query = buildFromToNodeQuery(from, to);
+    DBObject query = buildBidirectionalFromToNodeQuery(from, to);
     //Add a restriction on the edge type
     query.put(FIELD_KEYS_TYPE, edgeType);
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
