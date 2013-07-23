@@ -78,6 +78,10 @@ public class CursorStepToNode extends AbstractEntanglementCommand<EntanglementRu
     int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
     int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
+    if (nodeType==null && nodeName==null && nodeUid==null) {
+      throw new UserException(sender, "You must specify at least a UID or a name.");
+    }
+
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {
