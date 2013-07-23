@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.irc.commands.swing;
 
+import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.cursor.GraphCursorException;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
@@ -25,6 +26,8 @@ import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jgraphx.EntanglementMxGraph;
 import com.entanglementgraph.visualisation.jgraphx.GraphFrame;
+import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.EntryListener;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mxgraph.layout.mxFastOrganicLayout;
@@ -65,7 +68,11 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
 //    params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
     params.add(new OptionalParam("maxUids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
-    params.add(new OptionalParam("track", Boolean.class, Boolean.FALSE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
+    params.add(new OptionalParam("track", Boolean.class, Boolean.TRUE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
+
+    params.add(new OptionalParam("layout-force-constant", Double.class, "500", "The higher this value is, the more separated the nodes become."));
+    params.add(new OptionalParam("layout-min-distance-limit", Double.class, "10", "Unknown..."));
+    params.add(new OptionalParam("layout-initial-temp", Double.class, "10", "Unknown..."));
 
     return params;
   }
@@ -73,6 +80,10 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
   public CreateSwingCursorNearestNeighboursCommand() {
     super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
+
+  private double layoutForceConstant;
+  private double layoutMinDistanceLimit;
+  private double layoutInitialTemp;
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
@@ -83,13 +94,41 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
     int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
     boolean track = parsedArgs.get("track").parseValueAsBoolean();
 
+    layoutForceConstant = parsedArgs.get("layout-force-constant").parseValueAsDouble();
+    layoutMinDistanceLimit = parsedArgs.get("layout-min-distance-limit").parseValueAsDouble();
+    layoutInitialTemp = parsedArgs.get("layout-initial-temp").parseValueAsDouble();
 
-    boolean isAtDeadEnd = cursor.isAtDeadEnd();
-    int historyIdx = cursor.getCursorHistoryIdx();
+
 
     try {
-      GraphFrame frame = displayGraphInNewFrame();
+      final GraphFrame frame = displayGraphInNewFrame(cursor);
 
+      if (track) {
+        state.getUserObject().getCursorRegistry().getCurrentPositions().addEntryListener(new EntryListener<String, GraphCursor>() {
+          @Override
+          public void entryAdded(EntryEvent<String, GraphCursor> event) {
+          }
+
+          @Override
+          public void entryRemoved(EntryEvent<String, GraphCursor> event) {
+          }
+
+          @Override
+          public void entryUpdated(EntryEvent<String, GraphCursor> event) {
+            GraphCursor newCursor = event.getValue();
+            try {
+              updateDisplay(frame, newCursor);
+            } catch (Exception e) {
+              bot.printException(channel, sender, "Failed to update GUI for new cursor position", e);
+              e.printStackTrace();
+            }
+          }
+
+          @Override
+          public void entryEvicted(EntryEvent<String, GraphCursor> event) {
+          }
+        }, cursorName, true); //Receive updates for our cursor only.
+      }
 
       Message msg = new Message(channel);
 
@@ -100,6 +139,9 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
         currentPos = MongoUtils.parseKeyset(graphConn.getMarshaller(), (BasicDBObject) currentNodeObj);
       }
 
+
+      boolean isAtDeadEnd = cursor.isAtDeadEnd();
+      int historyIdx = cursor.getCursorHistoryIdx();
       msg.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
           cursor.getName(), formatNodeKeyset(currentPos), formatBoolean(isAtDeadEnd), formatHistoryIndex(historyIdx));
       msg.println("Short version: %s", formatNodeKeysetShort(currentPos, maxUids, maxNames));
@@ -111,25 +153,25 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
     }
   }
 
-  private GraphFrame displayGraphInNewFrame() throws JGraphXPopulationException, GraphCursorException {
+  private GraphFrame displayGraphInNewFrame(GraphCursor graphCursor) throws JGraphXPopulationException, GraphCursorException {
     EntanglementMxGraph mxGraph = new EntanglementMxGraph();
     GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
-    populator.populateImmediateNeighbourhood(graphConn, cursor);
+    populator.populateImmediateNeighbourhood(graphConn, graphCursor);
 //      doOrganicLayout(mxGraph);
     doFastOrganicLayout(mxGraph);
     GraphFrame frame = new GraphFrame(cursorName, mxGraph);
-    frame.displayNewGraph(cursor.getName(), mxGraph);
     frame.getFrame().setVisible(true);
     return frame;
   }
 
-  private void updateDisplay(GraphFrame frame) throws JGraphXPopulationException, GraphCursorException {
+  private void updateDisplay(GraphFrame frame, GraphCursor graphCursor) throws JGraphXPopulationException, GraphCursorException {
     EntanglementMxGraph mxGraph = new EntanglementMxGraph();
     GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
-    populator.populateImmediateNeighbourhood(graphConn, cursor);
+    populator.populateImmediateNeighbourhood(graphConn, graphCursor);
 //      doOrganicLayout(mxGraph);
     doFastOrganicLayout(mxGraph);
-    frame.displayNewGraph(cursor.getName(), mxGraph);
+    frame.displayNewGraph(graphCursor.getName(), mxGraph);
+
   }
 
   private void doOrganicLayout(mxGraph graph) {
@@ -148,11 +190,11 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
 
     //Layout with single layout
     // set some properties
-    layout.setForceConstant(80); // the higher, the more separated
+    layout.setForceConstant(layoutForceConstant); // the higher, the more separated
     layout.setDisableEdgeStyle(false); // true transforms the edges and makes them direct lines
 
-    layout.setMinDistanceLimit(10);
-    layout.setInitialTemp(10);
+    layout.setMinDistanceLimit(layoutMinDistanceLimit);
+    layout.setInitialTemp(layoutInitialTemp);
     layout.setDisableEdgeStyle(true);
 
     // layout graph
@@ -167,6 +209,8 @@ public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglem
     // layout graph
     layout.execute(graph.getDefaultParent());
   }
+
+
 
 
 }
