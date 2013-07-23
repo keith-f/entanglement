@@ -51,6 +51,24 @@ import java.util.logging.Logger;
 public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
 
+  public static class CursorContext {
+    final GraphConnection conn;
+    final HazelcastInstance hz;
+
+    public CursorContext(GraphConnection conn, HazelcastInstance hz) {
+      this.conn = conn;
+      this.hz = hz;
+    }
+
+    public GraphConnection getConn() {
+      return conn;
+    }
+
+    public HazelcastInstance getHz() {
+      return hz;
+    }
+  }
+
   public static class NodeEdgeNodeTuple implements Serializable {
     private DBObject rawSourceNode;
     private DBObject rawEdge;
@@ -99,10 +117,6 @@ public class GraphCursor implements Serializable {
     NODE,
     DEAD_END;
   }
-
-  private transient boolean autoRecord;
-  //Used when autoRecord is true.
-  private transient HazelcastInstance hzInstance;
 
 
   private final String name;
@@ -180,33 +194,15 @@ public class GraphCursor implements Serializable {
   /**
    * A convenience method that records this GraphCursor in a distributed history, and notifies other processes
    * of the cursor's new position. You should call this method after every cursor movement if this cursor is a
-   * distributed cursor. Alternatively, you can call <code>setAutoRecordContext</code>, in which case the movement
-   * history is recorded after every step automatically.
+   * distributed cursor.
    * @param hzInstance
    */
-  public void recordHistoryAndNotify(HazelcastInstance hzInstance) {
-    recordHistoryAndNotify(hzInstance, this);
-  }
-
-  /**
-   * After calling this method, all future GraphCursor movements will be recorded, and listeners notified automatically.
-   * @param hzInstance
-   */
-  public void setAutoRecordContext(HazelcastInstance hzInstance) {
-    autoRecord = true;
-    this.hzInstance = hzInstance;
-  }
-
-  private void performAutorecord(GraphCursor cursor) {
-    if (autoRecord && hzInstance != null) {
-      recordHistoryAndNotify(hzInstance, cursor);
-    }
-  }
-
   private void recordHistoryAndNotify(HazelcastInstance hzInstance, GraphCursor cursor) {
-    //Update current position and history for this named cursor
-    hzInstance.getMap(GraphCursorRegistry.HZ_CURSOR_POSITIONS_MAP).put(name, cursor);
-    hzInstance.getMultiMap(GraphCursorRegistry.HZ_CURSOR_HISTORIES_MULTIMAP).put(name, cursor);
+    if (hzInstance != null) {
+      //Update current position and history for this named cursor
+      hzInstance.getMap(GraphCursorRegistry.HZ_CURSOR_POSITIONS_MAP).put(name, cursor);
+      hzInstance.getMultiMap(GraphCursorRegistry.HZ_CURSOR_HISTORIES_MULTIMAP).put(name, cursor);
+    }
   }
 
 
@@ -221,9 +217,10 @@ public class GraphCursor implements Serializable {
    * @return
    * @throws GraphCursorException
    */
-  public GraphCursor jump(EntityKeys<? extends Node> destinationNode) throws GraphCursorException {
+  public GraphCursor jump(CursorContext c,
+                          EntityKeys<? extends Node> destinationNode) throws GraphCursorException {
     GraphCursor cursor = new GraphCursor(name, MovementTypes.JUMP, this, null, destinationNode, null);
-    performAutorecord(cursor);
+    recordHistoryAndNotify(c.getHz(), cursor);
     return cursor;
   }
 
@@ -241,11 +238,13 @@ public class GraphCursor implements Serializable {
    * <code>destinationNode</code> wsa ambiguous - for instance, if only a node name was specified, and there were two
    * directly connected nodes with the same name.
    */
-  public GraphCursor stepToNode(GraphConnection conn, EntityKeys<? extends Node> specifiedDestination)
+  public GraphCursor stepToNode(CursorContext c,
+                                EntityKeys<? extends Node> specifiedDestination)
       throws GraphCursorException {
     DBObject edgeObj;
     Edge edge;
     EntityKeys<Node> actualDestination;
+    GraphConnection conn = c.getConn();
     try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesBetweenNodes(position, specifiedDestination)) {
       if (!dbCursor.hasNext()) {
         // There are no edges between the cursor and the specified destination.
@@ -279,6 +278,7 @@ public class GraphCursor implements Serializable {
 
     GraphCursor cursor = new GraphCursor(
         name, MovementTypes.STEP_TO_NODE, this, edge.getKeys(), actualDestination, humanReadableProvenanceParams);
+    recordHistoryAndNotify(c.getHz(), cursor);
     return cursor;
   }
 

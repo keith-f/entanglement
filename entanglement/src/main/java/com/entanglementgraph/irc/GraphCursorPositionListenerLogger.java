@@ -66,18 +66,15 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
   @Override
   public void entryAdded(EntryEvent<String, GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging new GraphCursor: %s(%s) at position %s (added by host: %s)",
-        event.getKey(), event.getName(), cursor.getPosition(), event.getMember()));
-
-    // This new GraphCursor has been added to a distributed collection. Make sure it also informs us of future changes.
-    cursor.setAutoRecordContext(hzInstance);
+    log(String.format("Acknowledging new GraphCursor: %s at position %s (added by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember()));
   }
 
   @Override
   public void entryRemoved(EntryEvent<String, GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging removal of GraphCursor: %s(%s) at position %s (by host: %s)",
-        event.getKey(), event.getName(), cursor.getPosition(), event.getMember()));
+    log(String.format("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember()));
   }
 
   @Override
@@ -92,7 +89,7 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
   @Override
   public void entryEvicted(EntryEvent<String,GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging removal of GraphCursor: %s(%s) at position %s (by host: %s)",
-        event.getKey(), event.getName(), cursor.getPosition(), event.getMember()));
+    log(String.format("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember()));
   }
 }

@@ -82,7 +82,7 @@ public class CursorStepToNode extends AbstractEntanglementCommand<EntanglementRu
 
     try {
       GraphCursor previous = cursor;
-      GraphCursor current = cursor.stepToNode(graphConn, newLocation);
+      GraphCursor current = cursor.stepToNode(cursorContext, newLocation);
 
       String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
           formatCursorName(cursor.getName()),

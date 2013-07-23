@@ -47,6 +47,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   protected GraphConnection graphConn;
   protected String cursorName;
   protected GraphCursor cursor;
+  protected GraphCursor.CursorContext cursorContext;
 
 
 
@@ -93,6 +94,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     if (graphCursorNeeded) {
       cursorName = parsedArgs.get("cursor").getStringValue();
       cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(state.getUserObject(), cursorName);
+      cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
     }
   }
 
