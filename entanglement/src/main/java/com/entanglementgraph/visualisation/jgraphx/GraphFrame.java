@@ -42,11 +42,13 @@ public class GraphFrame {
     frame = new JFrame(title);
     frame.getContentPane().add(graphComponent);
     frame.setSize(400, 320);
+    frame.revalidate();
     frame.setVisible(true);
   }
 
   public void displayNewGraph(String title, EntanglementMxGraph graph) {
     graphComponent.setGraph(graph);
+    frame.revalidate();
   }
 
   public JFrame getFrame() {
