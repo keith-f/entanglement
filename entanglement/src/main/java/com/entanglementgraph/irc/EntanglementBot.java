@@ -18,12 +18,11 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
-import com.entanglementgraph.irc.commands.*;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.imageexport.ExportJGraphXCommand;
-import com.entanglementgraph.irc.commands.swing.CreateSwingCursorTrackerCommand;
+import com.entanglementgraph.irc.commands.swing.CreateSwingCursorNearestNeighboursCommand;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
@@ -144,7 +143,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     /*
      * Swing-based commands
      */
-    addCommand("gui-create-cursor-tracker", CreateSwingCursorTrackerCommand.class);
+    addCommand("gui-cursor-display-nearest-neighbours", CreateSwingCursorNearestNeighboursCommand.class);
   }
 
 

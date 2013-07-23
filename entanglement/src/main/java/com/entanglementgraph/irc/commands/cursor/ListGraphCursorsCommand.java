@@ -19,7 +19,6 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -27,7 +26,6 @@ import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -60,12 +58,12 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
     try {
       GraphCursor current = runtime.getCurrentCursor();
       msg.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : runtime.getGraphCursors().entrySet()) {
+      for (Map.Entry<String, GraphCursor> entry : runtime.getCursorRegistry().getCurrentPositions().entrySet()) {
         GraphCursor cursor = entry.getValue();
-        String currentText = current == current ? CURRENT_CURSOR_TXT : "";
+        String currentText = current == entry.getValue() ? CURRENT_CURSOR_TXT : "";
         msg.println("  %s => %s %s",
             entry.getKey(),
-            cursor.getCurrentNode().toString(),
+            cursor.getPosition().toString(),
             currentText);
       }
       msg.println("]");

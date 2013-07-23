@@ -63,12 +63,12 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
     EntanglementRuntime runtime = state.getUserObject();
 
     try {
-      GraphCursor cursor = runtime.getGraphCursor(cursorName);
+      GraphCursor cursor = runtime.getCursorRegistry().getCursorCurrentPosition(cursorName);
       if (cursor == null) {
         throw new UserException(sender, "No graph cursor exists with the name: "+cursorName);
       }
 
-      runtime.setCurrentCursor(cursor);
+      runtime.setCurrentCursorName(cursor.getName());
 
       Message result = new Message(channel);
       result.println("Current cursor set to: %s", formatCursorName(cursorName));

@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursor;
+import com.entanglementgraph.cursor.GraphCursorRegistry;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
@@ -46,28 +47,20 @@ import java.util.Map;
  */
 public class EntanglementRuntime {
   private static final String HZ_CONN_DETAILS = EntanglementRuntime.class.getSimpleName()+".GraphConnectionDetails";
-  private static final String HZ_GRAPH_CURSORS = EntanglementRuntime.class.getSimpleName()+".GraphCursors";
+//  private static final String HZ_GRAPH_CURSORS = EntanglementRuntime.class.getSimpleName()+".GraphCursors";
 
 
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
 
-  /**
-   * Holds objects with actual graph connection objects - real MongoDB objects with open connections to the database.
-   */
-//  private final Map<String, GraphConnection> graphConnections;
-//  private GraphConnection currentConnection;
-  private String currentConnectionName;
 
+  private String currentConnectionName;
   private final IMap<String, GraphConnectionDetails> graphConnectionDetails;
 
-  /**
-   * A map of cursor name to cursor location history.
-   */
-  private final IMap<String, IList<GraphCursor.HistoryItem>> graphCursors;
-//  private final Map<String, GraphCursor> graphCursorPositions;
-  private GraphCursor currentCursor;
+
+  private String currentCursorName;
+  private final GraphCursorRegistry cursorRegistry;
 
 
   /**
@@ -88,17 +81,20 @@ public class EntanglementRuntime {
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
     this.graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);;
-    this.graphCursors = hzInstance.getMap(HZ_GRAPH_CURSORS);
 
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
     this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
+//
 
+//    this.graphCursors.addEntryListener(new GraphCursorPositionListenerLogger(bot, channel), true);
+
+    this.cursorRegistry = new GraphCursorRegistry(hzInstance);
     /*
      * This is a Hazelcast listener on graphCursors that gets informed when a GraphCursor is added or updated
      * on local or remote processes.
      */
-    this.graphCursors.addEntryListener(new GraphCursorRegistryListenerLogger(bot, channel), true);
-
+    this.cursorRegistry.getCurrentPositions().addEntryListener(
+        new GraphCursorPositionListenerLogger(bot, channel, hzInstance), true);
   }
 
   /**
@@ -137,29 +133,7 @@ public class EntanglementRuntime {
     return createGraphConnectionFor(currentConnectionName);
   }
 
-  /**
-   * Adds a GraphCursor to the distributed registry. Also ensures that the appropriate <i>local</i> events cause
-   * an update to this data structure, which in turn my propagate to other distributed processes.
-   *
-   * @param cursor
-   */
-  public void addGraphCursor(GraphCursor cursor) {
-    graphCursors.put(cursor.getName(), cursor.getHistory());
-  }
 
-  public GraphCursor getGraphCursor(String cursorName) {
-    IList<GraphCursor.HistoryItem> cursorHistory = graphCursors.get(cursorName);
-    return cursorHistory.get(cursorHistory.size() - 1).getAssociatedCursor();
-  }
-
-
-  public Map<String, GraphCursor> getGraphCursors() {
-    Map<String, GraphCursor> currentPositions = new HashMap<>();
-    for (Map.Entry<String, IList<GraphCursor.HistoryItem>> entry : graphCursors.entrySet()) {
-      currentPositions.put(entry.getKey(), getGraphCursor(entry.getKey()));
-    }
-    return currentPositions;
-  }
 
   public ClassLoader getClassLoader() {
     return classLoader;
@@ -178,11 +152,15 @@ public class EntanglementRuntime {
   }
 
   public GraphCursor getCurrentCursor() {
-    return currentCursor;
+    return cursorRegistry.getCursorCurrentPosition(currentCursorName);
   }
 
-  public void setCurrentCursor(GraphCursor currentCursor) {
-    this.currentCursor = currentCursor;
+  public String getCurrentCursorName() {
+    return currentCursorName;
+  }
+
+  public void setCurrentCursorName(String currentCursorName) {
+    this.currentCursorName = currentCursorName;
   }
 
   public IMap<String, GraphConnectionDetails> getGraphConnectionDetails() {
@@ -191,5 +169,9 @@ public class EntanglementRuntime {
 
   public HazelcastInstance getHzInstance() {
     return hzInstance;
+  }
+
+  public GraphCursorRegistry getCursorRegistry() {
+    return cursorRegistry;
   }
 }

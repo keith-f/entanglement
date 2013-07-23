@@ -26,7 +26,6 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.GraphConnection;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.scalesinformatics.uibot.BotLogger;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -51,7 +50,6 @@ import java.util.logging.Logger;
  */
 public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
-  private static final String HZ_LIST_PREFIX = GraphCursor.class.getSimpleName() +":";
 
   public static class NodeEdgeNodeTuple implements Serializable {
     private DBObject rawSourceNode;
@@ -102,162 +100,115 @@ public class GraphCursor implements Serializable {
     DEAD_END;
   }
 
-  /**
-   * An item in a list of graph location histories. A history item represents a graph cursor movement from one node
-   * to another node. The following fields are present:
-   * <ul>
-   *   <li>movementType - the reason why this history item exists. Examples: the initial starting point;
-   *   a step via a particular edge type; a step to a particular node type.</li>
-   *   <li>parameters - any parameters that were specified at the time of the move. This might be a node or edge type
-   *   name, or a custom MongoDB query. Parameters are mostly for debugging/provenance and only need to be human-readable.</li>
-   *   <li>destination - the coordinate of the node that we eventually ended up at.</li>
-   *   <li>via - the keyset of the Edge that the cursor travelled along in order to reach the <code>destination</code>
-   *   (assuming that the cursor travelled via an edge, and didn't 'jump' to its destination).</li>
-   *   <li>associatedCursor (optional) - the GraphCursor object associated with this move.</li>
-   * </ul>
-   */
-  public static class HistoryItem implements Serializable {
-    private MovementTypes movementType;
-    private Map<String, Object> parameters;
-    private EntityKeys<? extends Edge> via;
-    private DestinationType destinationType;
-    private EntityKeys<? extends Node> destination;
-    private GraphCursor associatedCursor;
+  private transient boolean autoRecord;
+  //Used when autoRecord is true.
+  private transient HazelcastInstance hzInstance;
 
-
-    public HistoryItem(MovementTypes movementType, Map<String, Object> parameters) {
-      this.movementType = movementType;
-      this.parameters = parameters;
-      if (this.parameters == null) {
-        this.parameters = new HashMap<>();
-      }
-      setDestination(null);
-    }
-
-    public HistoryItem(MovementTypes movementType, Map<String, Object> parameters,
-                       EntityKeys<? extends Edge> via, EntityKeys<? extends Node> destination) {
-      this.movementType = movementType;
-      this.parameters = parameters;
-      if (this.parameters == null) {
-        this.parameters = new HashMap<>();
-      }
-      this.via = via;
-      setDestination(destination);
-
-    }
-
-    public void putParameter(String name, Object value) {
-      parameters.put(name, value);
-    }
-
-    @Override
-    public String toString() {
-      return "HistoryItem{" +
-          "movementType=" + movementType +
-          ", destination=" + destination +
-          ", parameters=" + parameters +
-          '}';
-    }
-
-    public MovementTypes getMovementType() {
-      return movementType;
-    }
-
-    public void setMovementType(MovementTypes movementType) {
-      this.movementType = movementType;
-    }
-
-    public Map<String, Object> getParameters() {
-      return parameters;
-    }
-
-    public void setParameters(Map<String, Object> parameters) {
-      this.parameters = parameters;
-    }
-
-    public EntityKeys<? extends Node> getDestination() {
-      return destination;
-    }
-
-    public void setDestination(EntityKeys<? extends Node> destination) {
-      this.destination = destination;
-      if (destination == null) {
-        destinationType = DestinationType.DEAD_END;
-      } else {
-        destinationType = DestinationType.NODE;
-      }
-    }
-
-    public GraphCursor getAssociatedCursor() {
-      return associatedCursor;
-    }
-
-    public void setAssociatedCursor(GraphCursor associatedCursor) {
-      this.associatedCursor = associatedCursor;
-    }
-
-    public EntityKeys<? extends Edge> getVia() {
-      return via;
-    }
-
-    public void setVia(EntityKeys<? extends Edge> via) {
-      this.via = via;
-    }
-
-    public DestinationType getDestinationType() {
-      return destinationType;
-    }
-
-  }
 
   private final String name;
-  private final IList<HistoryItem> history;
   private final int cursorHistoryIdx;
-  private final EntityKeys<? extends Node> currentNode;
 
-  public GraphCursor(HazelcastInstance hzInstance, String cursorName, EntityKeys<? extends Node> startNode)
+  /**
+   * The reason why this history item exists. Examples: the initial starting point;
+   * a step via a particular edge type; a step to a particular node type.
+   */
+  private final MovementTypes movementType;
+
+  /**
+   * The coordinate of the node that we ended up at.
+   */
+  private final EntityKeys<? extends Node> position;
+
+  private final DestinationType destinationType;
+
+  /**
+   * The keyset of the Edge that the cursor travelled along in order to reach the <code>destination</code>
+   * (assuming that the cursor travelled via an edge, and didn't 'jump' to its destination).
+   */
+  private final EntityKeys<? extends Edge> arrivedVia;
+
+  /**
+   * Any parameters that were specified at the time of the move. This might be a node or edge type name, or a
+   * custom MongoDB query. Parameters are mostly for debugging/provenance and only need to be human-readable.
+   */
+  private final Map<String, Object> parameters;
+
+
+
+  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
       throws GraphCursorException {
     this.name = cursorName;
-    this.currentNode = startNode;
-    this.history = hzInstance.getList(String.format("%s%s", HZ_LIST_PREFIX, cursorName));
+    this.position = startNode;
+    this.movementType = MovementTypes.START_POSITION;
+    this.arrivedVia = null;
+    this.parameters = null;
     cursorHistoryIdx = 0;
-    addHistoryItemForThisLocation(null, new HistoryItem(MovementTypes.START_POSITION, null, null, currentNode));
+
+    if (startNode == null) {
+      destinationType = DestinationType.DEAD_END;
+    } else {
+      destinationType = DestinationType.NODE;
+    }
   }
 
 
-  protected GraphCursor(String cursorName, GraphCursor previousLocation, HistoryItem currentLocation)
+  protected GraphCursor(String cursorName, MovementTypes movementType,
+                        GraphCursor previousLocation, EntityKeys<? extends Edge> arrivedVia, EntityKeys<? extends Node> newPosition,
+                        Map<String, Object> parameters)
       throws GraphCursorException {
     this.name = cursorName;
-    this.currentNode = currentLocation.getDestination();
-    this.history = previousLocation.getHistory();
+    this.position = newPosition;
+    this.movementType = movementType;
+    this.arrivedVia = arrivedVia;
+    this.parameters = parameters;
     cursorHistoryIdx = previousLocation.getCursorHistoryIdx() + 1;
-    addHistoryItemForThisLocation(previousLocation, currentLocation);
-  }
 
-  private void addHistoryItemForThisLocation(GraphCursor previousLocation, HistoryItem currentLocation)
-      throws GraphCursorException {
-
-    if (previousLocation != null && cursorHistoryIdx != history.size()) {
-      throw new GraphCursorException("You have attempted to a step from the same GraphCursor ("+previousLocation+") " +
-          "instance more than once, which is not currently possible with current linear history implementation.");
+    if (newPosition == null) {
+      destinationType = DestinationType.DEAD_END;
+    } else {
+      destinationType = DestinationType.NODE;
     }
-
-    this.history.add(currentLocation);
-    currentLocation.setAssociatedCursor(this);
   }
+
+
 
 
   /*
    * Utilities
    */
-//  public <T> T deserialise(DBObject rawObject, Class<T> beanType) throws GraphCursorException {
-//    try {
-//      return m.deserialize(rawObject, beanType);
-//    } catch (DbObjectMarshallerException e) {
-//      throw new GraphCursorException("Failed to deserialise to type: "
-//          +beanType.getName()+" from doc: "+rawObject.toString(), e);
-//    }
-//  }
+
+  /**
+   * A convenience method that records this GraphCursor in a distributed history, and notifies other processes
+   * of the cursor's new position. You should call this method after every cursor movement if this cursor is a
+   * distributed cursor. Alternatively, you can call <code>setAutoRecordContext</code>, in which case the movement
+   * history is recorded after every step automatically.
+   * @param hzInstance
+   */
+  public void recordHistoryAndNotify(HazelcastInstance hzInstance) {
+    recordHistoryAndNotify(hzInstance, this);
+  }
+
+  /**
+   * After calling this method, all future GraphCursor movements will be recorded, and listeners notified automatically.
+   * @param hzInstance
+   */
+  public void setAutoRecordContext(HazelcastInstance hzInstance) {
+    autoRecord = true;
+    this.hzInstance = hzInstance;
+  }
+
+  private void performAutorecord(GraphCursor cursor) {
+    if (autoRecord && hzInstance != null) {
+      recordHistoryAndNotify(hzInstance, cursor);
+    }
+  }
+
+  private void recordHistoryAndNotify(HazelcastInstance hzInstance, GraphCursor cursor) {
+    //Update current position and history for this named cursor
+    hzInstance.getMap(GraphCursorRegistry.HZ_CURSOR_POSITIONS_MAP).put(name, cursor);
+    hzInstance.getMultiMap(GraphCursorRegistry.HZ_CURSOR_HISTORIES_MULTIMAP).put(name, cursor);
+  }
+
 
   /*
    * Cursor movement
@@ -271,8 +222,8 @@ public class GraphCursor implements Serializable {
    * @throws GraphCursorException
    */
   public GraphCursor jump(EntityKeys<? extends Node> destinationNode) throws GraphCursorException {
-    HistoryItem historyItem = new HistoryItem(MovementTypes.JUMP, null, null, destinationNode);
-    GraphCursor cursor = new GraphCursor(name, this, historyItem);
+    GraphCursor cursor = new GraphCursor(name, MovementTypes.JUMP, this, null, destinationNode, null);
+    performAutorecord(cursor);
     return cursor;
   }
 
@@ -295,10 +246,10 @@ public class GraphCursor implements Serializable {
     DBObject edgeObj;
     Edge edge;
     EntityKeys<Node> actualDestination;
-    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesBetweenNodes(currentNode, specifiedDestination)) {
+    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesBetweenNodes(position, specifiedDestination)) {
       if (!dbCursor.hasNext()) {
         // There are no edges between the cursor and the specified destination.
-        throw new GraphCursorException("The following nodes are not directly related: "+currentNode+" and "+specifiedDestination);
+        throw new GraphCursorException("The following nodes are not directly related: "+ position +" and "+specifiedDestination);
       }
 
       // If there happen to be multiple destinations, we don't care here - just pick the first one.
@@ -312,13 +263,13 @@ public class GraphCursor implements Serializable {
       if (fromContainsDestinationSpec && toContainsDestinationSpec) {
         //We couldn't tell the difference between from/to - the specifiedDestination was ambiguous
         throw new GraphCursorException("Found an edge between the cursor and the specified node. However, the edge " +
-            "matched both from/to parts of the edge and was therefore ambiguous. Cursor node: "+currentNode +
+            "matched both from/to parts of the edge and was therefore ambiguous. Cursor node: "+ position +
             "; Specifed destination node: "+specifiedDestination +
             "; Edge was: "+edge);
       }
       actualDestination = fromContainsDestinationSpec ? edge.getFrom() : edge.getTo();
     } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to iterate edges between nodes: "+currentNode+" and "+specifiedDestination, e);
+      throw new GraphCursorException("Failed to iterate edges between nodes: "+ position +" and "+specifiedDestination, e);
     } catch (DbObjectMarshallerException e) {
       throw new GraphCursorException("Failed to deserialise an object", e);
     }
@@ -326,74 +277,73 @@ public class GraphCursor implements Serializable {
     Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
     humanReadableProvenanceParams.put("specifiedDestination", specifiedDestination);
 
-    HistoryItem historyItem = new HistoryItem(
-        MovementTypes.STEP_TO_NODE, humanReadableProvenanceParams, edge.getKeys(), actualDestination);
-    GraphCursor cursor = new GraphCursor(name, this, historyItem);
+    GraphCursor cursor = new GraphCursor(
+        name, MovementTypes.STEP_TO_NODE, this, edge.getKeys(), actualDestination, humanReadableProvenanceParams);
     return cursor;
   }
 
 
   //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
-  public GraphCursor stepToFirstNodeOfType(GraphConnection conn, String nodeType) throws GraphCursorException {
-    DbObjectMarshaller m = conn.getMarshaller();
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("nodeType", nodeType);
-    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, parameters);
-
-    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(currentNode, nodeType)) {
-      if (!edgeItr.hasNext()) {
-        return new GraphCursor(name, this, historyItem);
-      }
-      DBObject edgeObj = edgeItr.next();
-      edgeItr.close();
-
-      Edge edge = m.deserialize(edgeObj, Edge.class);
-      historyItem.setVia(edge.getKeys());
-      historyItem.setDestination(edge.getTo());
-      return new GraphCursor(name, this, historyItem);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to deserialise object.", e);
-    }
-  }
+//  public GraphCursor stepToFirstNodeOfType(GraphConnection conn, String nodeType) throws GraphCursorException {
+//    DbObjectMarshaller m = conn.getMarshaller();
+//    Map<String, Object> parameters = new HashMap<>();
+//    parameters.put("nodeType", nodeType);
+//    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, parameters);
+//
+//    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, nodeType)) {
+//      if (!edgeItr.hasNext()) {
+//        return new GraphCursor(name, this, historyItem);
+//      }
+//      DBObject edgeObj = edgeItr.next();
+//      edgeItr.close();
+//
+//      Edge edge = m.deserialize(edgeObj, Edge.class);
+//      historyItem.setVia(edge.getKeys());
+//      historyItem.setDestination(edge.getTo());
+//      return new GraphCursor(name, this, historyItem);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to deserialise object.", e);
+//    }
+//  }
 
   //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
-  public GraphCursor stepViaFirstEdgeOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
-    DbObjectMarshaller m = conn.getMarshaller();
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("edgeType", edgeType);
-    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, parameters);
-
-
-    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNode(edgeType, currentNode)) {
-      if (!edgeItr.hasNext()) {
-        return new GraphCursor(name, this, historyItem);
-      }
-      DBObject edgeObj = edgeItr.next();
-
-      Edge edge = m.deserialize(edgeObj, Edge.class);
-      historyItem.setVia(edge.getKeys());
-      historyItem.setDestination(edge.getTo());
-      return new GraphCursor(name, this, historyItem);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to deserialise object.", e);
-    }
-  }
+//  public GraphCursor stepViaFirstEdgeOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
+//    DbObjectMarshaller m = conn.getMarshaller();
+//    Map<String, Object> parameters = new HashMap<>();
+//    parameters.put("edgeType", edgeType);
+//    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, parameters);
+//
+//
+//    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNode(edgeType, position)) {
+//      if (!edgeItr.hasNext()) {
+//        return new GraphCursor(name, this, historyItem);
+//      }
+//      DBObject edgeObj = edgeItr.next();
+//
+//      Edge edge = m.deserialize(edgeObj, Edge.class);
+//      historyItem.setVia(edge.getKeys());
+//      historyItem.setDestination(edge.getTo());
+//      return new GraphCursor(name, this, historyItem);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to deserialise object.", e);
+//    }
+//  }
 
   /*
    * Cursor queries
    */
 
   public boolean isAtDeadEnd() {
-    return currentNode == null;
+    return position == null;
   }
 
   public boolean exists(GraphConnection conn) throws GraphCursorException {
     try {
-      return conn.getNodeDao().existsByKey(currentNode);
+      return conn.getNodeDao().existsByKey(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query database", e);
     }
@@ -401,7 +351,7 @@ public class GraphCursor implements Serializable {
 
   public DBObject resolve(GraphConnection conn)  throws GraphCursorException {
     try {
-      DBObject nodeDoc = conn.getNodeDao().getByKey(currentNode);
+      DBObject nodeDoc = conn.getNodeDao().getByKey(position);
       return nodeDoc;
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query database", e);
@@ -423,28 +373,28 @@ public class GraphCursor implements Serializable {
    */
   public DBCursor iterateIncomingEdges(GraphConnection conn) throws GraphCursorException {
     try {
-      return conn.getEdgeDao().iterateEdgesToNode(currentNode);
+      return conn.getEdgeDao().iterateEdgesToNode(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
   public long countIncomingEdges(GraphConnection conn) throws GraphCursorException {
     try {
-      return conn.getEdgeDao().countEdgesToNode(currentNode);
+      return conn.getEdgeDao().countEdgesToNode(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
   public DBCursor iterateOutgoingEdges(GraphConnection conn) throws GraphCursorException {
     try {
-      return conn.getEdgeDao().iterateEdgesFromNode(currentNode);
+      return conn.getEdgeDao().iterateEdgesFromNode(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
   }
   public long countOutgoingEdges(GraphConnection conn) throws GraphCursorException {
     try {
-      return conn.getEdgeDao().countEdgesFromNode(currentNode);
+      return conn.getEdgeDao().countEdgesFromNode(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
@@ -455,7 +405,7 @@ public class GraphCursor implements Serializable {
    */
   public DBCursor iterateOutgoingEdgesOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
     try {
-      return conn.getEdgeDao().iterateEdgesFromNode(edgeType, currentNode);
+      return conn.getEdgeDao().iterateEdgesFromNode(edgeType, position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query graph.", e);
     }
@@ -465,7 +415,7 @@ public class GraphCursor implements Serializable {
   public Iterable<EntityKeys<? extends Node>> iterateOutgoingNodeRefs(GraphConnection conn) throws GraphCursorException {
     try {
       DbObjectMarshaller m = conn.getMarshaller();
-      DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(currentNode);
+      DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(position);
 //      return new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class);
       /*
        * MakeIterable is required here because KeyExtractingIterable can only provide Iterable<EntityKeys>,
@@ -498,7 +448,7 @@ public class GraphCursor implements Serializable {
       public Iterator<NodeEdgeNodeTuple> iterator() {
         final DBCursor edgeItr;
         try {
-          edgeItr = conn.getEdgeDao().iterateEdgesFromNode(currentNode);
+          edgeItr = conn.getEdgeDao().iterateEdgesFromNode(position);
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to query database", e);
         }
@@ -522,7 +472,7 @@ public class GraphCursor implements Serializable {
               NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
               return nodeEdgeNode;
             } catch (Exception e) {
-              throw new RuntimeException("Failed to iterate destination nodes for: "+ currentNode, e);
+              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
             }
 
           }
@@ -556,7 +506,7 @@ public class GraphCursor implements Serializable {
       public Iterator<NodeEdgeNodeTuple> iterator() {
         final DBCursor edgeItr;
         try {
-          edgeItr = conn.getEdgeDao().iterateEdgesToNode(currentNode);
+          edgeItr = conn.getEdgeDao().iterateEdgesToNode(position);
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to query database", e);
         }
@@ -580,7 +530,7 @@ public class GraphCursor implements Serializable {
               NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
               return nodeEdgeNode;
             } catch (Exception e) {
-              throw new RuntimeException("Failed to iterate destination nodes for: "+ currentNode, e);
+              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
             }
 
           }
@@ -602,17 +552,8 @@ public class GraphCursor implements Serializable {
    *
    * @return the EntityKeys object originally specified in the constructor for this GraphCursor.
    */
-  public EntityKeys<? extends Node> getCurrentNode() {
-    return currentNode;
-  }
-
-  /**
-   * Returns the entire path that the named cursor has taken.
-   *
-   * @return
-   */
-  public IList<HistoryItem> getHistory() {
-    return history;
+  public EntityKeys<? extends Node> getPosition() {
+    return position;
   }
 
   /**
@@ -631,4 +572,21 @@ public class GraphCursor implements Serializable {
   public String getName() {
     return name;
   }
+
+  public MovementTypes getMovementType() {
+    return movementType;
+  }
+
+  public DestinationType getDestinationType() {
+    return destinationType;
+  }
+
+  public EntityKeys<? extends Edge> getArrivedVia() {
+    return arrivedVia;
+  }
+
+  public Map<String, Object> getParameters() {
+    return parameters;
+  }
+
 }

@@ -45,6 +45,10 @@ public class GraphFrame {
     frame.setVisible(true);
   }
 
+  public void displayNewGraph(String title, EntanglementMxGraph graph) {
+    graphComponent.setGraph(graph);
+  }
+
   public JFrame getFrame() {
     return frame;
   }

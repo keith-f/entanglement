@@ -60,7 +60,7 @@ public class EntanglementIrcCommandUtils {
 
     GraphCursor graphCursor = null;
     if (cursorName != null) {
-      graphCursor = runtime.getGraphCursor(cursorName);
+      graphCursor = runtime.getCursorRegistry().getCursorCurrentPosition(cursorName);
     }
     if (graphCursor == null) {
       graphCursor = runtime.getCurrentCursor();

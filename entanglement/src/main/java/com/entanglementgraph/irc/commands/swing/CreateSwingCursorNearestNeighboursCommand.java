@@ -17,14 +17,11 @@
 
 package com.entanglementgraph.irc.commands.swing;
 
-import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
+import com.entanglementgraph.cursor.GraphCursorException;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
-import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jgraphx.EntanglementMxGraph;
 import com.entanglementgraph.visualisation.jgraphx.GraphFrame;
@@ -34,20 +31,13 @@ import com.mxgraph.layout.mxFastOrganicLayout;
 import com.mxgraph.layout.mxOrganicLayout;
 import com.mxgraph.layout.orthogonal.mxOrthogonalLayout;
 import com.mxgraph.view.mxGraph;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import org.jibble.pircbot.Colors;
 
-import javax.swing.*;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
 
@@ -59,7 +49,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
+public class CreateSwingCursorNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -75,11 +65,12 @@ public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand
 //    params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
     params.add(new OptionalParam("maxUids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("track", Boolean.class, Boolean.FALSE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
 
     return params;
   }
 
-  public CreateSwingCursorTrackerCommand() {
+  public CreateSwingCursorNearestNeighboursCommand() {
     super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
 
@@ -90,27 +81,19 @@ public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand
 //    boolean verbose = parsedArgs.get("verbose").parseValueAsBoolean();
     int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
     int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
+    boolean track = parsedArgs.get("track").parseValueAsBoolean();
 
 
     boolean isAtDeadEnd = cursor.isAtDeadEnd();
     int historyIdx = cursor.getCursorHistoryIdx();
 
     try {
-      EntanglementMxGraph mxGraph = new EntanglementMxGraph();
-
-      GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
-      populator.populateImmediateNeighbourhood(graphConn, cursor);
-
-//      doOrganicLayout(mxGraph);
-      doFastOrganicLayout(mxGraph);
-
-      GraphFrame frame = new GraphFrame(cursorName, mxGraph);
-      frame.getFrame().setVisible(true);
+      GraphFrame frame = displayGraphInNewFrame();
 
 
       Message msg = new Message(channel);
 
-      EntityKeys<? extends Node> currentPos = cursor.getCurrentNode();
+      EntityKeys<? extends Node> currentPos = cursor.getPosition();
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
@@ -126,6 +109,27 @@ public class CreateSwingCursorTrackerCommand extends AbstractEntanglementCommand
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
+  }
+
+  private GraphFrame displayGraphInNewFrame() throws JGraphXPopulationException, GraphCursorException {
+    EntanglementMxGraph mxGraph = new EntanglementMxGraph();
+    GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
+    populator.populateImmediateNeighbourhood(graphConn, cursor);
+//      doOrganicLayout(mxGraph);
+    doFastOrganicLayout(mxGraph);
+    GraphFrame frame = new GraphFrame(cursorName, mxGraph);
+    frame.displayNewGraph(cursor.getName(), mxGraph);
+    frame.getFrame().setVisible(true);
+    return frame;
+  }
+
+  private void updateDisplay(GraphFrame frame) throws JGraphXPopulationException, GraphCursorException {
+    EntanglementMxGraph mxGraph = new EntanglementMxGraph();
+    GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
+    populator.populateImmediateNeighbourhood(graphConn, cursor);
+//      doOrganicLayout(mxGraph);
+    doFastOrganicLayout(mxGraph);
+    frame.displayNewGraph(cursor.getName(), mxGraph);
   }
 
   private void doOrganicLayout(mxGraph graph) {

@@ -81,17 +81,15 @@ public class CursorStepToNode extends AbstractEntanglementCommand<EntanglementRu
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {
-      cursor = cursor.stepToNode(graphConn, newLocation);
-
-      GraphCursor.HistoryItem current = cursor.getHistory().get(cursor.getCursorHistoryIdx());
-      GraphCursor.HistoryItem previous = cursor.getHistory().get(cursor.getCursorHistoryIdx()-1);
+      GraphCursor previous = cursor;
+      GraphCursor current = cursor.stepToNode(graphConn, newLocation);
 
       String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
           formatCursorName(cursor.getName()),
           Colors.REVERSE, Colors.NORMAL,
-          formatNodeKeysetShort(previous.getDestination(), maxUids, maxNames),
+          formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames),
           Colors.REVERSE, Colors.NORMAL,
-          formatNodeKeysetShort(current.getDestination(), maxUids, maxNames),
+          formatNodeKeysetShort(current.getPosition(), maxUids, maxNames),
           formatMovementType(current.getMovementType()));
 
       Message result = new Message(channel);

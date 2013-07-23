@@ -17,23 +17,18 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
-import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
@@ -89,7 +84,7 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
 
       Message msg = new Message(channel);
 
-      EntityKeys<? extends Node> currentPos = cursor.getCurrentNode();
+      EntityKeys<? extends Node> currentPos = cursor.getPosition();
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
@@ -106,7 +101,7 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
          */
         msg.println("* Incoming edges: %s", format(cursor.countIncomingEdges(graphConn)));
         if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getCurrentNode());
+          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
           msg.println("* Incoming edge types: %s", format(typeToCount));
         }
         if (verbose) {
@@ -123,7 +118,7 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
          */
         msg.println("* Outgoing edges: %s", format(cursor.countOutgoingEdges(graphConn)));
         if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getCurrentNode());
+          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
           msg.println("* Outgoing edge types: %s", format(typeToCount));
         }
         if (verbose) {
