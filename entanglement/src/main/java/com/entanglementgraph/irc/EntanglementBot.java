@@ -44,6 +44,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
   private static final String USAGE = "Usage:\n"
       + "  * Nickname\n"
       + "  * Server\n"
+      + "  * Server password\n"
       + "  * Hazelcast cluster name\n"
       + "  * Channel (optional)\n";
 
@@ -55,10 +56,11 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
 
     String nick = args[0];
     String server = args[1];
-    String hazelcastClusterName = args[2];
+    String serverPassword = args[2];
+    String hazelcastClusterName = args[3];
     String channel = null;
-    if (args.length == 4) {
-      channel = args[3];
+    if (args.length == 5) {
+      channel = args[4];
     }
 
     //FIXME this should work for now, but do this better...
@@ -86,7 +88,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     bot.setVerbose(true);
 
     // Connect to the IRC server.
-    bot.connect(server);
+    bot.connect(server, 6667, serverPassword);
 
     if (channel != null) {
       bot.joinChannel(channel);
