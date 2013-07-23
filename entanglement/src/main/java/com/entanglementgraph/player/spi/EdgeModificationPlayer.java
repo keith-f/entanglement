@@ -155,7 +155,7 @@ public class EdgeModificationPlayer
     try {
       // Edit existing node - need to perform a merge based on
       BasicDBObject existing = edgeDao.getByKey(reqKeyset);
-      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
+//      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       EdgeMerger merger = new EdgeMerger(marshaller);
       BasicDBObject updated = merger.merge(command.getMergePol(), existing, reqSerializedNode);
