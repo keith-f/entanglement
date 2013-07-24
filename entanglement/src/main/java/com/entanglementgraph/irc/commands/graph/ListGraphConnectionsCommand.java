@@ -66,7 +66,7 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
         GraphConnectionDetails details = entry.getValue();
         String currentText = current == entry.getKey() ? CURRENT_GRAPH_TXT : "";
         msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
-            details.getHostname(),
+            details.getPoolName(),
             details.getDatabase(),
             details.getGraphName(), details.getGraphBranch(),
             currentText);

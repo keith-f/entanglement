@@ -21,13 +21,13 @@ import java.io.Serializable;
 
 /**
  * Holds connection details that could be used to create a GraphConnection to a specified Entanglement graph
- * stored within a MongoDB database.
+ * stored within a named MongoDB cluster/connection pool.
  *
  * @author Keith Flanagan
  */
 public class GraphConnectionDetails implements Serializable {
 
-  private String hostname;
+  private String poolName;
   private String database;
   private String username;
   private String password;
@@ -38,8 +38,8 @@ public class GraphConnectionDetails implements Serializable {
   public GraphConnectionDetails() {
   }
 
-  public GraphConnectionDetails(String hostname, String database, String graphName, String graphBranch) {
-    this.hostname = hostname;
+  public GraphConnectionDetails(String poolName, String database, String graphName, String graphBranch) {
+    this.poolName = poolName;
     this.database = database;
     this.graphName = graphName;
     this.graphBranch = graphBranch;
@@ -48,7 +48,7 @@ public class GraphConnectionDetails implements Serializable {
   @Override
   public String toString() {
     return "GraphConnectionDetails{" +
-        "hostname='" + hostname + '\'' +
+        "poolName='" + poolName + '\'' +
         ", database='" + database + '\'' +
         ", username='" + username + '\'' +
         ", password='" + password + '\'' +
@@ -57,12 +57,12 @@ public class GraphConnectionDetails implements Serializable {
         '}';
   }
 
-  public String getHostname() {
-    return hostname;
+  public String getPoolName() {
+    return poolName;
   }
 
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setPoolName(String poolName) {
+    this.poolName = poolName;
   }
 
   public String getDatabase() {

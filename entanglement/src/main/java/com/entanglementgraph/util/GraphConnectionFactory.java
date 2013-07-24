@@ -61,22 +61,22 @@ import java.util.logging.Logger;
 public class GraphConnectionFactory {
   private static final Logger logger = Logger.getLogger(GraphConnectionFactory.class.getName());
 
-  private static final Map<String, MongoClient> mongoClusters = new HashMap<>();
+  private static final Map<String, MongoClient> mongoPools = new HashMap<>();
 
-  public static MongoClient registerNamedCluster(String clusterName, ServerAddress... replicaServers)
+  public static MongoClient registerNamedPool(String poolName, ServerAddress... replicaServers)
       throws GraphConnectionFactoryException {
-    synchronized (mongoClusters) {
-      if (mongoClusters.containsKey(clusterName)) {
+    synchronized (mongoPools) {
+      if (mongoPools.containsKey(poolName)) {
         logger.info(String.format("A MongoDB cluster with the name: %s already exists. Closing existing pool, " +
-            "and reconfiguring with new server set: %s", clusterName, Arrays.asList(replicaServers)));
-        MongoClient pool = mongoClusters.get(clusterName);
+            "and reconfiguring with new server set: %s", poolName, Arrays.asList(replicaServers)));
+        MongoClient pool = mongoPools.get(poolName);
         pool.close();
       }
 
       try {
         MongoClient pool = new MongoClient(Arrays.asList(replicaServers));
         pool.setWriteConcern(WriteConcern.SAFE);
-        mongoClusters.put(clusterName, pool);
+        mongoPools.put(poolName, pool);
         return pool;
       }
       catch(Exception e) {
@@ -85,15 +85,15 @@ public class GraphConnectionFactory {
     }
   }
 
-  public static MongoClient getNamedCluster(String clusterName) {
-    synchronized (mongoClusters) {
-      return mongoClusters.get(clusterName);
+  public static MongoClient getNamedPool(String poolName) {
+    synchronized (mongoPools) {
+      return mongoPools.get(poolName);
     }
   }
 
   private final ClassLoader classLoader;
   private final MongoClient connectionPool;
-  private final String clusterName;
+  private final String poolName;
   private final String databaseName;
 
   private DbObjectMarshaller marshaller;
@@ -102,11 +102,11 @@ public class GraphConnectionFactory {
     this(GraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
   }
 
-  public GraphConnectionFactory(ClassLoader classLoader, String clusterName, String databaseName) {
+  public GraphConnectionFactory(ClassLoader classLoader, String poolName, String databaseName) {
     this.classLoader = classLoader;
     this.marshaller = ObjectMarshallerFactory.create(classLoader);
-    this.connectionPool = getNamedCluster(clusterName);
-    this.clusterName = clusterName;
+    this.connectionPool = getNamedPool(poolName);
+    this.poolName = poolName;
     this.databaseName = databaseName;
   }
 
@@ -115,7 +115,7 @@ public class GraphConnectionFactory {
       logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName + "/" + graphBranch);
 
       GraphConnection connection = new GraphConnection();
-      connection.setClusterName(clusterName);
+      connection.setPoolName(poolName);
       connection.setDatabaseName(databaseName);
 
       // Underlying connection to MongoDB

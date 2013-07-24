@@ -18,7 +18,6 @@
 package com.entanglementgraph.util;
 
 import com.mongodb.DB;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
@@ -36,7 +35,7 @@ public class GraphConnection {
   private MongoClient pool;
   private DB db;
 
-  private String clusterName;
+  private String poolName;
   private String databaseName;
 
   private String graphName;
@@ -124,12 +123,12 @@ public class GraphConnection {
     this.marshaller = marshaller;
   }
 
-  public String getClusterName() {
-    return clusterName;
+  public String getPoolName() {
+    return poolName;
   }
 
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
+  public void setPoolName(String poolName) {
+    this.poolName = poolName;
   }
 
   public String getDatabaseName() {

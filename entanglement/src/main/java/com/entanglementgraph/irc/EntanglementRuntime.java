@@ -118,7 +118,7 @@ public class EntanglementRuntime {
     if (details == null) {
       throw new UserException("Unknown connection name: "+connName);
     }
-    GraphConnectionFactory gcf = new GraphConnectionFactory(classLoader, details.getHostname(), details.getDatabase());
+    GraphConnectionFactory gcf = new GraphConnectionFactory(classLoader, details.getPoolName(), details.getDatabase());
     try {
       return gcf.connect(details.getGraphName(), details.getGraphBranch());
     } catch (GraphConnectionFactoryException e) {

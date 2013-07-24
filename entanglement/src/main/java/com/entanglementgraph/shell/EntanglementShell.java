@@ -31,8 +31,6 @@ import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
-import com.scalesinformatics.mongodb.MongoDbFactory;
-import com.scalesinformatics.mongodb.MongoDbFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.util.UidGenerator;
@@ -66,6 +64,8 @@ import com.entanglementgraph.util.GraphConnectionFactoryException;
  * useful for debugging graph operations or for manipulating a live system.
  * 
  * @author Keith Flanagan
+ * @deprecated This command line interface is probably no longer functional. You should probably use the IRC interface
+ * instead.
  */
 public class EntanglementShell
 {
@@ -160,13 +160,13 @@ public class EntanglementShell
   }
   
   @Command
-  public void reconnect() throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
-    String hostname = state.getProperties().get(PROP_HOSTNAME);
+  public void reconnect() throws RevisionLogException, GraphConnectionFactoryException {
+    String poolName = state.getProperties().get(PROP_MONGODB_POOL_NAME);
     String database = state.getProperties().get(PROP_DB_NAME);
     String graphName = state.getProperties().get(PROP_GRAPH_NAME);
     String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
 
-    factory = new GraphConnectionFactory(classLoader, hostname, database);
+    factory = new GraphConnectionFactory(classLoader, poolName, database);
     GraphConnection connection = factory.connect(graphName, branchName);
     graphConn = connection;
 
@@ -312,20 +312,20 @@ public class EntanglementShell
     System.out.println("Done.");
   }
 
-  @Command
-  public void startLogger(
-      @Param(name="outputFile") File outputFile,
-      @Param(name="hostname") String hostname,
-      @Param(name="database") String database)
-      throws IOException, MongoDbFactoryException {
-    MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
-    Mongo mongo = dbFactory.createMongoConnection();
-    DB db = mongo.getDB(database);
-    BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, true));
-    bw.write(PerformanceLogger.getHeader());
-    PerformanceLogger perfLogger = new PerformanceLogger(mongo, db, bw);
-    exe.scheduleWithFixedDelay(perfLogger, 0, 120 * 1000, TimeUnit.MILLISECONDS);
-  }
+//  @Command
+//  public void startLogger(
+//      @Param(name="outputFile") File outputFile,
+//      @Param(name="hostname") String hostname,
+//      @Param(name="database") String database)
+//      throws IOException, MongoDbFactoryException {
+//    MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
+//    Mongo mongo = dbFactory.createMongoConnection();
+//    DB db = mongo.getDB(database);
+//    BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, true));
+//    bw.write(PerformanceLogger.getHeader());
+//    PerformanceLogger perfLogger = new PerformanceLogger(mongo, db, bw);
+//    exe.scheduleWithFixedDelay(perfLogger, 0, 120 * 1000, TimeUnit.MILLISECONDS);
+//  }
   
  
   

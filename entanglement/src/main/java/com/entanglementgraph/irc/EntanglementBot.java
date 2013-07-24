@@ -117,6 +117,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     createCustomUserObjectForBotState(null, getGlobalState());
 
 
+    addCommand("connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
     addCommand("connect-graph", ConnectGraphCommand.class);
     addCommand("create-edge", CreateEdgeCommand.class);
     addCommand("create-node", CreateNodeCommand.class);

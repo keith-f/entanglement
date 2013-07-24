@@ -78,7 +78,7 @@ public class RevisionLogDirectToMongoDbImpl
   private final GraphConnection graphConn;
 
 //  private final HazelcastInstance hz;
-  private final Mongo m;
+  private final MongoClient m;
   private final DB db;
   
   private final DBCollection revLogCol;
@@ -91,7 +91,7 @@ public class RevisionLogDirectToMongoDbImpl
     this.listeners = new HashSet<>();
 
     this.graphConn = graphConn;
-    this.m = graphConn.getMongo();
+    this.m = graphConn.getPool();
     this.db = graphConn.getDb();
 
     marshaller = ObjectMarshallerFactory.create(graphConn.getClassLoader());

@@ -17,24 +17,18 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
-import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.shell.EntanglementStatePropertyNames;
-import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.Message;
+import com.scalesinformatics.uibot.OptionalParam;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.scalesinformatics.mongodb.MongoDbFactoryException;
-import com.scalesinformatics.util.ExceptionUtils;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -55,10 +49,10 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
-    params.add(new OptionalParam("hostname", String.class,
-        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_HOSTNAME),
-        "The hostname of a MongoDB server. Optional if you have " +
-        "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_HOSTNAME));
+    params.add(new OptionalParam("pool-name", String.class,
+        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_MONGODB_POOL_NAME),
+        "The name of a MongoDB connection pool name (as created by the 'connect MongoDB cluster' command. " +
+        "Optional if you have already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_MONGODB_POOL_NAME));
     params.add(new OptionalParam("database", String.class,
         bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
         "A database located on a MongoDB server. Optional if you have " +

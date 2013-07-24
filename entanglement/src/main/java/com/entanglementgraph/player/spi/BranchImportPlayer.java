@@ -73,7 +73,7 @@ public class BranchImportPlayer
        */
       GraphConnectionFactory connFact = new GraphConnectionFactory(
           graphConnection.getClassLoader(),
-          graphConnection.getMongo().getAddress().getHost(), graphConnection.getDb().getName());
+          graphConnection.getPoolName(), graphConnection.getDb().getName());
 
       GraphConnection sourceGraphConn = connFact.connect(sourceGraphName, sourceGraphBranch);
 
