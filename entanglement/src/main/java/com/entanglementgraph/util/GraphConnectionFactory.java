@@ -27,46 +27,105 @@ import com.entanglementgraph.player.LogPlayerMongoDbImpl;
 import com.entanglementgraph.revlog.RevisionLog;
 import com.entanglementgraph.revlog.RevisionLogDirectToMongoDbImpl;
 import com.entanglementgraph.util.experimental.GraphOpPostCommitPlayer;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
-import com.scalesinformatics.mongodb.MongoDbFactory;
+import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
+/**
+ * This factory class creates <code>GraphConnection</code> objects for accessing your graphs. There are two
+ * aspects to consider:
+ * <ul>
+ *   <li>The <code>GraphConnection</code> contains a reference to a database connection, plus the necessary utilities
+ *   that are associated with object stored in that database (such as ClassLoaders for object marshalling, etc). Each
+ *   <code>GraphConnection</code> should be used by a single thread.</li>
+ *   <li>MongoDB clusters - these are the physical machines that store some or all of a graph. By default, a single
+ *   cluster named 'localhost' is defined for convenience. If you wish to create a <code>GraphConnection</code> for
+ *   a graph stored on a different server/cluster, you'll need to register a new cluster first using the static
+ *   methods below. Registering a cluster will provide you with a <code>MongoClient</code>. These are thread-safe and
+ *   represent a pool of connections. There should be one <code>MongoClient</code> instance per database per JVM.</li>
+ * </ul>
+ *
+ * See the following URLs for more information on creating MongoDB connections:
+ * http://docs.mongodb.org/ecosystem/tutorial/getting-started-with-java-driver/
+ * and
+ * http://api.mongodb.org/java/current/com/mongodb/MongoClient.html
+ * and
+ * http://docs.mongodb.org/ecosystem/drivers/java-concurrency/
+ *
+ * @author Keith Flanagan
+ */
 public class GraphConnectionFactory {
   private static final Logger logger = Logger.getLogger(GraphConnectionFactory.class.getName());
 
+  private static final Map<String, MongoClient> mongoClusters = new HashMap<>();
+
+  public static MongoClient registerNamedCluster(String clusterName, ServerAddress... replicaServers)
+      throws GraphConnectionFactoryException {
+    synchronized (mongoClusters) {
+      if (mongoClusters.containsKey(clusterName)) {
+        logger.info(String.format("A MongoDB cluster with the name: %s already exists. Closing existing pool, " +
+            "and reconfiguring with new server set: %s", clusterName, Arrays.asList(replicaServers)));
+        MongoClient pool = mongoClusters.get(clusterName);
+        pool.close();
+      }
+
+      try {
+        MongoClient pool = new MongoClient(Arrays.asList(replicaServers));
+        pool.setWriteConcern(WriteConcern.SAFE);
+        mongoClusters.put(clusterName, pool);
+        return pool;
+      }
+      catch(Exception e) {
+        throw new GraphConnectionFactoryException("Failed to create MongoDB connection", e);
+      }
+    }
+  }
+
+  public static MongoClient getNamedCluster(String clusterName) {
+    synchronized (mongoClusters) {
+      return mongoClusters.get(clusterName);
+    }
+  }
+
   private final ClassLoader classLoader;
-  private final String hostname;
-  private final String database;
+  private final MongoClient connectionPool;
+  private final String clusterName;
+  private final String databaseName;
 
   private DbObjectMarshaller marshaller;
 
-  public GraphConnectionFactory(String hostname, String database) {
-    this(GraphConnectionFactory.class.getClassLoader(), hostname, database);
+  public GraphConnectionFactory(String clusterName, String databaseName) {
+    this(GraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
   }
 
-  public GraphConnectionFactory(ClassLoader classLoader, String hostname, String database) {
+  public GraphConnectionFactory(ClassLoader classLoader, String clusterName, String databaseName) {
     this.classLoader = classLoader;
-    this.hostname = hostname;
-    this.database = database;
-    marshaller = ObjectMarshallerFactory.create(classLoader);
+    this.marshaller = ObjectMarshallerFactory.create(classLoader);
+    this.connectionPool = getNamedCluster(clusterName);
+    this.clusterName = clusterName;
+    this.databaseName = databaseName;
   }
 
   public GraphConnection connect(String graphName, String graphBranch) throws GraphConnectionFactoryException {
     try {
-      logger.info("Connecting to: " + hostname + "/" + database + ", graph: " + graphName + "/" + graphBranch);
+      logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName + "/" + graphBranch);
 
       GraphConnection connection = new GraphConnection();
+      connection.setClusterName(clusterName);
+      connection.setDatabaseName(databaseName);
 
       // Underlying connection to MongoDB
-      MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
-      Mongo mongo = dbFactory.createMongoConnection();
-      DB db = mongo.getDB(database);
+//      MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
+//      Mongo mongo = dbFactory.createMongoConnection();
+//      DB db = mongo.getDB(database);
+      DB db = connectionPool.getDB(databaseName);
+
       connection.setClassLoader(classLoader);
-      connection.setMongo(mongo);
+      connection.setPool(connectionPool);
       connection.setDb(db);
       connection.setGraphBranch(graphBranch);
       connection.setGraphName(graphName);
@@ -79,8 +138,8 @@ public class GraphConnectionFactory {
 
       RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(connection, revCol);
       connection.setRevisionLog(revLog);
-      NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, mongo, db, nodeCol);
-      EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, mongo, db, edgeCol);
+      NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, connectionPool, db, nodeCol);
+      EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, connectionPool, db, edgeCol);
 
       connection.setEdgeDao(edgeDao);
       connection.setNodeDao(nodeDao);
@@ -98,17 +157,17 @@ public class GraphConnectionFactory {
     }
   }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public static void silentClose(GraphConnection conn) {
-    if (conn == null) {
-      return;
-    }
-    try {
-      conn.getMongo().close();
-    } catch (Exception e) {
-      logger.info("Failed to close connection. Nothing we can do here. Ignoring this problem, but stack trace follows");
-      e.printStackTrace();
-    }
-  }
+//  @SuppressWarnings("UnusedDeclaration")
+//  public static void silentClose(GraphConnection conn) {
+//    if (conn == null) {
+//      return;
+//    }
+//    try {
+//      conn.getMongo().close();
+//    } catch (Exception e) {
+//      logger.info("Failed to close connection. Nothing we can do here. Ignoring this problem, but stack trace follows");
+//      e.printStackTrace();
+//    }
+//  }
 
 }
