@@ -49,14 +49,9 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
-    params.add(new OptionalParam("pool-name", String.class,
-        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_MONGODB_POOL_NAME),
-        "The name of a MongoDB connection pool name (as created by the 'connect MongoDB cluster' command. " +
-        "Optional if you have already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_MONGODB_POOL_NAME));
-    params.add(new OptionalParam("database", String.class,
-        bot.getStateForChannel(channel).getEnvironment().get(EntanglementStatePropertyNames.PROP_DB_NAME),
-        "A database located on a MongoDB server. Optional if you have " +
-        "already specified this in the environment variable: "+EntanglementStatePropertyNames.PROP_DB_NAME));
+    params.add(new RequiredParam("pool-name", String.class,
+        "The name of a MongoDB connection pool name (as created by the 'connect MongoDB cluster' command. "));
+    params.add(new RequiredParam("database", String.class, "A database located within a MongoDB pool."));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
     params.add(new OptionalParam("branch", String.class, "trunk",
         "Name of the branch to use (defaults to 'trunk', if not specified)"));

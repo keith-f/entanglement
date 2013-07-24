@@ -30,7 +30,6 @@ public class EntanglementStatePropertyNames
   /*
    * Special state property names
    */
-  public static String PROP_MONGODB_POOL_NAME = "mongodb_pool_name";
   public static String PROP_DB_NAME = "database_name";
   public static String PROP_GRAPH_NAME = "graph_name";
   public static String PROP_GRAPH_BRANCH_NAME = "graph_branch";

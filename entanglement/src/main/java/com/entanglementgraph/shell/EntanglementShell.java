@@ -159,19 +159,19 @@ public class EntanglementShell
     return text.toString();
   }
   
-  @Command
-  public void reconnect() throws RevisionLogException, GraphConnectionFactoryException {
-    String poolName = state.getProperties().get(PROP_MONGODB_POOL_NAME);
-    String database = state.getProperties().get(PROP_DB_NAME);
-    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
-    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
-
-    factory = new GraphConnectionFactory(classLoader, poolName, database);
-    GraphConnection connection = factory.connect(graphName, branchName);
-    graphConn = connection;
-
-    logger.info("Connected to "+graphName+"/"+branchName+"!");
-  }
+//  @Command
+//  public void reconnect() throws RevisionLogException, GraphConnectionFactoryException {
+//    String poolName = state.getProperties().get(PROP_MONGODB_POOL_NAME);
+//    String database = state.getProperties().get(PROP_DB_NAME);
+//    String graphName = state.getProperties().get(PROP_GRAPH_NAME);
+//    String branchName = state.getProperties().get(PROP_GRAPH_BRANCH_NAME);
+//
+//    factory = new GraphConnectionFactory(classLoader, poolName, database);
+//    GraphConnection connection = factory.connect(graphName, branchName);
+//    graphConn = connection;
+//
+//    logger.info("Connected to "+graphName+"/"+branchName+"!");
+//  }
   
   @Command
   public void listGraphOperations() throws IntrospectionException {
