@@ -67,7 +67,7 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String connectionName = parsedArgs.get("conn").getStringValue();
-    String hostname = parsedArgs.get("hostname").getStringValue();
+    String poolName = parsedArgs.get("pool-name").getStringValue();
     String database = parsedArgs.get("database").getStringValue();
     String graph = parsedArgs.get("graph").getStringValue();
     String branch = parsedArgs.get("branch").getStringValue();
@@ -75,11 +75,11 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     EntanglementRuntime runtime = state.getUserObject();
 
     try {
-      GraphConnectionDetails details = new GraphConnectionDetails(hostname, database, graph, branch);
+      GraphConnectionDetails details = new GraphConnectionDetails(poolName, database, graph, branch);
 //      GraphConnection connection = connect(runtime, hostname, database, graph, branch);
       runtime.registerGraphConnectionDetails(connectionName, details);
       Message result = new Message(channel);
-      result.println("Graph %s on %s is now available with connection name: %s", graph, hostname, connectionName);
+      result.println("Graph %s on %s is now available with connection name: %s", graph, poolName, connectionName);
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
