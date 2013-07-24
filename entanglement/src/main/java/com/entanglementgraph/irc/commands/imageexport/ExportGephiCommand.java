@@ -87,7 +87,7 @@ public class ExportGephiCommand extends AbstractEntanglementCommand<Entanglement
     }
   }
 
-  public static Map<String, Color> parseColoursFromEnvironment(BotState<EntanglementRuntime> state) {
+  public static Map<String, Color> parseColoursFromEnvironment(BotState<? extends EntanglementRuntime> state) {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();
