@@ -49,7 +49,7 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
-    params.add(new RequiredParam("pool-name", String.class,
+    params.add(new RequiredParam("pool", String.class,
         "The name of a MongoDB connection pool name (as created by the 'connect MongoDB cluster' command. "));
     params.add(new RequiredParam("database", String.class, "A database located within a MongoDB pool."));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
@@ -62,7 +62,7 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String connectionName = parsedArgs.get("conn").getStringValue();
-    String poolName = parsedArgs.get("pool-name").getStringValue();
+    String poolName = parsedArgs.get("pool").getStringValue();
     String database = parsedArgs.get("database").getStringValue();
     String graph = parsedArgs.get("graph").getStringValue();
     String branch = parsedArgs.get("branch").getStringValue();

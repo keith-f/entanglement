@@ -52,7 +52,7 @@ public class ConnectMongoDbClusterCommand extends AbstractCommand<EntanglementRu
 
   public List<Param> getParams() {
     List<Param> params = super.getParams();
-    params.add(new RequiredParam("pool-name", String.class, "A unique name to use for this connection pool."));
+    params.add(new RequiredParam("pool", String.class, "A unique name to use for this connection pool."));
     params.add(new RequiredParam("hosts", String.class, "A comma-separated list of hostname:port of the members of the cluster's replica set"));
     return params;
   }
@@ -60,7 +60,7 @@ public class ConnectMongoDbClusterCommand extends AbstractCommand<EntanglementRu
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String poolName = parsedArgs.get("pool-name").getStringValue();
+    String poolName = parsedArgs.get("pool").getStringValue();
     String rawHosts = parsedArgs.get("hosts").getStringValue();
 
 
