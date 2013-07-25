@@ -20,11 +20,9 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.OptionalParam;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -33,6 +31,8 @@ import com.mongodb.BasicDBObject;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -40,7 +40,7 @@ import java.util.List;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
+public class ListEdgesCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -50,12 +50,16 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new OptionalParam("type", String.class, "Specifies the type of graph entity to display"));
     params.add(new OptionalParam("offset", Integer.class, "0", "Specifies the number of entities to skip"));
     params.add(new OptionalParam("limit", Integer.class,
         String.valueOf(Integer.MAX_VALUE), "Specifies the maximum number of entities to display"));
     return params;
+  }
+
+  public ListEdgesCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
@@ -64,8 +68,6 @@ public class ListEdgesCommand extends AbstractCommand<EntanglementRuntime> {
     int offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
     int limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     int count = 0;
     try {

@@ -20,6 +20,8 @@ package com.entanglementgraph.irc.commands.cursor;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -49,7 +51,7 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("cursor", String.class, "The name of the cursor that is to be set 'active'"));
     return params;
   }
@@ -58,13 +60,15 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
   protected Message _processLine() throws UserException, BotCommandException {
     String cursorName = parsedArgs.get("cursor").getStringValue();
 
+    EntanglementRuntime runtime = state.getUserObject();
+
     try {
-      GraphCursor cursor = userObject.getGraphCursors().get(cursorName);
+      GraphCursor cursor = runtime.getCursorRegistry().getCursorCurrentPosition(cursorName);
       if (cursor == null) {
         throw new UserException(sender, "No graph cursor exists with the name: "+cursorName);
       }
 
-      userObject.setCurrentCursor(cursor);
+      runtime.setCurrentCursorName(cursor.getName());
 
       Message result = new Message(channel);
       result.println("Current cursor set to: %s", formatCursorName(cursorName));

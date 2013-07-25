@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands.imageexport;
 
 import com.entanglementgraph.export.gephi.MongoToGephiExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -32,6 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -39,7 +42,7 @@ import java.util.Map;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
+public class ExportGephiCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
@@ -52,17 +55,16 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-//    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
-//    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
-//    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
+    List<Param> params = super.getParams();
     return params;
+  }
+
+  public ExportGephiCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     Map<String, Color> colorMappings = parseColoursFromEnvironment(state);
     bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
@@ -85,7 +87,7 @@ public class ExportGephiCommand extends AbstractCommand<EntanglementRuntime> {
     }
   }
 
-  public static Map<String, Color> parseColoursFromEnvironment(BotState state) {
+  public static Map<String, Color> parseColoursFromEnvironment(BotState<? extends EntanglementRuntime> state) {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();

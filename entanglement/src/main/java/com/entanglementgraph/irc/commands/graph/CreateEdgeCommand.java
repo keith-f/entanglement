@@ -20,6 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
@@ -33,6 +34,8 @@ import com.mongodb.BasicDBObject;
 
 import java.util.*;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -40,7 +43,7 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateEdgeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -51,7 +54,8 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
+
     params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
     params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
     params.add(new RequiredParam("fromNodeType", String.class, "The type name of the 'from' node that this edge should connect to"));
@@ -62,13 +66,16 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
+  public CreateEdgeCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    EntanglementRuntime runtime = state.getUserObject();
 
     // Parse annotations
     Map<String, String> attributes = parseAttributes(args);
@@ -84,7 +91,7 @@ public class CreateEdgeCommand extends AbstractCommand<EntanglementRuntime> {
       edge.getKeys().addName(entityName);
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject edgeObj = userObject.getMarshaller().serialize(edge);
+      BasicDBObject edgeObj = runtime.getMarshaller().serialize(edge);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
         edgeObj.append(attr.getKey(), attr.getValue());

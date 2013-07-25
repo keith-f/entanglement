@@ -17,19 +17,18 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
-import com.scalesinformatics.uibot.RequiredParam;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
@@ -48,25 +47,27 @@ public class UseGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "The name of the connection that is to be set 'active'"));
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String connectionName = parsedArgs.get("conn").getStringValue();
+    String connName = parsedArgs.get("conn").getStringValue();
+
+    EntanglementRuntime runtime = state.getUserObject();
 
     try {
-      GraphConnection conn = userObject.getGraphConnections().get(connectionName);
-      if (conn == null) {
-        throw new UserException(sender, "No graph connection exists with the name: "+connectionName);
+      GraphConnectionDetails details = runtime.getGraphConnectionDetails().get(connName);
+      if (details == null) {
+        throw new UserException(sender, "No graph connection information exists with the name: "+connName);
       }
 
-      userObject.setCurrentConnection(conn);
+      runtime.setCurrentConnectionName(connName);
 
       Message result = new Message(channel);
-      result.println("Current graph set to: %s", connectionName);
+      result.println("Current graph set to: %s", connName);
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);

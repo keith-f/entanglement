@@ -30,7 +30,6 @@ public class EntanglementStatePropertyNames
   /*
    * Special state property names
    */
-  public static String PROP_HOSTNAME = "mongo_hostname";
   public static String PROP_DB_NAME = "database_name";
   public static String PROP_GRAPH_NAME = "graph_name";
   public static String PROP_GRAPH_BRANCH_NAME = "graph_branch";
@@ -46,7 +45,7 @@ public class EntanglementStatePropertyNames
   public static Map<String, String> getDefaultPropertySettings()
   {
     Map<String, String> defaults = new HashMap<>();
-    defaults.put(PROP_HOSTNAME, "localhost");
+//    defaults.put(PROP_MONGODB_POOL_NAME, "localhost");
     defaults.put(PROP_DB_NAME, "testing");
     defaults.put(PROP_GRAPH_NAME, "test_graph");
     defaults.put(PROP_GRAPH_BRANCH_NAME, "trunk");

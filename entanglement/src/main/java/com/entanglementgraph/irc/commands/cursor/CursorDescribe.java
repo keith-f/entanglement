@@ -17,24 +17,18 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.cursor.GraphCursorException;
-import com.entanglementgraph.graph.AbstractGraphEntityDAO;
-import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
@@ -48,7 +42,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  *
  * @author Keith Flanagan
  */
-public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
+public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -58,29 +52,31 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-    params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
+    List<Param> params = super.getParams();
     params.add(new OptionalParam("display-edge-counts", Boolean.class, "true", "If set 'true', will display incoming/outgoing edge counts."));
     params.add(new OptionalParam("display-edge-types", Boolean.class, "true", "If set 'true', will display edge type information under the edge counts."));
     params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
-    params.add(new OptionalParam("maxUids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
-    params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-uids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
+    params.add(new OptionalParam("display-max-names", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
 
     return params;
   }
 
+  public CursorDescribe() {
+    super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    String cursorName = parsedArgs.get("cursor").getStringValue();
     boolean displayEdgeCounts = parsedArgs.get("display-edge-counts").parseValueAsBoolean();
     boolean displayEdgeTypes = parsedArgs.get("display-edge-types").parseValueAsBoolean();
     boolean verbose = parsedArgs.get("verbose").parseValueAsBoolean();
-    int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
+    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
-    GraphCursor cursor = getSpecifiedCursorOrDefault(userObject, cursorName);
-    GraphConnection conn = cursor.getConn();
-    DbObjectMarshaller m = cursor.getConn().getMarshaller();
+//    EntanglementRuntime runtime = state.getUserObject();
+    DbObjectMarshaller m = graphConn.getMarshaller();
+
     boolean isAtDeadEnd = cursor.isAtDeadEnd();
     int historyIdx = cursor.getCursorHistoryIdx();
 
@@ -88,10 +84,10 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
 
       Message msg = new Message(channel);
 
-      EntityKeys<? extends Node> currentPos = cursor.getCurrentNode();
+      EntityKeys<? extends Node> currentPos = cursor.getPosition();
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
-        currentNodeObj = cursor.resolve();
+        currentNodeObj = cursor.resolve(graphConn);
         currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
       }
 
@@ -103,13 +99,13 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
         /*
          * Incoming edges
          */
-        msg.println("* Incoming edges: %s", format(cursor.countIncomingEdges()));
+        msg.println("* Incoming edges: %s", format(cursor.countIncomingEdges(graphConn)));
         if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = cursor.getConn().getEdgeDao().countEdgesByTypeToNode(cursor.getCurrentNode());
+          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
           msg.println("* Incoming edge types: %s", format(typeToCount));
         }
         if (verbose) {
-          for (DBObject edgeObj : cursor.iterateIncomingEdges()) {
+          for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
 //            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
             msg.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
@@ -120,13 +116,13 @@ public class CursorDescribe extends AbstractCommand<EntanglementRuntime> {
         /*
          * Outgoing edges
          */
-        msg.println("* Outgoing edges: %s", format(cursor.countOutgoingEdges()));
+        msg.println("* Outgoing edges: %s", format(cursor.countOutgoingEdges(graphConn)));
         if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = cursor.getConn().getEdgeDao().countEdgesByTypeFromNode(cursor.getCurrentNode());
+          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
           msg.println("* Outgoing edge types: %s", format(typeToCount));
         }
         if (verbose) {
-          for (DBObject edgeObj : cursor.iterateOutgoingEdges()) {
+          for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
 //            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
             msg.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,

@@ -19,9 +19,11 @@ package com.entanglementgraph.irc.commands.imageexport;
 
 import com.entanglementgraph.export.jgraphx.MongoToJGraphExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
+import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -34,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -41,7 +45,7 @@ import java.util.Map;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
+public class ExportJGraphXCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
@@ -54,17 +58,16 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
-//    params.add(new RequiredParam("type", String.class, "The type name of the edge to create/modify"));
-//    params.add(new RequiredParam("entityName", String.class, "A unique name for the edge to create/modify"));
-//    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the edge as attributes"));
+    List<Param> params = super.getParams();
     return params;
+  }
+
+  public ExportJGraphXCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     Map<String, Color> colorMappings = parseColoursFromEnvironment(state);
     bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
@@ -86,7 +89,7 @@ public class ExportJGraphXCommand extends AbstractCommand<EntanglementRuntime> {
     }
   }
 
-  public static Map<String, Color> parseColoursFromEnvironment(BotState state) {
+  public static Map<String, Color> parseColoursFromEnvironment(BotState<EntanglementRuntime> state) {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();

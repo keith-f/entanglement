@@ -187,6 +187,7 @@ First, install the software components available in the Ubuntu packaging
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "language=bash"
 inline false
 status open
 
@@ -203,7 +204,7 @@ apt-get install openjdk-7-jdk git maven2
 \begin_layout Standard
 
 \emph on
-Note the use of 'maven2', avobe.
+Note the use of 'maven2', above.
  Currently, the default 'maven' package (that provides Maven 3.x) is uninstallabl
 e on Ubuntu due to a conflict in the package manager.
  For now, we'll use Maven 2.x.
@@ -212,7 +213,15 @@ e on Ubuntu due to a conflict in the package manager.
 
 \begin_layout Standard
 Entanglement uses MongoDB as the underlying storage mechanism.
- You must have an installation of MongoDB in order to proceed.
+ 
+\end_layout
+
+\begin_layout Section
+Installing and starting MongoDB
+\end_layout
+
+\begin_layout Standard
+You must have an installation of MongoDB in order to proceed.
  MongoDB can be obtained from the following location: 
 \begin_inset Flex URL
 status collapsed
@@ -233,6 +242,7 @@ http://www.mongodb.org/downloads
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "language=bash"
 inline false
 status open
 
@@ -283,6 +293,271 @@ mkdir data
 \begin_layout Standard
 After a few moments, MongoDB should start.
  Leave this terminal running in the background.
+\end_layout
+
+\begin_layout Section
+Building a 'hello world' graph
+\end_layout
+
+\begin_layout Standard
+Check out the 'entanglement-examples' Git repository, available here: 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+https://bitbucket.org/keith_f/entanglement-examples
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+git clone https://keith_f@bitbucket.org/keith_f/entanglement-examples.git
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then, compile and run the 'metabolicnetworks' example:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+cd entanglement-examples/metabolicnetworks/
+\end_layout
+
+\begin_layout Plain Layout
+
+mvn clean install exec:exec
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Assuming that your MongoDB server is running correctly, you should have
+ seen the following output:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:24 PM com.entanglementgraph.util.GraphConnectionFactory connect
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Connecting to: localhost/metabolic, graph: helloworld/trunk
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:25 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
+yer notifyPostCommit
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Received notification of transaction commit: d6a3cf9dcb634b239404404d3b04a
+a61
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:25 PM com.entanglementgraph.player.spi.LogItemPlayerProvider
+ <init>
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Using classloader: sun.misc.Launcher$AppClassLoader@66cf9bf0
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionBeginPlayer
+ playItem
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Acknowledging START of transaction: d6a3cf9dcb634b239404404d3b04aa61Nothin
+g to do here yet.
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionCommitPlayer
+ playItem
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Acknowledging COMMIT of transaction: d6a3cf9dcb634b239404404d3b04aa61Nothi
+ng to do here yet.
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
+yer notifyPostCommit
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Playback of this transaction is now complete
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
+yer notifyPostCommit
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Received notification of transaction commit: 589f41b8ebe1426a804fc6f6cd899
+a70
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.LogItemPlayerProvider
+ <init>
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Using classloader: sun.misc.Launcher$AppClassLoader@66cf9bf0
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionBeginPlayer
+ playItem
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Acknowledging START of transaction: 589f41b8ebe1426a804fc6f6cd899a70Nothin
+g to do here yet.
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionCommitPlayer
+ playItem
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Acknowledging COMMIT of transaction: 589f41b8ebe1426a804fc6f6cd899a70Nothi
+ng to do here yet.
+\end_layout
+
+\begin_layout Plain Layout
+
+May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
+yer notifyPostCommit
+\end_layout
+
+\begin_layout Plain Layout
+
+INFO: Playback of this transaction is now complete
+\end_layout
+
+\begin_layout Plain Layout
+
+[INFO] ------------------------------------------------------------------------
+\end_layout
+
+\begin_layout Plain Layout
+
+[INFO] BUILD SUCCESS
+\end_layout
+
+\begin_layout Plain Layout
+
+[INFO] ------------------------------------------------------------------------
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This means that a small Entanglement graph has been constructed.
+\end_layout
+
+\begin_layout Section
+Building Entanglement from source
+\end_layout
+
+\begin_layout Standard
+Check out a working copy of the Git repository to your local machine:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+git clone git@bitbucket.org:keith_f/entanglement.git
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+cd entanglement/entanglement
+\end_layout
+
+\begin_layout Plain Layout
+
+mvn clean install
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Part

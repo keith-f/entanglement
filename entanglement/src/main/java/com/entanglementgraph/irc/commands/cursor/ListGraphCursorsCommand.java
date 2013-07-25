@@ -26,7 +26,6 @@ import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,22 +45,25 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     return params;
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
+
+    EntanglementRuntime runtime = state.getUserObject();
+
     try {
-      GraphCursor current = userObject.getCurrentCursor();
+      GraphCursor current = runtime.getCurrentCursor();
       msg.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : userObject.getGraphCursors().entrySet()) {
+      for (Map.Entry<String, GraphCursor> entry : runtime.getCursorRegistry().getCurrentPositions().entrySet()) {
         GraphCursor cursor = entry.getValue();
-        String currentText = current == current ? CURRENT_CURSOR_TXT : "";
+        String currentText = current == entry.getValue() ? CURRENT_CURSOR_TXT : "";
         msg.println("  %s => %s %s",
             entry.getKey(),
-            cursor.getCurrentNode().toString(),
+            cursor.getPosition().toString(),
             currentText);
       }
       msg.println("]");

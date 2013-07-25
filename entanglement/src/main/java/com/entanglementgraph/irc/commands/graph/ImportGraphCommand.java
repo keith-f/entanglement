@@ -21,6 +21,7 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -50,7 +51,7 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("source", String.class, "The name of the graph connection to be imported"));
     params.add(new RequiredParam("destination", String.class, "The name of the graph connection that is to recieve imported entities"));
     return params;
@@ -62,8 +63,9 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
     String destinationConnName = parsedArgs.get("destination").getStringValue();
 
     try {
-      GraphConnection sourceConn = userObject.getGraphConnections().get(sourceConnName);
-      GraphConnection destinationConn = userObject.getGraphConnections().get(destinationConnName);
+      EntanglementRuntime runtime = state.getUserObject();
+      GraphConnection sourceConn = runtime.createGraphConnectionFor(sourceConnName);
+      GraphConnection destinationConn = runtime.createGraphConnectionFor(destinationConnName);
       if (sourceConn == null) throw new UserException(sender, "No graph connection exists with the name: "+sourceConnName);
       if (destinationConn == null) throw new UserException(sender, "No graph connection exists with the name: "+destinationConnName);
 

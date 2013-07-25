@@ -15,60 +15,54 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jgraphx;
+package com.entanglementgraph.cli.export;
 
-import com.mxgraph.io.mxCodec;
 import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.util.mxUtils;
-import com.mxgraph.util.mxXmlUtils;
 import com.mxgraph.view.mxGraph;
-import org.w3c.dom.Document;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
  * User: keith
- * Date: 25/06/2013
- * Time: 11:17
+ * Date: 24/06/2013
+ * Time: 14:29
  * To change this template use File | Settings | File Templates.
  */
-public class JGraphXViewer extends JFrame {
+public class HelloJGraph extends JFrame{
+  /**
+   *
+   */
+  private static final long serialVersionUID = -2707712944901661771L;
 
-  private final mxGraph graph;
-
-  public JGraphXViewer()
+  public HelloJGraph()
   {
-    super("Graph viewer");
+    super("Hello, World!");
 
-    graph = new mxGraph();
+    mxGraph graph = new mxGraph();
     Object parent = graph.getDefaultParent();
 
-
+    graph.getModel().beginUpdate();
+    try
+    {
+      Object v1 = graph.insertVertex(parent, null, "Hello", 20, 20, 80, 30);
+      Object v2 = graph.insertVertex(parent, null, "World!", 240, 150,80, 30);
+      graph.insertEdge(parent, null, "Edge", v1, v2);
+    }
+    finally
+    {
+      graph.getModel().endUpdate();
+    }
 
     mxGraphComponent graphComponent = new mxGraphComponent(graph);
     getContentPane().add(graphComponent);
   }
 
-  private void loadFile(File file) throws IOException {
-    Document document = mxXmlUtils.parseXml(
-        mxUtils.readFile(file.getAbsolutePath()));
-
-    mxCodec codec = new mxCodec(document);
-    codec.decode(document.getDocumentElement(), graph.getModel());
-  }
-
-  public static void main(String[] args) throws IOException {
-    JGraphXViewer frame = new JGraphXViewer();
+  public static void main(String[] args)
+  {
+    HelloJGraph frame = new HelloJGraph();
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setSize(400, 320);
     frame.setVisible(true);
-
-    File file = new File(args[0]);
-
-    //fc.getSelectedFile().getAbsolutePath()
-    frame.loadFile(file);
   }
 }

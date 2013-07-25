@@ -17,8 +17,6 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
-
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
@@ -27,7 +25,10 @@ import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.BotState;
+import com.scalesinformatics.uibot.Message;
+import com.scalesinformatics.uibot.OptionalParam;
+import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -36,17 +37,21 @@ import org.jibble.pircbot.Colors;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+
 /**
- * A command that sets a new graph cursor to a specified node. The new position can be completely unrelated to the
- * existing position. This command is effectively a 'goto' statement for a cursor.
+ * Steps the graph cursor to a directly connected node.
  *
  * @author Keith Flanagan
  */
-public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime> {
+public class CursorStepToNode extends AbstractEntanglementCommand<EntanglementRuntime> {
+
 
   @Override
   public String getDescription() {
-    return "Sets a new position for a graph cursor. You can either specify UID or a type/name pair of the node to jump to.";
+    return "Steps the graph cursor to a directly connected node. The node may be at the end of either an incoming or " +
+        "outgoing edge. You may specify a node UID, or type/name, or even just a type or a name as long as the they " +
+        "are not ambiguous.";
   }
 
   @Override
@@ -61,7 +66,7 @@ public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime>
     return params;
   }
 
-  public CursorGoto() {
+  public CursorStepToNode() {
     super(AbstractEntanglementCommand.Requirements.GRAPH_CONN_NEEDED, AbstractEntanglementCommand.Requirements.CURSOR_NEEDED);
   }
 
@@ -73,12 +78,15 @@ public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime>
     int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
     int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
 
+    if (nodeType==null && nodeName==null && nodeUid==null) {
+      throw new UserException(sender, "You must specify at least a UID or a name.");
+    }
+
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {
-
       GraphCursor previous = cursor;
-      GraphCursor current = cursor.jump(cursorContext, newLocation);
+      GraphCursor current = cursor.stepToNode(cursorContext, newLocation);
 
       String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
           formatCursorName(cursor.getName()),

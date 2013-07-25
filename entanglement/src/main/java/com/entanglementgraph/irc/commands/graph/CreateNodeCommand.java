@@ -20,6 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
@@ -33,6 +34,8 @@ import com.mongodb.BasicDBObject;
 
 import java.util.*;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -40,7 +43,7 @@ import java.util.*;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateNodeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -50,7 +53,7 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("type", String.class, "The type name of the node to create/modify"));
     params.add(new RequiredParam("entityName", String.class, "A unique name for the node to create/modify"));
     params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the node as attributes"));
@@ -58,13 +61,16 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
+  public CreateNodeCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
+  }
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
 
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
+    EntanglementRuntime runtime = state.getUserObject();
 
     // Parse annotations
     Map<String, String> attributes = parseAttributes(args);
@@ -80,7 +86,7 @@ public class CreateNodeCommand extends AbstractCommand<EntanglementRuntime> {
       node.getKeys().addName(entityName);
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject nodeObj = userObject.getMarshaller().serialize(node);
+      BasicDBObject nodeObj = runtime.getMarshaller().serialize(node);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
         nodeObj.append(attr.getKey(), attr.getValue());

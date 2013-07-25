@@ -19,11 +19,9 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.ParamParser;
-import com.scalesinformatics.uibot.RequiredParam;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -34,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+
 /**
  * Created with IntelliJ IDEA.
  * User: keith
@@ -41,7 +41,7 @@ import java.util.Map;
  * Time: 15:07
  * To change this template use File | Settings | File Templates.
  */
-public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
+public class ShowEdgeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
 
 
   @Override
@@ -53,19 +53,20 @@ public class ShowEdgeCommand extends AbstractCommand<EntanglementRuntime> {
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     params.add(new RequiredParam("type", String.class, "The type name of the edge to display"));
     params.add(new RequiredParam("entityName", String.class, "A unique name of the edge to display"));
     return params;
+  }
+
+  public ShowEdgeCommand() {
+    super(Requirements.GRAPH_CONN_NEEDED);
   }
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     String type = parsedArgs.get("type").getStringValue();
     String entityName = parsedArgs.get("entityName").getStringValue();
-
-    GraphConnection graphConn = userObject.getCurrentConnection();
-    if (graphConn == null) throw new UserException(sender, "No graph was set as the 'current' connection.");
 
     try {
       // Create a keyset in order to query the database

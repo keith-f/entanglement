@@ -52,12 +52,12 @@ public class DefaultNodeVisuals implements NodeVisuals {
 
   @Override
   public double getDefaultWidth() {
-    return 20;
+    return 80;
   }
 
   @Override
   public double getDefaultHeight() {
-    return 20;
+    return 40;
   }
 
   @Override

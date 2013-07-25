@@ -4,7 +4,7 @@
 # Author: Keith Flanagan
 
 # The Java class to run
-EXE_CLASSNAME="com.entanglementgraph.visualisation.jgraphx.JGraphXViewer"
+EXE_CLASSNAME="com.entanglementgraph.visualisation.jgraphx.BasicJGraphXFileViewer"
 RAM="-Xmx1024M"
 
 # Get the filename of this script

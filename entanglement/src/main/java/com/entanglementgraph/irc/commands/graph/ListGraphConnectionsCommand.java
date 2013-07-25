@@ -18,7 +18,9 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
@@ -48,7 +50,7 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
 
   @Override
   public List<Param> getParams() {
-    List<Param> params = new LinkedList<>();
+    List<Param> params = super.getParams();
     return params;
   }
 
@@ -56,15 +58,17 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
   protected Message _processLine() throws UserException, BotCommandException {
     Message msg = new Message(channel);
     try {
-      GraphConnection current = userObject.getCurrentConnection();
+      EntanglementRuntime runtime = state.getUserObject();
+
+      String current = runtime.getCurrentConnectionName();
       msg.println("Graph connections [");
-      for (Map.Entry<String, GraphConnection> entry : userObject.getGraphConnections().entrySet()) {
-        GraphConnection conn = entry.getValue();
-        String currentText = current == conn ? CURRENT_GRAPH_TXT : "";
+      for (Map.Entry<String, GraphConnectionDetails> entry : runtime.getGraphConnectionDetails().entrySet()) {
+        GraphConnectionDetails details = entry.getValue();
+        String currentText = current == entry.getKey() ? CURRENT_GRAPH_TXT : "";
         msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
-            conn.getMongo().getAddress().getHost(),
-            conn.getDb().getName(),
-            conn.getGraphName(), conn.getGraphBranch(),
+            details.getPoolName(),
+            details.getDatabase(),
+            details.getGraphName(), details.getGraphBranch(),
             currentText);
       }
       msg.println("]");

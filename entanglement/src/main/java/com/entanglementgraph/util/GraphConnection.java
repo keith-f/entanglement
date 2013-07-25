@@ -18,7 +18,7 @@
 package com.entanglementgraph.util;
 
 import com.mongodb.DB;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
@@ -32,8 +32,11 @@ import com.entanglementgraph.revlog.RevisionLog;
  * To change this template use File | Settings | File Templates.
  */
 public class GraphConnection {
-  private Mongo mongo;
+  private MongoClient pool;
   private DB db;
+
+  private String poolName;
+  private String databaseName;
 
   private String graphName;
   private String graphBranch;
@@ -48,12 +51,12 @@ public class GraphConnection {
   public GraphConnection() {
   }
 
-  public Mongo getMongo() {
-    return mongo;
+  public MongoClient getPool() {
+    return pool;
   }
 
-  public void setMongo(Mongo mongo) {
-    this.mongo = mongo;
+  public void setPool(MongoClient pool) {
+    this.pool = pool;
   }
 
   public DB getDb() {
@@ -118,5 +121,21 @@ public class GraphConnection {
 
   public void setMarshaller(DbObjectMarshaller marshaller) {
     this.marshaller = marshaller;
+  }
+
+  public String getPoolName() {
+    return poolName;
+  }
+
+  public void setPoolName(String poolName) {
+    this.poolName = poolName;
+  }
+
+  public String getDatabaseName() {
+    return databaseName;
+  }
+
+  public void setDatabaseName(String databaseName) {
+    this.databaseName = databaseName;
   }
 }
