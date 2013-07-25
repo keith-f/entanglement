@@ -28,6 +28,8 @@ import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,7 +51,7 @@ import java.util.Map;
  *
  * @author Keith Flanagan
  */
-public class GraphIterator {
+public class DepthFirstGraphIterator {
 
   public static enum NodeBasedModificationAction {
     /**
@@ -107,18 +109,24 @@ public class GraphIterator {
 //
 //  }
 
+  private final List<EntityHandlerRule> nodeRules;
+  private final List<EntityHandlerRule> edgeRules;
 
   private GraphConnection destination;
   private final Map<String, TypeBasedModifier> nodeTypeModifiers;
   private GraphCursor cursor;
 
-  public GraphIterator(GraphConnection destination) {
+  public DepthFirstGraphIterator(GraphConnection destination) {
     this.destination = destination;
+    nodeRules = new LinkedList<>();
+    edgeRules = new LinkedList<>();
     nodeTypeModifiers = new HashMap<>();
   }
 
-  private GraphIterator(GraphIterator previous) {
+  private DepthFirstGraphIterator(DepthFirstGraphIterator previous) {
     this.nodeTypeModifiers = previous.nodeTypeModifiers;
+    this.nodeRules = previous.nodeRules;
+    this.edgeRules = previous.edgeRules;
   }
 
   public void addNodeTypeModifier(TypeBasedModifier modifier) {
