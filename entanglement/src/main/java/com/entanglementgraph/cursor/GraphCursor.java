@@ -26,6 +26,7 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.GraphConnection;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -70,37 +71,37 @@ public class GraphCursor implements Serializable {
   }
 
   public static class NodeEdgeNodeTuple implements Serializable {
-    private DBObject rawSourceNode;
-    private DBObject rawEdge;
-    private DBObject rawDestinationNode;
+    private BasicDBObject rawSourceNode;
+    private BasicDBObject rawEdge;
+    private BasicDBObject rawDestinationNode;
 
-    public NodeEdgeNodeTuple(DBObject rawSourceNode, DBObject rawEdge, DBObject rawDestinationNode) {
+    public NodeEdgeNodeTuple(BasicDBObject rawSourceNode, BasicDBObject rawEdge, BasicDBObject rawDestinationNode) {
       this.rawSourceNode = rawSourceNode;
       this.rawEdge = rawEdge;
       this.rawDestinationNode = rawDestinationNode;
     }
 
-    public DBObject getRawEdge() {
+    public BasicDBObject getRawEdge() {
       return rawEdge;
     }
 
-    public void setRawEdge(DBObject rawEdge) {
+    public void setRawEdge(BasicDBObject rawEdge) {
       this.rawEdge = rawEdge;
     }
 
-    public DBObject getRawSourceNode() {
+    public BasicDBObject getRawSourceNode() {
       return rawSourceNode;
     }
 
-    public void setRawSourceNode(DBObject rawSourceNode) {
+    public void setRawSourceNode(BasicDBObject rawSourceNode) {
       this.rawSourceNode = rawSourceNode;
     }
 
-    public DBObject getRawDestinationNode() {
+    public BasicDBObject getRawDestinationNode() {
       return rawDestinationNode;
     }
 
-    public void setRawDestinationNode(DBObject rawDestinationNode) {
+    public void setRawDestinationNode(BasicDBObject rawDestinationNode) {
       this.rawDestinationNode = rawDestinationNode;
     }
   };
@@ -349,9 +350,9 @@ public class GraphCursor implements Serializable {
     }
   }
 
-  public DBObject resolve(GraphConnection conn)  throws GraphCursorException {
+  public BasicDBObject resolve(GraphConnection conn)  throws GraphCursorException {
     try {
-      DBObject nodeDoc = conn.getNodeDao().getByKey(position);
+      BasicDBObject nodeDoc = conn.getNodeDao().getByKey(position);
       return nodeDoc;
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query database", e);
@@ -442,7 +443,7 @@ public class GraphCursor implements Serializable {
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveOutgoingEdgeDestPairs(final GraphConnection conn)
       throws GraphCursorException {
     final DbObjectMarshaller m = conn.getMarshaller();
-    final DBObject sourceNode = resolve(conn);
+    final BasicDBObject sourceNode = resolve(conn);
     return new Iterable<NodeEdgeNodeTuple>() {
       @Override
       public Iterator<NodeEdgeNodeTuple> iterator() {
@@ -461,10 +462,10 @@ public class GraphCursor implements Serializable {
 
           @Override
           public NodeEdgeNodeTuple next() {
-            DBObject edgeObj = edgeItr.next();
+            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
             try {
               EntityKeys<? extends Node> destinationKeys = m.deserialize(edgeObj, Edge.class).getTo();
-              DBObject destinationNode = conn.getNodeDao().getByKey(destinationKeys);
+              BasicDBObject destinationNode = conn.getNodeDao().getByKey(destinationKeys);
               if (destinationNode == null) {
                 //This is probably a 'hanging' edge - we have the node reference, but no node exists.
                 logger.info("Potential hanging edge found: "+destinationKeys);
@@ -500,7 +501,7 @@ public class GraphCursor implements Serializable {
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveIncomingEdgeDestPairs(final GraphConnection conn)
       throws GraphCursorException {
     final DbObjectMarshaller m = conn.getMarshaller();
-    final DBObject destinationNode = resolve(conn);
+    final BasicDBObject destinationNode = resolve(conn);
     return new Iterable<NodeEdgeNodeTuple>() {
       @Override
       public Iterator<NodeEdgeNodeTuple> iterator() {
@@ -519,10 +520,10 @@ public class GraphCursor implements Serializable {
 
           @Override
           public NodeEdgeNodeTuple next() {
-            DBObject edgeObj = edgeItr.next();
+            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
             try {
               EntityKeys<? extends Node> fromKeys = m.deserialize(edgeObj, Edge.class).getFrom();
-              DBObject sourceNode = conn.getNodeDao().getByKey(fromKeys);
+              BasicDBObject sourceNode = conn.getNodeDao().getByKey(fromKeys);
               if (sourceNode == null) {
                 //This is probably a 'hanging' edge - we have the node reference, but no node exists.
                 logger.info("Potential hanging edge found: "+fromKeys);
