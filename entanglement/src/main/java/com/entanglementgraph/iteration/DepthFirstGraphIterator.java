@@ -34,6 +34,7 @@ import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * A class that enables you to build graph iterators using an Entanglement <code>GraphCursor</code> to traverse
@@ -55,6 +56,8 @@ import java.util.*;
  * @author Keith Flanagan
  */
 public class DepthFirstGraphIterator {
+
+  private static final Logger logger = Logger.getLogger(DepthFirstGraphIterator.class.getSimpleName());
 
   private static final int DEFAULT_BATCH_SIZE = 5000;
 
@@ -93,6 +96,8 @@ public class DepthFirstGraphIterator {
 
   private final List<GraphOperation> graphUpdates; //In-memory staging for the current block of transaction data
   private boolean killSwitchActive = false;
+  private String txnId;
+  private int txnPart;
 
   /*
    * An in-memory cache of the source graph edges that we've seen so far. This is required so that we don't end up
@@ -115,7 +120,9 @@ public class DepthFirstGraphIterator {
     this.seenEdgeNames = new HashMap<>();
   }
 
-
+  public void addRule(EntityRule rule) {
+    rules.add(rule);
+  }
 
 
   /**
@@ -126,7 +133,8 @@ public class DepthFirstGraphIterator {
    */
   public void execute(GraphCursor start) throws GraphCursorException, RevisionLogException, GraphIteratorException, DbObjectMarshallerException {
     // Begin database transaction
-    String txnId = TxnUtils.beginNewTransaction(destinationGraph);
+    txnId = TxnUtils.beginNewTransaction(destinationGraph);
+    txnPart = 0;
 
     // Add the start node
     BasicDBObject startObj = start.resolve(sourceGraph);
@@ -140,13 +148,16 @@ public class DepthFirstGraphIterator {
   }
 
   private void addChildNodes(GraphCursor previous, GraphCursor current)
-      throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException {
+      throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException, RevisionLogException {
     if (killSwitchActive) {
       return;
     }
     for (GraphCursor.NodeEdgeNodeTuple nen : current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph)) {
       if (killSwitchActive) {
         return;
+      }
+      if (graphUpdates.size() > DEFAULT_BATCH_SIZE) {
+        writeUpdates();
       }
 
       DBObject remoteNode = nen.getRawSourceNode();
@@ -211,6 +222,14 @@ public class DepthFirstGraphIterator {
       return true;
     }
     return false;
+  }
+  
+  private void writeUpdates() throws RevisionLogException {
+    logger.info("Writing "+graphUpdates+" graph update commands to the destination graph");
+
+    TxnUtils.submitTxnPart(destinationGraph, txnId, txnPart, graphUpdates);
+    txnPart++;
+    graphUpdates.clear();
   }
 
   protected EntityRule.NextEdgeIteration processEdge(
