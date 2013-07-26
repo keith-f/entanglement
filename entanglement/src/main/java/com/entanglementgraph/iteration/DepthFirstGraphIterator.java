@@ -89,6 +89,8 @@ public class DepthFirstGraphIterator {
 
   private int batchSize = DEFAULT_BATCH_SIZE;
   private final List<EntityRule> rules;
+  private final EntityRule defaultRule;
+
 
   private final GraphConnection sourceGraph;
   private final GraphConnection destinationGraph;
@@ -118,6 +120,7 @@ public class DepthFirstGraphIterator {
 
     this.seenEdgeUids = new HashSet<>();
     this.seenEdgeNames = new HashMap<>();
+    this.defaultRule = new DefaultRule();
   }
 
   public void addRule(EntityRule rule) {
@@ -256,8 +259,11 @@ public class DepthFirstGraphIterator {
         }
       }
     }
-    throw new GraphIteratorException("No valid rule found for processing edge: "+nenTuple +
-        " from node: "+currentPosition);
+
+    // No rule in the list matched this node. Apply the default rule
+    EntityRule.HandlerAction result = defaultRule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+    graphUpdates.addAll(result.getOperations());
+    return result.getNextIterationBehaviour();
   }
 
 }
