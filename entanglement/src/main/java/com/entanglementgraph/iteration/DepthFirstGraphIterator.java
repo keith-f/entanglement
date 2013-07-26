@@ -151,6 +151,11 @@ public class DepthFirstGraphIterator {
       // Iterate child nodes recursively
       addChildNodes(null, start);
 
+      // Write any final updates that haven't been written already
+      if (!graphUpdates.isEmpty()) {
+        writeUpdates();
+      }
+
       // Commit transaction
       TxnUtils.commitTransaction(destinationGraph, txnId);
     } catch(Exception e) {
@@ -164,7 +169,18 @@ public class DepthFirstGraphIterator {
     if (killSwitchActive) {
       return;
     }
-    for (GraphCursor.NodeEdgeNodeTuple nen : current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph)) {
+    processEdges(previous, current, current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
+    processEdges(previous, current, current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
+
+//    // We've finished iterating the children of this node. Step back to the parent (if there is one).
+//    if (previous != null) {
+//      current.jump(cursorContext, previous.getPosition());
+//    }
+  }
+
+  private void processEdges(GraphCursor previous, GraphCursor current, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
+      throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException {
+    for (GraphCursor.NodeEdgeNodeTuple nen : edges) {
       if (killSwitchActive) {
         return;
       }
@@ -185,7 +201,7 @@ public class DepthFirstGraphIterator {
       }
       cacheEdgeIds(edgeId);
 
-      EntityRule.NextEdgeIteration nextIterationDecision = processEdge(current, nen, false, remoteNodeId, edgeId);
+      EntityRule.NextEdgeIteration nextIterationDecision = executeRules(current, nen, false, remoteNodeId, edgeId);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
@@ -202,8 +218,7 @@ public class DepthFirstGraphIterator {
 
       }
     }
-
-    // We've finished iterating the children of this node means we need to step back to the parent.
+    // We've finished iterating the children of this node. Step back to the parent (if there is one).
     if (previous != null) {
       current.jump(cursorContext, previous.getPosition());
     }
@@ -225,13 +240,20 @@ public class DepthFirstGraphIterator {
   }
 
   private boolean seenEdge(EntityKeys<Edge> edgeKey) {
-    if (seenEdgeUids.containsAll(edgeKey.getUids())) {
-      return true;
+    for (String edgeUid : edgeKey.getUids()) {
+      if (seenEdgeUids.contains(edgeUid)) {
+        return true;
+      }
     }
 
     Set<String> names = seenEdgeNames.get(edgeKey.getType());
-    if (names != null && names.containsAll(edgeKey.getNames())) {
-      return true;
+    if (names == null) {
+      return false;
+    }
+    for (String edgeName : edgeKey.getNames()) {
+      if (names.contains(edgeName)) {
+        return true;
+      }
     }
     return false;
   }
@@ -244,7 +266,7 @@ public class DepthFirstGraphIterator {
     graphUpdates.clear();
   }
 
-  protected EntityRule.NextEdgeIteration processEdge(
+  protected EntityRule.NextEdgeIteration executeRules(
           GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
           boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
         throws GraphIteratorException {
