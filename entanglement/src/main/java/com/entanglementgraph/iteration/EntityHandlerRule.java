@@ -1,6 +1,9 @@
 package com.entanglementgraph.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
+import com.entanglementgraph.graph.data.Edge;
+import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
@@ -9,6 +12,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * Defines a rule that is executed if it matches a node-edge-node tuple as a graph iterator executes.
+ * Rules are responsible for defining:
+ * <ul>
+ *   <li>Which nodes / edges get added (if any), or whether nodes/edges need to be rewritten</li>
+ *   <li>Determining the next iteration path: continue unaffected, terminate the current branch recursion, or
+ *   terminate all recursion.</li>
+ * </ul>
+ *
  * User: keith
  * Date: 25/07/13; 16:05
  *
@@ -18,17 +29,16 @@ public interface EntityHandlerRule {
 
   public static enum NextEdgeIteration {
     CONTINUE_AS_NORMAL,
-    TERMINATE_AND_BACKTRACK,
-    TERMINATE,
-    JUMP_TO_NODE
+    TERMINATE_BRANCH,
+    TERMINATE
   }
 
   public static class HandlerAction {
     private final List<GraphOperation> operations;
     private final NextEdgeIteration nextIterationBehaviour;
     /**
-     * Set true if you want further rules to run after this rule has finished, or false if the iterator should
-     * move onto the next edge after this rule has completed. Default is false.
+     * Set true if you want further rules to run for this graph iteration step after this rule has finished, or false
+     * if the iterator should move onto the next edge after this rule has completed. Default is false.
      */
     private boolean processFurtherRules;
 
@@ -67,21 +77,38 @@ public interface EntityHandlerRule {
     }
   }
 
-  public boolean canHandleNodeEdgePair(GraphConnection sourceGraph, GraphConnection destinationGraph,
-                                       GraphCursor currentPosition, BasicDBObject edge, BasicDBObject remoteNode);
+  public void setSourceGraph(GraphConnection sourceGraph);
+  public void setDestinationGraph(GraphConnection destinationGraph);
+
+
+  /**
+   * Returns true if this rule implementation matches the data presented in the graph iterator's current location.
+   *
+   * @param currentPosition a GraphCursor that represents the current node whose edges are being iterated
+   * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
+   *                 destination node, respectively.
+   * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
+   * @param nodeId the deserialised EntityKeys of the remote node, provided for convenience.
+   * @param edgeId the deserialised EntityKeys of the edge, provided for convenience.
+   * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
+   * data.
+   */
+  public boolean ruleMatches(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
 
   /**
    * Called when a <code>DepthFirstGraphIterator</code> decides that this rule implementation should process the
    * next edge/node iteration step.
    *
-   * @param sourceGraph the connection to the source graph or view that is being iterated
-   * @param destinationGraph the connection to the graph that nodes/edges are being written to
-   * @param currentPosition the current position within the source graph
-   * @param edge the edge being iterated
-   * @param remoteNode the remote node connected to <code>edge</code>.
+   * @param currentPosition a GraphCursor that represents the current node whose edges are being iterated
+   * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
+   *                 destination node, respectively.
+   * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
+   * @param nodeId the deserialised EntityKeys of the remote node, provided for convenience.
+   * @param edgeId the deserialised EntityKeys of the edge, provided for convenience.
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    */
-  public HandlerAction apply(GraphConnection sourceGraph, GraphConnection destinationGraph,
-                             GraphCursor currentPosition, BasicDBObject edge, BasicDBObject remoteNode);
+  public HandlerAction apply(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
 }

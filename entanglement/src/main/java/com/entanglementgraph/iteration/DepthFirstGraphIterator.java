@@ -22,8 +22,14 @@ import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.revlog.commands.GraphOperation;
+import com.entanglementgraph.revlog.commands.MergePolicy;
+import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.util.TxnUtils;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
@@ -52,6 +58,8 @@ import java.util.Map;
  * @author Keith Flanagan
  */
 public class DepthFirstGraphIterator {
+
+  private static final int DEFAULT_BATCH_SIZE = 5000;
 
   public static enum NodeBasedModificationAction {
     /**
@@ -109,54 +117,123 @@ public class DepthFirstGraphIterator {
 //
 //  }
 
-  private final List<EntityHandlerRule> nodeRules;
-  private final List<EntityHandlerRule> edgeRules;
+  private int batchSize = DEFAULT_BATCH_SIZE;
+  private final List<EntityHandlerRule> rules;
 
-  private GraphConnection destination;
+  private GraphConnection sourceGraph;
+  private GraphConnection destinationGraph;
+  private GraphCursor.CursorContext cursorContext;
   private final Map<String, TypeBasedModifier> nodeTypeModifiers;
   private GraphCursor cursor;
 
-  public DepthFirstGraphIterator(GraphConnection destination) {
-    this.destination = destination;
-    nodeRules = new LinkedList<>();
-    edgeRules = new LinkedList<>();
+  private final List<GraphOperation> graphUpdates;
+  private boolean killSwitchActive = false;
+
+  public DepthFirstGraphIterator(GraphConnection sourceGraph, GraphConnection destinationGraph, GraphCursor.CursorContext cursorContext) {
+    this.sourceGraph = sourceGraph;
+    this.destinationGraph = destinationGraph;
+    this.cursorContext = cursorContext;
+    rules = new LinkedList<>();
     nodeTypeModifiers = new HashMap<>();
+    this.graphUpdates = new LinkedList<>();
   }
 
-  private DepthFirstGraphIterator(DepthFirstGraphIterator previous) {
-    this.nodeTypeModifiers = previous.nodeTypeModifiers;
-    this.nodeRules = previous.nodeRules;
-    this.edgeRules = previous.edgeRules;
-  }
 
   public void addNodeTypeModifier(TypeBasedModifier modifier) {
     nodeTypeModifiers.put(modifier.getTypeName(), modifier);
   }
 
-  public void iterate(GraphConnection graphConn) throws GraphCursorException, DbObjectMarshallerException {
-    for (GraphCursor.NodeEdgeNodeTuple nen : cursor.iterateAndResolveIncomingEdgeDestPairs(graphConn)) {
+  /**
+   * Iterates over every edge from the current location, performing a depth-first sweep of the source graph.
+   *
+   * @param start the starting position for hte iteration
+   * @throws GraphCursorException
+   * @throws DbObjectMarshallerException
+   */
+  public void execute(GraphCursor start) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphIteratorException {
+    // Begin database transaction
+    String txnId = TxnUtils.beginNewTransaction(destinationGraph);
+
+    // Add the start node
+    BasicDBObject startObj = start.resolve(sourceGraph);
+    graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
+
+    // Iterate child nodes recursively
+    addChildNodes(null, start);
+
+    // Commit transaction
+    TxnUtils.commitTransaction(destinationGraph, txnId);
+  }
+
+  private void addChildNodes(GraphCursor previous, GraphCursor current)
+      throws GraphCursorException, DbObjectMarshallerException, GraphIteratorException {
+    if (killSwitchActive) {
+      return;
+    }
+    for (GraphCursor.NodeEdgeNodeTuple nen : current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph)) {
+      if (killSwitchActive) {
+        return;
+      }
+
       DBObject remoteNode = nen.getRawSourceNode();
       DBObject edge = nen.getRawEdge();
+      DBObject localNode = nen.getRawDestinationNode();
 
-      EntityKeys<Node> nodeId = MongoUtils.parseKeyset(graphConn.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
-      EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(graphConn.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
+      EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
+      EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
 
-      handleEdge(edge);
+      // TODO check if we've seen this edge before (exists in DB, or exists in pending edge update). If yes, skip it.
 
-      //Check if the node or edge match any of the custom modifier rules.
-      if (nodeTypeModifiers.containsKey(nodeId.getType())) {
+      EntityHandlerRule.NextEdgeIteration nextIterationDecision = processEdge(cursor, nen, false, remoteNodeId, edgeId);
 
-      } else {
-        defaultHandler(edge, remoteNode);
+      switch (nextIterationDecision) {
+        case CONTINUE_AS_NORMAL:
+          // Step the cursor to the next level deep
+          GraphCursor nextLevel = cursor.stepToNode(cursorContext, remoteNodeId);
+          addChildNodes(current, nextLevel);
+          break;
+        case TERMINATE_BRANCH:
+          // Simply do nothing here. We'll skip over the children of the current remote node
+          break;
+        case TERMINATE:
+          killSwitchActive = true;
+          break;
+
       }
+    }
+
+    // We've finished iterating the children of this node means we need to step back to the parent.
+    if (previous != null) {
+      current.jump(cursorContext, previous.getPosition());
     }
   }
 
-  protected void handleEdge(DBObject edge) {
+  protected EntityHandlerRule.NextEdgeIteration processEdge(
+          GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+          boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+        throws GraphIteratorException {
 
+    for (EntityHandlerRule rule : rules) {
+      if (rule.ruleMatches(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
+        EntityHandlerRule.HandlerAction result = rule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+        graphUpdates.addAll(result.getOperations());
+
+
+        if (result.isProcessFurtherRules() &&
+            result.getNextIterationBehaviour() != EntityHandlerRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+          // We can't not 'continue as normal' AND process other rules, since further rules might conflict
+          throw new GraphIteratorException(
+              "A rule cannot have ProcessFurtherRules="+result.isProcessFurtherRules() +
+              " at the same time as NextIterationBehaviour="+EntityHandlerRule.NextEdgeIteration.CONTINUE_AS_NORMAL);
+        }
+        if (!result.isProcessFurtherRules()) {
+          // No further rules need to be processed for this edge iteration.
+          return result.getNextIterationBehaviour();
+        }
+      }
+    }
+    throw new GraphIteratorException("No valid rule found for processing edge: "+nenTuple +
+        " from node: "+currentPosition);
   }
 
-  protected void defaultHandler(DBObject edge, DBObject node) {
-
-  }
 }
