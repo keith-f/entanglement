@@ -134,20 +134,29 @@ public class DepthFirstGraphIterator {
    * @param start the starting position for hte iteration
    * @throws GraphCursorException
    */
-  public void execute(GraphCursor start) throws GraphCursorException, RevisionLogException, GraphIteratorException, DbObjectMarshallerException {
-    // Begin database transaction
-    txnId = TxnUtils.beginNewTransaction(destinationGraph);
-    txnPart = 0;
+  public void execute(GraphCursor start) throws GraphIteratorException {
+    try {
+      // Begin database transaction
+      txnId = TxnUtils.beginNewTransaction(destinationGraph);
+      txnPart = 0;
+    } catch(Exception e) {
+      throw new GraphIteratorException("Failed to start transaction", e);
+    }
 
-    // Add the start node
-    BasicDBObject startObj = start.resolve(sourceGraph);
-    graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
+    try {
+      // Add the start node
+      BasicDBObject startObj = start.resolve(sourceGraph);
+      graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
 
-    // Iterate child nodes recursively
-    addChildNodes(null, start);
+      // Iterate child nodes recursively
+      addChildNodes(null, start);
 
-    // Commit transaction
-    TxnUtils.commitTransaction(destinationGraph, txnId);
+      // Commit transaction
+      TxnUtils.commitTransaction(destinationGraph, txnId);
+    } catch(Exception e) {
+      TxnUtils.silentRollbackTransaction(destinationGraph, txnId);
+      throw new GraphIteratorException("Failed to export subgraph", e);
+    }
   }
 
   private void addChildNodes(GraphCursor previous, GraphCursor current)
