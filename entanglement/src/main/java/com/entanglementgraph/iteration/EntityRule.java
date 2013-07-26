@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public interface EntityHandlerRule {
+public interface EntityRule {
 
   public static enum NextEdgeIteration {
     CONTINUE_AS_NORMAL,

@@ -22,21 +22,31 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.MergePolicy;
+import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
 
 /**
- * An edge handler that simply stores the destination node as-is.
+ * A rule that causes graph iterations to stop when a particular node type is encountered.
+ * The rule can be configured to include or exclude the target node type in the destination graph, as desired.
  *
  * User: keith
  * Date: 25/07/13; 16:06
  *
  * @author Keith Flanagan
  */
-public class DefaultEdgeHandlerRule implements EntityHandlerRule {
+public class StopAtNodeTypeRule implements EntityRule {
 
   private GraphConnection sourceGraph;
   private GraphConnection destinationGraph;
+
+  private String nodeType;
+  private boolean includeNodeInDestination;
+
+  public StopAtNodeTypeRule(String nodeType, boolean includeNodeInDestination) {
+    this.nodeType = nodeType;
+    this.includeNodeInDestination = includeNodeInDestination;
+  }
 
   @Override
   public void setSourceGraph(GraphConnection sourceGraph) {
@@ -51,14 +61,20 @@ public class DefaultEdgeHandlerRule implements EntityHandlerRule {
   @Override
   public boolean ruleMatches(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
-    return true;
+    return nodeId.getType().equals(nodeType);
   }
 
   @Override
   public HandlerAction apply(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
-    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
+    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+    BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
+
+    if (includeNodeInDestination) {
+      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, remoteNode));
+      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
+    }
+
     return action;
   }
 }

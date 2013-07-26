@@ -33,10 +33,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A class that enables you to build graph iterators using an Entanglement <code>GraphCursor</code> to traverse
@@ -87,70 +84,47 @@ public class DepthFirstGraphIterator {
     CONTINUE_AND_EXCLUDE_BUT_JOIN_CHILD_NODES
   }
 
-  public static class TypeBasedModifier {
-    private String typeName;
-    private NodeBasedModificationAction actionType;
-
-    public TypeBasedModifier(String typeName, NodeBasedModificationAction actionType) {
-      this.typeName = typeName;
-      this.actionType = actionType;
-    }
-
-    public String getTypeName() {
-      return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-      this.typeName = typeName;
-    }
-
-    public NodeBasedModificationAction getActionType() {
-      return actionType;
-    }
-
-    public void setActionType(NodeBasedModificationAction actionType) {
-      this.actionType = actionType;
-    }
-  }
-
-//  public static class IndividualBasedModifier {
-//
-//  }
-
   private int batchSize = DEFAULT_BATCH_SIZE;
-  private final List<EntityHandlerRule> rules;
+  private final List<EntityRule> rules;
 
-  private GraphConnection sourceGraph;
-  private GraphConnection destinationGraph;
-  private GraphCursor.CursorContext cursorContext;
-  private final Map<String, TypeBasedModifier> nodeTypeModifiers;
-  private GraphCursor cursor;
+  private final GraphConnection sourceGraph;
+  private final GraphConnection destinationGraph;
+  private final GraphCursor.CursorContext cursorContext;
 
-  private final List<GraphOperation> graphUpdates;
+  private final List<GraphOperation> graphUpdates; //In-memory staging for the current block of transaction data
   private boolean killSwitchActive = false;
+
+  /*
+   * An in-memory cache of the source graph edges that we've seen so far. This is required so that we don't end up
+   * iterating over edges that we've already seen. Eventually, this information should be stored in a temporary
+   * MongoDB collection because large graphs won't all fit into memory.
+   */
+  private final Set<String> seenEdgeUids;
+  private final Map<String, Set<String>> seenEdgeNames;
+
 
   public DepthFirstGraphIterator(GraphConnection sourceGraph, GraphConnection destinationGraph, GraphCursor.CursorContext cursorContext) {
     this.sourceGraph = sourceGraph;
     this.destinationGraph = destinationGraph;
     this.cursorContext = cursorContext;
     rules = new LinkedList<>();
-    nodeTypeModifiers = new HashMap<>();
     this.graphUpdates = new LinkedList<>();
+
+
+    this.seenEdgeUids = new HashSet<>();
+    this.seenEdgeNames = new HashMap<>();
   }
 
 
-  public void addNodeTypeModifier(TypeBasedModifier modifier) {
-    nodeTypeModifiers.put(modifier.getTypeName(), modifier);
-  }
+
 
   /**
    * Iterates over every edge from the current location, performing a depth-first sweep of the source graph.
    *
    * @param start the starting position for hte iteration
    * @throws GraphCursorException
-   * @throws DbObjectMarshallerException
    */
-  public void execute(GraphCursor start) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphIteratorException {
+  public void execute(GraphCursor start) throws GraphCursorException, RevisionLogException, GraphIteratorException, DbObjectMarshallerException {
     // Begin database transaction
     String txnId = TxnUtils.beginNewTransaction(destinationGraph);
 
@@ -166,7 +140,7 @@ public class DepthFirstGraphIterator {
   }
 
   private void addChildNodes(GraphCursor previous, GraphCursor current)
-      throws GraphCursorException, DbObjectMarshallerException, GraphIteratorException {
+      throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException {
     if (killSwitchActive) {
       return;
     }
@@ -182,14 +156,18 @@ public class DepthFirstGraphIterator {
       EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
       EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
 
-      // TODO check if we've seen this edge before (exists in DB, or exists in pending edge update). If yes, skip it.
+      // FIXME for now, we're just caching 'seen' edges in memory. We need to store these in a temporary mongo collection for large graphs
+      if (seenEdge(edgeId)) {
+        continue;
+      }
+      cacheEdgeIds(edgeId);
 
-      EntityHandlerRule.NextEdgeIteration nextIterationDecision = processEdge(cursor, nen, false, remoteNodeId, edgeId);
+      EntityRule.NextEdgeIteration nextIterationDecision = processEdge(current, nen, false, remoteNodeId, edgeId);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
           // Step the cursor to the next level deep
-          GraphCursor nextLevel = cursor.stepToNode(cursorContext, remoteNodeId);
+          GraphCursor nextLevel = current.stepToNode(cursorContext, remoteNodeId);
           addChildNodes(current, nextLevel);
           break;
         case TERMINATE_BRANCH:
@@ -208,23 +186,50 @@ public class DepthFirstGraphIterator {
     }
   }
 
-  protected EntityHandlerRule.NextEdgeIteration processEdge(
+  private void cacheEdgeIds(EntityKeys<Edge> edgeKeys) {
+    seenEdgeUids.addAll(edgeKeys.getUids());
+
+    if (edgeKeys.getNames().isEmpty()) {
+      return;
+    }
+
+    Set<String> names = seenEdgeNames.get(edgeKeys.getType());
+    if (names == null) {
+      names = new HashSet<>();
+      seenEdgeNames.put(edgeKeys.getType(), names);
+    }
+    names.addAll(edgeKeys.getNames());
+  }
+
+  private boolean seenEdge(EntityKeys<Edge> edgeKey) {
+    if (seenEdgeUids.containsAll(edgeKey.getUids())) {
+      return true;
+    }
+
+    Set<String> names = seenEdgeNames.get(edgeKey.getType());
+    if (names != null && names.containsAll(edgeKey.getNames())) {
+      return true;
+    }
+    return false;
+  }
+
+  protected EntityRule.NextEdgeIteration processEdge(
           GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
           boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
         throws GraphIteratorException {
 
-    for (EntityHandlerRule rule : rules) {
+    for (EntityRule rule : rules) {
       if (rule.ruleMatches(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
-        EntityHandlerRule.HandlerAction result = rule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+        EntityRule.HandlerAction result = rule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
         graphUpdates.addAll(result.getOperations());
 
 
         if (result.isProcessFurtherRules() &&
-            result.getNextIterationBehaviour() != EntityHandlerRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+            result.getNextIterationBehaviour() != EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
           // We can't not 'continue as normal' AND process other rules, since further rules might conflict
           throw new GraphIteratorException(
               "A rule cannot have ProcessFurtherRules="+result.isProcessFurtherRules() +
-              " at the same time as NextIterationBehaviour="+EntityHandlerRule.NextEdgeIteration.CONTINUE_AS_NORMAL);
+              " at the same time as NextIterationBehaviour="+ EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL);
         }
         if (!result.isProcessFurtherRules()) {
           // No further rules need to be processed for this edge iteration.

@@ -20,21 +20,21 @@ import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
- * A node handler that simply stores the destination node as-is.
+ * A rule that simply stores the edges and nodes unchanged in the destination graph.
  *
  * User: keith
  * Date: 25/07/13; 16:06
  *
  * @author Keith Flanagan
  */
-public class DefaultNodeHandlerRule implements EntityHandlerRule {
+public class DefaultRule implements EntityRule {
 
   private GraphConnection sourceGraph;
   private GraphConnection destinationGraph;
@@ -60,7 +60,9 @@ public class DefaultNodeHandlerRule implements EntityHandlerRule {
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
+
     action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, remoteNode));
+    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
     return action;
   }
 }
