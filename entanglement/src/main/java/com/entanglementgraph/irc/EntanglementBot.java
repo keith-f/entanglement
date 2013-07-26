@@ -23,6 +23,7 @@ import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.imageexport.ExportJGraphXCommand;
 import com.entanglementgraph.irc.commands.swing.CreateSwingCursorNearestNeighboursCommand;
+import com.entanglementgraph.irc.commands.swing.CreateSwingGuiEntireGraphCommand;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
@@ -147,6 +148,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
      * Swing-based commands
      */
     addCommand("gui-cursor-display-nearest-neighbours", CreateSwingCursorNearestNeighboursCommand.class);
+    addCommand("gui-display-entire-graph", CreateSwingGuiEntireGraphCommand.class);
   }
 
 
