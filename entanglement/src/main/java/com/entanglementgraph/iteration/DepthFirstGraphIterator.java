@@ -169,8 +169,8 @@ public class DepthFirstGraphIterator {
     if (killSwitchActive) {
       return;
     }
-    processEdges(previous, current, current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
-    processEdges(previous, current, current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
+    processEdges(previous, current, false, current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
+    processEdges(previous, current, true, current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
 
 //    // We've finished iterating the children of this node. Step back to the parent (if there is one).
 //    if (previous != null) {
@@ -178,7 +178,8 @@ public class DepthFirstGraphIterator {
 //    }
   }
 
-  private void processEdges(GraphCursor previous, GraphCursor current, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
+  private void processEdges(GraphCursor previous, GraphCursor current,
+                            boolean outgoingEdges, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
       throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException {
     for (GraphCursor.NodeEdgeNodeTuple nen : edges) {
       if (killSwitchActive) {
@@ -188,9 +189,8 @@ public class DepthFirstGraphIterator {
         writeUpdates();
       }
 
-      DBObject remoteNode = nen.getRawSourceNode();
+      BasicDBObject remoteNode = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
       DBObject edge = nen.getRawEdge();
-      DBObject localNode = nen.getRawDestinationNode();
 
       EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
       EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
