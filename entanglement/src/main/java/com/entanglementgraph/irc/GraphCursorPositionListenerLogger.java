@@ -17,6 +17,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursor;
+import com.entanglementgraph.irc.commands.cursor.CursorCommandUtils;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.HazelcastInstance;
@@ -81,8 +82,10 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
   public void entryUpdated(EntryEvent<String, GraphCursor> event) {
     GraphCursor previousCursor = event.getOldValue();
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging GraphCursor %s moved from %s ==> %s (by host: %s)",
-        cursor.getName(), previousCursor.getPosition(), cursor.getPosition(),
+    log(String.format("Acknowledging GraphCursor %s moved from %s ==> %s. Index: %s. Type: %s. (by host: %s)",
+        cursor.getName(), CursorCommandUtils.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3),
+        CursorCommandUtils.formatNodeKeysetShort(cursor.getPosition(), 1, 3),
+        CursorCommandUtils.format(cursor.getCursorHistoryIdx()), cursor.getMovementType(),
         event.getMember()));
   }
 
