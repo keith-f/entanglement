@@ -59,13 +59,13 @@ public class StopAtNodeTypeRule implements EntityRule {
   }
 
   @Override
-  public boolean ruleMatches(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     return nodeId.getType().equals(nodeType);
   }
 
   @Override
-  public HandlerAction apply(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();

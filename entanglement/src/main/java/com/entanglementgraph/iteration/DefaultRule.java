@@ -50,13 +50,13 @@ public class DefaultRule implements EntityRule {
   }
 
   @Override
-  public boolean ruleMatches(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     return true;
   }
 
   @Override
-  public HandlerAction apply(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();

@@ -93,7 +93,7 @@ public interface EntityRule {
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
-  public boolean ruleMatches(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
 
   /**
@@ -109,6 +109,6 @@ public interface EntityRule {
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    */
-  public HandlerAction apply(GraphCursor currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
 }
