@@ -327,7 +327,7 @@ public class MongoToJGraphExporter {
 //    logger.info("Adding node: "+nodeObj);
 
     //noinspection unchecked
-    EntityKeys<Node> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
+    EntityKeys<Node> keyset = MongoUtils.parseKeyset(marshaller, nodeObj, NodeDAO.FIELD_KEYS);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
       return existingNode;
