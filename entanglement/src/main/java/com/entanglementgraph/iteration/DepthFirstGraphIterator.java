@@ -200,7 +200,7 @@ public class DepthFirstGraphIterator {
       }
 
       BasicDBObject remoteNode = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
-      DBObject edge = nen.getRawEdge();
+      BasicDBObject edge = nen.getRawEdge();
 
       EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
       EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);

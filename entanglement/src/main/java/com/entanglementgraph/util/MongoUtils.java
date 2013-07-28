@@ -113,7 +113,8 @@ public class MongoUtils {
    */
   public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject, String fieldName)
       throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(fieldName).toString();
+//    com.mongodb.util.JSON.serialize()
+    String jsonKeyset = com.mongodb.util.JSON.serialize(dbObject.get(fieldName));
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }
