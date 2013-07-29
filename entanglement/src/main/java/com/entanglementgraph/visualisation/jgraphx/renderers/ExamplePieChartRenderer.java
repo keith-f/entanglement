@@ -42,11 +42,15 @@ import java.util.Map;
  */
 public class ExamplePieChartRenderer<T> implements CustomCellRenderer<T> {
 
+  private Map<String, Object> rendererProperties;
   private ChartPanel chartPanel;
 
   public ExamplePieChartRenderer() {
   }
 
+  public void setRendererProperties(Map<String, Object> rendererProperties) {
+    this.rendererProperties = rendererProperties;
+  }
 
 
   @Override

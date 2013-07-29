@@ -16,6 +16,8 @@
  */
 package com.entanglementgraph.visualisation.jgraphx;
 
+import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jgraphx.renderers.CustomCellRenderer;
 import com.mxgraph.canvas.mxICanvas;
 import com.mxgraph.canvas.mxImageCanvas;
@@ -36,6 +38,14 @@ import java.util.Map;
  * @author Keith Flanagan
  */
 public class EntanglementMxGraph extends mxGraph {
+  /**
+   * The following are set by the EntanglementMxGraph constructor and are passed on to new instances of
+   * custom renderers. This map can be used to pass on runtime configuration information, such as variables,
+   * display properties, graph connections, file paths, or anything else that a custom renderer might need to
+   * complete its task,
+   */
+  private final Map<String, Object> rendererProperties;
+
 
   /**
    * A map of bean type to cell renderer type
@@ -58,6 +68,13 @@ public class EntanglementMxGraph extends mxGraph {
   public EntanglementMxGraph() {
     beanTypeToCustomRendererType = new HashMap<>();
     beanInstanceToCustomRenderer = new HashMap<>();
+    rendererProperties = new HashMap<>();
+  }
+
+  public EntanglementMxGraph(Map<String, Object> rendererProperties) {
+    beanTypeToCustomRendererType = new HashMap<>();
+    beanInstanceToCustomRenderer = new HashMap<>();
+    this.rendererProperties = rendererProperties;
   }
 
   @Override
@@ -130,6 +147,7 @@ public class EntanglementMxGraph extends mxGraph {
       Class<? extends CustomCellRenderer> rendererType = beanTypeToCustomRendererType.get(beanType);
       try {
         CustomCellRenderer renderer = rendererType.newInstance();
+        renderer.setRendererProperties(rendererProperties);
 
         //Cache this renderer for reuse with this bean later.
         beanInstanceToCustomRenderer.put(cellValue, renderer);

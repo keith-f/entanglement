@@ -21,6 +21,7 @@ import com.mxgraph.swing.view.mxInteractiveCanvas;
 import com.mxgraph.view.mxCellState;
 
 import javax.swing.*;
+import java.util.Map;
 
 /**
  * Implementations of this class take some data bean, and return a JComponent that can be rendered as either a
@@ -32,6 +33,14 @@ import javax.swing.*;
  * @author Keith Flanagan
  */
 public interface CustomCellRenderer<T> {
+
+  /**
+   * A map that can be used to pass on runtime configuration information, such as variables,
+   * display properties, graph connections, file paths, or anything else that a custom renderer might need to
+   * complete its task,
+   */
+  public void setRendererProperties(Map<String, Object> rendererProperties);
+
   /**
    * This method is called by our <code>EntanglementPassThroughCanvas</code> for rendering each from of a particular
    * cell. For this reason, this method should be <i>fast</i>.
