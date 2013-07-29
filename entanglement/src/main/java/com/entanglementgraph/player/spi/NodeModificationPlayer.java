@@ -21,6 +21,7 @@ package com.entanglementgraph.player.spi;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.jiti.NodeMerger;
+import com.entanglementgraph.util.MongoUtils;
 import com.google.gson.internal.StringMap;
 import com.mongodb.*;
 
@@ -64,25 +65,7 @@ public class NodeModificationPlayer
       NodeModification command = (NodeModification) item.getOp();
       BasicDBObject reqSerializedNode = command.getNode();
 
-      //FIXME this is a quick fix. We need to not be using BasicDBObject on the command - use a proper JSON string instead
-      //Due to the way this is serialized, we need to get an internal GSON class and decode EntityKeys manually in this case
-      //If we don't do it this way, then Strings aren't properly quoted, meaning that special characters have bad effects
-      StringMap sm = (StringMap) reqSerializedNode.get(FIELD_KEYS);
-      reqKeyset = new EntityKeys();
-      String type = (String) sm.get("type");
-      List<String> uids = (List) sm.get("uids");
-      List<String> names = (List) sm.get("names");
-
-      if (type != null) {
-        reqKeyset.setType(type);
-      }
-      if (uids != null) {
-        reqKeyset.getUids().addAll(uids);
-      }
-      if (names != null) {
-        reqKeyset.getNames().addAll(names);
-      }
-      // ^^^ Quick hack end
+      reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode);
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);

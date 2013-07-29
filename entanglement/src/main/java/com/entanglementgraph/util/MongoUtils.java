@@ -29,6 +29,7 @@ import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import javax.lang.model.type.PrimitiveType;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,6 +39,7 @@ import java.util.Iterator;
  * To change this template use File | Settings | File Templates.
  */
 public class MongoUtils {
+  private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());
 
   public static void createIndexes(DBCollection col, Iterable<DBObject> indexDefns) {
     for (DBObject idx : indexDefns) {
@@ -87,10 +89,9 @@ public class MongoUtils {
    * database object.
    * @throws DbObjectMarshallerException
    */
-  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, BasicDBObject dbObject)
+  public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject)
       throws DbObjectMarshallerException {
-//    String jsonKeyset = dbObject.get(FIELD_KEYS).toString();
-    String jsonKeyset = dbObject.getString(FIELD_KEYS);
+    String jsonKeyset = com.mongodb.util.JSON.serialize(dbObject.get(FIELD_KEYS));
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }
@@ -113,7 +114,8 @@ public class MongoUtils {
    */
   public static EntityKeys parseKeyset(DbObjectMarshaller marshaller, DBObject dbObject, String fieldName)
       throws DbObjectMarshallerException {
-    String jsonKeyset = dbObject.get(fieldName).toString();
+    String jsonKeyset = com.mongodb.util.JSON.serialize(dbObject.get(fieldName));
+//    logger.info(String.format("Extracted keyset DBObject and serialised to: %s", jsonKeyset));
     EntityKeys keyset = marshaller.deserialize(jsonKeyset, EntityKeys.class);
     return keyset;
   }

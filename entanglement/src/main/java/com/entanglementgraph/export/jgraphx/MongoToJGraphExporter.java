@@ -29,6 +29,7 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.visualisation.jgraphx.EntanglementMxGraph;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Rectangle;
@@ -71,7 +72,7 @@ public class MongoToJGraphExporter {
   private final Map<String, EdgeVisuals> edgeTypeToStyleInfo;
 
 
-  private mxGraph graph;
+  private EntanglementMxGraph graph;
   private Object parentContainer;
 
   // Keys to graph object cache - keep track of these so that we can add edges to nodes we've already added.
@@ -91,7 +92,7 @@ public class MongoToJGraphExporter {
   }
 
   public void clearGraph() {
-    graph = new mxGraph();
+    graph = new EntanglementMxGraph();
     parentContainer = graph.getDefaultParent();
 
     // Clear caches of 'seen' nodes.
@@ -326,7 +327,7 @@ public class MongoToJGraphExporter {
 //    logger.info("Adding node: "+nodeObj);
 
     //noinspection unchecked
-    EntityKeys<Node> keyset = marshaller.deserialize((DBObject) nodeObj.get(NodeDAO.FIELD_KEYS), EntityKeys.class);
+    EntityKeys<Node> keyset = MongoUtils.parseKeyset(marshaller, nodeObj, NodeDAO.FIELD_KEYS);
     Object existingNode = getJGraphNodeFromCache(keyset);
     if (existingNode != null) {
       return existingNode;
@@ -767,7 +768,7 @@ public class MongoToJGraphExporter {
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public mxGraph getGraph() {
+  public EntanglementMxGraph getGraph() {
     return graph;
   }
 
