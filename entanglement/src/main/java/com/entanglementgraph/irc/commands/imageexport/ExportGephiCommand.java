@@ -50,7 +50,7 @@ public class ExportGephiCommand extends AbstractEntanglementCommand<Entanglement
 
   @Override
   public String getDescription() {
-    return "Exports the current graph to Gephi format.";
+    return "Exports an Entanglement graph to Gephi format.";
   }
 
   @Override
