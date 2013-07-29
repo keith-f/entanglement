@@ -62,32 +62,6 @@ public class DepthFirstGraphIterator {
 
   private static final int DEFAULT_BATCH_SIZE = 5000;
 
-  public static enum NodeBasedModificationAction {
-    /**
-     * When triggered by a particular node or type of node, causes further cursor iterations to halt. The node that
-     * caused the iterations to cease is included in the final result set.
-     */
-    BLOCK_ITERATION_AND_INCLUDE,
-    /**
-     * When triggered by a particular node or type of node, causes further cursor iterations to halt. The node that
-     * caused the iterations to cease is NOT included in the final result set.
-     */
-    BLOCK_ITERATION_AND_EXCLUDE,
-    /**
-     * When triggered by a particular node or type of node, iterations continue as normal, but this particular node
-     * is NOT included in the result set. This can be useful when you're iterating over an integrated dataset joined
-     * by one or more 'hub' nodes and you want the result set to contain a discrete set of graphs to contain everything
-     * except the hub nodes.
-     */
-    CONTINUE_AND_EXCLUDE,
-
-    /**
-     * Similar to <code>CONTINUE_AND_EXCLUDE</code>, except the two edges that would otherwise link to the common
-     * hub node are merged together and given a new type and identity.
-     */
-    CONTINUE_AND_EXCLUDE_BUT_JOIN_CHILD_NODES
-  }
-
   private int batchSize = DEFAULT_BATCH_SIZE;
   private final List<EntityRule> rules;
   private final EntityRule defaultRule;
@@ -180,11 +154,6 @@ public class DepthFirstGraphIterator {
     current = getCurrentCursorPosition(cursorName);
     processEdges(cursorName, previousPosition, current.getPosition(), true,
         current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
-
-//    // We've finished iterating the children of this node. Step back to the parent (if there is one).
-//    if (previous != null) {
-//      current.jump(cursorContext, previous.getPosition());
-//    }
   }
 
   private void processEdges(String cursorName,
@@ -195,7 +164,7 @@ public class DepthFirstGraphIterator {
       if (killSwitchActive) {
         return;
       }
-      if (graphUpdates.size() > DEFAULT_BATCH_SIZE) {
+      if (graphUpdates.size() > batchSize) {
         writeUpdates();
       }
 
