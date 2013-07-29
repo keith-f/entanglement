@@ -152,6 +152,10 @@ MongoDB
 \end_layout
 
 \begin_layout Itemize
+An IRC server
+\end_layout
+
+\begin_layout Itemize
 Java 7
 \end_layout
 
@@ -187,13 +191,12 @@ First, install the software components available in the Ubuntu packaging
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "language=bash"
 inline false
 status open
 
 \begin_layout Plain Layout
 
-apt-get install openjdk-7-jdk git maven2
+apt-get install openjdk-7-jdk git git-flow maven
 \end_layout
 
 \end_inset
@@ -202,26 +205,8 @@ apt-get install openjdk-7-jdk git maven2
 \end_layout
 
 \begin_layout Standard
-
-\emph on
-Note the use of 'maven2', above.
- Currently, the default 'maven' package (that provides Maven 3.x) is uninstallabl
-e on Ubuntu due to a conflict in the package manager.
- For now, we'll use Maven 2.x.
- 
-\end_layout
-
-\begin_layout Standard
 Entanglement uses MongoDB as the underlying storage mechanism.
- 
-\end_layout
-
-\begin_layout Section
-Installing and starting MongoDB
-\end_layout
-
-\begin_layout Standard
-You must have an installation of MongoDB in order to proceed.
+ You must have an installation of MongoDB in order to proceed.
  MongoDB can be obtained from the following location: 
 \begin_inset Flex URL
 status collapsed
@@ -242,7 +227,6 @@ http://www.mongodb.org/downloads
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "language=bash"
 inline false
 status open
 
@@ -296,229 +280,39 @@ After a few moments, MongoDB should start.
 \end_layout
 
 \begin_layout Section
-Building a 'hello world' graph
+Installing an IRC server
 \end_layout
 
 \begin_layout Standard
-Check out the 'entanglement-examples' Git repository, available here: 
-\begin_inset Flex URL
-status collapsed
-
-\begin_layout Plain Layout
-
-https://bitbucket.org/keith_f/entanglement-examples
-\end_layout
-
+The default Entanglement user inteface makes use of IRC as a distributed
+ collaborative environement.
+ If you don't have one already, you will need to install an IRC server.
+ Here, we explain how to install and configure the 'ircd-hybrid' server,
+ but any IRC server program should be suitable.
+ Importantly, it is necessary to disable the 
+\begin_inset Quotes eld
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-git clone https://keith_f@bitbucket.org/keith_f/entanglement-examples.git
-\end_layout
-
+flood protection
+\begin_inset Quotes erd
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Then, compile and run the 'metabolicnetworks' example:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-cd entanglement-examples/metabolicnetworks/
-\end_layout
-
-\begin_layout Plain Layout
-
-mvn clean install exec:exec
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Assuming that your MongoDB server is running correctly, you should have
- seen the following output:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:24 PM com.entanglementgraph.util.GraphConnectionFactory connect
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Connecting to: localhost/metabolic, graph: helloworld/trunk
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:25 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
-yer notifyPostCommit
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Received notification of transaction commit: d6a3cf9dcb634b239404404d3b04a
-a61
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:25 PM com.entanglementgraph.player.spi.LogItemPlayerProvider
- <init>
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Using classloader: sun.misc.Launcher$AppClassLoader@66cf9bf0
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionBeginPlayer
- playItem
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Acknowledging START of transaction: d6a3cf9dcb634b239404404d3b04aa61Nothin
-g to do here yet.
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionCommitPlayer
- playItem
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Acknowledging COMMIT of transaction: d6a3cf9dcb634b239404404d3b04aa61Nothi
-ng to do here yet.
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
-yer notifyPostCommit
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Playback of this transaction is now complete
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
-yer notifyPostCommit
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Received notification of transaction commit: 589f41b8ebe1426a804fc6f6cd899
-a70
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.LogItemPlayerProvider
- <init>
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Using classloader: sun.misc.Launcher$AppClassLoader@66cf9bf0
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionBeginPlayer
- playItem
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Acknowledging START of transaction: 589f41b8ebe1426a804fc6f6cd899a70Nothin
-g to do here yet.
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.player.spi.TransactionCommitPlayer
- playItem
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Acknowledging COMMIT of transaction: 589f41b8ebe1426a804fc6f6cd899a70Nothi
-ng to do here yet.
-\end_layout
-
-\begin_layout Plain Layout
-
-May 22, 2013 1:41:26 PM com.entanglementgraph.util.experimental.GraphOpPostCommitPla
-yer notifyPostCommit
-\end_layout
-
-\begin_layout Plain Layout
-
-INFO: Playback of this transaction is now complete
-\end_layout
-
-\begin_layout Plain Layout
-
-[INFO] ------------------------------------------------------------------------
-\end_layout
-
-\begin_layout Plain Layout
-
-[INFO] BUILD SUCCESS
-\end_layout
-
-\begin_layout Plain Layout
-
-[INFO] ------------------------------------------------------------------------
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-This means that a small Entanglement graph has been constructed.
+ feature present in many server implementations; Entanglement agents frequently
+ post large volumes of information to a chat channel, which may be mis-interpret
+ted by some servers as a malicious attempt at flooding the network.
 \end_layout
 
 \begin_layout Section
-Building Entanglement from source
+Compiling Entanglement
 \end_layout
 
 \begin_layout Standard
-Check out a working copy of the Git repository to your local machine:
+First, obtain a clone of the Entanglement source code from BitBucket (replacing
+ '
+\emph on
+yourusername
+\emph default
+' with your own BitBucket account name):
 \end_layout
 
 \begin_layout Standard
@@ -528,27 +322,52 @@ status open
 
 \begin_layout Plain Layout
 
-git clone git@bitbucket.org:keith_f/entanglement.git
+cd $HOME
 \end_layout
 
-\end_inset
+\begin_layout Plain Layout
 
-
+git clone https://yourusername@bitbucket.org/keith_f/entanglement.git
 \end_layout
-
-\begin_layout Standard
-Then:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
 
 \begin_layout Plain Layout
 
 cd entanglement/entanglement
 \end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Next, execute 'git flow init', and accept all the default values by pressing
+ 'return' to each question:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+git flow init
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Now, compile Entanglement with the following command:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
 
 \begin_layout Plain Layout
 
@@ -560,8 +379,259 @@ mvn clean install
 
 \end_layout
 
+\begin_layout Standard
+The first time you compile Entanglement, many Maven dependencies will be
+ downloaded.
+ Subsequent builds should be much faster.
+\end_layout
+
+\begin_layout Chapter
+IRC User interface
+\end_layout
+
+\begin_layout Standard
+We chose an IRC (Internet Rely Chat) inteface as the primary means of interactin
+g with Entanglement graphs for a number of reasons.
+ IRC is a popular means of communicating with other people and programs
+ over the Internet.
+ While developing Entanglement, we needed to stike a balance between automation
+ (scriptability), interactivity (inspecting and managing long-running tasks)
+ and visual feedback (graph GUIs).
+ The default Entanglement user interface builds on the distributed nature
+ of IRC to provide an extremely versitile graph environment with the following
+ features:
+\end_layout
+
+\begin_layout Enumerate
+Multiple users at different geographical locations can interact with the
+ same graphs.
+ Users in the same IRC channel can interact and issue commands to one or
+ more Entanglement agents.
+ Users are kept up-to-date of progress and status messages.
+\end_layout
+
+\begin_layout Enumerate
+The command-based interface allows scriptability and therefore repeatability.
+ Integrated datasets can be composed step-by-step.
+\end_layout
+
+\begin_layout Enumerate
+Further commands are provided that launch user-local GUI visualisations
+ of remote graph entities and operations.
+ For example, a GUI running on a local machine can be attached to a remote
+ graph cursor.
+ When a remote user or automated agent updates the position of the graph
+ cursor, the changes are reflected in the local visualisation.
+\end_layout
+
+\begin_layout Enumerate
+IRC 'channels' provide an intuitive means of segregating workspaces and
+ workgroups.
+ Separate user groups, graphs and configurations can exist in different
+ named channels.
+ Altenatively, channels can also be used to provide different integrated
+ views over the same datasets.
+\end_layout
+
+\begin_layout Section
+HOWTOs
+\end_layout
+
+\begin_layout Subsection
+How to connect to a MongoDB cluster
+\end_layout
+
+\begin_layout Standard
+Before you can manipulate or query any Entanglement graphs, you must first
+ define a database 'cluster' by providing connection details.
+ Database cluster definitions in Entanglement are 1:1 with MongoDB replica
+ server sets, and can be defined as follows:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+!<your_bot> connect-mongodb-pool pool=my-project-pool hosts=my-mongodb-host.com
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the above command, we define a connection pool named 'my-project-pool'
+ that connects to the MongoDB server 'my-mongodb-host.com'.
+ This connection pool can now be used to create graph connections.
+\end_layout
+
+\begin_layout Standard
+Note that the 'hosts' parameter can take a comma-separated list of hostnames,
+ but is used to configure 
+\emph on
+replica
+\emph default
+ server sets only.
+ If you have a sharded configuration, you do not need to specify shard members
+ here.
+\end_layout
+
+\begin_layout Subsection
+How to create a graph connection
+\end_layout
+
+\begin_layout Standard
+Once MongoDB cluster information has been registered (see previous section),
+ you can create named graph connections.
+ Most other Entanglement operations require at least one graph connection
+ in order to perform queries or other database operations.
+ Here, we define a graph connection '
+\emph on
+my-connection
+\emph default
+' that connects to the MongoDB cluster '
+\emph on
+my-project-pool
+\emph default
+'.
+ The database '
+\emph on
+my-database
+\emph default
+' is used, which refers to a MongoDB database stored on the server cluster.
+ Within this database, we connect to the graph '
+\emph on
+my-graph
+\emph default
+'.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+!<your_bot> connect-graph conn=my-connection pool=my-project-pool database=my-da
+tabase graph=my-graph
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This connection information is made available to subsequent commands through
+ the connection name '
+\emph on
+my-connection
+\emph default
+'.
+\end_layout
+
+\begin_layout Subsection
+How to export an Entanglement graph to Gephi (.gexf) format
+\end_layout
+
+\begin_layout Standard
+Quite often it is useful to be able to visualise small graphs, or sub-graphs.
+ Gephi is able to display approximately 30,000 nodes and edges on modern
+ graphics hardware.
+ Exporting an Entanglement graph to Gephi format is straightfoward.
+ Via the IRC interface, execute the '
+\emph on
+export-gephi
+\emph default
+' command, which will either use the current default graph connection, or
+ a specified name, as shown:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+!<your_bot> export-gephi conn=<your_connection_name>
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You may also specify custom colour formatting by node type by inserting
+ appropriate colour entries into your IRC bot's environement, as follows:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.Chromosome RED
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.Gene GREEN
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.ProbeType CYAN
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.Bristol450kData YELLOW
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.Encode450kData ORANGE
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> prop-set node.color.Protein BLUE
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+!<your_bot> export-gephi conn=<your_connection_name>
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Part
 Entanglement Development Documentation
+\end_layout
+
+\begin_layout Chapter
+Programmatic interface to Entanglement graphs
 \end_layout
 
 \end_body
