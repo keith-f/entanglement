@@ -211,7 +211,7 @@ public class DepthFirstGraphIterator {
       }
       cacheEdgeIds(edgeId);
 
-      EntityRule.NextEdgeIteration nextIterationDecision = executeRules(currentPosition, nen, false, remoteNodeId, edgeId);
+      EntityRule.NextEdgeIteration nextIterationDecision = executeRules(currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
