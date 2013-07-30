@@ -34,29 +34,16 @@ import com.mongodb.BasicDBObject;
  *
  * @author Keith Flanagan
  */
-public class DefaultRule implements EntityRule {
-
-  private GraphConnection sourceGraph;
-  private GraphConnection destinationGraph;
+public class DefaultRule extends AbstractRule {
 
   @Override
-  public void setSourceGraph(GraphConnection sourceGraph) {
-    this.sourceGraph = sourceGraph;
-  }
-
-  @Override
-  public void setDestinationGraph(GraphConnection destinationGraph) {
-    this.destinationGraph = destinationGraph;
-  }
-
-  @Override
-  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     return true;
   }
 
   @Override
-  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();

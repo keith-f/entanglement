@@ -103,6 +103,10 @@ public class DepthFirstGraphIterator {
   }
 
   public void addRule(EntityRule rule) {
+    rule.setSourceGraph(sourceGraph);
+    rule.setDestinationGraph(destinationGraph);
+    rule.setEntanglementRuntime(runtime);
+    rule.setCursorContext(cursorContext);
     rules.add(rule);
   }
 
@@ -180,7 +184,8 @@ public class DepthFirstGraphIterator {
       }
       cacheEdgeIds(edgeId);
 
-      EntityRule.NextEdgeIteration nextIterationDecision = executeRules(currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
+      EntityRule.NextEdgeIteration nextIterationDecision =
+          executeRules(cursorName, currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
@@ -252,14 +257,14 @@ public class DepthFirstGraphIterator {
     graphUpdates.clear();
   }
 
-  protected EntityRule.NextEdgeIteration executeRules(
+  protected EntityRule.NextEdgeIteration executeRules(String cursorName,
           EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
           boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
         throws GraphIteratorException {
 
     for (EntityRule rule : rules) {
-      if (rule.ruleMatches(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
-        EntityRule.HandlerAction result = rule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+      if (rule.ruleMatches(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
+        EntityRule.HandlerAction result = rule.apply(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
         graphUpdates.addAll(result.getOperations());
 
 
@@ -278,7 +283,7 @@ public class DepthFirstGraphIterator {
     }
 
     // No rule in the list matched this node. Apply the default rule
-    EntityRule.HandlerAction result = defaultRule.apply(currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+    EntityRule.HandlerAction result = defaultRule.apply(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
     graphUpdates.addAll(result.getOperations());
     return result.getNextIterationBehaviour();
   }

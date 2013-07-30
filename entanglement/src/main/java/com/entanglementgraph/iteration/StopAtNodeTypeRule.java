@@ -35,11 +35,7 @@ import com.mongodb.BasicDBObject;
  *
  * @author Keith Flanagan
  */
-public class StopAtNodeTypeRule implements EntityRule {
-
-  private GraphConnection sourceGraph;
-  private GraphConnection destinationGraph;
-
+public class StopAtNodeTypeRule extends AbstractRule {
   private String nodeType;
   private boolean includeNodeInDestination;
 
@@ -49,23 +45,13 @@ public class StopAtNodeTypeRule implements EntityRule {
   }
 
   @Override
-  public void setSourceGraph(GraphConnection sourceGraph) {
-    this.sourceGraph = sourceGraph;
-  }
-
-  @Override
-  public void setDestinationGraph(GraphConnection destinationGraph) {
-    this.destinationGraph = destinationGraph;
-  }
-
-  @Override
-  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     return nodeId.getType().equals(nodeType);
   }
 
   @Override
-  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
