@@ -126,6 +126,16 @@ public class DepthFirstGraphIterator {
       throw new GraphIteratorException("Failed to start transaction", e);
     }
 
+    // Inform all rules that we're about to start graph walking
+    try {
+      for (EntityRule rule : rules) {
+        graphUpdates.addAll(rule.iterationStarted(start.getName(), start.getPosition()));
+      }
+    } catch(Exception e) {
+      throw new GraphIteratorException("Failed rule initialisation step", e);
+    }
+
+    // Start iterations
     try {
       // Add the start node
       BasicDBObject startObj = start.resolve(sourceGraph);
@@ -137,6 +147,15 @@ public class DepthFirstGraphIterator {
       // Write any final updates that haven't been written already
       if (!graphUpdates.isEmpty()) {
         writeUpdates();
+      }
+
+      // Inform all rules that we've finished graph walking
+      try {
+        for (EntityRule rule : rules) {
+          graphUpdates.addAll(rule.iterationFinished(start.getName(), start.getPosition()));
+        }
+      } catch(Exception e) {
+        throw new GraphIteratorException("Failed rule initialisation step", e);
       }
 
       // Commit transaction

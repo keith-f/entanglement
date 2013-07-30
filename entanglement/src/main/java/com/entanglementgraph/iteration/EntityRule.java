@@ -124,4 +124,22 @@ public interface EntityRule {
    */
   public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
+
+  /**
+   * A method that is triggered when the graph iterator is about to start iterating. You should use this method to
+   * perform any initialisation that needs to be performed.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
+   * @param currentPosition the starting node for the cursor.
+   */
+  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition);
+
+  /**
+   * A method that is triggered when the graph iterator has completed its iteration. You could use this method to
+   * perform tidy-up operations that must be performed before the iterator commits the destination graph.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
+   * @param currentPosition the position of the final node whose edges were iterated.
+   */
+  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition);
 }

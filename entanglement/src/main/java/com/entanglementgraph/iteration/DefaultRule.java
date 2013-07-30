@@ -21,10 +21,13 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.commands.EdgeModification;
+import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
+
+import java.util.List;
 
 /**
  * A rule that simply stores the edges and nodes unchanged in the destination graph.
@@ -52,4 +55,5 @@ public class DefaultRule extends AbstractRule {
     action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
     return action;
   }
+
 }

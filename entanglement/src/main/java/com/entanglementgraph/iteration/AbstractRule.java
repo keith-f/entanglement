@@ -21,7 +21,11 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.util.GraphConnection;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * User: keith
@@ -53,6 +57,16 @@ abstract public class AbstractRule implements EntityRule {
   @Override
   public void setCursorContext(GraphCursor.CursorContext cursorContext) {
     this.cursorContext = cursorContext;
+  }
+
+  @Override
+  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition) {
+    return new LinkedList<>();
+  }
+
+  @Override
+  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition) {
+    return new LinkedList<>();
   }
 
 }
