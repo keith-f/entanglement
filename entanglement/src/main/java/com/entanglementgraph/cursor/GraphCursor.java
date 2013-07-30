@@ -150,8 +150,7 @@ public class GraphCursor implements Serializable {
 
 
 
-  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode)
-      throws GraphCursorException {
+  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode) {
     this.name = cursorName;
     this.position = startNode;
     this.movementType = MovementTypes.START_POSITION;
@@ -169,8 +168,7 @@ public class GraphCursor implements Serializable {
 
   protected GraphCursor(String cursorName, MovementTypes movementType,
                         GraphCursor previousLocation, EntityKeys<? extends Edge> arrivedVia, EntityKeys<? extends Node> newPosition,
-                        Map<String, Object> parameters)
-      throws GraphCursorException {
+                        Map<String, Object> parameters) {
     this.name = cursorName;
     this.position = newPosition;
     this.movementType = movementType;
