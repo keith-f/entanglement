@@ -46,13 +46,13 @@ public class StopAtNodeTypeRule extends AbstractRule {
 
   @Override
   public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException  {
     return nodeId.getType().equals(nodeType);
   }
 
   @Override
   public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
 

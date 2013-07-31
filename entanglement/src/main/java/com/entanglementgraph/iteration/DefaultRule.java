@@ -41,13 +41,13 @@ public class DefaultRule extends AbstractRule {
 
   @Override
   public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
     return true;
   }
 
   @Override
   public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) {
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
     BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
 
