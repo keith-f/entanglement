@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class ScatterPlotChartRenderer implements CustomCellRenderer<XYChartNode> {
-  private static final Logger logger = Logger.getLogger(PieChartRenderer.class.getSimpleName());
+  private static final Logger logger = Logger.getLogger(ScatterPlotChartRenderer.class.getSimpleName());
 
   private Map<String, Object> rendererProperties;
   private ChartPanel chartPanel;

@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class XYLineChartRenderer implements CustomCellRenderer<XYChartNode> {
-  private static final Logger logger = Logger.getLogger(PieChartRenderer.class.getSimpleName());
+  private static final Logger logger = Logger.getLogger(XYLineChartRenderer.class.getSimpleName());
 
   private Map<String, Object> rendererProperties;
   private ChartPanel chartPanel;
