@@ -112,6 +112,9 @@ public class GraphConnectionFactory {
 
   public GraphConnection connect(String graphName, String graphBranch) throws GraphConnectionFactoryException {
     try {
+      if (connectionPool == null) {
+        throw new GraphConnectionFactoryException("Connection pool: "+poolName+" could not be found.");
+      }
       logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName + "/" + graphBranch);
 
       GraphConnection connection = new GraphConnection();
