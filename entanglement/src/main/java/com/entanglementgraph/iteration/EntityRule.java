@@ -142,8 +142,7 @@ public interface EntityRule {
    * perform tidy-up operations that must be performed before the iterator commits the destination graph.
    *
    * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
-   * @param currentPosition the position of the final node whose edges were iterated.
    */
-  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition)
+  public List<GraphOperation> iterationFinished(String cursorName)
       throws RuleException;
 }

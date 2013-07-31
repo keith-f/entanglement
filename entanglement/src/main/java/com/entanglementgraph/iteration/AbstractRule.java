@@ -66,7 +66,7 @@ abstract public class AbstractRule implements EntityRule {
   }
 
   @Override
-  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition)
+  public List<GraphOperation> iterationFinished(String cursorName)
       throws RuleException {
     return new LinkedList<>();
   }

@@ -144,18 +144,18 @@ public class DepthFirstGraphIterator {
       // Iterate child nodes recursively
       addChildNodes(start.getName(), null);
 
-      // Write any final updates that haven't been written already
-      if (!graphUpdates.isEmpty()) {
-        writeUpdates();
-      }
-
       // Inform all rules that we've finished graph walking
       try {
         for (EntityRule rule : rules) {
-          graphUpdates.addAll(rule.iterationFinished(start.getName(), start.getPosition()));
+          graphUpdates.addAll(rule.iterationFinished(start.getName()));
         }
       } catch(Exception e) {
-        throw new GraphIteratorException("Failed rule initialisation step", e);
+        throw new GraphIteratorException("Failed rule tidyup step", e);
+      }
+
+      // Write any final updates that haven't been written already
+      if (!graphUpdates.isEmpty()) {
+        writeUpdates();
       }
 
       // Commit transaction
