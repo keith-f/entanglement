@@ -46,15 +46,16 @@ public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.Node
   private final boolean edgesAreOutgoing;
   private final Callable<DBCursor> queryExecutor;
 
-  public EdgeIteratorToNENTupleIterator(DbObjectMarshaller marshaller, GraphConnection conn,
-                                        EntityKeys<? extends Node> subjectNodePosition, boolean edgesAreOutgoing,
-                                        Callable<DBCursor> queryExecutor) throws GraphModelException {
-    this.marshaller = marshaller;
+  public EdgeIteratorToNENTupleIterator(GraphConnection conn,
+                                        EntityKeys<? extends Node> subjectNodePosition, BasicDBObject subjectNode,
+                                        boolean edgesAreOutgoing, Callable<DBCursor> queryExecutor) {
     this.conn = conn;
+    this.marshaller = conn.getMarshaller();
+
     this.subjectNodePosition = subjectNodePosition;
     this.edgesAreOutgoing = edgesAreOutgoing;
     this.queryExecutor = queryExecutor;
-    this.subjectNode = conn.getNodeDao().getByKey(subjectNodePosition);
+    this.subjectNode = subjectNode;
   }
 
   @Override

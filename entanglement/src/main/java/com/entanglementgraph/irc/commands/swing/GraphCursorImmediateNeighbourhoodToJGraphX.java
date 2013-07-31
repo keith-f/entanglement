@@ -111,12 +111,12 @@ public class GraphCursorImmediateNeighbourhoodToJGraphX {
       DBObject cursorNode = cursor.resolve(graphConn);
       addNode(parent, cursorNode);
 
-      for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveOutgoingEdgeDestPairs(graphConn)) {
+      for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveEdgeDestPairs(graphConn, true)) {
         addNode(parent, nodeEdgeNode.getRawDestinationNode());
         addEdge(parent, nodeEdgeNode.getRawEdge());
       }
 
-      for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveIncomingEdgeDestPairs(graphConn)) {
+      for (GraphCursor.NodeEdgeNodeTuple nodeEdgeNode : cursor.iterateAndResolveEdgeDestPairs(graphConn, false)) {
         addNode(parent, nodeEdgeNode.getRawSourceNode());
         addEdge(parent, nodeEdgeNode.getRawEdge());
       }

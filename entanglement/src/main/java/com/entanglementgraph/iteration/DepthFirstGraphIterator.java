@@ -173,10 +173,12 @@ public class DepthFirstGraphIterator {
     }
     GraphCursor current = getCurrentCursorPosition(cursorName);
     processEdges(cursorName, previousPosition, current.getPosition(), false,
-        current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
+        current.iterateAndResolveEdgeDestPairs(sourceGraph, false));
+//        current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
     current = getCurrentCursorPosition(cursorName);
     processEdges(cursorName, previousPosition, current.getPosition(), true,
-        current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
+        current.iterateAndResolveEdgeDestPairs(sourceGraph, true));
+//        current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
   }
 
   private void processEdges(String cursorName,

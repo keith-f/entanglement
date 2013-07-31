@@ -36,6 +36,7 @@ import com.scalesinformatics.util.generics.MakeIterable;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 /**
@@ -427,6 +428,67 @@ public class GraphCursor implements Serializable {
     }
   }
 
+  /*
+   * ***************************** Iterate and resolve edge/node pairs
+   */
+
+  /**
+   * Using the current cursor position as a starting point, iterates over every incoming or outgoing edge (depending
+   * on the value of <code>outgoingEdges</code> and resolves the raw DBObject representation of the edge and also the
+   * DBObject of the destination node. This class is useful when it is necessary to return node and edge data in
+   * a single operation, rather than querying for them individually.
+   *
+   * @param conn the graph database connection to use.
+   * @param outgoingEdges set 'true' to iterate over outgoing edges, or 'false' to iterate over incoming edges.
+   * @return an Iterable set of source-edge-destination tuples. In the case where a database entry for a node doesn't
+   * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
+   * but the node document(s) will be NULL.
+   * @throws GraphCursorException
+   */
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveEdgeDestPairs(
+      final GraphConnection conn, final boolean outgoingEdges)
+      throws GraphCursorException {
+    final BasicDBObject subjectNode = resolve(conn);
+    return new EdgeIteratorToNENTupleIterator(conn, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+      @Override
+      public DBCursor call() throws Exception {
+        return outgoingEdges
+            ? conn.getEdgeDao().iterateEdgesFromNode(position)
+            : conn.getEdgeDao().iterateEdgesToNode(position);
+      }
+    });
+  }
+
+  /**
+   * Using the current cursor position as a starting point, iterates over every incoming or outgoing edge (depending
+   * on the value of <code>outgoingEdges</code> and resolves the raw DBObject representation of the edge and also the
+   * DBObject of the destination node. This class is useful when it is necessary to return node and edge data in
+   * a single operation, rather than querying for them individually.
+   *
+   * @param conn the graph database connection to use.
+   * @param outgoingEdges set 'true' to iterate over outgoing edges, or 'false' to iterate over incoming edges.
+   * @param remoteNodeType filters edges that don't have a node with type <code>remoteNodeType</code> at the remote
+   *                       end.
+   * @return an Iterable set of source-edge-destination tuples. In the case where a database entry for a node doesn't
+   * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
+   * but the node document(s) will be NULL.
+   * @throws GraphCursorException
+   */
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveEdgeDestPairsToRemoteNodeOfType(
+      final GraphConnection conn, final boolean outgoingEdges, final String remoteNodeType)
+      throws GraphCursorException {
+    final BasicDBObject subjectNode = resolve(conn);
+    return new EdgeIteratorToNENTupleIterator(conn, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+      @Override
+      public DBCursor call() throws Exception {
+        return outgoingEdges
+            ? conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)
+            : conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType);
+      }
+    });
+  }
+
+
   /**
    * Using the current cursor position as a starting point, iterates over every outgoing edge and resolves the raw
    * DBObject representation of the edge and also the DBObject of the destination node. This class is useful when it
@@ -437,8 +499,9 @@ public class GraphCursor implements Serializable {
    * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
    * but the node document(s) will be NULL.
    * @throws GraphCursorException
+   * @deprecated replaced by a more generic implementation
    */
-  public Iterable<NodeEdgeNodeTuple> iterateAndResolveOutgoingEdgeDestPairs(final GraphConnection conn)
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveOutgoingEdgeDestPairsOld(final GraphConnection conn)
       throws GraphCursorException {
     final DbObjectMarshaller m = conn.getMarshaller();
     final BasicDBObject sourceNode = resolve(conn);
@@ -495,8 +558,9 @@ public class GraphCursor implements Serializable {
    * exist, but an <code>EntityKeys</code> exists in the edge (i.e. a hanging edges), then the edge will be resolved,
    * but the node document(s) will be NULL.
    * @throws GraphCursorException
+   * @deprecated replaced by a more generic implementation
    */
-  public Iterable<NodeEdgeNodeTuple> iterateAndResolveIncomingEdgeDestPairs(final GraphConnection conn)
+  public Iterable<NodeEdgeNodeTuple> iterateAndResolveIncomingEdgeDestPairsOld(final GraphConnection conn)
       throws GraphCursorException {
     final DbObjectMarshaller m = conn.getMarshaller();
     final BasicDBObject destinationNode = resolve(conn);
