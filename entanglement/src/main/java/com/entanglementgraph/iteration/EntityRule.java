@@ -102,7 +102,8 @@ public interface EntityRule {
    * data.
    */
   public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             throws RuleException;
 
   /**
    * Called when a <code>DepthFirstGraphIterator</code> decides that this rule implementation should process the
@@ -123,7 +124,8 @@ public interface EntityRule {
    * b) whether to change the iteration behaviour of the caller.
    */
   public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             throws RuleException;
 
   /**
    * A method that is triggered when the graph iterator is about to start iterating. You should use this method to
@@ -132,7 +134,8 @@ public interface EntityRule {
    * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
    * @param currentPosition the starting node for the cursor.
    */
-  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition);
+  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
+      throws RuleException;;
 
   /**
    * A method that is triggered when the graph iterator has completed its iteration. You could use this method to
@@ -141,5 +144,6 @@ public interface EntityRule {
    * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
    * @param currentPosition the position of the final node whose edges were iterated.
    */
-  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition);
+  public List<GraphOperation> iterationFinished(String cursorName, EntityKeys<? extends Node> currentPosition)
+      throws RuleException;
 }

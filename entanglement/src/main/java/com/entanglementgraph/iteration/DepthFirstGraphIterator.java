@@ -167,7 +167,7 @@ public class DepthFirstGraphIterator {
   }
 
   private void addChildNodes(String cursorName, EntityKeys<? extends Node> previousPosition)
-      throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException, RevisionLogException {
+      throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException, RevisionLogException, RuleException {
     if (killSwitchActive) {
       return;
     }
@@ -184,7 +184,7 @@ public class DepthFirstGraphIterator {
   private void processEdges(String cursorName,
                             EntityKeys<? extends Node> previousPosition, EntityKeys<? extends Node> currentPosition,
                             boolean outgoingEdges, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
-      throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException {
+      throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException, RuleException {
     for (GraphCursor.NodeEdgeNodeTuple nen : edges) {
       if (killSwitchActive) {
         return;
@@ -281,7 +281,7 @@ public class DepthFirstGraphIterator {
   protected EntityRule.NextEdgeIteration executeRules(String cursorName,
           EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
           boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
-        throws GraphIteratorException {
+        throws GraphIteratorException, RuleException {
 
     for (EntityRule rule : rules) {
       if (rule.ruleMatches(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
