@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * An extension of the <code>mxGraph</code> class that can be used to implement custom cell renderers.
@@ -40,6 +41,8 @@ import java.util.Set;
  * @author Keith Flanagan
  */
 public class EntanglementMxGraph extends mxGraph {
+  private static final Logger logger = Logger.getLogger(EntanglementMxGraph.class.getName());
+
   /**
    * The following are set by the EntanglementMxGraph constructor and are passed on to new instances of
    * custom renderers. This map can be used to pass on runtime configuration information, such as variables,
@@ -169,6 +172,7 @@ public class EntanglementMxGraph extends mxGraph {
      */
     for (ValueRule rule : customRendererRules) {
       Class<? extends CustomCellRenderer> rendererType = rule.getRenderer(cellValue);
+      logger.info("Rule: "+rule+" evaluated: "+cellValue+" and returned renderer type: "+rendererType);
       if (rendererType != null) {
         try {
           CustomCellRenderer renderer = rendererType.newInstance();

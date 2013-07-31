@@ -22,10 +22,14 @@ import com.entanglementgraph.visualisation.jgraphx.renderers.CustomCellRenderer;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 
+import java.util.logging.Logger;
+
 /**
  * @author Keith Flanagan
  */
 public class NodeByTypeValueRule implements ValueRule {
+  private static final Logger logger = Logger.getLogger(NodeByTypeValueRule.class.getName());
+
   private final DbObjectMarshaller marshaller;
   private final String nodeType;
   private final Class<? extends CustomCellRenderer> rendererType;
@@ -54,6 +58,7 @@ public class NodeByTypeValueRule implements ValueRule {
 
   @Override
   public Class<? extends CustomCellRenderer> getRenderer(Object value) {
+    logger.info(String.format("Evaluating: %s", value));
     if (!(value instanceof DBObject)) {
       return null;
     }
@@ -61,6 +66,7 @@ public class NodeByTypeValueRule implements ValueRule {
     try {
       DBObject valObj = (DBObject) value;
       Node valNode = marshaller.deserialize(valObj, Node.class);
+      logger.info(String.format("Deserialised: %s to: %s", value, valNode));
       return valNode.getKeys().getType().equals(nodeType)
           ? rendererType
           : null;
