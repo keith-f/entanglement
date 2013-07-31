@@ -17,11 +17,10 @@
 
 package com.entanglementgraph.specialistnodes;
 
-import org.jfree.data.general.PieDataset;
-import org.jfree.data.xy.XYDataset;
+import org.jfree.data.general.DefaultPieDataset;
 
 /**
- * A node that represents an X/Y dataset for a chart.
+ * A node that represents an pie chart dataset for a chart.
  *
  * @author Keith Flanagan
  */
@@ -32,17 +31,17 @@ public class PieChartNode extends AbstractChartNode {
     return CV_NAME;
   }
 
-  private PieDataset dataset;
+  private DefaultPieDataset dataset;
 
   public PieChartNode() {
     keys.setType(getTypeName());
   }
 
-  public PieDataset getDataset() {
+  public DefaultPieDataset getDataset() {
     return dataset;
   }
 
-  public void setDataset(PieDataset dataset) {
+  public void setDataset(DefaultPieDataset dataset) {
     this.dataset = dataset;
   }
 }

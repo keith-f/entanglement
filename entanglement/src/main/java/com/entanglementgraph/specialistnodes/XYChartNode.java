@@ -17,8 +17,7 @@
 
 package com.entanglementgraph.specialistnodes;
 
-import com.entanglementgraph.graph.data.Node;
-import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.DefaultXYDataset;
 
 /**
  * A node that represents an X/Y dataset for a chart.
@@ -32,17 +31,17 @@ public class XYChartNode extends AbstractChartNode {
     return CV_NAME;
   }
 
-  private XYDataset dataset;
+  private DefaultXYDataset dataset;
 
   public XYChartNode() {
     keys.setType(getTypeName());
   }
 
-  public XYDataset getDataset() {
+  public DefaultXYDataset getDataset() {
     return dataset;
   }
 
-  public void setDataset(XYDataset dataset) {
+  public void setDataset(DefaultXYDataset dataset) {
     this.dataset = dataset;
   }
 }

@@ -17,33 +17,31 @@
 
 package com.entanglementgraph.specialistnodes;
 
-import com.entanglementgraph.graph.data.Node;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesDataItem;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 /**
- * A node that represents a time series dataset for a chart.
+ * A node that represents a basic category dataset for a chart.
  *
  * @author Keith Flanagan
  */
-public class TimeSeriesChartNode extends AbstractChartNode {
+public class CategoryChartNode extends AbstractChartNode {
 
-  private static final String CV_NAME = TimeSeriesChartNode.class.getSimpleName();
+  private static final String CV_NAME = CategoryChartNode.class.getSimpleName();
   public static String getTypeName() {
     return CV_NAME;
   }
 
-  private TimeSeries dataset;
+  private DefaultCategoryDataset dataset;
 
-  public TimeSeriesChartNode() {
+  public CategoryChartNode() {
     keys.setType(getTypeName());
   }
 
-  public TimeSeries getDataset() {
+  public DefaultCategoryDataset getDataset() {
     return dataset;
   }
 
-  public void setDataset(TimeSeries dataset) {
+  public void setDataset(DefaultCategoryDataset dataset) {
     this.dataset = dataset;
   }
 }
