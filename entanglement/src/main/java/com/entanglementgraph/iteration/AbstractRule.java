@@ -34,10 +34,10 @@ import java.util.List;
  * @author Keith Flanagan
  */
 abstract public class AbstractRule implements EntityRule {
-  private GraphConnection sourceGraph;
-  private GraphConnection destinationGraph;
-  private EntanglementRuntime entanglementRuntime;
-  private GraphCursor.CursorContext cursorContext;
+  protected GraphConnection sourceGraph;
+  protected GraphConnection destinationGraph;
+  protected EntanglementRuntime entanglementRuntime;
+  protected GraphCursor.CursorContext cursorContext;
 
   @Override
   public void setSourceGraph(GraphConnection sourceGraph) {
