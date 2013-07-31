@@ -108,6 +108,16 @@ public interface EdgeDAO
       throws GraphModelException;
 
   /**
+   * Iterates all edges <b>to</b> a specified node that originate from a remote (source) node of a specified type.
+   * @param to the destination node
+   * @param fromNodeType the type of source node
+   * @return
+   * @throws GraphModelException
+   */
+  public DBCursor iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType)
+      throws GraphModelException;
+
+  /**
    * Given a node, returns an Iterable over all the incoming edges to that node.
    *
    * @param to the node whose incoming edges are to be iterated.

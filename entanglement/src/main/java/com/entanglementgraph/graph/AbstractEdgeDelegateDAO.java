@@ -81,6 +81,11 @@ import java.util.Set;
   }
 
   @Override
+  public DBCursor iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType) throws GraphModelException {
+    return delegate.iterateEdgesToNodeFromNodeOfType(to, fromNodeType);
+  }
+
+  @Override
   public DBCursor iterateEdgesToNode(EntityKeys to) throws GraphModelException {
     return delegate.iterateEdgesToNode(to);
   }
