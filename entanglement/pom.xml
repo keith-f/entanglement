@@ -30,6 +30,7 @@
     <cliche.version>1.0-SNAPSHOT</cliche.version>
     <gephi.version>0.8.2</gephi.version>
     <jgraphx.version>2.0.0.1</jgraphx.version>
+      <jung.version>2.0.1</jung.version>
     <jfreechart.version>1.0.14</jfreechart.version>
   </properties>
 
@@ -217,6 +218,49 @@
       <artifactId>jgraphx</artifactId>
       <version>${jgraphx.version}</version>
     </dependency>
+
+    <!-- JUNG -->
+    <dependency>
+        <groupId>net.sf.jung</groupId>
+        <artifactId>jung-api</artifactId>
+        <version>${jung.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>net.sf.jung</groupId>
+        <artifactId>jung-graph-impl</artifactId>
+        <version>${jung.version}</version>
+    </dependency>
+
+      <dependency>
+          <groupId>net.sf.jung</groupId>
+          <artifactId>jung-visualization</artifactId>
+          <version>${jung.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>net.sf.jung</groupId>
+          <artifactId>jung-algorithms</artifactId>
+          <version>${jung.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>net.sf.jung</groupId>
+          <artifactId>jung-io</artifactId>
+          <version>${jung.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>net.sf.jung</groupId>
+          <artifactId>jung-jai</artifactId>
+          <version>${jung.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>net.sf.jung</groupId>
+          <artifactId>jung-3d</artifactId>
+          <version>${jung.version}</version>
+      </dependency>
 
     <!-- JFree chart -->
     <dependency>
