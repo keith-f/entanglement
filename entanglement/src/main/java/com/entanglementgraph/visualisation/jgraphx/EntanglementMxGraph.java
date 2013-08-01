@@ -172,7 +172,7 @@ public class EntanglementMxGraph extends mxGraph {
      */
     for (ValueRule rule : customRendererRules) {
       Class<? extends CustomCellRenderer> rendererType = rule.getRenderer(cellValue);
-      logger.info("Rule: "+rule+" evaluated: "+cellValue+" and returned renderer type: "+rendererType);
+      logger.info("Rule: "+rule+" evaluated: "+cellValue+" of type: "+cellValue.getClass().getName()+" and returned renderer type: "+rendererType);
       if (rendererType != null) {
         try {
           CustomCellRenderer renderer = rendererType.newInstance();

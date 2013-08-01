@@ -339,7 +339,9 @@ public class MongoToJGraphExporter {
     }
 
     String id = parseIdStringFromKeyset(keyset);
-    Object jgraphNode = graph.insertVertex(parentContainer, id, visualInfo.toBasicString(keyset, nodeObj), 0, 0,
+//    Object jgraphNode = graph.insertVertex(parentContainer, id, visualInfo.toBasicString(keyset, nodeObj), 0, 0,
+//        visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
+    Object jgraphNode = graph.insertVertex(parentContainer, id, nodeObj, 0, 0,
         visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
     cacheJGraphXNode(keyset, jgraphNode);
     return jgraphNode;
