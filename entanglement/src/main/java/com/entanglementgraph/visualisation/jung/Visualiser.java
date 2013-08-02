@@ -1,0 +1,143 @@
+/*
+ * Copyright 2013 Keith Flanagan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
+package com.entanglementgraph.visualisation.jung;
+
+import com.entanglementgraph.experimental.TestIcon;
+import com.mongodb.DBObject;
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.EdgeType;
+import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
+import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.ScalingControl;
+import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
+import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
+import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
+import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
+import org.apache.commons.collections15.Transformer;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot3D;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.PieDataset;
+import org.jfree.util.Rotation;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+/**
+ *
+ * @author Keith Flanagan
+ */
+public class Visualiser {
+
+  private final Graph<DBObject, DBObject> graph;
+
+  /**
+   * the visual component and renderer for the graph
+   */
+  private VisualizationViewer<DBObject, DBObject> vv;
+
+  public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexAppearance customVertexAppearance) {
+    this.graph = graph;
+
+    Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
+    layout.setSize(new Dimension(800, 800));
+//    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
+    vv =  new VisualizationViewer<>(layout);
+    vv.setDoubleBuffered(true);
+
+    vv.setPreferredSize(new Dimension(850,850)); //Sets the viewing area size
+    vv.getRenderContext().setVertexLabelTransformer(customVertexAppearance.getVertexLabelTransformer());
+    vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
+    vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
+
+    // ******
+    vv.getRenderContext().setVertexIconTransformer(new Transformer<DBObject, Icon>() {
+      public Icon transform(final DBObject v) {
+//        if (Math.random() < 0.05) {
+//          return new ChartIcon<>(vv, v);
+//        } else {
+         return new TestIcon<>(vv, v);
+//        return null;
+//      }
+
+      }});
+
+
+    vv.getRenderContext().setVertexShapeTransformer(new Transformer<DBObject, Shape>() {
+      @Override
+      public Shape transform(DBObject integer) {
+        Rectangle rect = new Rectangle(200, 200);
+        return rect;
+      }
+    });
+
+    vv.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vv.getPickedVertexState(), Color.white,  Color.yellow));
+    vv.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vv.getPickedEdgeState(), Color.black, Color.lightGray));
+
+    vv.setBackground(Color.white);
+
+    // add my listener for ToolTips
+    vv.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
+
+    // create a frome to hold the graph
+    final JFrame frame = new JFrame();
+    Container content = frame.getContentPane();
+    final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
+    content.add(panel);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    final ModalGraphMouse gm = new DefaultModalGraphMouse<Integer,Number>();
+    vv.setGraphMouse(gm);
+
+    final ScalingControl scaler = new CrossoverScalingControl();
+
+    JButton plus = new JButton("+");
+    plus.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        scaler.scale(vv, 1.1f, vv.getCenter());
+      }
+    });
+    JButton minus = new JButton("-");
+    minus.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        scaler.scale(vv, 1/1.1f, vv.getCenter());
+      }
+    });
+
+    JPanel controls = new JPanel();
+    controls.add(plus);
+    controls.add(minus);
+    controls.add(((DefaultModalGraphMouse<Integer,Number>) gm).getModeComboBox());
+    content.add(controls, BorderLayout.SOUTH);
+
+    frame.pack();
+    frame.setVisible(true);
+  }
+
+}
