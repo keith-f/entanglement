@@ -74,6 +74,7 @@ public class JungTest {
     BasicVisualizationServer<Integer,String> vv =
         new BasicVisualizationServer<Integer,String>(layout);
     vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
+
     JFrame frame = new JFrame("Simple Graph View");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.getContentPane().add(vv);

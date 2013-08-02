@@ -66,20 +66,26 @@ public class DrawnIconVertexDemo2 {
 
     // create a simple graph for the demo
     graph = new DirectedSparseGraph<Integer,Number>();
-    Integer[] v = createVertices(10);
+    System.out.println("Generating dataset ...");
+    Integer[] v = createVertices(100);
+    System.out.println("Generation complete!");
     createEdges(v);
 
-    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
+    Layout<Integer, Number> layout = new FRLayout<Integer,Number>(graph);
+//    layout.setSize(new Dimension(1000, 800));
+//    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
     vv =  new VisualizationViewer<Integer,Number>(layout);
+    //BasicVisualizationServer
 
+    vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
     vv.getRenderContext().setVertexLabelTransformer(new Transformer<Integer,String>(){
 
       public String transform(Integer v) {
-        return "Vertex "+v;
+        return String.format("Vertex %d", v);
       }});
     vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
-
+    vv.setDoubleBuffered(true);
 
 
 
@@ -143,23 +149,24 @@ public class DrawnIconVertexDemo2 {
 //        return icon;
 //      }});
 
+    // ******
     vv.getRenderContext().setVertexIconTransformer(new Transformer<Integer,Icon>() {
-
       public Icon transform(final Integer v) {
-       if (v % 2 == 0) {
+//        if (Math.random() < 0.05) {
+//          return new ChartIcon<>(vv, v);
+//        } else {
          return new TestIcon<>(vv, v);
-       } else {
-         return new ChartIcon<>(vv, v);
-       }
+//        return null;
+//      }
 
       }});
 
-    vv.getRenderContext().setVertexLabelRenderer(new VertexLabelRenderer() {
-      @Override
-      public <T> Component getVertexLabelRendererComponent(JComponent jComponent, Object o, Font font, boolean b, T t) {
-        return new JButton("Text: "+b+t);
-      }
-    });
+//    vv.getRenderContext().setVertexLabelRenderer(new VertexLabelRenderer() {
+//      @Override
+//      public <T> Component getVertexLabelRendererComponent(JComponent jComponent, Object o, Font font, boolean b, T t) {
+//        return new JButton("Text: "+b+t);
+//      }
+//    });
 
 //    vv.getRenderContext().setLabelOffset(0);
 
@@ -234,23 +241,33 @@ public class DrawnIconVertexDemo2 {
    * @param v an array of Vertices to connect
    */
   void createEdges(Integer[] v) {
-    graph.addEdge(new Double(Math.random()), v[0], v[1], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[0], v[3], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[0], v[4], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[4], v[5], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[3], v[5], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[1], v[2], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[1], v[4], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[8], v[2], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[3], v[8], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[6], v[7], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[7], v[5], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[0], v[9], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[9], v[8], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[7], v[6], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[6], v[5], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[4], v[2], EdgeType.DIRECTED);
-    graph.addEdge(new Double(Math.random()), v[5], v[4], EdgeType.DIRECTED);
+    for (int i=0; i<v.length; i++) {
+      for (int j=0; j<v.length; j++) {
+        if (Math.random() < 0.05) {
+          graph.addEdge(new Double(Math.random()), v[i], v[j], EdgeType.DIRECTED);
+        }
+        if (Math.random() < 0.05) {
+          break;
+        }
+      }
+    }
+//    graph.addEdge(new Double(Math.random()), v[0], v[1], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[0], v[3], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[0], v[4], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[4], v[5], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[3], v[5], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[1], v[2], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[1], v[4], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[8], v[2], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[3], v[8], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[6], v[7], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[7], v[5], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[0], v[9], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[9], v[8], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[7], v[6], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[6], v[5], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[4], v[2], EdgeType.DIRECTED);
+//    graph.addEdge(new Double(Math.random()), v[5], v[4], EdgeType.DIRECTED);
   }
 
   /**
