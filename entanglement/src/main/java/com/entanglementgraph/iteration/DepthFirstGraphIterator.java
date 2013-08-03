@@ -71,6 +71,7 @@ public class DepthFirstGraphIterator {
   private final GraphConnection sourceGraph;
   private final GraphConnection destinationGraph;
   private final GraphCursor.CursorContext cursorContext;
+  private final boolean addStartNode;
 
   private final List<GraphOperation> graphUpdates; //In-memory staging for the current block of transaction data
   private boolean killSwitchActive = false;
@@ -88,11 +89,12 @@ public class DepthFirstGraphIterator {
 
   public DepthFirstGraphIterator(GraphConnection sourceGraph, GraphConnection destinationGraph,
                                  EntanglementRuntime runtime,
-                                 GraphCursor.CursorContext cursorContext) {
+                                 GraphCursor.CursorContext cursorContext, boolean addStartNode) {
     this.sourceGraph = sourceGraph;
     this.destinationGraph = destinationGraph;
     this.runtime = runtime;
     this.cursorContext = cursorContext;
+    this.addStartNode = addStartNode;
     rules = new LinkedList<>();
     this.graphUpdates = new LinkedList<>();
 
@@ -138,8 +140,10 @@ public class DepthFirstGraphIterator {
     // Start iterations
     try {
       // Add the start node
-      BasicDBObject startObj = start.resolve(sourceGraph);
-      graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
+      if (addStartNode) {
+        BasicDBObject startObj = start.resolve(sourceGraph);
+        graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
+      }
 
       // Iterate child nodes recursively
       addChildNodes(start.getName(), null);
