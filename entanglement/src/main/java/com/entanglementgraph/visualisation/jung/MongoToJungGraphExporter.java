@@ -291,6 +291,7 @@ public class MongoToJungGraphExporter {
     }
 
     graph.addVertex(nodeObj);
+    cacheDBObject(keyset, nodeObj);
     return true;
   }
 
