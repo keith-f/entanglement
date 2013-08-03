@@ -15,11 +15,14 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
+import com.entanglementgraph.visualisation.jung.CustomVertexAppearance;
+import com.entanglementgraph.visualisation.jung.ErrorIcon;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import org.apache.commons.collections15.Transformer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -45,7 +48,7 @@ public class CategoryLineChartRenderer implements CustomVertexAppearance {
   }
 
   @Override
-  public Transformer<DBObject, Icon> getIconTransformer() {
+  public Transformer<DBObject, Icon> getVertexIconTransformer() {
     if (iconTransformer == null) {
       iconTransformer = new Transformer<DBObject, Icon>() {
         JFreeChart cachedChart = null;
@@ -53,11 +56,17 @@ public class CategoryLineChartRenderer implements CustomVertexAppearance {
         @Override
         public Icon transform(DBObject dbObject) {
           if (cachedChart == null) {
-            CategoryChartNode node = marshaller.deserialize(dbObject, CategoryChartNode.class);
-            cachedChart = createChart(dbObject);
-            BufferedImage objBufferedImage=cachedChart.createBufferedImage(200, 200);
-            cachedIcon = new ImageIcon();
-            cachedIcon.setImage(objBufferedImage);
+            CategoryChartNode node = null;
+            try {
+              node = marshaller.deserialize(dbObject, CategoryChartNode.class);
+              cachedChart = createChart(node);
+              BufferedImage objBufferedImage=cachedChart.createBufferedImage(200, 200);
+              cachedIcon = new ImageIcon();
+              cachedIcon.setImage(objBufferedImage);
+            } catch (DbObjectMarshallerException e) {
+              e.printStackTrace();
+              return new ErrorIcon();
+            }
           }
           return cachedIcon;
         }
@@ -81,7 +90,7 @@ public class CategoryLineChartRenderer implements CustomVertexAppearance {
   }
 
   @Override
-  public Transformer<DBObject, Shape> getShapeTransformer() {
+  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
     return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 

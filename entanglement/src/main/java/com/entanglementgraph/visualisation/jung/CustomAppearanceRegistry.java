@@ -48,28 +48,28 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
   }
 
   @Override
-  public Transformer<DBObject, Icon> getIconTransformer() {
+  public Transformer<DBObject, Icon> getVertexIconTransformer() {
     return new Transformer<DBObject, Icon>() {
       @Override
       public Icon transform(DBObject data) {
         CustomVertexAppearance customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
-            : customRenderer.getIconTransformer().transform(data);
+            : customRenderer.getVertexIconTransformer().transform(data);
       }
     };
   }
 
 
   @Override
-  public Transformer<DBObject, Shape> getShapeTransformer() {
+  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
     return new Transformer<DBObject, Shape>() {
       @Override
       public Shape transform(DBObject data) {
         CustomVertexAppearance customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
-            : customRenderer.getShapeTransformer().transform(data);
+            : customRenderer.getVertexShapeTransformer().transform(data);
       }
     };
   }

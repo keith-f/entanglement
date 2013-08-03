@@ -76,34 +76,16 @@ public class Visualiser {
     vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
 
-    // ******
-    vv.getRenderContext().setVertexIconTransformer(new Transformer<DBObject, Icon>() {
-      public Icon transform(final DBObject v) {
-//        if (Math.random() < 0.05) {
-//          return new ChartIcon<>(vv, v);
-//        } else {
-         return new TestIcon<>(vv, v);
-//        return null;
-//      }
-
-      }});
-
-
-    vv.getRenderContext().setVertexShapeTransformer(new Transformer<DBObject, Shape>() {
-      @Override
-      public Shape transform(DBObject integer) {
-        Rectangle rect = new Rectangle(200, 200);
-        return rect;
-      }
-    });
-
+    vv.getRenderContext().setVertexIconTransformer(customVertexAppearance.getVertexIconTransformer());
+    vv.getRenderContext().setVertexShapeTransformer(customVertexAppearance.getVertexShapeTransformer());
     vv.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vv.getPickedVertexState(), Color.white,  Color.yellow));
     vv.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vv.getPickedEdgeState(), Color.black, Color.lightGray));
 
-    vv.setBackground(Color.white);
 
-    // add my listener for ToolTips
-    vv.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
+//    vv.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
+    vv.setVertexToolTipTransformer(customVertexAppearance.getTooltipTransformer());
+
+    vv.setBackground(Color.white);
 
     // create a frome to hold the graph
     final JFrame frame = new JFrame();

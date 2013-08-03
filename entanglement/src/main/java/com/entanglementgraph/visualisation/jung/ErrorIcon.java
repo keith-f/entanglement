@@ -14,22 +14,36 @@
  * limitations under the License.
  * 
  */
-
 package com.entanglementgraph.visualisation.jung;
 
-import com.mongodb.DBObject;
-import org.apache.commons.collections15.Transformer;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
 
 import javax.swing.*;
 import java.awt.*;
 
 /**
+ * User: keith
+ * Date: 01/08/13; 16:38
+ *
  * @author Keith Flanagan
  */
-public interface CustomVertexAppearance {
-  public Transformer<DBObject, Icon> getVertexIconTransformer();
-  public Transformer<DBObject, Shape> getVertexShapeTransformer();
-  public Transformer<DBObject, String> getVertexLabelTransformer();
-  public Transformer<DBObject, String> getTooltipTransformer();
+public class ErrorIcon implements Icon {
 
+  public ErrorIcon() {
+  }
+
+  public int getIconHeight() {
+    return 20;
+  }
+
+  public int getIconWidth() {
+    return 90;
+  }
+
+  public void paintIcon(Component c, Graphics g,
+                        int x, int y) {
+    g.setColor(Color.red);
+    g.drawString("Error! (see stack trace)", x + 6, y + 15);
+
+  }
 }
