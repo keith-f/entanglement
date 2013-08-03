@@ -92,7 +92,6 @@ public class Visualiser {
     Container content = frame.getContentPane();
     final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
     content.add(panel);
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     final ModalGraphMouse gm = new DefaultModalGraphMouse<Integer,Number>();
     vv.setGraphMouse(gm);
