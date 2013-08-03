@@ -63,12 +63,16 @@ public class StartNodeTypeFilterRule extends AbstractRule {
   }
 
   @Override
-  public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple, boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
+                             GraphCursor.NodeEdgeNodeTuple nenTuple, boolean outgoingEdge,
+                             EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
     return !rootNodeWasValidStartType;
   }
 
   @Override
-  public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple, boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
+                             GraphCursor.NodeEdgeNodeTuple nenTuple, boolean outgoingEdge,
+                             EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
     return new HandlerAction(NextEdgeIteration.TERMINATE);
   }
 }

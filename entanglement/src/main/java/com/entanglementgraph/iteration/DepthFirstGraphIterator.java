@@ -146,7 +146,7 @@ public class DepthFirstGraphIterator {
       }
 
       // Iterate child nodes recursively
-      addChildNodes(start.getName(), null);
+      addChildNodes(start.getName(), 0, null);
 
       // Inform all rules that we've finished graph walking
       try {
@@ -170,23 +170,24 @@ public class DepthFirstGraphIterator {
     }
   }
 
-  private void addChildNodes(String cursorName, EntityKeys<? extends Node> previousPosition)
+  private void addChildNodes(String cursorName, int currentDepth, EntityKeys<? extends Node> previousPosition)
       throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException, RevisionLogException, RuleException {
     if (killSwitchActive) {
       return;
     }
     GraphCursor current = getCurrentCursorPosition(cursorName);
-    processEdges(cursorName, previousPosition, current.getPosition(), false,
+    processEdges(cursorName, currentDepth, previousPosition, current.getPosition(), false,
         current.iterateAndResolveEdgeDestPairs(sourceGraph, false));
 //        current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
     current = getCurrentCursorPosition(cursorName);
-    processEdges(cursorName, previousPosition, current.getPosition(), true,
+    processEdges(cursorName, currentDepth, previousPosition, current.getPosition(), true,
         current.iterateAndResolveEdgeDestPairs(sourceGraph, true));
 //        current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
   }
 
-  private void processEdges(String cursorName,
-                            EntityKeys<? extends Node> previousPosition, EntityKeys<? extends Node> currentPosition,
+  private void processEdges(String cursorName, int currentDepth,
+                            EntityKeys<? extends Node> previousPosition,
+                            EntityKeys<? extends Node> currentPosition,
                             boolean outgoingEdges, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
       throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException, RuleException {
     for (GraphCursor.NodeEdgeNodeTuple nen : edges) {
@@ -210,14 +211,14 @@ public class DepthFirstGraphIterator {
       cacheEdgeIds(edgeId);
 
       EntityRule.NextEdgeIteration nextIterationDecision =
-          executeRules(cursorName, currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
+          executeRules(cursorName, currentDepth, currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
           // Step the cursor to the next level deep
           GraphCursor current = getCurrentCursorPosition(cursorName);
           GraphCursor nextLevel = current.stepToNode(cursorContext, remoteNodeId);
-          addChildNodes(cursorName, current.getPosition());
+          addChildNodes(cursorName, currentDepth+1, current.getPosition());
           break;
         case TERMINATE_BRANCH:
           // Simply do nothing here. We'll skip over the children of the current remote node
@@ -282,14 +283,15 @@ public class DepthFirstGraphIterator {
     graphUpdates.clear();
   }
 
-  protected EntityRule.NextEdgeIteration executeRules(String cursorName,
+  protected EntityRule.NextEdgeIteration executeRules(String cursorName, int currentDepth,
           EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
           boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
         throws GraphIteratorException, RuleException {
 
     for (EntityRule rule : rules) {
-      if (rule.ruleMatches(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
-        EntityRule.HandlerAction result = rule.apply(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+      if (rule.ruleMatches(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
+        EntityRule.HandlerAction result =
+            rule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
         graphUpdates.addAll(result.getOperations());
 
 
@@ -308,7 +310,8 @@ public class DepthFirstGraphIterator {
     }
 
     // No rule in the list matched this node. Apply the default rule
-    EntityRule.HandlerAction result = defaultRule.apply(cursorName, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+    EntityRule.HandlerAction result =
+        defaultRule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
     graphUpdates.addAll(result.getOperations());
     return result.getNextIterationBehaviour();
   }

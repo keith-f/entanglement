@@ -92,6 +92,8 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
+   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
+   *                     of '0'; a node one step away has a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
    *                 destination node, respectively.
@@ -101,7 +103,8 @@ public interface EntityRule {
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
-  public boolean ruleMatches(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
                              throws RuleException;
 
@@ -114,6 +117,8 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
+   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
+   *                     of '0'; a node one step away has a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
    *                 destination node, respectively.
@@ -123,7 +128,8 @@ public interface EntityRule {
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    */
-  public HandlerAction apply(String cursorName, EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
                              throws RuleException;
 
