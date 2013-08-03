@@ -19,6 +19,7 @@ package com.entanglementgraph.visualisation.jung;
 
 import com.entanglementgraph.graph.AbstractGraphEntityDAO;
 import com.mongodb.DBObject;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import org.apache.commons.collections15.Transformer;
 
 import javax.swing.*;
@@ -29,22 +30,29 @@ import java.util.Map;
 /**
  * @author Keith Flanagan
  */
-public class CustomAppearanceRegistry implements CustomVertexAppearance {
+public class CustomRendererRegistry implements CustomVertexRenderer {
+  private DbObjectMarshaller marshaller;
+
   /**
    * A set of node types to custom visualisation providers.
    */
-  private final Map<String, Class<? extends CustomVertexAppearance>> entanglementTypeToAppearance;
+  private final Map<String, Class<? extends CustomVertexRenderer>> entanglementTypeToAppearance;
 
   /**
    * A map of individual node values to renderer instances. Each graph data value that requires a custom renderer
    * gets its own instance of a renderer, allowing the renderer to maintain state from one frame to the next.
    * This map stores graph entity -> renderer instance mappings
    */
-  private final Map<DBObject, CustomVertexAppearance> valueToRenderer;
+  private final Map<DBObject, CustomVertexRenderer> valueToRenderer;
 
-  public CustomAppearanceRegistry() {
+  public CustomRendererRegistry(DbObjectMarshaller marshaller) {
+    this.marshaller = marshaller;
     entanglementTypeToAppearance = new HashMap<>();
     valueToRenderer = new HashMap<>();
+  }
+
+  public void addTypeToRendererMapping(String nodeType, Class<? extends CustomVertexRenderer> renderer) {
+    entanglementTypeToAppearance.put(nodeType, renderer);
   }
 
   @Override
@@ -52,7 +60,7 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
     return new Transformer<DBObject, Icon>() {
       @Override
       public Icon transform(DBObject data) {
-        CustomVertexAppearance customRenderer = findRendererForValue(data);
+        CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
             : customRenderer.getVertexIconTransformer().transform(data);
@@ -66,7 +74,7 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
     return new Transformer<DBObject, Shape>() {
       @Override
       public Shape transform(DBObject data) {
-        CustomVertexAppearance customRenderer = findRendererForValue(data);
+        CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
             : customRenderer.getVertexShapeTransformer().transform(data);
@@ -79,7 +87,7 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
     return new Transformer<DBObject, String>() {
       @Override
       public String transform(DBObject data) {
-        CustomVertexAppearance customRenderer = findRendererForValue(data);
+        CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
             : customRenderer.getVertexLabelTransformer().transform(data);
@@ -92,12 +100,17 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
     return new Transformer<DBObject, String>() {
       @Override
       public String transform(DBObject data) {
-        CustomVertexAppearance customRenderer = findRendererForValue(data);
+        CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
             ? null
             : customRenderer.getTooltipTransformer().transform(data);
       }
     };
+  }
+
+  @Override
+  public void setMarshaller(DbObjectMarshaller marshaller) {
+    this.marshaller = marshaller;
   }
 
   /**
@@ -107,8 +120,8 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
    * @param data
    * @return
    */
-  private CustomVertexAppearance findRendererForValue(DBObject data) {
-    CustomVertexAppearance renderer = valueToRenderer.get(data);
+  private CustomVertexRenderer findRendererForValue(DBObject data) {
+    CustomVertexRenderer renderer = valueToRenderer.get(data);
     if (renderer == null) {
       renderer = createRendererForValue(data);
       valueToRenderer.put(data, renderer);
@@ -117,12 +130,13 @@ public class CustomAppearanceRegistry implements CustomVertexAppearance {
   }
 
 
-  private CustomVertexAppearance createRendererForValue(DBObject data) {
+  private CustomVertexRenderer createRendererForValue(DBObject data) {
     String nodeType =  (String) ((DBObject) data.get(AbstractGraphEntityDAO.FIELD_KEYS)).get("type");
-    Class<? extends CustomVertexAppearance> rendererType = entanglementTypeToAppearance.get(nodeType);
+    Class<? extends CustomVertexRenderer> rendererType = entanglementTypeToAppearance.get(nodeType);
 
     try {
-      CustomVertexAppearance renderer =  rendererType.newInstance();
+      CustomVertexRenderer renderer =  rendererType.newInstance();
+      renderer.setMarshaller(marshaller);
       return renderer;
     } catch (Exception e) {
       throw new RuntimeException("Failed to create renderer instance of type: "+rendererType+" for data item: "+data, e);

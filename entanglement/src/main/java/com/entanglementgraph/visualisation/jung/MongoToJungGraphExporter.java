@@ -68,7 +68,6 @@ public class MongoToJungGraphExporter {
       ObjectMarshallerFactory.create(MongoToJungGraphExporter.class.getClassLoader());
 
   private Graph<DBObject, DBObject> graph;
-  private Object parentContainer;
 
   // Keys to DBObject cache - keep track of these so that we can add edges to nodes we've already added.
   // Map of UID -> DBObject node objects
@@ -93,7 +92,7 @@ public class MongoToJungGraphExporter {
   }
 
 
-  public void writeToJGraphGraphMLFile(File outputFile) throws IOException {
+  public void writeToGraphMLFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
     FileWriter fw = new FileWriter(outputFile);
     GraphMLWriter writer = new GraphMLWriter();
@@ -166,7 +165,7 @@ public class MongoToJungGraphExporter {
   /**
    * Lookup a cached node based on a keyset. This is useful when adding edges to a graph.
    *
-   * @param keyset the keyset associated with the JGraph node of interest
+   * @param keyset the keyset associated with the Jung graph node of interest
    * @return the DBObject document associated with the EntityKey, or null if not found.
    */
   private DBObject getDBObjectNodeFromCache(EntityKeys<?> keyset) {
@@ -280,7 +279,7 @@ public class MongoToJungGraphExporter {
    * Adds a new node to a Jung graph. If at least one of the items in the <code>nodeObj</code> keyset matches
    * an entry in the node cache, the node will node be added again.
    *
-   * @param nodeObj the DBObject (Entanglement) node to add to the JGraph
+   * @param nodeObj the DBObject (Entanglement) node to add to the Jung graph
    * @return true if <code>nodeObj</code> was added, otherwise false.
    * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    */
@@ -587,6 +586,7 @@ public class MongoToJungGraphExporter {
 
   }
 
-
-
+  public Graph<DBObject, DBObject> getGraph() {
+    return graph;
+  }
 }

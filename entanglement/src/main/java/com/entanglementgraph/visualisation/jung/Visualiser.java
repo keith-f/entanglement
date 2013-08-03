@@ -17,37 +17,17 @@
 
 package com.entanglementgraph.visualisation.jung;
 
-import com.entanglementgraph.experimental.TestIcon;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.util.EdgeType;
-import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
-import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
-import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
-import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
-import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
-import org.apache.commons.collections15.Transformer;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PiePlot3D;
-import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.data.general.PieDataset;
-import org.jfree.util.Rotation;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  *
@@ -62,7 +42,7 @@ public class Visualiser {
    */
   private VisualizationViewer<DBObject, DBObject> vv;
 
-  public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexAppearance customVertexAppearance) {
+  public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexRenderer customVertexRenderer) {
     this.graph = graph;
 
     Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
@@ -72,53 +52,24 @@ public class Visualiser {
     vv.setDoubleBuffered(true);
 
     vv.setPreferredSize(new Dimension(850,850)); //Sets the viewing area size
-    vv.getRenderContext().setVertexLabelTransformer(customVertexAppearance.getVertexLabelTransformer());
+    vv.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
     vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
 
-    vv.getRenderContext().setVertexIconTransformer(customVertexAppearance.getVertexIconTransformer());
-    vv.getRenderContext().setVertexShapeTransformer(customVertexAppearance.getVertexShapeTransformer());
+    vv.getRenderContext().setVertexIconTransformer(customVertexRenderer.getVertexIconTransformer());
+    vv.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());
     vv.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vv.getPickedVertexState(), Color.white,  Color.yellow));
     vv.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vv.getPickedEdgeState(), Color.black, Color.lightGray));
 
 
 //    vv.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
-    vv.setVertexToolTipTransformer(customVertexAppearance.getTooltipTransformer());
+    vv.setVertexToolTipTransformer(customVertexRenderer.getTooltipTransformer());
 
     vv.setBackground(Color.white);
 
-    // create a frome to hold the graph
-    final JFrame frame = new JFrame();
-    Container content = frame.getContentPane();
-    final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
-    content.add(panel);
-
-    final ModalGraphMouse gm = new DefaultModalGraphMouse<Integer,Number>();
-    vv.setGraphMouse(gm);
-
-    final ScalingControl scaler = new CrossoverScalingControl();
-
-    JButton plus = new JButton("+");
-    plus.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        scaler.scale(vv, 1.1f, vv.getCenter());
-      }
-    });
-    JButton minus = new JButton("-");
-    minus.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        scaler.scale(vv, 1/1.1f, vv.getCenter());
-      }
-    });
-
-    JPanel controls = new JPanel();
-    controls.add(plus);
-    controls.add(minus);
-    controls.add(((DefaultModalGraphMouse<Integer,Number>) gm).getModeComboBox());
-    content.add(controls, BorderLayout.SOUTH);
-
-    frame.pack();
-    frame.setVisible(true);
   }
 
+  public VisualizationViewer<DBObject, DBObject> getVv() {
+    return vv;
+  }
 }

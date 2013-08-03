@@ -18,7 +18,7 @@
 package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
-import com.entanglementgraph.visualisation.jung.CustomVertexAppearance;
+import com.entanglementgraph.visualisation.jung.CustomVertexRenderer;
 import com.entanglementgraph.visualisation.jung.ErrorIcon;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -36,15 +36,14 @@ import java.util.logging.Logger;
 /**
  * @author Keith Flanagan
  */
-public class CategoryLineChartRenderer implements CustomVertexAppearance {
+public class CategoryLineChartRenderer implements CustomVertexRenderer {
   private static final Logger logger = Logger.getLogger(CategoryLineChartRenderer.class.getName());
 
-  private final DbObjectMarshaller marshaller;
+  private DbObjectMarshaller marshaller;
 
   private Transformer<DBObject, Icon> iconTransformer;
 
-  public CategoryLineChartRenderer(DbObjectMarshaller marshaller) {
-    this.marshaller = marshaller;
+  public CategoryLineChartRenderer() {
   }
 
   @Override
@@ -102,5 +101,10 @@ public class CategoryLineChartRenderer implements CustomVertexAppearance {
   @Override
   public Transformer<DBObject, String> getTooltipTransformer() {
     return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void setMarshaller(DbObjectMarshaller marshaller) {
+    this.marshaller = marshaller;
   }
 }
