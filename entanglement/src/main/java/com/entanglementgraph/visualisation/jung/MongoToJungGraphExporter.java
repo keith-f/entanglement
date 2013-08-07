@@ -301,7 +301,7 @@ public class MongoToJungGraphExporter {
     DBObject fromNodeObj = getDBObjectNodeFromCache(edge.getFrom());
     DBObject toNodeObj = getDBObjectNodeFromCache(edge.getTo());
 
-    logger.info("Adding Jung edge. Edge: "+edgeObj+"\nFrom: "+fromNodeObj+"\nTo: "+toNodeObj);
+//    logger.info("Adding Jung edge. Edge: "+edgeObj+"\nFrom: "+fromNodeObj+"\nTo: "+toNodeObj);
     graph.addEdge(edgeObj, fromNodeObj, toNodeObj, EdgeType.DIRECTED);
   }
 

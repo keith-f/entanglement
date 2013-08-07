@@ -33,6 +33,8 @@ import java.util.Map;
 public class CustomRendererRegistry implements CustomVertexRenderer {
   private DbObjectMarshaller marshaller;
 
+  private Visualiser visualiser;
+
   /**
    * A set of node types to custom visualisation providers.
    */
@@ -45,6 +47,8 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
    */
   private final Map<DBObject, CustomVertexRenderer> valueToRenderer;
 
+  private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
+
   public CustomRendererRegistry(DbObjectMarshaller marshaller) {
     this.marshaller = marshaller;
     entanglementTypeToAppearance = new HashMap<>();
@@ -56,31 +60,37 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
   }
 
   @Override
+  public void setVisualiser(Visualiser visualiser) {
+    this.visualiser = visualiser;
+    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser.getVv());
+  }
+
+  @Override
   public Transformer<DBObject, Icon> getVertexIconTransformer() {
     return new Transformer<DBObject, Icon>() {
       @Override
       public Icon transform(DBObject data) {
         CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
-            ? null
+            ? new DefaultNodeIcon<>(visualiser.getVv(), data)
             : customRenderer.getVertexIconTransformer().transform(data);
       }
     };
   }
 
 
-  @Override
-  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
-    return new Transformer<DBObject, Shape>() {
-      @Override
-      public Shape transform(DBObject data) {
-        CustomVertexRenderer customRenderer = findRendererForValue(data);
-        return customRenderer == null
-            ? null
-            : customRenderer.getVertexShapeTransformer().transform(data);
-      }
-    };
-  }
+//  @Override
+//  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
+//    return new Transformer<DBObject, Shape>() {
+//      @Override
+//      public Shape transform(DBObject data) {
+//        CustomVertexRenderer customRenderer = findRendererForValue(data);
+//        return customRenderer == null
+//            ? null
+//            : customRenderer.getVertexShapeTransformer().transform(data);
+//      }
+//    };
+//  }
 
   @Override
   public Transformer<DBObject, String> getVertexLabelTransformer() {
@@ -89,7 +99,7 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
       public String transform(DBObject data) {
         CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
-            ? null
+            ? defaultVertexLabelTransformer.transform(data)
             : customRenderer.getVertexLabelTransformer().transform(data);
       }
     };
@@ -102,7 +112,7 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
       public String transform(DBObject data) {
         CustomVertexRenderer customRenderer = findRendererForValue(data);
         return customRenderer == null
-            ? null
+            ? defaultVertexLabelTransformer.transform(data)
             : customRenderer.getTooltipTransformer().transform(data);
       }
     };
@@ -118,7 +128,7 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
    * a match).
    *
    * @param data
-   * @return
+   * @return a renderer instance for use with the <code>data</code> item, or NULL if no custom renderer could be found.
    */
   private CustomVertexRenderer findRendererForValue(DBObject data) {
     CustomVertexRenderer renderer = valueToRenderer.get(data);
@@ -133,10 +143,13 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
   private CustomVertexRenderer createRendererForValue(DBObject data) {
     String nodeType =  (String) ((DBObject) data.get(AbstractGraphEntityDAO.FIELD_KEYS)).get("type");
     Class<? extends CustomVertexRenderer> rendererType = entanglementTypeToAppearance.get(nodeType);
-
+    if (rendererType == null) {
+      return null; //No custom renderer could be found for this data value.
+    }
     try {
       CustomVertexRenderer renderer =  rendererType.newInstance();
       renderer.setMarshaller(marshaller);
+      renderer.setVisualiser(visualiser);
       return renderer;
     } catch (Exception e) {
       throw new RuntimeException("Failed to create renderer instance of type: "+rendererType+" for data item: "+data, e);

@@ -24,6 +24,7 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
+import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 
@@ -44,6 +45,7 @@ public class Visualiser {
 
   public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexRenderer customVertexRenderer) {
     this.graph = graph;
+    customVertexRenderer.setVisualiser(this);
 
     Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
     layout.setSize(new Dimension(800, 800));
@@ -57,7 +59,7 @@ public class Visualiser {
     vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
 
     vv.getRenderContext().setVertexIconTransformer(customVertexRenderer.getVertexIconTransformer());
-    vv.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());
+//    vv.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());
     vv.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vv.getPickedVertexState(), Color.white,  Color.yellow));
     vv.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vv.getPickedEdgeState(), Color.black, Color.lightGray));
 

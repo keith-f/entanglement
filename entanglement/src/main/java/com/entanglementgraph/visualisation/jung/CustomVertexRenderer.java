@@ -28,8 +28,17 @@ import java.awt.*;
  * @author Keith Flanagan
  */
 public interface CustomVertexRenderer {
+  /**
+   * Sets the display that this renderer will provide visualisations for. This is usually set by the visualiser
+   * instance itself and can be used for situations where you need to render objects differently depending on
+   * circumstances such as user object selection, etc.
+   *
+   * @param visualiser
+   */
+  public void setVisualiser(Visualiser visualiser);
+
   public Transformer<DBObject, Icon> getVertexIconTransformer();
-  public Transformer<DBObject, Shape> getVertexShapeTransformer();
+//  public Transformer<DBObject, Shape> getVertexShapeTransformer();
   public Transformer<DBObject, String> getVertexLabelTransformer();
   public Transformer<DBObject, String> getTooltipTransformer();
 

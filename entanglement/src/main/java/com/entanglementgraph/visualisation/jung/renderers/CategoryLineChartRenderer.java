@@ -19,7 +19,9 @@ package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.visualisation.jung.CustomVertexRenderer;
+import com.entanglementgraph.visualisation.jung.DefaultVertexLabelTransformer;
 import com.entanglementgraph.visualisation.jung.ErrorIcon;
+import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -39,11 +41,20 @@ import java.util.logging.Logger;
 public class CategoryLineChartRenderer implements CustomVertexRenderer {
   private static final Logger logger = Logger.getLogger(CategoryLineChartRenderer.class.getName());
 
+  private Visualiser visualiser;
+
   private DbObjectMarshaller marshaller;
 
   private Transformer<DBObject, Icon> iconTransformer;
+  private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
 
   public CategoryLineChartRenderer() {
+  }
+
+  @Override
+  public void setVisualiser(Visualiser visualiser) {
+    this.visualiser = visualiser;
+    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser.getVv());
   }
 
   @Override
@@ -59,7 +70,7 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
             try {
               node = marshaller.deserialize(dbObject, CategoryChartNode.class);
               cachedChart = createChart(node);
-              BufferedImage objBufferedImage=cachedChart.createBufferedImage(200, 200);
+              BufferedImage objBufferedImage=cachedChart.createBufferedImage(500, 500);
               cachedIcon = new ImageIcon();
               cachedIcon.setImage(objBufferedImage);
             } catch (DbObjectMarshallerException e) {
@@ -88,19 +99,19 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
     return iconTransformer;
   }
 
-  @Override
-  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
-  }
+//  @Override
+//  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
+//    return null;  //To change body of implemented methods use File | Settings | File Templates.
+//  }
 
   @Override
   public Transformer<DBObject, String> getVertexLabelTransformer() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return defaultVertexLabelTransformer;
   }
 
   @Override
   public Transformer<DBObject, String> getTooltipTransformer() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return defaultVertexLabelTransformer;
   }
 
   @Override
