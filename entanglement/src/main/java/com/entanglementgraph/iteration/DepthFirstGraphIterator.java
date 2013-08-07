@@ -238,6 +238,10 @@ public class DepthFirstGraphIterator {
 
   private GraphCursor getCurrentCursorPosition(String cursorName) {
     GraphCursor current = runtime.getCursorRegistry().getCursorCurrentPosition(cursorName);
+    if (current == null) {
+      throw new RuntimeException("Unable to find a cursor with name: "+cursorName
+          +". Did you register it with the cursor registry?");
+    }
     return current;
   }
 
@@ -276,7 +280,7 @@ public class DepthFirstGraphIterator {
   }
   
   private void writeUpdates() throws RevisionLogException {
-    logger.info("Writing "+graphUpdates+" graph update commands to the destination graph");
+    logger.info("Writing "+graphUpdates.size()+" graph update commands to the destination graph");
 
     TxnUtils.submitTxnPart(destinationGraph, txnId, txnPart, graphUpdates);
     txnPart++;
