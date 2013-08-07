@@ -47,6 +47,15 @@ public class GraphCursorRegistry {
     cursorHistories.put(cursor.getName(), cursor);
   }
 
+  public void removeCursor(GraphCursor cursor) {
+    removeCursorByName(cursor.getName());
+  }
+
+  public void removeCursorByName(String cursorName) {
+    currentPositions.remove(cursorName);
+    cursorHistories.remove(cursorName);
+  }
+
   public GraphCursor getCursorCurrentPosition(String cursorName) {
     return currentPositions.get(cursorName);
   }
