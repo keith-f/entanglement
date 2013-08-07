@@ -4,6 +4,7 @@ import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
@@ -79,12 +80,21 @@ public interface EntityRule {
 
   public void setSourceGraph(GraphConnection sourceGraph);
   public void setDestinationGraph(GraphConnection destinationGraph);
+  public void setEntanglementRuntime(EntanglementRuntime entanglementRuntime);
+  public void setCursorContext(GraphCursor.CursorContext cursorContext);
 
 
   /**
    * Returns true if this rule implementation matches the data presented in the graph iterator's current location.
    *
-   * @param currentPosition a GraphCursor that represents the current node whose edges are being iterated
+   * @param cursorName the name of the <code>GraphCursor</code> whose movements led to the current position. The
+   *                   name is provided only, which should be sufficient for most purposes. You can use this name to
+   *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
+   *                   your rule implementation requires to perform its own graph walking, it should do so on its own
+   *                   local cursor.
+   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
+   *                     of '0'; a node one step away has a depth of '1', etc.
+   * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
    *                 destination node, respectively.
    * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
@@ -93,14 +103,23 @@ public interface EntityRule {
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
-  public boolean ruleMatches(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             throws RuleException;
 
   /**
    * Called when a <code>DepthFirstGraphIterator</code> decides that this rule implementation should process the
    * next edge/node iteration step.
    *
-   * @param currentPosition a GraphCursor that represents the current node whose edges are being iterated
+   * @param cursorName the name of the <code>GraphCursor</code> whose movements led to the current position. The
+   *                   name is provided only, which should be sufficient for most purposes. You can use this name to
+   *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
+   *                   your rule implementation requires to perform its own graph walking, it should do so on its own
+   *                   local cursor.
+   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
+   *                     of '0'; a node one step away has a depth of '1', etc.
+   * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
    *                 destination node, respectively.
    * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
@@ -109,6 +128,27 @@ public interface EntityRule {
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    */
-  public HandlerAction apply(EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId);
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             throws RuleException;
+
+  /**
+   * A method that is triggered when the graph iterator is about to start iterating. You should use this method to
+   * perform any initialisation that needs to be performed.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
+   * @param currentPosition the starting node for the cursor.
+   */
+  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
+      throws RuleException;;
+
+  /**
+   * A method that is triggered when the graph iterator has completed its iteration. You could use this method to
+   * perform tidy-up operations that must be performed before the iterator commits the destination graph.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
+   */
+  public List<GraphOperation> iterationFinished(String cursorName)
+      throws RuleException;
 }

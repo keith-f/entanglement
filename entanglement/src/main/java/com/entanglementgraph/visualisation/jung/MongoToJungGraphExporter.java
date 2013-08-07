@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.export.jgraphx;
+package com.entanglementgraph.visualisation.jung;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
@@ -29,27 +29,28 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.MongoUtils;
-import com.entanglementgraph.visualisation.jgraphx.EntanglementMxGraph;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfWriter;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mxgraph.canvas.mxGraphics2DCanvas;
-import com.mxgraph.canvas.mxICanvas;
-import com.mxgraph.canvas.mxSvgCanvas;
-import com.mxgraph.io.mxCodec;
-import com.mxgraph.io.mxGdCodec;
-import com.mxgraph.util.*;
-import com.mxgraph.view.mxGraph;
-import com.mxgraph.view.mxStylesheet;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.EdgeType;
+import edu.uci.ics.jung.io.GraphFile;
+import edu.uci.ics.jung.io.GraphMLWriter;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
+import org.freehep.graphics2d.VectorGraphics;
+import org.freehep.graphicsio.svg.SVGGraphics2D;
 import org.w3c.dom.Element;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -59,160 +60,132 @@ import java.util.logging.Logger;
  * @author Allyson Lister
  * @author Keith Flanagan
  */
-public class MongoToJGraphExporter {
+public class MongoToJungGraphExporter {
 
-  private static final Logger logger = Logger.getLogger(MongoToJGraphExporter.class.getName());
+  private static final Logger logger = Logger.getLogger(MongoToJungGraphExporter.class.getName());
 
-  private static final NodeVisuals DEFAULT_NODE_STYLE_INFO = new DefaultNodeVisuals();
-  private static final EdgeVisuals DEFAULT_EDGE_STYLE_INFO = new DefaultEdgeNoNamesVisuals();
   private static final DbObjectMarshaller marshaller =
-      ObjectMarshallerFactory.create(MongoToJGraphExporter.class.getClassLoader());
+      ObjectMarshallerFactory.create(MongoToJungGraphExporter.class.getClassLoader());
 
-  private final Map<String, NodeVisuals> nodeTypeToStyleInfo;
-  private final Map<String, EdgeVisuals> edgeTypeToStyleInfo;
+  private Graph<DBObject, DBObject> graph;
 
-
-  private EntanglementMxGraph graph;
-  private Object parentContainer;
-
-  // Keys to graph object cache - keep track of these so that we can add edges to nodes we've already added.
-  // Map of UID -> JGraphX node objects
-  private final Map<String, Object> uidToNode;
-  // Map of type -> name -> JGraphX node objects
-  private final Map<String, Map<String, Object>> typeToNameToNode;
+  // Keys to DBObject cache - keep track of these so that we can add edges to nodes we've already added.
+  // Map of UID -> DBObject node objects
+  private final Map<String, DBObject> uidToNode;
+  // Map of type -> name -> DBObject node objects
+  private final Map<String, Map<String, DBObject>> typeToNameToNode;
 
 
-  public MongoToJGraphExporter() {
+  public MongoToJungGraphExporter() {
     uidToNode = new HashMap<>();
     typeToNameToNode = new HashMap<>();
-    nodeTypeToStyleInfo = new HashMap<>();
-    edgeTypeToStyleInfo = new HashMap<>();
     clearGraph();
 
   }
 
   public void clearGraph() {
-    graph = new EntanglementMxGraph();
-    parentContainer = graph.getDefaultParent();
+    graph = new DirectedSparseGraph<>();
 
     // Clear caches of 'seen' nodes.
     uidToNode.clear();
     typeToNameToNode.clear();
-
-    //Reset style info
-    mxStylesheet stylesheet = graph.getStylesheet();
-    for (Map.Entry<String, NodeVisuals> entry : nodeTypeToStyleInfo.entrySet()) {
-      stylesheet.putCellStyle(entry.getKey(), entry.getValue().getStyle());
-    }
   }
 
 
-  public void writeToJGraphXmlFile(File outputFile) throws IOException {
+  public void writeToGraphMLFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    mxCodec codec = new mxCodec();
-    String xml = mxXmlUtils.getXml(codec.encode(graph.getModel()));
-
-    mxUtils.writeFile(xml, outputFile.getAbsolutePath());
+    FileWriter fw = new FileWriter(outputFile);
+    GraphMLWriter writer = new GraphMLWriter();
+    writer.save(graph, fw);
+    fw.flush();
+    fw.close();
   }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public void writeToHtmlFile(File outputFile) throws IOException {
-    logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    mxUtils.writeFile(mxXmlUtils.getXml(mxCellRenderer
-        .createHtmlDocument(graph, null, 1, null, null)
-        .getDocumentElement()), outputFile.getAbsolutePath());
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public void writeToTextFile(File outputFile) throws IOException {
-    logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    String content = mxGdCodec.encode(graph);
-    mxUtils.writeFile(content, outputFile.getAbsolutePath());
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public void writeToSvgFile(File outputFile) throws IOException {
-    logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    mxSvgCanvas canvas = (mxSvgCanvas) mxCellRenderer
-        .drawCells(graph, null, 1, null,
-            new mxCellRenderer.CanvasFactory() {
-              public mxICanvas createCanvas(int width, int height) {
-                mxSvgCanvas canvas = new mxSvgCanvas(mxDomUtils.createSvgDocument(width, height));
-                canvas.setEmbedded(true);
-                return canvas;
-              }
-            });
-
-    mxUtils.writeFile(mxXmlUtils.getXml(canvas.getDocument()), outputFile.getAbsolutePath());
-  }
 
 //  public void writeToPngFile(File outputFile) throws IOException {
+//    logger.info("Writing to file: " + outputFile.getAbsolutePath());
+//    //Dimension loDims = getGraphLayout().getSize();
+//    Dimension vsDims = getSize();
 //
+//    int width = vsDims.width;
+//    int height = vsDims.height;
+//    Color bg = Color.BLACK;
+//
+//    BufferedImage im = new BufferedImage(width,height, BufferedImage.TYPE_INT_BGR);
+//    Graphics2D graphics = im.createGraphics();
+//    graphics.setColor(bg);
+//    graphics.fillRect(0, 0, width, height);
+//
+//    paintComponent(graphics);
+//
+//    try{
+//      ImageIO.write(im,"png",new File(outputFile));
+//    }catch(Exception e){
+//      e.printStackTrace();
+//    }
 //  }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public void writeToPdfFile(File outputFile) throws IOException {
+  public void writeToSvgFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
-    try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-      mxRectangle bounds = graph.getGraphBounds();
-      Rectangle rectangle = new Rectangle((float) bounds.getWidth(), (float) bounds.getHeight());
-      Document document = new Document(rectangle);
-      PdfWriter writer = PdfWriter.getInstance(document, fos);
-      document.open();
-      PdfCanvasFactory pdfCanvasFactory = new PdfCanvasFactory(writer.getDirectContent());
-      mxGraphics2DCanvas canvas = (mxGraphics2DCanvas) mxCellRenderer
-          .drawCells(graph, null, 1, null, pdfCanvasFactory);
-      canvas.getGraphics().dispose();
-      document.close();
-    } catch (DocumentException e) {
-      throw new IOException(e.getLocalizedMessage());
-    }
-    // no need to check if fos is not null, as it will always be not null
+
+    Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
+    layout.setSize(new Dimension(800, 800));
+//    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
+    VisualizationViewer<DBObject, DBObject> vv =  new VisualizationViewer<>(layout);
+
+    Properties p = new Properties();
+    p.setProperty("PageSize","A5");
+    VectorGraphics g = new SVGGraphics2D(new File("Output.svg"), new Dimension(400,300));
+    g.setProperties(p);
+    g.startExport();
+    vv.print(g);
+    g.endExport();
   }
+
 
   /**
    * @param keyset     the keyset to use when caching
-   * @param jgraphNode the node to cache
+   * @param nodeObj the node to cache
    */
-  private void cacheJGraphXNode(EntityKeys<?> keyset, Object jgraphNode) {
+  private void cacheDBObject(EntityKeys<?> keyset, DBObject nodeObj) {
     for (String uid : keyset.getUids()) {
-      uidToNode.put(uid, jgraphNode);
+      uidToNode.put(uid, nodeObj);
     }
 
-    Map<String, Object> nameToJGraphNode = typeToNameToNode.get(keyset.getType());
-    if (nameToJGraphNode == null) {
-      nameToJGraphNode = new HashMap<>();
-      typeToNameToNode.put(keyset.getType(), nameToJGraphNode);
+    Map<String, DBObject> nameToDBObject = typeToNameToNode.get(keyset.getType());
+    if (nameToDBObject == null) {
+      nameToDBObject = new HashMap<>();
+      typeToNameToNode.put(keyset.getType(), nameToDBObject);
     }
     for (String name : keyset.getNames()) {
-      nameToJGraphNode.put(name, jgraphNode);
+      nameToDBObject.put(name, nodeObj);
     }
   }
 
   /**
    * Lookup a cached node based on a keyset. This is useful when adding edges to a graph.
    *
-   * @param keyset the keyset associated with the JGraph node of interest
-   * @return the JGraph node associated with the EntityKey, or null if not found.
+   * @param keyset the keyset associated with the Jung graph node of interest
+   * @return the DBObject document associated with the EntityKey, or null if not found.
    */
-  private Object getJGraphNodeFromCache(EntityKeys<?> keyset) {
+  private DBObject getDBObjectNodeFromCache(EntityKeys<?> keyset) {
 
     for (String uid : keyset.getUids()) {
-      Object jgraphNode = uidToNode.get(uid);
-      if (jgraphNode != null) {
-        return jgraphNode;
+      DBObject nodeObj = uidToNode.get(uid);
+      if (nodeObj != null) {
+        return nodeObj;
       }
     }
 
-    Map<String, Object> nameToJGraphNode = typeToNameToNode.get(keyset.getType());
-    if (nameToJGraphNode == null) {
+    Map<String, DBObject> nameToDBObject = typeToNameToNode.get(keyset.getType());
+    if (nameToDBObject == null) {
       //No nodes of this type at all, so don't even need to check the name
       return null;
     }
     for (String name : keyset.getNames()) {
-      Object jgraphNode = nameToJGraphNode.get(name);
-      if (jgraphNode != null) {
-        return jgraphNode;
+      DBObject nodeObj = nameToDBObject.get(name);
+      if (nodeObj != null) {
+        return nodeObj;
       }
     }
 
@@ -220,7 +193,7 @@ public class MongoToJGraphExporter {
   }
 
   private boolean nodeExistsInCache(EntityKeys<?> keyset) {
-    return getJGraphNodeFromCache(keyset) != null;
+    return getDBObjectNodeFromCache(keyset) != null;
   }
 
   /**
@@ -235,7 +208,6 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes a list of edge types which will stop the progression of the query
    * @return true if a node with the given EntityKey was found, false otherwise.
    */
-  @SuppressWarnings("UnusedDeclaration")
   public boolean addSubgraph(GraphConnection graphConn,
                              EntityKeys entityKey, Set<String> stopNodeTypes, Set<String> stopEdgeTypes)
       throws GraphModelException, DbObjectMarshallerException {
@@ -246,8 +218,6 @@ public class MongoToJGraphExporter {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
     }
-    graph.getModel().beginUpdate();
-//    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
     addNode(coreNode);
 
     // Store the IDs of edges that we've already seen as we step through the graph.
@@ -255,14 +225,10 @@ public class MongoToJGraphExporter {
     // algorithm and we can't have investigatedEdges being cleared partway through subgraph creation.
     Set<String> investigatedEdges = new HashSet<>();
 
-    // Export subgraph into the current JGraphX graph model
+    // Export subgraph into the current Jung graph model
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
     addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopNodeTypes, stopEdgeTypes);
 
-    // Print out a summary of the full graph
-//    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
-//        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
-    graph.getModel().endUpdate();
     return true;
 
   }
@@ -293,8 +259,6 @@ public class MongoToJGraphExporter {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
     }
-    graph.getModel().beginUpdate();
-//    directedGraph.addNode(parseEntanglementNode(coreNode, attributeModel));
     addNode(coreNode);
 
     // Store the IDs of edges that we've already seen as we step through the graph.
@@ -302,81 +266,45 @@ public class MongoToJGraphExporter {
     // algorithm and we can't have investigatedEdges being cleared partway through subgraph creation.
     Set<String> investigatedEdges = new HashSet<>();
 
-    // Export subgraph into the current JGraphX graph model
+    // Export subgraph into the current Jung graph model
     Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
     addChildNodesAtDepth(graphConn, investigatedEdges, coreAriesNode.getKeys(), 0, traversalDepth,
         stopNodeTypes, stopEdgeTypes);
 
-    // Print out a summary of the full graph
-//    logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
-//        new Integer[]{directedGraph.getNodeCount(), directedGraph.getEdgeCount()});
-    graph.getModel().endUpdate();
     return true;
 
   }
 
   /**
-   * Adds a new node to a JGraphX graph, or, if at least one of the items in the <code>nodeObj</code> keyset matches
-   * an entry in the node cache, returns the existing object instead.
+   * Adds a new node to a Jung graph. If at least one of the items in the <code>nodeObj</code> keyset matches
+   * an entry in the node cache, the node will node be added again.
    *
-   * @param nodeObj the DBObject (Entanglement) node to add to the JGraph
-   * @return the newly-created (or already existing matching) JGraph node
-   * @throws DbObjectMarshallerException
+   * @param nodeObj the DBObject (Entanglement) node to add to the Jung graph
+   * @return true if <code>nodeObj</code> was added, otherwise false.
+   * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    */
-  private Object addNode(DBObject nodeObj) throws DbObjectMarshallerException {
-//    logger.info("Adding node: "+nodeObj);
-
-    //noinspection unchecked
+  private boolean addNode(DBObject nodeObj) throws DbObjectMarshallerException {
     EntityKeys<Node> keyset = MongoUtils.parseKeyset(marshaller, nodeObj, NodeDAO.FIELD_KEYS);
-    Object existingNode = getJGraphNodeFromCache(keyset);
+    Object existingNode = getDBObjectNodeFromCache(keyset);
     if (existingNode != null) {
-      return existingNode;
+      return false;
     }
 
-    NodeVisuals visualInfo = nodeTypeToStyleInfo.get(keyset.getType());
-    if (visualInfo == null) {
-      visualInfo = DEFAULT_NODE_STYLE_INFO;
-    }
-
-    String id = parseIdStringFromKeyset(keyset);
-//    Object jgraphNode = graph.insertVertex(parentContainer, id, visualInfo.toBasicString(keyset, nodeObj), 0, 0,
-//        visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
-    Object jgraphNode = graph.insertVertex(parentContainer, id, nodeObj, 0, 0,
-        visualInfo.getDefaultWidth(), visualInfo.getDefaultHeight(), keyset.getType());
-    cacheJGraphXNode(keyset, jgraphNode);
-    return jgraphNode;
+    graph.addVertex(nodeObj);
+    cacheDBObject(keyset, nodeObj);
+    return true;
   }
 
 
-  private Object addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
-//    logger.info("Adding edge: "+edgeObj);
+  private void addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
     Edge edge = marshaller.deserialize(edgeObj, Edge.class);
-    Object jgraphFromNode = getJGraphNodeFromCache(edge.getFrom());
-    Object jgraphToNode = getJGraphNodeFromCache(edge.getTo());
+    DBObject fromNodeObj = getDBObjectNodeFromCache(edge.getFrom());
+    DBObject toNodeObj = getDBObjectNodeFromCache(edge.getTo());
 
-    EdgeVisuals visualInfo = edgeTypeToStyleInfo.get(edge.getKeys().getType());
-    if (visualInfo == null) {
-      visualInfo = DEFAULT_EDGE_STYLE_INFO;
-    }
-
-    String id = parseIdStringFromKeyset(edge.getKeys());
-    return graph.insertEdge(parentContainer, id,
-        visualInfo.toBasicString(edge.getKeys(), edgeObj), jgraphFromNode, jgraphToNode);
+//    logger.info("Adding Jung edge. Edge: "+edgeObj+"\nFrom: "+fromNodeObj+"\nTo: "+toNodeObj);
+    graph.addEdge(edgeObj, fromNodeObj, toNodeObj, EdgeType.DIRECTED);
   }
 
-  private Element createXmlUserObject(EntityKeys<?> keyset, DBObject obj) {
-    org.w3c.dom.Document doc = mxDomUtils.createDocument();
-    Element element = doc.createElement(keyset.getType());
-    for (Object entryObj : obj.toMap().entrySet()) {
-      Map.Entry entry = (Map.Entry) entryObj;
-      element.setAttribute(entry.getKey().toString(), entry.getValue().toString());
-    }
-//    Element person1 = doc.createElement("Person");
-//    person1.setAttribute("firstName", "Daffy");
-//    person1.setAttribute("lastName", "Duck");
-
-    return element;
-  }
 
   /**
    * Adds all the nodes and eddges in the specified Entanglement graph to the in-memory Gephi workspace.
@@ -390,78 +318,16 @@ public class MongoToJGraphExporter {
    */
   public void addEntireGraph(GraphConnection graphConn)
       throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
-    graph.getModel().beginUpdate();
+
     for (DBObject node : graphConn.getNodeDao().iterateAll()) {
       addNode(node);
     }
 
-//    Iterable<Edge> edgeItr = new DeserialisingIterable<>(graphConn.getEdgeDao().iterateAll(), marshaller, Edge.class);
-//    for (Edge edge : edgeItr) {
     for (DBObject edgeObj : graphConn.getEdgeDao().iterateAll()) {
       addEdge(edgeObj);
     }
-    graph.getModel().endUpdate();
   }
 
-
-  /**
-   * Given a EntityKeys, create a suitable ID string for use with JGraphX entities.
-   */
-  private String parseIdStringFromKeyset(EntityKeys<?> keyset) throws DbObjectMarshallerException {
-    StringBuilder sb = new StringBuilder();
-
-
-    if (keyset.getType() != null) {
-      sb.append(String.format("[%s]: ", keyset.getType()));
-    } else {
-      sb.append("[Unknown]: ");
-    }
-
-    for (String name : keyset.getNames()) {
-      sb.append(name).append(", ");
-    }
-
-    for (String id : keyset.getUids()) {
-      sb.append(id).append(", ");
-    }
-
-    return sb.toString();
-
-  }
-
-  /**
-   * Adds "from", "to", and an appropriate label to a new Gephi edge based on the Entanglement edge. Note that
-   * currently the entanglement edge UIDs are not saved in Gephi, as Gephi does not have a specific place to
-   * store such an ID. If it turns out we wish to store this as a standard edge attribute, this functionality can
-   * easily be added.
-   *
-   * @param edge the Entanglement edge to process
-   * @return the new Gephi edge
-   * @throws com.entanglementgraph.graph.GraphModelException if there is a problem retrieving the from/to nodes from Entanglement
-   */
-//  private org.gephi.graph.api.Edge parseEntanglementEdge(GraphConnection graphConn, Edge edge) throws
-//      GraphModelException {
-//
-//    NodeDAO nodeDao = graphConn.getNodeDao();
-//    BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
-//    BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
-//
-//    // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
-//    if (fromObj == null || toObj == null) {
-//      logger.log(Level.FINE, "Edge {0} is hanging and will not be propagated to Gephi.", keysetToId(edge.getKeys()));
-//      return null;
-//    }
-//
-//    String fromId = keysetToId(fromObj);
-//    String toId = keysetToId(toObj);
-//    org.gephi.graph.api.Edge gephiEdge = graphModel.factory().newEdge(directedGraph.getNode(fromId), directedGraph.
-//        getNode(toId), 1f, true);
-//    gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
-//
-//    addEdge()
-//    return gephiEdge;
-//
-//  }
 
   /**
    * Adds all child nodes and the edges between them (irrespective of directionality) until
@@ -472,7 +338,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes the edge types which determine where a subgraph should stop
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws DbObjectMarshallerException
+   * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void addChildNodes(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
@@ -503,7 +369,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes     the edge types which determine where a subgraph should stop at each traversal depth
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws DbObjectMarshallerException
+   * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void addChildNodesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges, EntityKeys parentKeys,
@@ -535,7 +401,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes       the edge types which determine where a subgraph should stop
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws DbObjectMarshallerException
+   * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
@@ -573,7 +439,7 @@ public class MongoToJGraphExporter {
       // add the node that the current edge is pointing to, if it hasn't already been added.
       DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
 
-      //Add a new JGraphX node or retrieve reference to existing node (if we've seen this node before)
+      //Add a new Jung node or retrieve reference to existing node (if we've seen this node before)
       if (currentNodeObject != null) {
         EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
         if (nodeExistsInCache(currentNodeKeyset)) {
@@ -581,20 +447,16 @@ public class MongoToJGraphExporter {
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
           // don't add the current edge, and move on to the next one without investigating further children.
           logger.log(Level.FINE,
-              "JGraphX node {0} already present. Skipping entire edge and node addition.",
+              "Jung node {0} already present. Skipping entire edge and node addition.",
               currentNodeKeyset.toString());
           continue;
         }
-        Object jgraphNode = addNode(currentNodeObject);
-        logger.log(Level.FINE, "Added node to JGraphX: {0}", currentNodeKeyset.toString());
-//        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
+        logger.log(Level.FINE, "Added node to Jung: {0}", currentNodeKeyset.toString());
 
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        Object jgraphEdge = addEdge(edgeObj);
-        if (jgraphEdge != null) {
-          logger.log(Level.FINE, "Added edge to JGraphX: {0}", currentEdge.getKeys().toString());
-        }
+        addEdge(edgeObj);
+        logger.log(Level.FINE, "Added edge to Jung: {0}", currentEdge.getKeys().toString());
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(),
@@ -632,7 +494,7 @@ public class MongoToJGraphExporter {
    * @param stopEdgeTypes       the edge types which determine where a subgraph should stop at each traversal depth
    * @throws com.entanglementgraph.graph.GraphModelException
    *          if there is a problem retrieving part of an entanglement graph
-   * @throws DbObjectMarshallerException
+   * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdgesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges,
@@ -674,7 +536,7 @@ public class MongoToJGraphExporter {
       // add the node that the current edge is pointing to, if it hasn't already been added.
       DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
 
-      //Add a new JGraphX node or retrieve reference to existing node (if we've seen this node before)
+      //Add a new Jung node or retrieve reference to existing node (if we've seen this node before)
       if (currentNodeObject != null) {
         EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
         if (nodeExistsInCache(currentNodeKeyset)) {
@@ -682,20 +544,19 @@ public class MongoToJGraphExporter {
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
           // don't add the current edge, and move on to the next one without investigating further children.
           logger.log(Level.FINE,
-              "JGraphX node {0} already present. Skipping entire edge and node addition.",
+              "Jung node {0} already present. Skipping entire edge and node addition.",
               currentNodeKeyset.toString());
           continue;
         }
-        Object jgraphNode = addNode(currentNodeObject);
-        logger.log(Level.FINE, "Added node to JGraphX: {0}", currentNodeKeyset.toString());
+        boolean added = addNode(currentNodeObject);
+        logger.log(Level.FINE, "Added node to Jung: {0}: {1}", new Object[]{currentNodeKeyset.toString(), added});
 //        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
 
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        Object jgraphEdge = addEdge(edgeObj);
-        if (jgraphEdge != null) {
-          logger.log(Level.FINE, "Added edge to JGraphX: {0}", currentEdge.getKeys().toString());
-        }
+        addEdge(edgeObj);
+        logger.log(Level.FINE, "Added edge to Jung: {0}", currentEdge.getKeys().toString());
+
 
         Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(),
@@ -727,55 +588,7 @@ public class MongoToJGraphExporter {
 
   }
 
-//  /**
-//   * This will reformat the default value stored within a Gephi node label to be a String[].
-//   * Assumes that the label being passed is one that has been auto-generated by this class via parseEntanglementNode.
-//   * String[] aren't used by default for the Gephi export, as Gephi expects only a String as the label value.
-//   *
-//   * @param label the string to parse
-//   * @return a cleaned String[] which stores all labels in their own position in the array
-//   */
-//  @SuppressWarnings("UnusedDeclaration")
-//  public static String[] getLabelArray(String label) {
-//    // if there is only one label, just add it and return immediately
-//    if (!label.contains(LABEL_SPLIT_REGEX)) {
-//      return new String[]{label};
-//    }
-//
-//    // cut off leading and trailing chars.
-//    label = label.substring(LABEL_LIST_START.length());
-//    label = label.substring(0, label.length() - LABEL_LIST_END.length());
-//
-//    // split the label
-//    return label.split(LABEL_SPLIT_REGEX);
-//  }
-
-
-  @SuppressWarnings("UnusedDeclaration")
-  public void addNodeVisualInfo(String nodeTypeName, NodeVisuals visualInfo) {
-    nodeTypeToStyleInfo.put(nodeTypeName, visualInfo);
-
-    mxStylesheet stylesheet = graph.getStylesheet();
-    stylesheet.putCellStyle(nodeTypeName, visualInfo.getStyle());
-
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public void addEdgeVisualInfo(String edgeTypeName, EdgeVisuals visualInfo) {
-    edgeTypeToStyleInfo.put(edgeTypeName, visualInfo);
-
-    mxStylesheet stylesheet = graph.getStylesheet();
-    stylesheet.putCellStyle(edgeTypeName, visualInfo.getStyle());
-
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public EntanglementMxGraph getGraph() {
+  public Graph<DBObject, DBObject> getGraph() {
     return graph;
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public Object getParentContainer() {
-    return parentContainer;
   }
 }

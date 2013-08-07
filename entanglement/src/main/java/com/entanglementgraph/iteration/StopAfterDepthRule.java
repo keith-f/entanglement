@@ -21,41 +21,35 @@ import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.revlog.commands.EdgeModification;
-import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
 
-import java.util.List;
-
 /**
- * A rule that simply stores the edges and nodes unchanged in the destination graph.
- *
- * User: keith
- * Date: 25/07/13; 16:06
+ * A rule that causes graph iterations to stop when a particular depth (steps away from the starting node)
+ * is reached.
  *
  * @author Keith Flanagan
  */
-public class DefaultRule extends AbstractRule {
+public class StopAfterDepthRule extends AbstractRule {
+  private final int targetDepth;
+
+  public StopAfterDepthRule(int targetDepth) {
+    this.targetDepth = targetDepth;
+  }
 
   @Override
   public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
                              GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
-    return true;
+                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException  {
+    return currentDepth > targetDepth;
   }
 
   @Override
   public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
                              GraphCursor.NodeEdgeNodeTuple nenTuple,
                              boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
-    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-    BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
-
-    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, remoteNode));
-    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
+    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     return action;
   }
-
 }
