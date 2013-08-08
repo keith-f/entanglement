@@ -19,6 +19,9 @@ package com.entanglementgraph.specialistnodes;
 
 import org.jfree.data.category.DefaultCategoryDataset;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A node that represents a basic category dataset for a chart.
  *
@@ -31,17 +34,40 @@ public class CategoryChartNode extends AbstractChartNode {
     return CV_NAME;
   }
 
-  private DefaultCategoryDataset dataset;
+  public static class CategoryDataset {
+    private final Map<String, Map<String, Number>> rowKeyToColKeyToValue = new HashMap<>();
+
+    public void addValue(Number value, String rowKey, String colKey) {
+      Map<String, Number> colKeyToValue = rowKeyToColKeyToValue.get(rowKey);
+      if (colKeyToValue == null) {
+        colKeyToValue = new HashMap<>();
+        rowKeyToColKeyToValue.put(rowKey, colKeyToValue);
+      }
+      colKeyToValue.put(colKey, value);
+    }
+
+    public void convertToJFreeChart(DefaultCategoryDataset jfreeDataset) {
+      for (Map.Entry<String, Map<String, Number>> entry : rowKeyToColKeyToValue.entrySet()) {
+        Comparable rowKey = entry.getKey();
+        for (Map.Entry<String, Number> colToValue : entry.getValue().entrySet()) {
+          jfreeDataset.addValue(colToValue.getValue(), rowKey, colToValue.getKey());
+        }
+      }
+    }
+  }
+
+  private CategoryDataset dataset;
 
   public CategoryChartNode() {
     keys.setType(getTypeName());
+    dataset = new CategoryChartNode.CategoryDataset();
   }
 
-  public DefaultCategoryDataset getDataset() {
+  public CategoryChartNode.CategoryDataset getDataset() {
     return dataset;
   }
 
-  public void setDataset(DefaultCategoryDataset dataset) {
+  public void setDataset(CategoryChartNode.CategoryDataset dataset) {
     this.dataset = dataset;
   }
 }

@@ -29,6 +29,7 @@ import org.apache.commons.collections15.Transformer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 import javax.swing.*;
 import java.awt.*;
@@ -83,11 +84,15 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
 
         public JFreeChart createChart(CategoryChartNode value) {
           logger.info("Creating chart for: "+value);
+          //Convert serialised category data to JFreeChart dataset
+          DefaultCategoryDataset jfreeDataset = new DefaultCategoryDataset();
+          value.getDataset().convertToJFreeChart(jfreeDataset);
+
           JFreeChart chart = ChartFactory.createLineChart(
               value.getChartTitle(),  // chart title
               value.getAxisTitleX(),
               value.getAxisTitleY(),
-              value.getDataset(),     // data
+              jfreeDataset,           // data
               PlotOrientation.HORIZONTAL,
               true,                   // include legend
               true,                   // include tooltips
