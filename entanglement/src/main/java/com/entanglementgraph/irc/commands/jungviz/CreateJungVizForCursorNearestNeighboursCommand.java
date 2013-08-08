@@ -51,6 +51,7 @@ import edu.uci.ics.jung.graph.Graph;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
 
@@ -63,7 +64,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  * @author Keith Flanagan
  */
 public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+  private static final Logger logger = Logger.getLogger(CreateJungVizForCursorNearestNeighboursCommand.class.getName());
 
   @Override
   public String getDescription() {
@@ -145,6 +146,12 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     @Override
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
+//      GraphCursor eventCursor = event.getValue();
+//      if (!eventCursor.getName().equals(cursorName)) {
+//        logger.info(String.format("Received an event of a cursor that we're not interested in: %s != %s. Ignoring.",
+//            eventCursor.getName(), cursorName));
+//        return;
+//      }
       notifyGraphCursorUpdated(event.getValue());
     }
 
@@ -155,6 +162,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
   private void notifyGraphCursorUpdated(GraphCursor newCursor) {
     try {
+      bot.infoln(channel, "Received notification that cursor %s moved to %s via %s",
+          newCursor.getName(), newCursor.getPosition(), newCursor.getArrivedVia());
 //              updateDisplay(frame, newCursor);
       GraphConnection destGraph = exportSubgraph(newCursor);
       JungGraphFrame newFrame = displayGraphInNewFrame(destGraph);
