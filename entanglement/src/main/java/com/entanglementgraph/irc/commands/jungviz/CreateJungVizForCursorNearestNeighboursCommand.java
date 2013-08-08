@@ -35,6 +35,8 @@ import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryLineChartRenderer;
+import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.EntryListener;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -101,37 +103,12 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     boolean track = parsedArgs.get("track").parseValueAsBoolean();
 
     try {
-      // Display initial graph around current cursor position
-      GraphConnection destGraph = exportSubgraph(cursor);
-      final JungGraphFrame frame = displayGraphInNewFrame(destGraph);
+      // Manually fire the first event just in case we happen to be on a Gene node at the moment
+      notifyGraphCursorUpdated(cursor);
 
-//
-//      if (track) {
-//        state.getUserObject().getCursorRegistry().getCurrentPositions().addEntryListener(new EntryListener<String, GraphCursor>() {
-//          @Override
-//          public void entryAdded(EntryEvent<String, GraphCursor> event) {
-//          }
-//
-//          @Override
-//          public void entryRemoved(EntryEvent<String, GraphCursor> event) {
-//          }
-//
-//          @Override
-//          public void entryUpdated(EntryEvent<String, GraphCursor> event) {
-//            GraphCursor newCursor = event.getValue();
-//            try {
-//              updateDisplay(frame, newCursor);
-//            } catch (Exception e) {
-//              bot.printException(channel, sender, "Failed to update GUI for new cursor position", e);
-//              e.printStackTrace();
-//            }
-//          }
-//
-//          @Override
-//          public void entryEvicted(EntryEvent<String, GraphCursor> event) {
-//          }
-//        }, cursorName, true); //Receive updates for our cursor only.
-//      }
+      // Register a listener to take care of future cursor movements
+      CursorListener listener = new CursorListener();
+      state.getUserObject().getCursorRegistry().getCurrentPositions().addEntryListener(listener, cursorName, true);
 
       Message msg = new Message(channel);
 
@@ -139,7 +116,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
-        currentPos = MongoUtils.parseKeyset(graphConn.getMarshaller(), (BasicDBObject) currentNodeObj);
+        currentPos = MongoUtils.parseKeyset(graphConn.getMarshaller(), currentNodeObj);
       }
 
 
@@ -156,21 +133,57 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     }
   }
 
+  private class CursorListener implements EntryListener<String, GraphCursor> {
+
+    @Override
+    public void entryAdded(EntryEvent<String, GraphCursor> event) {
+    }
+
+    @Override
+    public void entryRemoved(EntryEvent<String, GraphCursor> event) {
+    }
+
+    @Override
+    public void entryUpdated(EntryEvent<String, GraphCursor> event) {
+      notifyGraphCursorUpdated(event.getValue());
+    }
+
+    @Override
+    public void entryEvicted(EntryEvent<String, GraphCursor> event) {
+    }
+  }
+
+  private void notifyGraphCursorUpdated(GraphCursor newCursor) {
+    try {
+//              updateDisplay(frame, newCursor);
+      GraphConnection destGraph = exportSubgraph(newCursor);
+      JungGraphFrame newFrame = displayGraphInNewFrame(destGraph);
+    } catch (Exception e) {
+      bot.printException(channel, sender, "Failed to update GUI for new cursor position", e);
+      e.printStackTrace();
+    }
+  }
+
   private GraphConnection exportSubgraph(GraphCursor graphCursor) throws GraphIteratorException, GraphConnectionFactoryException {
     GraphConnection sourceGraph = graphConn;
     GraphConnection destinationGraph = createTemporaryGraphConnection();
     DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(
         sourceGraph, destinationGraph, state.getUserObject(), cursorContext, 1);
-    exporter.execute(graphCursor);
+
+    //Use a throwaway cursor so as not to alter the cursor we're listening to, which may have unintended side effects
+    GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), graphCursor.getPosition());
+    state.getUserObject().getCursorRegistry().addCursor(tmpCursor);
+    exporter.execute(tmpCursor);
+    state.getUserObject().getCursorRegistry().removeCursor(tmpCursor);
     return destinationGraph;
   }
 
   private GraphConnection createTemporaryGraphConnection() throws GraphConnectionFactoryException {
     GraphConnectionFactory factory = new GraphConnectionFactory(tempCluster, tempDatabase);
-    return factory.connect("tmp_"+ UidGenerator.generateUid(), "temp");
+    return factory.connect("tmp_"+UidGenerator.generateUid(), "temp");
   }
 
-  private JungGraphFrame displayGraphInNewFrame(GraphConnection subgraph) throws JGraphXPopulationException, GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
+  private JungGraphFrame displayGraphInNewFrame(GraphConnection subgraph) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
     // Export the temporary Entanglement graph to an in-memory Jung graph
     MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
     dbToJung.addEntireGraph(subgraph);
@@ -186,6 +199,17 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     frame.getFrame().setVisible(true);
     return frame;
   }
+
+//  private void updateDisplay(GraphFrame frame, GraphCursor graphCursor) throws JGraphXPopulationException, GraphCursorException {
+//    EntanglementMxGraph mxGraph = new EntanglementMxGraph();
+//    GraphCursorImmediateNeighbourhoodToJGraphX populator = new GraphCursorImmediateNeighbourhoodToJGraphX(mxGraph);
+//    populator.populateImmediateNeighbourhood(graphConn, graphCursor);
+////      doOrganicLayout(mxGraph);
+//    doFastOrganicLayout(mxGraph);
+//    frame.displayNewGraph(graphCursor.getName(), mxGraph);
+//
+//  }
+
 
 
 }
