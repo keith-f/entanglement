@@ -27,7 +27,10 @@ import com.mxgraph.view.mxGraph;
 
 import javax.swing.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * An extension of the <code>mxGraph</code> class that can be used to implement custom cell renderers.
@@ -38,6 +41,8 @@ import java.util.Map;
  * @author Keith Flanagan
  */
 public class EntanglementMxGraph extends mxGraph {
+  private static final Logger logger = Logger.getLogger(EntanglementMxGraph.class.getName());
+
   /**
    * The following are set by the EntanglementMxGraph constructor and are passed on to new instances of
    * custom renderers. This map can be used to pass on runtime configuration information, such as variables,
@@ -46,6 +51,10 @@ public class EntanglementMxGraph extends mxGraph {
    */
   private final Map<String, Object> rendererProperties;
 
+  /**
+   * A set of customisable rules that determine mappings to custom renderers
+   */
+  private final Set<ValueRule> customRendererRules;
 
   /**
    * A map of bean type to cell renderer type
@@ -66,12 +75,14 @@ public class EntanglementMxGraph extends mxGraph {
   private final Map<Object, CustomCellRenderer> beanInstanceToCustomRenderer;
 
   public EntanglementMxGraph() {
+    customRendererRules = new HashSet<>();
     beanTypeToCustomRendererType = new HashMap<>();
     beanInstanceToCustomRenderer = new HashMap<>();
     rendererProperties = new HashMap<>();
   }
 
   public EntanglementMxGraph(Map<String, Object> rendererProperties) {
+    customRendererRules = new HashSet<>();
     beanTypeToCustomRendererType = new HashMap<>();
     beanInstanceToCustomRenderer = new HashMap<>();
     this.rendererProperties = rendererProperties;
@@ -90,14 +101,13 @@ public class EntanglementMxGraph extends mxGraph {
     }
 
 
-    String label = null; // A basic label to be used when no custom renderer is specified.
-    JComponent centralContent = null;
+//    String label = null; // A basic label to be used when no custom renderer is specified.
+//    JComponent centralContent = null;
     CustomCellRenderer customCellRenderer = getRendererForCellValue(cellValue);
-    if (customCellRenderer != null) {
-      label = (drawLabel) ? state.getLabel() : "";
-      centralContent = customCellRenderer.renderCellContent(cellValue);
-    }
-//    System.out.println("Cell type: "+cellValueType+", customCellRenderer: "+customCellRenderer);
+//    if (customCellRenderer != null) {
+//      label = (drawLabel) ? state.getLabel() : "";
+//      centralContent = customCellRenderer.renderCellContent(cellValue);
+//    }
 
     // Indirection for wrapped swing canvas inside image canvas (used for creating
     // the preview image when cells are dragged)
@@ -158,6 +168,26 @@ public class EntanglementMxGraph extends mxGraph {
     }
 
     /*
+     * No existing renderer exists for this particular bean. Can we create a new renderer based on the value content?
+     */
+    for (ValueRule rule : customRendererRules) {
+      Class<? extends CustomCellRenderer> rendererType = rule.getRenderer(cellValue);
+      logger.info("Rule: "+rule+" evaluated: "+cellValue+" of type: "+cellValue.getClass().getName()+" and returned renderer type: "+rendererType);
+      if (rendererType != null) {
+        try {
+          CustomCellRenderer renderer = rendererType.newInstance();
+          renderer.setRendererProperties(rendererProperties);
+
+          //Cache this renderer for reuse with this bean later.
+          beanInstanceToCustomRenderer.put(cellValue, renderer);
+          return renderer;
+        } catch (Exception e) {
+          throw new RuntimeException("Failed to instantiate a custom renderer.", e);
+        }
+      }
+    }
+
+    /*
      * No custom renderer could be found for this bean/type
      */
     return null;
@@ -165,5 +195,9 @@ public class EntanglementMxGraph extends mxGraph {
 
   public void addCustomRendererForBeanType(Class<?> beanType, Class<? extends CustomCellRenderer> rendererType) {
     beanTypeToCustomRendererType.put(beanType, rendererType);
+  }
+
+  public void addCustomRendererRule(ValueRule rule) {
+    customRendererRules.add(rule);
   }
 }

@@ -94,6 +94,10 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     if (graphCursorNeeded) {
       cursorName = parsedArgs.get("cursor").getStringValue();
       cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(state.getUserObject(), cursorName);
+      // Make sure that cursorName reflects the chosen cursor, even if no name was specified by the user
+      if (cursor != null) {
+        cursorName = cursor.getName();
+      }
       cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
     }
   }
