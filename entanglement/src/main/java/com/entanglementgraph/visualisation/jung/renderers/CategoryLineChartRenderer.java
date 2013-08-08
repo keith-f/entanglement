@@ -90,10 +90,10 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
 
           JFreeChart chart = ChartFactory.createLineChart(
               value.getChartTitle(),  // chart title
-              value.getAxisTitleX(),
-              value.getAxisTitleY(),
+              value.getAxisTitleX(),  // Category axis
+              value.getAxisTitleY(),  // Value axis
               jfreeDataset,           // data
-              PlotOrientation.HORIZONTAL,
+              PlotOrientation.VERTICAL,
               true,                   // include legend
               true,                   // include tooltips
               false);                 // include URLs
