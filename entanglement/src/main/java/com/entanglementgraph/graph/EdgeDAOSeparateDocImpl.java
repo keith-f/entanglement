@@ -155,7 +155,7 @@ public class EdgeDAOSeparateDocImpl
   public DBCursor iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType) throws GraphModelException {
     logger.log(Level.FINE, "Iterating edges to node: {0}, from a node of type: {1}", new Object[]{to, fromNodeType});
     DBObject query = buildToNodeQuery(to);
-    query.put(FIELD_TO_KEYS_TYPE, fromNodeType);
+    query.put(FIELD_FROM_KEYS_TYPE, fromNodeType);
 //    query.putAll(customQuery);
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
