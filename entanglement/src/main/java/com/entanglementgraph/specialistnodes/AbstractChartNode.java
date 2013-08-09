@@ -26,9 +26,32 @@ import com.entanglementgraph.graph.data.Node;
  * @author Keith Flanagan
  */
 public class AbstractChartNode extends Node {
+  public static enum ChartType {
+    AREA,
+    BAR,
+    BOX_AND_WHISKER,
+    BUBBLE,
+    CANDLESTICK,
+    GANTT,
+    HIGH_LOW,
+    HISTOGRAM,
+    LINE,
+    POLAR,
+    RING,
+    SCATTERPLOT,
+    STACKED_AREA,
+    STACKED_BAR,
+    STACKED_XY_AREA,
+    TIMESERIES,
+    XY_AREA,
+    XY_BAR,
+    XY_LINE
+  }
+
   private String chartTitle;
   private String axisTitleX;
   private String axisTitleY;
+  private ChartType suggestedType;
 
   public AbstractChartNode() {
     chartTitle = "Title";
@@ -36,10 +59,11 @@ public class AbstractChartNode extends Node {
     axisTitleY = "Y axis";
   }
 
-  public AbstractChartNode(String chartTitle, String axisTitleX, String axisTitleY) {
+  public AbstractChartNode(String chartTitle, String axisTitleX, String axisTitleY, ChartType suggestedType) {
     this.chartTitle = chartTitle;
     this.axisTitleX = axisTitleX;
     this.axisTitleY = axisTitleY;
+    this.suggestedType = suggestedType;
   }
 
   public String getChartTitle() {
@@ -64,5 +88,13 @@ public class AbstractChartNode extends Node {
 
   public void setAxisTitleY(String axisTitleY) {
     this.axisTitleY = axisTitleY;
+  }
+
+  public ChartType getSuggestedType() {
+    return suggestedType;
+  }
+
+  public void setSuggestedType(ChartType suggestedType) {
+    this.suggestedType = suggestedType;
   }
 }

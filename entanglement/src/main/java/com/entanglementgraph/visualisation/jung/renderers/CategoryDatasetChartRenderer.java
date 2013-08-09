@@ -18,10 +18,7 @@
 package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
-import com.entanglementgraph.visualisation.jung.CustomVertexRenderer;
-import com.entanglementgraph.visualisation.jung.DefaultVertexLabelTransformer;
-import com.entanglementgraph.visualisation.jung.ErrorIcon;
-import com.entanglementgraph.visualisation.jung.Visualiser;
+import com.entanglementgraph.visualisation.jung.*;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -32,15 +29,14 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 /**
  * @author Keith Flanagan
  */
-public class CategoryLineChartRenderer implements CustomVertexRenderer {
-  private static final Logger logger = Logger.getLogger(CategoryLineChartRenderer.class.getName());
+public class CategoryDatasetChartRenderer implements CustomVertexRenderer {
+  private static final Logger logger = Logger.getLogger(CategoryDatasetChartRenderer.class.getName());
 
   private Visualiser visualiser;
 
@@ -49,7 +45,7 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
   private Transformer<DBObject, Icon> iconTransformer;
   private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
 
-  public CategoryLineChartRenderer() {
+  public CategoryDatasetChartRenderer() {
   }
 
   @Override
@@ -70,11 +66,14 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
             CategoryChartNode node = null;
             try {
               node = marshaller.deserialize(dbObject, CategoryChartNode.class);
-              cachedChart = createChart(node);
+              cachedChart = CategoryDatasetJFreeChartFactory.createSuggestedChart(node);
               BufferedImage objBufferedImage=cachedChart.createBufferedImage(500, 500);
               cachedIcon = new ImageIcon();
               cachedIcon.setImage(objBufferedImage);
             } catch (DbObjectMarshallerException e) {
+              e.printStackTrace();
+              return new ErrorIcon();
+            } catch (CustomRendererException e) {
               e.printStackTrace();
               return new ErrorIcon();
             }
@@ -82,23 +81,6 @@ public class CategoryLineChartRenderer implements CustomVertexRenderer {
           return cachedIcon;
         }
 
-        public JFreeChart createChart(CategoryChartNode value) {
-          logger.info("Creating chart for: "+value);
-          //Convert serialised category data to JFreeChart dataset
-          DefaultCategoryDataset jfreeDataset = new DefaultCategoryDataset();
-          value.getDataset().convertToJFreeChart(jfreeDataset);
-
-          JFreeChart chart = ChartFactory.createLineChart(
-              value.getChartTitle(),  // chart title
-              value.getAxisTitleX(),  // Category axis
-              value.getAxisTitleY(),  // Value axis
-              jfreeDataset,           // data
-              PlotOrientation.VERTICAL,
-              true,                   // include legend
-              true,                   // include tooltips
-              false);                 // include URLs
-          return chart;
-        }
       };
     }
     return iconTransformer;

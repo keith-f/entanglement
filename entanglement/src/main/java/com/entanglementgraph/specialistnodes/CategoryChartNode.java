@@ -56,11 +56,21 @@ public class CategoryChartNode extends AbstractChartNode {
     }
   }
 
+  public static enum CategoryLabelPosition {
+    STANDARD,
+    UP_90,
+    DOWN_90,
+    UP_45,
+    DOWN_45;
+  }
+
   private CategoryDataset dataset;
+  private CategoryLabelPosition labelPosition;
 
   public CategoryChartNode() {
     keys.setType(getTypeName());
     dataset = new CategoryChartNode.CategoryDataset();
+    labelPosition = CategoryLabelPosition.STANDARD;
   }
 
   public CategoryChartNode.CategoryDataset getDataset() {
@@ -69,5 +79,13 @@ public class CategoryChartNode extends AbstractChartNode {
 
   public void setDataset(CategoryChartNode.CategoryDataset dataset) {
     this.dataset = dataset;
+  }
+
+  public CategoryLabelPosition getLabelPosition() {
+    return labelPosition;
+  }
+
+  public void setLabelPosition(CategoryLabelPosition labelPosition) {
+    this.labelPosition = labelPosition;
   }
 }

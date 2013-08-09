@@ -25,7 +25,6 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.irc.commands.swing.JGraphXPopulationException;
 import com.entanglementgraph.iteration.GraphIteratorException;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
@@ -34,10 +33,9 @@ import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
-import com.entanglementgraph.visualisation.jung.renderers.CategoryLineChartRenderer;
+import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
@@ -200,7 +198,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     // Add a custom renderer for chart nodes
     CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller());
-    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryLineChartRenderer.class);
+    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
 
     Visualiser visualiser = new Visualiser(jungGraph, customVertexRenderers);
 
