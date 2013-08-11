@@ -44,6 +44,8 @@ public class AbstractChartNode extends Node {
     STACKED_XY_AREA,
     TIMESERIES,
     XY_AREA,
+    XY_STEP_AREA,
+    XY_STEP,
     XY_BAR,
     XY_LINE
   }
