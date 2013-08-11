@@ -29,8 +29,7 @@
     <scales-common.version>SC-SNAPSHOT</scales-common.version>
     <cliche.version>1.0-SNAPSHOT</cliche.version>
     <gephi.version>0.8.2</gephi.version>
-    <jgraphx.version>2.0.0.1</jgraphx.version>
-      <jung.version>2.0.1</jung.version>
+     <jung.version>2.0.1</jung.version>
     <jfreechart.version>1.0.14</jfreechart.version>
   </properties>
 
@@ -210,13 +209,6 @@
       <artifactId>gephi-toolkit</artifactId>
       <version>${gephi.version}</version>
       <scope>compile</scope>
-    </dependency>
-
-    <!-- JGraphX / mxGraph stuff -->
-    <dependency>
-      <groupId>org.tinyjee.jgraphx</groupId>
-      <artifactId>jgraphx</artifactId>
-      <version>${jgraphx.version}</version>
     </dependency>
 
     <!-- JUNG -->
