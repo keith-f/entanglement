@@ -20,8 +20,8 @@ package com.entanglementgraph.specialistnodes;
 import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -50,29 +50,31 @@ public class XYChartNode extends AbstractChartNode {
      * x-values and the second containing the y-values)."
      * http://www.jfree.org/jfreechart/api/javadoc/org/jfree/data/xy/DefaultXYDataset.html#addSeries%28java.lang.Comparable,%20double[][]%29
      */
-    private final Map<String, double[][]> seriesToXYData = new HashMap<>();
+    private final Map<String, Number[][]> seriesToXYData = new HashMap<>();
 
-    public void addSeries(String series, double[][] data) {
+    public void addSeries(String series, Number[][] data) {
       seriesToXYData.put(series, data);
     }
 
-    public void convertToXYDataset(DefaultXYDataset jfreeDataset) {
-      for (Map.Entry<String, double[][]> seriesEntry : seriesToXYData.entrySet()) {
+    public void convertToXYDataset(XYSeriesCollection jfreeDataset) {
+      for (Map.Entry<String, Number[][]> seriesEntry : seriesToXYData.entrySet()) {
         XYSeries xySeries = new XYSeries(seriesEntry.getKey());
-        double[][] data = seriesEntry.getValue();
+        Number[][] data = seriesEntry.getValue();
         for (int i=0; i<data[0].length; i++) {
           xySeries.add(data[0][i], data[1][i]);
         }
+        jfreeDataset.addSeries(xySeries);
       }
     }
 
     public void convertToTimeSeries(TimeSeriesCollection jfreeDataset) {
-      for (Map.Entry<String, double[][]> seriesEntry : seriesToXYData.entrySet()) {
+      for (Map.Entry<String, Number[][]> seriesEntry : seriesToXYData.entrySet()) {
         TimeSeries timeSeries = new TimeSeries(seriesEntry.getKey());
-        double[][] data = seriesEntry.getValue();
+        Number[][] data = seriesEntry.getValue();
         for (int i=0; i<data[0].length; i++) {
           timeSeries.add(new Minute(new Date((long) data[0][i])), data[1][i]);
         }
+        jfreeDataset.addSeries(timeSeries);
       }
     }
   }

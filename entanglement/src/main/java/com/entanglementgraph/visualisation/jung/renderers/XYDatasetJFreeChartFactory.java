@@ -20,13 +20,9 @@ import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.visualisation.jung.CustomRendererException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPositions;
-import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.xy.DefaultXYDataset;
-import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import java.util.logging.Logger;
 
@@ -104,7 +100,7 @@ public class XYDatasetJFreeChartFactory {
   }
 
   public static JFreeChart createPolarChart(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createPolarChart(
@@ -118,7 +114,7 @@ public class XYDatasetJFreeChartFactory {
 
 
   public static JFreeChart createScatterPlot(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createScatterPlot(
@@ -134,7 +130,7 @@ public class XYDatasetJFreeChartFactory {
   }
 
   public static JFreeChart createXYAreaChart(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createXYAreaChart(
@@ -150,7 +146,7 @@ public class XYDatasetJFreeChartFactory {
   }
 
   public static JFreeChart createXYLineChart(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createXYLineChart(
@@ -166,7 +162,7 @@ public class XYDatasetJFreeChartFactory {
   }
 
   public static JFreeChart createXYStepAreaChart(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createXYStepAreaChart(
@@ -182,7 +178,8 @@ public class XYDatasetJFreeChartFactory {
   }
 
   public static JFreeChart createXYStepChart(XYChartNode node) {
-    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+//    DefaultXYDataset jfreeDataset = new DefaultXYDataset();
+    XYSeriesCollection jfreeDataset = new XYSeriesCollection();
     node.getDataset().convertToXYDataset(jfreeDataset);
 
     JFreeChart chart = ChartFactory.createXYStepChart(
