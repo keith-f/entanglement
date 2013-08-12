@@ -28,8 +28,8 @@ import com.scalesinformatics.uibot.commands.UserException;
  */
 public class EntanglementIrcCommandUtils {
   /**
-   * A convenience method that returns either a connection named <code>connName</code>, or if <code>connName</code>
-   * is NULL, then returns the current bot's current "active" connection.
+   * A convenience method that creates and returns either a connection named <code>connName</code>, or
+   * if <code>connName</code> is NULL, then creates and returns a connection for the bot's current "active" connection.
    *
    * @param runtime
    * @param connName
@@ -43,6 +43,27 @@ public class EntanglementIrcCommandUtils {
       return runtime.createGraphConnectionFor(connName);
     }
     return runtime.createGraphConnectionForCurrentConnection();
+  }
+
+  /**
+   * A convenience method that creates and returns a connection named <code>connName</code>, or NULL if
+   * <code>connName</code> was also NULL.
+   * Note that an exception will be thrown if <code>connName</code> is non-null, but no connection information
+   * with that name could be found.
+   *
+   * @param runtime
+   * @param connName
+   * @return
+   * @throws UserException
+   * @throws BotCommandException
+   */
+  public static GraphConnection getSpecifiedGraph(EntanglementRuntime runtime, String connName)
+      throws UserException, BotCommandException {
+    if (connName != null) {
+      return runtime.createGraphConnectionFor(connName);
+    } else {
+      return null;
+    }
   }
 
   /**
