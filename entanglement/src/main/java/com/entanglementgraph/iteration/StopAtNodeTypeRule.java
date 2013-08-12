@@ -27,7 +27,8 @@ import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
 
 /**
- * A rule that causes graph iterations to stop when a particular node type is encountered.
+ * A rule that causes graph iterations to stop when a particular (remote) node type at the end of the current
+ * edge is encountered.
  * The rule can be configured to include or exclude the target node type in the destination graph, as desired.
  *
  * User: keith
