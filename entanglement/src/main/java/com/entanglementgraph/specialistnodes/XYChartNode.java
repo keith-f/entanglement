@@ -23,6 +23,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,16 +51,16 @@ public class XYChartNode extends AbstractChartNode {
      * x-values and the second containing the y-values)."
      * http://www.jfree.org/jfreechart/api/javadoc/org/jfree/data/xy/DefaultXYDataset.html#addSeries%28java.lang.Comparable,%20double[][]%29
      */
-    private final Map<String, Number[][]> seriesToXYData = new HashMap<>();
+    private final Map<String, BigDecimal[][]> seriesToXYData = new HashMap<>();
 
-    public void addSeries(String series, Number[][] data) {
+    public void addSeries(String series, BigDecimal[][] data) {
       seriesToXYData.put(series, data);
     }
 
     public void convertToXYDataset(XYSeriesCollection jfreeDataset) {
-      for (Map.Entry<String, Number[][]> seriesEntry : seriesToXYData.entrySet()) {
+      for (Map.Entry<String, BigDecimal[][]> seriesEntry : seriesToXYData.entrySet()) {
         XYSeries xySeries = new XYSeries(seriesEntry.getKey());
-        Number[][] data = seriesEntry.getValue();
+        BigDecimal[][] data = seriesEntry.getValue();
         for (int i=0; i<data[0].length; i++) {
           xySeries.add(data[0][i], data[1][i]);
         }
@@ -68,11 +69,11 @@ public class XYChartNode extends AbstractChartNode {
     }
 
     public void convertToTimeSeries(TimeSeriesCollection jfreeDataset) {
-      for (Map.Entry<String, Number[][]> seriesEntry : seriesToXYData.entrySet()) {
+      for (Map.Entry<String, BigDecimal[][]> seriesEntry : seriesToXYData.entrySet()) {
         TimeSeries timeSeries = new TimeSeries(seriesEntry.getKey());
-        Number[][] data = seriesEntry.getValue();
+        BigDecimal[][] data = seriesEntry.getValue();
         for (int i=0; i<data[0].length; i++) {
-          timeSeries.add(new Minute(new Date((long) data[0][i])), data[1][i]);
+          timeSeries.add(new Minute(new Date(data[0][i].longValue())), data[1][i]);
         }
         jfreeDataset.addSeries(timeSeries);
       }
