@@ -94,7 +94,7 @@ public class CategoryDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     setCategoryLabelPositions(node, chart);
@@ -111,7 +111,7 @@ public class CategoryDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     setCategoryLabelPositions(node, chart);
@@ -129,7 +129,7 @@ public class CategoryDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     setCategoryLabelPositions(node, chart);
@@ -146,7 +146,7 @@ public class CategoryDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     setCategoryLabelPositions(node, chart);
@@ -163,7 +163,7 @@ public class CategoryDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     setCategoryLabelPositions(node, chart);

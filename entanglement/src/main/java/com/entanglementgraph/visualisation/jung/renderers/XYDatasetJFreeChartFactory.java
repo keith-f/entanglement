@@ -93,7 +93,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleX(),   // Time axis
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
@@ -123,7 +123,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
@@ -139,7 +139,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
@@ -155,7 +155,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
@@ -171,7 +171,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
@@ -188,7 +188,7 @@ public class XYDatasetJFreeChartFactory {
         node.getAxisTitleY(),   // Value axis
         jfreeDataset,           // data
         PlotOrientation.VERTICAL,
-        true,                   // include legend
+        node.isDisplayLegend(), // include legend
         true,                   // include tooltips
         false);
     return chart;
