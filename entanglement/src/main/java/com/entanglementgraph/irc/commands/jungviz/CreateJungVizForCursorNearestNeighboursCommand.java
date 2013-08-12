@@ -72,15 +72,17 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
-//    params.add(new OptionalParam("display-edge-counts", Boolean.class, "true", "If set 'true', will display incoming/outgoing edge counts."));
-//    params.add(new OptionalParam("display-edge-types", Boolean.class, "true", "If set 'true', will display edge type information under the edge counts."));
-//    params.add(new OptionalParam("verbose", Boolean.class, "false", "If set 'true', will display all edge information as well as the summary."));
     params.add(new OptionalParam("maxUids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     params.add(new OptionalParam("track", Boolean.class, Boolean.TRUE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
 
     params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
     params.add(new OptionalParam("temp-database", String.class, "temp", "The name of a database to use for storing temporary graphs."));
+
+    params.add(new OptionalParam("layout-size-x", Integer.class, "800", "The width (in pixels) that the node layout engine will use for performing layouts."));
+    params.add(new OptionalParam("layout-size-y", Integer.class, "800", "The height (in pixels) that the node layout engine will use for performing layouts."));
+    params.add(new OptionalParam("display-size-x", Integer.class, "850", "The preferred width (in pixels) of the graph viewport."));
+    params.add(new OptionalParam("display-size-y", Integer.class, "850", "The preferred height (in pixels) of the graph viewport."));
 
     return params;
   }
@@ -92,6 +94,11 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
   private String tempCluster;
   private String tempDatabase;
 
+  private int layoutSizeX;
+  private int layoutSizeY;
+  private int displaySizeX;
+  private int displaySizeY;
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
@@ -100,6 +107,11 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
     int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
     boolean track = parsedArgs.get("track").parseValueAsBoolean();
+
+    layoutSizeX = parsedArgs.get("layout-size-x").parseValueAsInteger();
+    layoutSizeY = parsedArgs.get("layout-size-y").parseValueAsInteger();
+    displaySizeX = parsedArgs.get("display-size-x").parseValueAsInteger();
+    displaySizeY = parsedArgs.get("display-size-y").parseValueAsInteger();
 
     try {
       // Manually fire the first event just in case we happen to be on a Gene node at the moment
@@ -200,7 +212,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller());
     customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
 
-    Visualiser visualiser = new Visualiser(jungGraph, customVertexRenderers);
+    Visualiser visualiser = new Visualiser(jungGraph, customVertexRenderers, layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
 
     JungGraphFrame frame = new JungGraphFrame(visualiser);
     frame.getFrame().setVisible(true);
