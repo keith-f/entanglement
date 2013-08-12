@@ -198,20 +198,25 @@ public class DepthFirstGraphIterator {
         writeUpdates();
       }
 
-      BasicDBObject remoteNode = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
-      BasicDBObject edge = nen.getRawEdge();
+      BasicDBObject localNodeDoc = outgoingEdges ? nen.getRawSourceNode() : nen.getRawDestinationNode();
+      BasicDBObject edgeDoc = nen.getRawEdge();
+      BasicDBObject remoteNodeDoc = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
 
-      EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
-      EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
+      Edge edge = sourceGraph.getMarshaller().deserialize(edgeDoc, Edge.class);
+//      EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
+//      EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edgeDoc, GraphEntityDAO.FIELD_KEYS);
+      EntityKeys<Node> localNodeId = outgoingEdges ? edge.getFrom() : edge.getTo();
+      EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
 
       // FIXME for now, we're just caching 'seen' edges in memory. We need to store these in a temporary mongo collection for large graphs
-      if (seenEdge(edgeId)) {
+      if (seenEdge(edge.getKeys())) {
         continue;
       }
-      cacheEdgeIds(edgeId);
+      cacheEdgeIds(edge.getKeys());
 
       EntityRule.NextEdgeIteration nextIterationDecision =
-          executeRules(cursorName, currentDepth, currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
+          executeRules(cursorName, currentDepth, currentPosition, edge.getKeys(), outgoingEdges, remoteNodeId,
+              localNodeDoc, edgeDoc, remoteNodeDoc);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
@@ -287,15 +292,23 @@ public class DepthFirstGraphIterator {
     graphUpdates.clear();
   }
 
-  protected EntityRule.NextEdgeIteration executeRules(String cursorName, int currentDepth,
-          EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-          boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+  protected EntityRule.NextEdgeIteration executeRules
+      (String cursorName, int currentDepth,
+       EntityKeys<? extends Node> currentPosition,
+       EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+       EntityKeys<? extends Node> remoteNodeId,
+       BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+//      (String cursorName, int currentDepth,
+//          EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
+//          boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
         throws GraphIteratorException, RuleException {
 
     for (EntityRule rule : rules) {
-      if (rule.ruleMatches(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
+      if (rule.ruleMatches(cursorName, currentDepth, currentPosition, edgeId, outgoingEdge, remoteNodeId,
+          rawLocalNode, rawEdge, rawRemoteNode)) {
         EntityRule.HandlerAction result =
-            rule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+            rule.apply(cursorName, currentDepth, currentPosition, edgeId, outgoingEdge, remoteNodeId,
+                rawLocalNode, rawEdge, rawRemoteNode);
         graphUpdates.addAll(result.getOperations());
 
 
@@ -315,7 +328,8 @@ public class DepthFirstGraphIterator {
 
     // No rule in the list matched this node. Apply the default rule
     EntityRule.HandlerAction result =
-        defaultRule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+        defaultRule.apply(cursorName, currentDepth, currentPosition, edgeId, outgoingEdge, remoteNodeId,
+            rawLocalNode, rawEdge, rawRemoteNode);
     graphUpdates.addAll(result.getOperations());
     return result.getNextIterationBehaviour();
   }

@@ -40,21 +40,26 @@ import java.util.List;
 public class DefaultRule extends AbstractRule {
 
   @Override
-  public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+                             throws RuleException {
     return true;
   }
 
   @Override
-  public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+                             throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-    BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
 
-    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, remoteNode));
-    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
+    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
     return action;
   }
 

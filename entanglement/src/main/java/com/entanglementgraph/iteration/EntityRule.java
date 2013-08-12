@@ -85,7 +85,17 @@ public interface EntityRule {
 
 
   /**
-   * Returns true if this rule implementation matches the data presented in the graph iterator's current location.
+   * This method should return true if the rule implementation matches the data presented in the graph iterator's
+   * current location.
+   *
+   * Two sets of location object are provided here:
+   * <ol>
+   *   <li>The three <code>EntityKeys</code> objects are obtained from the edge currently being iterated. The
+   *   edge may be either incoming or outgoing from the current node, so the <code>currentPosition</code>, and
+   *   <code>remoteNodeId</code> are set accordingly, for convenience.</li>
+   *   <li>Additionally, the raw <code>BasicDBObject</code> instances are provided (if they actually exist in the
+   *   database), for manual parsing into whatever data bean(s) they represent.</li>
+   * </ol>
    *
    * @param cursorName the name of the <code>GraphCursor</code> whose movements led to the current position. The
    *                   name is provided only, which should be sufficient for most purposes. You can use this name to
@@ -95,23 +105,37 @@ public interface EntityRule {
    * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
    *                     of '0'; a node one step away has a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
-   * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
-   *                 destination node, respectively.
-   * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
-   * @param nodeId the deserialised EntityKeys of the remote node, provided for convenience.
-   * @param edgeId the deserialised EntityKeys of the edge, provided for convenience.
+   * @param edgeId       the deserialised EntityKeys of the edge, provided for convenience.
+   * @param outgoingEdge true if <code>edge</code> represents an outgoing edge wrt <code>currentPosition</code>
+   * @param remoteNodeId the deserialised EntityKeys of the remote node, provided for convenience.
+   * @param rawLocalNode the complete MongoDB document representing <code>currentPosition</code> node, or NULL if no
+   *                     such node document exists (i.e., this edge is 'hanging').
+   * @param rawEdge      the complete MongoDB document representing the current edge being iterated.
+   * @param rawRemoteNode the complete MongoDB document representing <code>currentPosition</code> node, or NULL if no
+   *                      such node document exists (i.e., this edge is 'hanging').
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
   public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
                              throws RuleException;
 
   /**
    * Called when a <code>DepthFirstGraphIterator</code> decides that this rule implementation should process the
    * next edge/node iteration step.
    *
+   * Two sets of location object are provided here:
+   * <ol>
+   *   <li>The three <code>EntityKeys</code> objects are obtained from the edge currently being iterated. The
+   *   edge may be either incoming or outgoing from the current node, so the <code>currentPosition</code>, and
+   *   <code>remoteNodeId</code> are set accordingly, for convenience.</li>
+   *   <li>Additionally, the raw <code>BasicDBObject</code> instances are provided (if they actually exist in the
+   *   database), for manual parsing into whatever data bean(s) they represent.</li>
+   * </ol>
+   *
    * @param cursorName the name of the <code>GraphCursor</code> whose movements led to the current position. The
    *                   name is provided only, which should be sufficient for most purposes. You can use this name to
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
@@ -120,17 +144,22 @@ public interface EntityRule {
    * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
    *                     of '0'; a node one step away has a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
-   * @param nenTuple a node-edge-node tuple that contains the MongoDB objects representing the source, edge and
-   *                 destination node, respectively.
-   * @param outgoingEdge true if <code>nenTuple</code> represents an outgoing edge
-   * @param nodeId the deserialised EntityKeys of the remote node, provided for convenience.
-   * @param edgeId the deserialised EntityKeys of the edge, provided for convenience.
+   * @param edgeId       the deserialised EntityKeys of the edge, provided for convenience.
+   * @param outgoingEdge true if <code>edge</code> represents an outgoing edge wrt <code>currentPosition</code>
+   * @param remoteNodeId the deserialised EntityKeys of the remote node, provided for convenience.
+   * @param rawLocalNode the complete MongoDB document representing <code>currentPosition</code> node, or NULL if no
+   *                     such node document exists (i.e., this edge is 'hanging').
+   * @param rawEdge      the complete MongoDB document representing the current edge being iterated.
+   * @param rawRemoteNode the complete MongoDB document representing <code>currentPosition</code> node, or NULL if no
+   *                      such node document exists (i.e., this edge is 'hanging').
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    */
   public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
                              throws RuleException;
 
   /**
@@ -141,7 +170,7 @@ public interface EntityRule {
    * @param currentPosition the starting node for the cursor.
    */
   public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
-      throws RuleException;;
+      throws RuleException;
 
   /**
    * A method that is triggered when the graph iterator has completed its iteration. You could use this method to

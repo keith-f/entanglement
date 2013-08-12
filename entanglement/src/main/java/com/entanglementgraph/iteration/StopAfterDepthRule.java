@@ -39,16 +39,20 @@ public class StopAfterDepthRule extends AbstractRule {
   }
 
   @Override
-  public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException  {
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
     return currentDepth > targetDepth;
   }
 
   @Override
-  public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     return action;
   }
