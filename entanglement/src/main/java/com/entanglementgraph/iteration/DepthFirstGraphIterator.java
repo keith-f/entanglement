@@ -142,6 +142,10 @@ public class DepthFirstGraphIterator {
       // Add the start node
       if (addStartNode) {
         BasicDBObject startObj = start.resolve(sourceGraph);
+        if (startObj == null) {
+          throw new GraphIteratorException("The database object corresponding to the following cursor " +
+              "could not be found: "+start.getPosition());
+        }
         graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
       }
 

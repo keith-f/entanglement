@@ -127,6 +127,10 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
+        if (currentNodeObj == null) {
+          throw new BotCommandException("A database document for the current cursor location could not be found: "
+              +cursor.getPosition());
+        }
         currentPos = MongoUtils.parseKeyset(graphConn.getMarshaller(), currentNodeObj);
       }
 
