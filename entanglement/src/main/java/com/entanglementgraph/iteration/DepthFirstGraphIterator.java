@@ -120,13 +120,6 @@ public class DepthFirstGraphIterator {
    * @throws GraphCursorException
    */
   public void execute(GraphCursor start) throws GraphIteratorException {
-    try {
-      // Begin database transaction
-      txnId = TxnUtils.beginNewTransaction(destinationGraph);
-      txnPart = 0;
-    } catch(Exception e) {
-      throw new GraphIteratorException("Failed to start transaction", e);
-    }
 
     // Inform all rules that we're about to start graph walking
     try {
@@ -137,15 +130,19 @@ public class DepthFirstGraphIterator {
       throw new GraphIteratorException("Failed rule initialisation step", e);
     }
 
+    try {
+      // Begin database transaction
+      txnId = TxnUtils.beginNewTransaction(destinationGraph);
+      txnPart = 0;
+    } catch(Exception e) {
+      throw new GraphIteratorException("Failed to start transaction", e);
+    }
+
     // Start iterations
     try {
       // Add the start node
       if (addStartNode) {
         BasicDBObject startObj = start.resolve(sourceGraph);
-        if (startObj == null) {
-          throw new GraphIteratorException("The database object corresponding to the following cursor " +
-              "could not be found: "+start.getPosition());
-        }
         graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
       }
 
