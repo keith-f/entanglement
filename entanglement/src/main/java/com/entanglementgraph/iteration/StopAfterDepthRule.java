@@ -25,6 +25,8 @@ import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.mongodb.BasicDBObject;
 
+import java.util.logging.Logger;
+
 /**
  * A rule that causes graph iterations to stop when a particular depth (steps away from the starting node)
  * is reached.
@@ -32,6 +34,7 @@ import com.mongodb.BasicDBObject;
  * @author Keith Flanagan
  */
 public class StopAfterDepthRule extends AbstractRule {
+  private static final Logger logger = Logger.getLogger(StopAfterDepthRule.class.getName());
   private final int targetDepth;
 
   public StopAfterDepthRule(int targetDepth) {
@@ -44,6 +47,8 @@ public class StopAfterDepthRule extends AbstractRule {
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
                              EntityKeys<? extends Node> remoteNodeId,
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+//    logger.info(String.format("Current depth: %d; Target depth: %d; Current position: %s; Remote node: %s\n" +
+//        "Edge: %s", currentDepth, targetDepth, currentPosition, remoteNodeId, edgeId));
     return currentDepth > targetDepth;
   }
 
