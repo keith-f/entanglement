@@ -78,6 +78,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     params.add(new OptionalParam("maxNames", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     params.add(new OptionalParam("track", Boolean.class, Boolean.TRUE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
 
+    params.add(new OptionalParam("depth", Integer.class, "1", "Specifies the depth to search when generating the view. Default is to show directly connected neighbours only (depth=1)."));
+
     params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
     params.add(new OptionalParam("temp-database", String.class, "temp", "The name of a database to use for storing temporary graphs."));
 
@@ -96,6 +98,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
   private String tempCluster;
   private String tempDatabase;
 
+  private int depth;
+
   private int layoutSizeX;
   private int layoutSizeY;
   private int displaySizeX;
@@ -103,6 +107,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
+    depth = parsedArgs.get("depth").parseValueAsInteger();
+
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
     tempDatabase = parsedArgs.get("temp-database").getStringValue();
 
@@ -193,7 +199,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     GraphConnection sourceGraph = graphConn;
     GraphConnection destinationGraph = createTemporaryGraphConnection();
     DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(
-        sourceGraph, destinationGraph, state.getUserObject(), cursorContext, 1);
+        sourceGraph, destinationGraph, state.getUserObject(), cursorContext, depth);
 
     //Use a throwaway cursor so as not to alter the cursor we're listening to, which may have unintended side effects
     GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), graphCursor.getPosition());
