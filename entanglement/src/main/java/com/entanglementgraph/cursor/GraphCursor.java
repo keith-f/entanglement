@@ -349,13 +349,25 @@ public class GraphCursor implements Serializable {
     }
   }
 
+  /**
+   * Makes an attempt to load the database document that the current cursor position represents. If no matching
+   * document could be found, then an exception is thrown
+   * @param conn the graph connection to use
+   * @return the MongoDB document for the current cursor location.
+   * @throws GraphCursorException
+   */
   public BasicDBObject resolve(GraphConnection conn)  throws GraphCursorException {
+    BasicDBObject nodeDoc;
     try {
-      BasicDBObject nodeDoc = conn.getNodeDao().getByKey(position);
-      return nodeDoc;
+      nodeDoc = conn.getNodeDao().getByKey(position);
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query database", e);
     }
+    if (nodeDoc == null) {
+      throw new GraphCursorException("The current position could not be resolved (no database object exists) for: "+position);
+    }
+    return nodeDoc;
+
   }
 
   public <T> T resolveAndDeserialise(GraphConnection conn, Class<T> javaBeanType)  throws GraphCursorException {
