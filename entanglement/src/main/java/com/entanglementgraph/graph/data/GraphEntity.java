@@ -18,11 +18,12 @@
 package com.entanglementgraph.graph.data;
 
 /**
- * Created with IntelliJ IDEA.
+ * An entity (either a node or an edge) within an Entanglement graph.
+ *
  * User: keith
  * Date: 30/03/2013
  * Time: 18:55
- * To change this template use File | Settings | File Templates.
  */
-public interface GraphEntity {
+public interface GraphEntity<T> {
+  public EntityKeys<T> getKeys();
 }

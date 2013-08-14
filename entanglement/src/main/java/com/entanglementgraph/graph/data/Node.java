@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Node<N extends Node>
-      implements Serializable, GraphEntity
+      implements Serializable, GraphEntity<N>
 { 
 //  protected String uid;
 //  protected Set<String> names;

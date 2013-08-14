@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Edge<E extends Edge, F extends Node, T extends Node>
-       implements Serializable, GraphEntity
+       implements Serializable, GraphEntity<E>
 {
   protected EntityKeys<E> keys;
 
