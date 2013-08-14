@@ -93,6 +93,10 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     if (graphConnNeeded) {
       graphConnName = parsedArgs.get("conn").getStringValue();
       graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(state.getUserObject(), graphConnName);
+      // Make sure that graphConnName reflects the chosen connection, even if no name was specified by the user
+      if (graphConn != null) {
+        graphConnName = state.getUserObject().getCurrentConnectionName();
+      }
     }
     if (graphCursorNeeded) {
       cursorName = parsedArgs.get("cursor").getStringValue();
