@@ -41,12 +41,16 @@ import com.entanglementgraph.graph.data.EntityKeys;
  * Multiple implementations are possible, ranging from in-memory caches for 'small', short-term datasets. A database
  * backed implementation may be more appropriate if your graph operations need to keep track of millions of entities.
  *
+ * In addition to the functionality provided by <code>EntityKeyElementCache</code>, this interface also provides
+ * mappings between Entanglement entity key elements and arbitrary user objects. This functionality is useful in
+ * several export operation.
+ *
  * User: keith
  * Date: 13/08/13; 16:24
  *
  * @author Keith Flanagan
  */
-public interface EntityKeyElementCache<T> {
-  public void cacheElementsOf(EntityKeys<T> key);
-  public boolean seenElementOf(EntityKeys<T> key);
+public interface EntityKeyElementCacheWithLookups<T, U> {
+  public void cacheElementsAndAssociateWithObject(EntityKeys<T> key, U userObject);
+  public U getUserObjectFor(EntityKeys<T> key);
 }

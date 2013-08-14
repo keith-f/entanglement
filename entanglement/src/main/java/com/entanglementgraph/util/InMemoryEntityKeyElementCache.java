@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @author Keith Flanagan
  */
-public class InMemoryEntityKeyElementCache<T> implements EntityKeyElementCache {
+public class InMemoryEntityKeyElementCache<T> implements EntityKeyElementCache<T> {
   private final Set<String> seenUids;
   private final Map<String, Set<String>> seenNames;
 
@@ -40,7 +40,8 @@ public class InMemoryEntityKeyElementCache<T> implements EntityKeyElementCache {
     seenNames = new HashMap<>();
   }
 
-  private void cacheElementsOf(EntityKeys<T> key) {
+  @Override
+  public void cacheElementsOf(EntityKeys<T> key) {
     seenUids.addAll(key.getUids());
 
     if (key.getNames().isEmpty()) {
@@ -55,7 +56,8 @@ public class InMemoryEntityKeyElementCache<T> implements EntityKeyElementCache {
     names.addAll(key.getNames());
   }
 
-  private boolean seenElementOf(EntityKeys<T> key) {
+  @Override
+  public boolean seenElementOf(EntityKeys<T> key) {
     for (String uid : key.getUids()) {
       if (seenUids.contains(uid)) {
         return true;

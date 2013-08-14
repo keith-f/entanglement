@@ -31,49 +31,52 @@ import java.util.Set;
  *
  * @author Keith Flanagan
  */
-public class InMemoryEntityKeyElementCacheWithLookups<T, U> implements EntityKeyElementCache {
-  private final Map<String, U> seenUids;
-  private final Map<String, Map<String, U>> seenNames;
+public class InMemoryEntityKeyElementCacheWithLookups<T, U> implements EntityKeyElementCacheWithLookups<T, U> {
+  private final Map<String, U> seenUids;               // A map of UID to user object
+  private final Map<String, Map<String, U>> seenNames; // A map of type -> name -> user object
 
   public InMemoryEntityKeyElementCacheWithLookups() {
     seenUids = new HashMap<>();
     seenNames = new HashMap<>();
   }
 
-  private void cacheElementsAndAssociatedWith(EntityKeys<T> key, U userObject) {
+  @Override
+  public void cacheElementsAndAssociateWithObject(EntityKeys<T> key, U userObject) {
     for (String uid : key.getUids()) {
       seenUids.put(uid, userObject);
     }
-
 
     if (key.getNames().isEmpty()) {
       return;
     }
 
-    Set<String> names = seenNames.get(key.getType());
-    if (names == null) {
-      names = new HashSet<>();
-      seenNames.put(key.getType(), names);
-    }
-    names.addAll(key.getNames());
-  }
-
-  private boolean seenElementOf(EntityKeys<T> key) {
-    for (String uid : key.getUids()) {
-      if (seenUids.contains(uid)) {
-        return true;
-      }
-    }
-
-    Set<String> names = seenNames.get(key.getType());
-    if (names == null) {
-      return false;
+    Map<String, U> nameToUserObject = seenNames.get(key.getType());
+    if (nameToUserObject == null) {
+      nameToUserObject = new HashMap<>();
+      seenNames.put(key.getType(), nameToUserObject);
     }
     for (String name : key.getNames()) {
-      if (names.contains(name)) {
-        return true;
+      nameToUserObject.put(name, userObject);
+    }
+  }
+
+  @Override
+  public U getUserObjectFor(EntityKeys<T> key) {
+    for (String uid : key.getUids()) {
+      if (seenUids.containsKey(uid)) {
+        return seenUids.get(uid);
       }
     }
-    return false;
+
+    Map<String, U> nameToUserObject = seenNames.get(key.getType());
+    if (nameToUserObject == null) {
+      return null;
+    }
+    for (String name : key.getNames()) {
+      if (nameToUserObject.containsKey(name)) {
+        return nameToUserObject.get(name);
+      }
+    }
+    return null;
   }
 }
