@@ -83,7 +83,6 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     params.add(new OptionalParam("depth", Integer.class, "1", "Specifies the depth to search when generating the view. Default is to show directly connected neighbours only (depth=1)."));
 
     params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
-    params.add(new OptionalParam("temp-database", String.class, "temp", "The name of a database to use for storing temporary graphs."));
 
     params.add(new OptionalParam("layout-size-x", Integer.class, "800", "The width (in pixels) that the node layout engine will use for performing layouts."));
     params.add(new OptionalParam("layout-size-y", Integer.class, "800", "The height (in pixels) that the node layout engine will use for performing layouts."));
@@ -98,7 +97,6 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
   }
 
   private String tempCluster;
-  private String tempDatabase;
 
   private int depth;
 
@@ -112,7 +110,6 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     depth = parsedArgs.get("depth").parseValueAsInteger();
 
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
-    tempDatabase = parsedArgs.get("temp-database").getStringValue();
 
     int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
     int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
@@ -199,7 +196,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
   private GraphConnection exportSubgraph(GraphCursor graphCursor) throws GraphIteratorException, GraphConnectionFactoryException {
     GraphConnection sourceGraph = graphConn;
-    GraphConnection destinationGraph = createTemporaryGraphConnection();
+    GraphConnection destinationGraph = createTemporaryGraphConnection(tempCluster);
     DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(
         sourceGraph, destinationGraph, state.getUserObject(), cursorContext, depth);
 
@@ -209,11 +206,6 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     exporter.execute(tmpCursor);
     state.getUserObject().getCursorRegistry().removeCursor(tmpCursor);
     return destinationGraph;
-  }
-
-  private GraphConnection createTemporaryGraphConnection() throws GraphConnectionFactoryException {
-    GraphConnectionFactory factory = new GraphConnectionFactory(tempCluster, tempDatabase);
-    return factory.connect("tmp_"+UidGenerator.generateUid(), "temp");
   }
 
   private JungGraphFrame displayGraphInNewFrame(GraphConnection subgraph) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
