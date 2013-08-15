@@ -35,6 +35,7 @@ import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
+import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;

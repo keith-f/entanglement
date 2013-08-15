@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.renderers;
 
 /**
  * @author Keith Flanagan

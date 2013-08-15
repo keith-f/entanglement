@@ -14,8 +14,9 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.renderers;
 
+import com.mongodb.DBObject;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 
 import javax.swing.*;
@@ -28,7 +29,7 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class DefaultNodeIcon<V, E> implements Icon {
+public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements Icon {
   private static final Logger logger = Logger.getLogger(DefaultNodeIcon.class.getName());
 
   private static final int DEFAULT_DIMENSION = 20;
@@ -36,20 +37,20 @@ public class DefaultNodeIcon<V, E> implements Icon {
   private static final Color DEFAULT_PICKED_COLOUR = Color.YELLOW;
   private static final Color DEFAULT_UNPICKED_COLOUR = Color.RED;
 
-  private final VisualizationViewer<V, E> vv;
-  private final V v;
+  protected final VisualizationViewer<V, E> vv;
+  protected final V vertexData;
 
   private int dimension;
   private Color pickedColour;
   private Color unpickedColour;
 
-  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V v) {
-    this(vv, v, DEFAULT_PICKED_COLOUR, DEFAULT_UNPICKED_COLOUR);
+  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V vertexData) {
+    this(vv, vertexData, DEFAULT_PICKED_COLOUR, DEFAULT_UNPICKED_COLOUR);
   }
 
-  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V v, Color pickedColour, Color unpickedColour) {
+  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V vertexData, Color pickedColour, Color unpickedColour) {
     this.vv = vv;
-    this.v = v;
+    this.vertexData = vertexData;
     this.pickedColour = pickedColour;
     this.unpickedColour = unpickedColour;
     this.dimension = DEFAULT_DIMENSION;
@@ -64,7 +65,7 @@ public class DefaultNodeIcon<V, E> implements Icon {
   }
 
   public void paintIcon(Component c, Graphics g, int x, int y) {
-    if (vv.getPickedVertexState().isPicked(v)) {
+    if (vv.getPickedVertexState().isPicked(vertexData)) {
       g.setColor(pickedColour);
     } else {
       g.setColor(unpickedColour);
@@ -74,11 +75,24 @@ public class DefaultNodeIcon<V, E> implements Icon {
     g.drawOval(x, y, dimension, dimension);
 
     // If we want a text label within the node (space for about 1 character)
-//    if (vv.getPickedVertexState().isPicked(v)) {
-//      g.setColor(Color.black);
-//    } else {
-//      g.setColor(Color.white);
-//    }
-//    g.drawString("" + v, x + 6, y + 15);
+    String label = createNodeLabel();
+    if (label != null) {
+      if (vv.getPickedVertexState().isPicked(vertexData)) {
+        g.setColor(Color.cyan);
+      } else {
+        g.setColor(Color.black);
+      }
+      g.drawString(label, x + 6, y + 15);
+    }
+  }
+
+  /**
+   * Subclasses can override this method to create text that is rendered as part of the icon.
+   *
+   * Default implementation doesn't generate a label.
+   * @return
+   */
+  protected String createNodeLabel() {
+    return null;
   }
 }

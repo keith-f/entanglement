@@ -14,34 +14,36 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.renderers;
 
-import com.mongodb.DBObject;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
-import org.apache.commons.collections15.Transformer;
 
 import javax.swing.*;
-import java.util.logging.Logger;
+import java.awt.*;
 
 /**
  * User: keith
- * Date: 07/08/13; 14:48
+ * Date: 01/08/13; 16:38
  *
  * @author Keith Flanagan
  */
-public class DefaultVertexLabelTransformer<V extends DBObject, E> implements Transformer<V, String> {
-  private static final Logger logger = Logger.getLogger(DefaultVertexLabelTransformer.class.getName());
-  private final VisualizationViewer<V, E> vv;
-//  private final V v;
+public class ErrorIcon implements Icon {
 
-  public DefaultVertexLabelTransformer(VisualizationViewer<V, E> vv) {
-    this.vv = vv;
-//    this.v = v;
+  public ErrorIcon() {
   }
 
-  @Override
-  public String transform(V v) {
-    return (String) ((DBObject) v.get("keys")).get("type");
+  public int getIconHeight() {
+    return 20;
   }
 
+  public int getIconWidth() {
+    return 90;
+  }
+
+  public void paintIcon(Component c, Graphics g,
+                        int x, int y) {
+    g.setColor(Color.red);
+    g.drawString("Error! (see stack trace)", x + 6, y + 15);
+
+  }
 }

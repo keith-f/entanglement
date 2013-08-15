@@ -17,7 +17,6 @@
 package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.specialistnodes.XYChartNode;
-import com.entanglementgraph.visualisation.jung.CustomRendererException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;

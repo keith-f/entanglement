@@ -15,15 +15,15 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.graph.AbstractGraphEntityDAO;
+import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import org.apache.commons.collections15.Transformer;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
