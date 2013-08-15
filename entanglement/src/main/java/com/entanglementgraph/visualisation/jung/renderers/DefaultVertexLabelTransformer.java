@@ -16,7 +16,12 @@
  */
 package com.entanglementgraph.visualisation.jung.renderers;
 
+import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
@@ -30,17 +35,40 @@ import java.util.logging.Logger;
  */
 public class DefaultVertexLabelTransformer<V extends DBObject, E> implements Transformer<V, String> {
   private static final Logger logger = Logger.getLogger(DefaultVertexLabelTransformer.class.getName());
-  private final VisualizationViewer<V, E> vv;
-//  private final V v;
 
-  public DefaultVertexLabelTransformer(VisualizationViewer<V, E> vv) {
+  protected DbObjectMarshaller marshaller;
+  private final EntityDisplayNameRegistry displayNameFactories;
+  private final VisualizationViewer<V, E> vv;
+  private boolean enabled;
+
+  public DefaultVertexLabelTransformer(VisualizationViewer<V, E> vv, DbObjectMarshaller marshaller,
+                                       EntityDisplayNameRegistry displayNameFactories) {
     this.vv = vv;
-//    this.v = v;
+    this.marshaller = marshaller;
+    this.displayNameFactories = displayNameFactories;
+    this.enabled = true;
   }
 
   @Override
-  public String transform(V v) {
-    return (String) ((DBObject) v.get("keys")).get("type");
+  public String transform(V vertexData) {
+    if (!enabled) {
+      return "";
+    }
+    try {
+      //This is potentially expensive when rendering lots of nodes, but icons should be cached and reused for most frames
+      EntityKeys<?> keys = MongoUtils.parseKeyset(marshaller, vertexData);
+      return displayNameFactories.createNameForEntity(keys);
+    } catch (DbObjectMarshallerException e) {
+      e.printStackTrace();
+      return "Rendering Error!";
+    }
   }
 
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
 }

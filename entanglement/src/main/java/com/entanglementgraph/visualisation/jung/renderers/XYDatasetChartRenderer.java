@@ -32,15 +32,10 @@ import java.util.logging.Logger;
 /**
  * @author Keith Flanagan
  */
-public class XYDatasetChartRenderer implements CustomVertexRenderer {
+public class XYDatasetChartRenderer extends DefaultVertexRenderer {
   private static final Logger logger = Logger.getLogger(XYDatasetChartRenderer.class.getName());
 
-  private Visualiser visualiser;
-
-  private DbObjectMarshaller marshaller;
-
   private Transformer<DBObject, Icon> iconTransformer;
-  private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
 
   public XYDatasetChartRenderer() {
   }
@@ -48,7 +43,6 @@ public class XYDatasetChartRenderer implements CustomVertexRenderer {
   @Override
   public void setVisualiser(Visualiser visualiser) {
     this.visualiser = visualiser;
-    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser.getVv());
   }
 
   @Override
@@ -77,29 +71,8 @@ public class XYDatasetChartRenderer implements CustomVertexRenderer {
           }
           return cachedIcon;
         }
-
       };
     }
     return iconTransformer;
-  }
-
-//  @Override
-//  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
-//    return null;  //To change body of implemented methods use File | Settings | File Templates.
-//  }
-
-  @Override
-  public Transformer<DBObject, String> getVertexLabelTransformer() {
-    return defaultVertexLabelTransformer;
-  }
-
-  @Override
-  public Transformer<DBObject, String> getTooltipTransformer() {
-    return defaultVertexLabelTransformer;
-  }
-
-  @Override
-  public void setMarshaller(DbObjectMarshaller marshaller) {
-    this.marshaller = marshaller;
   }
 }
