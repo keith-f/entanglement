@@ -49,8 +49,9 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
   private final Map<DBObject, CustomVertexRenderer> valueToRenderer;
 
 
-  public CustomRendererRegistry(DbObjectMarshaller marshaller) {
+  public CustomRendererRegistry(DbObjectMarshaller marshaller, EntityDisplayNameRegistry displayNameFactories) {
     this.marshaller = marshaller;
+    this.displayNameFactories = displayNameFactories;
     entanglementTypeToAppearance = new HashMap<>();
     valueToRenderer = new HashMap<>();
   }

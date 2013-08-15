@@ -37,6 +37,7 @@ import com.entanglementgraph.visualisation.jung.*;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
+import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.mongodb.DBObject;
@@ -222,7 +223,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     Graph<DBObject, DBObject> jungGraph = dbToJung.getGraph();
 
     // Add a custom renderer for chart nodes
-    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller());
+    EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
+    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller(), displayNameFactories);
     customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
     customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
 
