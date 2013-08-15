@@ -59,11 +59,11 @@ public class EntanglementIrcCommandUtils {
    */
   public static GraphConnection getSpecifiedGraph(EntanglementRuntime runtime, String connName)
       throws UserException, BotCommandException {
-    if (connName != null) {
-      return runtime.createGraphConnectionFor(connName);
-    } else {
-      return null;
+    GraphConnection conn = runtime.createGraphConnectionFor(connName);
+    if (conn == null) {
+      throw new UserException("Graph connection not found: %s", connName);
     }
+    return conn;
   }
 
   /**
