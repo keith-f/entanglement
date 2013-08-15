@@ -471,7 +471,7 @@ public class GraphCursor implements Serializable {
     });
   }
 
-  public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPairs(
+  public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPair(
       final GraphConnection conn, final boolean outgoingEdges)
       throws GraphCursorException {
     Iterator<NodeEdgeNodeTuple> itr = iterateAndResolveEdgeDestPairs(conn, outgoingEdges).iterator();
