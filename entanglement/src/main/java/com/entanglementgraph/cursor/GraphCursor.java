@@ -471,6 +471,16 @@ public class GraphCursor implements Serializable {
     });
   }
 
+  public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPairs(
+      final GraphConnection conn, final boolean outgoingEdges)
+      throws GraphCursorException {
+    Iterator<NodeEdgeNodeTuple> itr = iterateAndResolveEdgeDestPairs(conn, outgoingEdges).iterator();
+    if (itr.hasNext()) {
+      return itr.next();
+    }
+    return null;
+  }
+
   /**
    * Using the current cursor position as a starting point, iterates over every incoming or outgoing edge (depending
    * on the value of <code>outgoingEdges</code> and resolves the raw DBObject representation of the edge and also the
@@ -500,6 +510,16 @@ public class GraphCursor implements Serializable {
     });
   }
 
+  public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPairToRemoteNodeOfType(
+      final GraphConnection conn, final boolean outgoingEdges, final String remoteNodeType)
+      throws GraphCursorException {
+    Iterator<NodeEdgeNodeTuple> itr = iterateAndResolveEdgeDestPairsToRemoteNodeOfType(
+        conn, outgoingEdges, remoteNodeType).iterator();
+    if (itr.hasNext()) {
+      return itr.next();
+    }
+    return null;
+  }
 
   /**
    * Using the current cursor position as a starting point, iterates over every outgoing edge and resolves the raw
