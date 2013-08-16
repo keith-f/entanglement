@@ -177,6 +177,14 @@ public class DepthFirstGraphIterator {
       return;
     }
     GraphCursor current = getCurrentCursorPosition(cursorName);
+    logger.info(String.format("We are here: %s, with an edge depth of: %d. Running rule 'pre edge iteration' checks.",
+        current.getPosition(), currentDepth));
+    EntityRule.NextEdgeIteration preIterationInstruction =
+        executePreIterationRules(cursorName, currentDepth, current.getPosition());
+    if (preIterationInstruction != EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+      return;
+    }
+
     logger.info(String.format("We are here: %s, with an edge depth of: %d. Going to iterate edges from this node.",
         current.getPosition(), currentDepth));
     processEdges(cursorName, currentDepth, current.getPosition(), false,
@@ -284,6 +292,42 @@ public class DepthFirstGraphIterator {
     TxnUtils.submitTxnPart(destinationGraph, txnId, txnPart, graphUpdates);
     txnPart++;
     graphUpdates.clear();
+  }
+
+  protected EntityRule.NextEdgeIteration executePreIterationRules(
+      String cursorName, int currentEdgeDepth, EntityKeys<? extends Node> currentPosition) throws RuleException, GraphIteratorException {
+    // If there are no rules, or no rules have special requirements, then go ahead with edge iteration.
+    EntityRule.NextEdgeIteration instruction = EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL;
+
+    // Override the default if a rule requires it
+    for (EntityRule rule : rules) {
+      EntityRule.HandlerAction result = rule.preEdgeIteration(cursorName, currentEdgeDepth, currentPosition);
+      graphUpdates.addAll(result.getOperations());
+      if (result.isProcessFurtherRules() &&
+          result.getNextIterationBehaviour() != EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+        // We can't not 'continue as normal' AND process other rules, since further rules might conflict
+        throw new GraphIteratorException(
+            "A rule cannot have ProcessFurtherRules="+result.isProcessFurtherRules() +
+                " at the same time as NextIterationBehaviour="+ EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL);
+      }
+      if (!result.isProcessFurtherRules()) {
+        // No further rules need to be processed for this edge iteration.
+        instruction = result.getNextIterationBehaviour();
+      }
+    }
+
+    switch (instruction) {
+      case CONTINUE_AS_NORMAL:
+      case TERMINATE_BRANCH:
+        // Simply do nothing for these cases.
+        break;
+      case TERMINATE:
+        // We need to flip the kill switch if a rule told us to stop all iteration.
+        killSwitchActive = true;
+        break;
+    }
+
+    return instruction;
   }
 
   protected EntityRule.NextEdgeIteration executeRules

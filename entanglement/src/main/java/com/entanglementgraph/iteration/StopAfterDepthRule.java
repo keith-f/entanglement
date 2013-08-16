@@ -42,6 +42,19 @@ public class StopAfterDepthRule extends AbstractRule {
   }
 
   @Override
+  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth, EntityKeys<? extends Node> currentPosition) throws RuleException {
+    /*
+     * Greater than or equal, since if the 'current' depth is already the target depth, then there's no point in
+     * iterating any edges
+     */
+    if (currentEdgeDepth >= targetDepth) {
+      HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+      return action;
+    }
+    return super.preEdgeIteration(cursorName, currentEdgeDepth, currentPosition);
+  }
+
+  @Override
   public boolean ruleMatches(String cursorName, int currentDepth,
                              EntityKeys<? extends Node> currentPosition,
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
@@ -49,7 +62,7 @@ public class StopAfterDepthRule extends AbstractRule {
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
 //    logger.info(String.format("Current depth: %d; Target depth: %d; Current position: %s; Remote node: %s\n" +
 //        "Edge: %s", currentDepth, targetDepth, currentPosition, remoteNodeId, edgeId));
-    return currentDepth > targetDepth;
+    return currentDepth >= targetDepth;
   }
 
   @Override

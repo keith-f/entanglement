@@ -103,15 +103,14 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
-   * @param currentEdgeDepth the depth of the edges (from the start node) that are currently being iterated.
-   *                     Edges from initial node have a depth of '0'; edges from a node one step away have a
-   *                     depth of '1', etc.
+   * @param currentDepth the depth (as measured from the start node) of the node whose edges will be iterated.
+   *                     The start node has a depth of '0'. Nodes that are one edge away have a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
    * b) whether to change the iteration behaviour of the caller.
    * @throws RuleException
    */
-  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth,
+  public HandlerAction preEdgeIteration(String cursorName, int currentDepth,
                                         EntityKeys<? extends Node> currentPosition) throws RuleException;
 
   /**
@@ -132,9 +131,8 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
-   * @param currentEdgeDepth the depth of the edges (from the start node) that are currently being iterated.
-   *                     Edges from initial node have a depth of '0'; edges from a node one step away have a
-   *                     depth of '1', etc.
+   * @param currentDepth the depth (as measured from the start node) of the node whose edges are being iterated.
+   *                     The start node has a depth of '0'. Nodes that are one edge away have a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param edgeId       the deserialised EntityKeys of the edge, provided for convenience.
    * @param outgoingEdge true if <code>edge</code> represents an outgoing edge wrt <code>currentPosition</code>
@@ -147,7 +145,7 @@ public interface EntityRule {
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
-  public boolean ruleMatches(String cursorName, int currentEdgeDepth,
+  public boolean ruleMatches(String cursorName, int currentDepth,
                              EntityKeys<? extends Node> currentPosition,
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
                              EntityKeys<? extends Node> remoteNodeId,
@@ -172,8 +170,8 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
-   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
-   *                     of '0'; a node one step away has a depth of '1', etc.
+   * @param currentDepth the depth (as measured from the start node) of the node whose edges are being iterated.
+   *                     The start node has a depth of '0'. Nodes that are one edge away have a depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param edgeId       the deserialised EntityKeys of the edge, provided for convenience.
    * @param outgoingEdge true if <code>edge</code> represents an outgoing edge wrt <code>currentPosition</code>
