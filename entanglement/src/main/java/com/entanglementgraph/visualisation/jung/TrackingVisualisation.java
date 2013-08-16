@@ -16,12 +16,12 @@
  */
 package com.entanglementgraph.visualisation.jung;
 
-import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Pair;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
@@ -51,13 +51,13 @@ public class TrackingVisualisation {
     APPEND_ON_CURSOR_MOVE;
   }
 
-  private EntanglementToJungConverter entanglementToJung;
+//  private EntanglementToJungConverter entanglementToJung;
 
   private final CustomVertexRenderer customVertexRenderer;
 
 
   private Layout<DBObject, DBObject> layout;
-  private VisualizationViewer<DBObject, DBObject> vv;
+  private VisualizationViewer<DBObject, DBObject> jungViewer;
 
   private int layoutDimensionX;
   private int layoutDimensionY;
@@ -78,9 +78,9 @@ public class TrackingVisualisation {
 
   }
 
-  private void update(Graph<DBObject, DBObject> newJungGraph) {
+  public void update(Graph<DBObject, DBObject> newJungGraph) {
 
-    if (vv == null) {
+    if (jungViewer == null) {
       createNewVisualizationViewer(newJungGraph);
     } else {
       updateExistingVisualization(newJungGraph);
@@ -93,45 +93,51 @@ public class TrackingVisualisation {
     layout = new FRLayout<>(jungGraph);
     layout.setSize(new Dimension(layoutDimensionX, layoutDimensionY));
 
-    vv =  new VisualizationViewer<>(layout);
-    vv.setDoubleBuffered(true);
+    jungViewer =  new VisualizationViewer<>(layout);
+    jungViewer.setDoubleBuffered(true);
 
-    vv.setPreferredSize(new Dimension(displayDimensionX, displayDimensionY)); //Sets the viewing area size
-    vv.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
-    vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
-    vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
+    jungViewer.setPreferredSize(new Dimension(displayDimensionX, displayDimensionY)); //Sets the viewing area size
+    jungViewer.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
+    jungViewer.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
+    jungViewer.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
 
-    vv.getRenderContext().setVertexIconTransformer(customVertexRenderer.getVertexIconTransformer());
-//    vv.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());
-    vv.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vv.getPickedVertexState(), Color.white,  Color.yellow));
-    vv.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vv.getPickedEdgeState(), Color.black, Color.lightGray));
+    jungViewer.getRenderContext().setVertexIconTransformer(customVertexRenderer.getVertexIconTransformer());
+//    jungViewer.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());
+    jungViewer.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(jungViewer.getPickedVertexState(), Color.white, Color.yellow));
+    jungViewer.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(jungViewer.getPickedEdgeState(), Color.black, Color.lightGray));
 
 
-//    vv.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
-    vv.setVertexToolTipTransformer(customVertexRenderer.getTooltipTransformer());
+//    jungViewer.setVertexToolTipTransformer(new ToStringLabeller<DBObject>());
+    jungViewer.setVertexToolTipTransformer(customVertexRenderer.getTooltipTransformer());
 
-    vv.setBackground(Color.white);
+    jungViewer.setBackground(Color.white);
   }
 
-  private void updateExistingVisualization(Graph<DBObject, DBObject> jungGraph) {
+  private void updateExistingVisualization(Graph<DBObject, DBObject> newGraph) {
     switch (updateType) {
       case APPEND_ON_CURSOR_MOVE:
-        mergeGraphs(jungGraph);
+        mergeGraphs(layout.getGraph(), newGraph);
         break;
       case REPLACE_ON_CURSOR_MOVE:
-        layout.setGraph(jungGraph);
+        layout.setGraph(newGraph);
         break;
     }
   }
 
-  private void mergeGraphs(Graph<DBObject, DBObject> newJungGraph) {
-    for (DBObject vertex : newJungGraph.getVertices()) {
-
+  private void mergeGraphs(Graph<DBObject, DBObject> existingGraph, Graph<DBObject, DBObject> newGraph) {
+    for (DBObject vertex : newGraph.getVertices()) {
+      //FIXME do this properly. For now, just add the objects and see what happens...
+      existingGraph.addVertex(vertex);
     }
 
-    for (DBObject edge : newJungGraph.getEdges()) {
-
+    for (DBObject edge : newGraph.getEdges()) {
+      //FIXME do this properly. For now, just add the objects and see what happens...
+      Pair<DBObject> pair = newGraph.getEndpoints(edge);
+      existingGraph.addEdge(edge, pair.getFirst(), pair.getSecond());
     }
   }
 
+  public VisualizationViewer<DBObject, DBObject> getJungViewer() {
+    return jungViewer;
+  }
 }

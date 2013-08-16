@@ -105,6 +105,10 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
   private int displaySizeX;
   private int displaySizeY;
 
+  private TrackingVisualisation trackingVisualisation;
+  private JungGraphFrame frame;
+
+
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
     depth = parsedArgs.get("depth").parseValueAsInteger();
@@ -119,6 +123,19 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     layoutSizeY = parsedArgs.get("layout-size-y").parseValueAsInteger();
     displaySizeX = parsedArgs.get("display-size-x").parseValueAsInteger();
     displaySizeY = parsedArgs.get("display-size-y").parseValueAsInteger();
+
+    EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
+    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(graphConn.getMarshaller(), displayNameFactories);
+    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
+    customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
+
+    trackingVisualisation = new TrackingVisualisation(
+        customVertexRenderers,
+        track
+            ? TrackingVisualisation.UpdateType.APPEND_ON_CURSOR_MOVE
+            : TrackingVisualisation.UpdateType.REPLACE_ON_CURSOR_MOVE,
+        layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
+
 
     try {
       // Manually fire the first event just in case we happen to be on a Gene node at the moment
@@ -167,12 +184,6 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     @Override
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
-//      GraphCursor eventCursor = event.getValue();
-//      if (!eventCursor.getName().equals(cursorName)) {
-//        logger.info(String.format("Received an event of a cursor that we're not interested in: %s != %s. Ignoring.",
-//            eventCursor.getName(), cursorName));
-//        return;
-//      }
       notifyGraphCursorUpdated(event.getValue());
     }
 
@@ -185,9 +196,22 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     try {
       bot.infoln(channel, "Received notification that cursor %s moved to %s via %s",
           newCursor.getName(), newCursor.getPosition(), newCursor.getArrivedVia());
-//              updateDisplay(frame, newCursor);
       GraphConnection destGraph = exportSubgraph(newCursor);
-      JungGraphFrame newFrame = displayGraphInNewFrame(destGraph);
+
+      // Create an in-memory Jung graph representation of destGraph.
+      MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
+      dbToJung.addEntireGraph(destGraph);
+
+      // Pass this graph connection to the TrackingVisualisation - it will decide what action to take.
+      trackingVisualisation.update(dbToJung.getGraph());
+
+      if (frame == null) {
+        //This is the first refresh. We need a JFrame to display the visualisation.
+        frame = new JungGraphFrame(trackingVisualisation.getJungViewer());
+        frame.getFrame().setVisible(true);
+      }
+
+
     } catch (Exception e) {
       bot.printException(channel, sender, "Failed to update GUI for new cursor position", e);
       e.printStackTrace();
@@ -208,25 +232,25 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     return destinationGraph;
   }
 
-  private JungGraphFrame displayGraphInNewFrame(GraphConnection subgraph) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
-    // Export the temporary Entanglement graph to an in-memory Jung graph
-    MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
-    dbToJung.addEntireGraph(subgraph);
-    Graph<DBObject, DBObject> jungGraph = dbToJung.getGraph();
-
-    // Add a custom renderer for chart nodes
-    EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
-    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller(), displayNameFactories);
-    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
-    customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
-
-
-    Visualiser visualiser = new Visualiser(jungGraph, customVertexRenderers, layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
-
-    JungGraphFrame frame = new JungGraphFrame(visualiser);
-    frame.getFrame().setVisible(true);
-    return frame;
-  }
+//  private JungGraphFrame displayGraphInNewFrame(GraphConnection subgraph) throws GraphCursorException, DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
+//    // Export the temporary Entanglement graph to an in-memory Jung graph
+//    MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
+//    dbToJung.addEntireGraph(subgraph);
+//    Graph<DBObject, DBObject> jungGraph = dbToJung.getGraph();
+//
+//    // Add a custom renderer for chart nodes
+//    EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
+//    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(subgraph.getMarshaller(), displayNameFactories);
+//    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
+//    customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
+//
+//
+//    Visualiser visualiser = new Visualiser(jungGraph, customVertexRenderers, layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
+//
+//    JungGraphFrame frame = new JungGraphFrame(visualiser);
+//    frame.getFrame().setVisible(true);
+//    return frame;
+//  }
 
 //  private void updateDisplay(GraphFrame frame, GraphCursor graphCursor) throws JGraphXPopulationException, GraphCursorException {
 //    EntanglementMxGraph mxGraph = new EntanglementMxGraph();

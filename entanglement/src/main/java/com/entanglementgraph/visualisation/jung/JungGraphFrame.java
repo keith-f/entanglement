@@ -35,31 +35,30 @@ import java.awt.event.ActionListener;
  */
 public class JungGraphFrame {
   private final JFrame frame;
-  private final Visualiser visualiser;
+  private final VisualizationViewer<DBObject, DBObject> visualiser;
 
-  public JungGraphFrame(Visualiser visualiser) {
+  public JungGraphFrame(final VisualizationViewer<DBObject, DBObject> visualiser) {
     this.visualiser = visualiser;
-    final VisualizationViewer<DBObject, DBObject> vv = visualiser.getVv();
     frame = new JFrame();
     Container content = frame.getContentPane();
-    final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
+    final GraphZoomScrollPane panel = new GraphZoomScrollPane(visualiser);
     content.add(panel);
 
     final ModalGraphMouse gm = new DefaultModalGraphMouse<Integer,Number>();
-    vv.setGraphMouse(gm);
+    visualiser.setGraphMouse(gm);
 
     final ScalingControl scaler = new CrossoverScalingControl();
 
     JButton plus = new JButton("+");
     plus.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        scaler.scale(vv, 1.1f, vv.getCenter());
+        scaler.scale(visualiser, 1.1f, visualiser.getCenter());
       }
     });
     JButton minus = new JButton("-");
     minus.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        scaler.scale(vv, 1/1.1f, vv.getCenter());
+        scaler.scale(visualiser, 1/1.1f, visualiser.getCenter());
       }
     });
 
@@ -77,7 +76,7 @@ public class JungGraphFrame {
     return frame;
   }
 
-  public Visualiser getVisualiser() {
+  public VisualizationViewer<DBObject, DBObject> getVisualiser() {
     return visualiser;
   }
 }
