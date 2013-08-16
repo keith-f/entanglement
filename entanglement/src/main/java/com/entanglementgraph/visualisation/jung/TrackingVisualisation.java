@@ -20,13 +20,19 @@ import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.StaticLayout;
+import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
+import edu.uci.ics.jung.algorithms.layout.util.VisRunner;
+import edu.uci.ics.jung.algorithms.util.IterativeContext;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Pair;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
+import edu.uci.ics.jung.visualization.layout.LayoutTransition;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
+import edu.uci.ics.jung.visualization.util.Animator;
 
 import java.awt.*;
 
@@ -83,9 +89,23 @@ public class TrackingVisualisation {
     if (jungViewer == null) {
       createNewVisualizationViewer(newJungGraph);
     } else {
-      updateExistingVisualization(newJungGraph);
-      layout.reset();
+      Graph<DBObject, DBObject> existingGraph = layout.getGraph();
+      updateExistingVisualization(existingGraph, newJungGraph);
+      relayout(existingGraph);
     }
+  }
+
+  private void relayout(Graph<DBObject, DBObject> g) {
+    layout.initialize();
+    Relaxer relaxer = new VisRunner((IterativeContext) layout);
+    relaxer.stop();
+    relaxer.prerelax();
+    StaticLayout<DBObject, DBObject> staticLayout = new StaticLayout<>(g, layout);
+    LayoutTransition<DBObject, DBObject> lt =
+        new LayoutTransition<>(jungViewer, jungViewer.getGraphLayout(), staticLayout);
+    Animator animator = new Animator(lt);
+    animator.start();
+    jungViewer.repaint();
   }
 
   private void createNewVisualizationViewer(Graph<DBObject, DBObject> jungGraph) {
@@ -114,10 +134,10 @@ public class TrackingVisualisation {
     jungViewer.setBackground(Color.white);
   }
 
-  private void updateExistingVisualization(Graph<DBObject, DBObject> newGraph) {
+  private void updateExistingVisualization(Graph<DBObject, DBObject> existingGraph, Graph<DBObject, DBObject> newGraph) {
     switch (updateType) {
       case APPEND_ON_CURSOR_MOVE:
-        mergeGraphs(layout.getGraph(), newGraph);
+        mergeGraphs(existingGraph, newGraph);
         break;
       case REPLACE_ON_CURSOR_MOVE:
         layout.setGraph(newGraph);
