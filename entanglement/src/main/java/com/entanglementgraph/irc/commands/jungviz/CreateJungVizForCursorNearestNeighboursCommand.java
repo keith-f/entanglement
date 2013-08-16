@@ -161,8 +161,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
       boolean isAtDeadEnd = cursor.isAtDeadEnd();
       int historyIdx = cursor.getCursorHistoryIdx();
-      msg.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
-          cursor.getName(), formatNodeKeyset(currentPos), formatBoolean(isAtDeadEnd), formatHistoryIndex(historyIdx));
+      msg.println("Cursor %s (%s) is currently located at: %s; Dead end? %s; Steps taken: %s",
+          cursor.getName(), cursorName, formatNodeKeyset(currentPos), formatBoolean(isAtDeadEnd), formatHistoryIndex(historyIdx));
       msg.println("Short version: %s", formatNodeKeysetShort(currentPos, maxUids, maxNames));
 
 
@@ -184,6 +184,10 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     @Override
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
+      bot.println("%s Received notification that cursor: %s has moved to %s",
+          CreateJungVizForCursorNearestNeighboursCommand.class.getSimpleName(),
+          formatCursorName(event.getValue().getName()),
+          formatNodeKeysetShort(event.getValue().getPosition(), 1, 1));
       notifyGraphCursorUpdated(event.getValue());
     }
 

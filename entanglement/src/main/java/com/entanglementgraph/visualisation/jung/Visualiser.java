@@ -47,12 +47,13 @@ public class Visualiser {
                     int layoutDimensionX, int layoutDimensionY,
                     int displayDimensionX, int displayDimensionY) {
     this.graph = graph;
-    customVertexRenderer.setVisualiser(this);
+
 
     Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
     layout.setSize(new Dimension(layoutDimensionX, layoutDimensionY));
 //    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
     vv =  new VisualizationViewer<>(layout);
+    customVertexRenderer.setVisualiser(vv);
     vv.setDoubleBuffered(true);
 
     vv.setPreferredSize(new Dimension(displayDimensionX, displayDimensionY)); //Sets the viewing area size

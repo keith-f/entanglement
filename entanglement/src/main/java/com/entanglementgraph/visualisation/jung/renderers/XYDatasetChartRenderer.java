@@ -41,11 +41,6 @@ public class XYDatasetChartRenderer extends DefaultVertexRenderer {
   }
 
   @Override
-  public void setVisualiser(Visualiser visualiser) {
-    this.visualiser = visualiser;
-  }
-
-  @Override
   public Transformer<DBObject, Icon> getVertexIconTransformer() {
     if (iconTransformer == null) {
       iconTransformer = new Transformer<DBObject, Icon>() {

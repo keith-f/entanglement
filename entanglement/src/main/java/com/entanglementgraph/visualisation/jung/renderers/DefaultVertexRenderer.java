@@ -20,6 +20,7 @@ import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
 import javax.swing.*;
@@ -35,14 +36,14 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
   private static final Logger logger = Logger.getLogger(DefaultVertexRenderer.class.getName());
 
   protected DbObjectMarshaller marshaller;
-  protected Visualiser visualiser;
+  protected VisualizationViewer<DBObject, DBObject> visualiser;
   protected EntityDisplayNameRegistry displayNameFactories;
   private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
 
   @Override
-  public void setVisualiser(Visualiser visualiser) {
+  public void setVisualiser(VisualizationViewer<DBObject, DBObject> visualiser) {
     this.visualiser = visualiser;
-    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser.getVv(), marshaller, displayNameFactories);
+    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser, marshaller, displayNameFactories);
   }
 
   @Override
@@ -50,7 +51,7 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
     return new Transformer<DBObject, Icon>() {
       @Override
       public Icon transform(DBObject data) {
-        return new DefaultNodeIcon<>(visualiser.getVv(), data);
+        return new DefaultNodeIcon<>(visualiser, data);
       }
     };
   }

@@ -40,11 +40,6 @@ public class CategoryDatasetChartRenderer extends DefaultVertexRenderer {
   }
 
   @Override
-  public void setVisualiser(Visualiser visualiser) {
-    super.setVisualiser(visualiser);
-  }
-
-  @Override
   public Transformer<DBObject, Icon> getVertexIconTransformer() {
     if (iconTransformer == null) {
       iconTransformer = new Transformer<DBObject, Icon>() {

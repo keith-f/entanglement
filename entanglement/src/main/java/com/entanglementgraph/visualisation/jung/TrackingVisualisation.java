@@ -95,6 +95,7 @@ public class TrackingVisualisation {
 
     jungViewer =  new VisualizationViewer<>(layout);
     jungViewer.setDoubleBuffered(true);
+    customVertexRenderer.setVisualiser(jungViewer);
 
     jungViewer.setPreferredSize(new Dimension(displayDimensionX, displayDimensionY)); //Sets the viewing area size
     jungViewer.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
