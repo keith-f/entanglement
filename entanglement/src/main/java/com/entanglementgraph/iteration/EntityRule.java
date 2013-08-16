@@ -83,6 +83,36 @@ public interface EntityRule {
   public void setEntanglementRuntime(EntanglementRuntime entanglementRuntime);
   public void setCursorContext(GraphCursor.CursorContext cursorContext);
 
+  /**
+   * A method that is triggered when the graph iterator is about to start iterating. You should use this method to
+   * perform any initialisation that needs to be performed.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
+   * @param currentPosition the starting node for the cursor.
+   */
+  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
+      throws RuleException;
+
+  /**
+   * Called when the iterator has reached a new node, but before any edges have been iterated. Your rule implementations
+   * can use this method to (for example) increase efficiency by terminating the current branch in cases where it
+   * would be pointless to iterate the edges of a particular node.
+   *
+   * @param cursorName the name of the <code>GraphCursor</code> whose movements led to the current position. The
+   *                   name is provided only, which should be sufficient for most purposes. You can use this name to
+   *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
+   *                   your rule implementation requires to perform its own graph walking, it should do so on its own
+   *                   local cursor.
+   * @param currentEdgeDepth the depth of the edges (from the start node) that are currently being iterated.
+   *                     Edges from initial node have a depth of '0'; edges from a node one step away have a
+   *                     depth of '1', etc.
+   * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
+   * @return an action object that determines: a) what graph operations should be sent to <code>destinationGraph</code>;
+   * b) whether to change the iteration behaviour of the caller.
+   * @throws RuleException
+   */
+  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth,
+                                        EntityKeys<? extends Node> currentPosition) throws RuleException;
 
   /**
    * This method should return true if the rule implementation matches the data presented in the graph iterator's
@@ -102,8 +132,9 @@ public interface EntityRule {
    *                   obtain the movement history of the cursor if your implementation requires it. Remember that if
    *                   your rule implementation requires to perform its own graph walking, it should do so on its own
    *                   local cursor.
-   * @param currentDepth the depth of the node whose edges are currently being iterated. The initial node has a depth
-   *                     of '0'; a node one step away has a depth of '1', etc.
+   * @param currentEdgeDepth the depth of the edges (from the start node) that are currently being iterated.
+   *                     Edges from initial node have a depth of '0'; edges from a node one step away have a
+   *                     depth of '1', etc.
    * @param currentPosition the EntityKeys of the node whose edges are currently being iterated
    * @param edgeId       the deserialised EntityKeys of the edge, provided for convenience.
    * @param outgoingEdge true if <code>edge</code> represents an outgoing edge wrt <code>currentPosition</code>
@@ -116,7 +147,7 @@ public interface EntityRule {
    * @return true if this rule matches and could be applied, or false if this rule doesn't make sense for the current
    * data.
    */
-  public boolean ruleMatches(String cursorName, int currentDepth,
+  public boolean ruleMatches(String cursorName, int currentEdgeDepth,
                              EntityKeys<? extends Node> currentPosition,
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
                              EntityKeys<? extends Node> remoteNodeId,
@@ -162,15 +193,6 @@ public interface EntityRule {
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
                              throws RuleException;
 
-  /**
-   * A method that is triggered when the graph iterator is about to start iterating. You should use this method to
-   * perform any initialisation that needs to be performed.
-   *
-   * @param cursorName the name of the <code>GraphCursor</code> that will be used to step over the graph.
-   * @param currentPosition the starting node for the cursor.
-   */
-  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
-      throws RuleException;
 
   /**
    * A method that is triggered when the graph iterator has completed its iteration. You could use this method to
