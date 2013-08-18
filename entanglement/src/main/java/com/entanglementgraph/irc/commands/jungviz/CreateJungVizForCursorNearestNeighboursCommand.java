@@ -117,6 +117,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     displaySizeX = parsedArgs.get("display-size-x").parseValueAsInteger();
     displaySizeY = parsedArgs.get("display-size-y").parseValueAsInteger();
 
+    // Here, we use generic Entanglement display name and Jung renderer registries
+    // These could be replaced with project-specific classes, if necessary
     EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
     CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(graphConn.getMarshaller(), displayNameFactories);
     customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
