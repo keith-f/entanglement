@@ -131,7 +131,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
 
     try {
-      // Manually fire the first event just in case we happen to be on a Gene node at the moment
+      // Manually fire the first event
       notifyGraphCursorUpdated(cursor);
 
       // Register a listener to take care of future cursor movements
