@@ -22,22 +22,16 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 
 /**
  * Steps the graph cursor to a directly connected node.
@@ -88,13 +82,13 @@ public class CursorStepToNode extends AbstractEntanglementCommand<EntanglementRu
       GraphCursor previous = cursor;
       GraphCursor current = cursor.stepToNode(cursorContext, newLocation);
 
-      String outputText = String.format("Cursor %s moved %sfrom%s %s %sto%s %s. Movement type %s",
-          formatCursorName(cursor.getName()),
-          Colors.REVERSE, Colors.NORMAL,
-          formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames),
-          Colors.REVERSE, Colors.NORMAL,
-          formatNodeKeysetShort(current.getPosition(), maxUids, maxNames),
-          formatMovementType(current.getMovementType()));
+      String outputText = String.format("Cursor %s moved %s %s %s %s. Movement type %s",
+          entFormat.formatCursorName(cursor.getName()),
+          entFormat.customFormat("from", Colors.BOLD),
+          entFormat.formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames),
+          entFormat.customFormat("to", Colors.BOLD),
+          entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames),
+          entFormat.formatMovementType(current.getMovementType()));
 
       Message result = new Message(channel);
       result.println(outputText);

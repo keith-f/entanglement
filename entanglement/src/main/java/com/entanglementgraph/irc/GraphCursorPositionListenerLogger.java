@@ -17,7 +17,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.irc.commands.cursor.CursorCommandUtils;
+import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.HazelcastInstance;
@@ -37,12 +37,13 @@ import java.util.logging.Logger;
  */
 public class GraphCursorPositionListenerLogger implements EntryListener<String, GraphCursor> {
   private static final Logger logger = Logger.getLogger(GraphCursorPositionListenerLogger.class.getName());
-  private static final String LOGGER_PREFIX = "Graph cursor listener";
+  private static final String LOGGER_NAME = GraphCursorPositionListenerLogger.class.getSimpleName();
 
   private final GenericIrcBot<EntanglementRuntime> bot;
   private final String channel;
   private final BotLogger botLogger;
   private final HazelcastInstance hzInstance;
+  private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   public GraphCursorPositionListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel,
                                            HazelcastInstance hzInstance) {
@@ -50,7 +51,7 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
     this.channel = channel;
     this.hzInstance = hzInstance;
     if (channel != null) {
-      botLogger = new BotLogger(bot, channel, LOGGER_PREFIX, LOGGER_PREFIX);
+      botLogger = new BotLogger(bot, channel, LOGGER_NAME);
     } else {
       botLogger = null;
     }
@@ -83,9 +84,9 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
     GraphCursor previousCursor = event.getOldValue();
     GraphCursor cursor = event.getValue();
     log(String.format("Acknowledging GraphCursor %s moved from %s ==> %s. Index: %s. Type: %s. (by host: %s)",
-        cursor.getName(), CursorCommandUtils.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3),
-        CursorCommandUtils.formatNodeKeysetShort(cursor.getPosition(), 1, 3),
-        CursorCommandUtils.format(cursor.getCursorHistoryIdx()), cursor.getMovementType(),
+        cursor.getName(), entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3),
+        entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3),
+        entFormat.format(cursor.getCursorHistoryIdx()), cursor.getMovementType(),
         event.getMember()));
   }
 

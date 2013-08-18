@@ -17,19 +17,16 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
-import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -77,7 +74,6 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
-    BotLogger logger = new BotLogger(bot, channel, cursorName, cursorName);
     logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
 
     try {
@@ -88,9 +84,10 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
        */
       runtime.getCursorRegistry().addCursor(newCursor);
 
+      IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
       String outputText = String.format("New cursor %s created at node: %s",
-          formatCursorName(cursorName),
-          formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
+          entFormat.formatCursorName(cursorName),
+          entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
 
       Message result = new Message(channel);
       result.println(outputText);

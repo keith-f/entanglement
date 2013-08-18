@@ -19,6 +19,7 @@ package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
@@ -52,6 +53,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   protected GraphCursor cursor;
   protected GraphCursor.CursorContext cursorContext;
 
+  protected final IrcEntanglementFormat entFormat;
 
 
   protected static enum Requirements {
@@ -75,6 +77,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   protected AbstractEntanglementCommand(Requirements... requirements)
   {
+    entFormat = new IrcEntanglementFormat();
     for (Requirements req : requirements) {
       switch (req) {
         case GRAPH_CONN_NEEDED:

@@ -18,19 +18,15 @@
 package com.entanglementgraph.irc.commands.jungviz;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.cursor.GraphCursorException;
 import com.entanglementgraph.export.DepthBasedSubgraphCreator;
-import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.iteration.GraphIteratorException;
-import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
@@ -41,7 +37,6 @@ import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.mongodb.DBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
@@ -49,13 +44,11 @@ import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import com.scalesinformatics.util.UidGenerator;
-import edu.uci.ics.jung.graph.Graph;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 
 /**
  * This command opens a JFrame and tracks a specified cursor by displaying lists of incoming/outgoing edges of the
@@ -162,8 +155,10 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
       boolean isAtDeadEnd = cursor.isAtDeadEnd();
       int historyIdx = cursor.getCursorHistoryIdx();
       msg.println("Cursor %s (%s) is currently located at: %s; Dead end? %s; Steps taken: %s",
-          cursor.getName(), cursorName, formatNodeKeyset(currentPos), formatBoolean(isAtDeadEnd), formatHistoryIndex(historyIdx));
-      msg.println("Short version: %s", formatNodeKeysetShort(currentPos, maxUids, maxNames));
+          entFormat.formatCursorName(cursor.getName()), cursorName,
+          entFormat.formatNodeKeyset(currentPos), entFormat.formatBoolean(isAtDeadEnd),
+          entFormat.formatHistoryIndex(historyIdx));
+      msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
 
 
       return msg;
@@ -186,8 +181,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
       bot.println("%s Received notification that cursor: %s has moved to %s",
           CreateJungVizForCursorNearestNeighboursCommand.class.getSimpleName(),
-          formatCursorName(event.getValue().getName()),
-          formatNodeKeysetShort(event.getValue().getPosition(), 1, 1));
+          entFormat.formatCursorName(event.getValue().getName()),
+          entFormat.formatNodeKeysetShort(event.getValue().getPosition(), 1, 1));
       notifyGraphCursorUpdated(event.getValue());
     }
 
