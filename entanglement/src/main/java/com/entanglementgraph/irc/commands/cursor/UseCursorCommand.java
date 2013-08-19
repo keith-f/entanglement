@@ -38,7 +38,7 @@ import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
  * To change this template use File | Settings | File Templates.
  */
 public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
-
+  private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   @Override
   public String getDescription() {
@@ -66,9 +66,9 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
       runtime.setCurrentCursorName(cursor.getName());
 
-      IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
+
       Message result = new Message(channel);
-      result.println("Current cursor set to: %s", entFormat.formatCursorName(cursorName));
+      result.println("Current cursor set to: %s", entFormat.formatCursorName(cursorName).toString());
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);

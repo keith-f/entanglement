@@ -35,7 +35,7 @@ import java.util.List;
  * @author Keith Flanagan
  */
 public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
-
+  private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   @Override
   public String getDescription() {
@@ -74,7 +74,10 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
-    logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
+
+    logger.infoln("Created new graph cursor: %s at location: %s",
+        entFormat.formatCursorName(cursorName).toString(),
+        entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
 
     try {
       GraphCursor newCursor = new GraphCursor(cursorName, nodeLocation);
@@ -84,10 +87,9 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
        */
       runtime.getCursorRegistry().addCursor(newCursor);
 
-      IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
       String outputText = String.format("New cursor %s created at node: %s",
-          entFormat.formatCursorName(cursorName),
-          entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
+          entFormat.formatCursorName(cursorName).toString(),
+          entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames)).toString();
 
       Message result = new Message(channel);
       result.println(outputText);

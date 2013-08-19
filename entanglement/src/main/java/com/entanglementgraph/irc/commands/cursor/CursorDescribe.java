@@ -91,42 +91,44 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
       }
 
       msg.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
-          cursor.getName(), entFormat.formatNodeKeyset(currentPos), entFormat.formatBoolean(isAtDeadEnd),
-          entFormat.formatHistoryIndex(historyIdx));
+          entFormat.formatCursorName(cursor.getName()).toString(),
+          entFormat.formatNodeKeyset(currentPos).toString(),
+          entFormat.formatBoolean(isAtDeadEnd).toString(),
+          entFormat.formatHistoryIndex(historyIdx).toString());
       msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
 
       if (displayEdgeCounts) {
         /*
          * Incoming edges
          */
-        msg.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)));
+        msg.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)).toString());
         if (displayEdgeTypes) {
           Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
-          msg.println("* Incoming edge types: %s", entFormat.format(typeToCount));
+          msg.println("* Incoming edge types: %s", entFormat.format(typeToCount).toString());
         }
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
 //            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
             msg.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
-                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames));
+                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames).toString());
           }
         }
 
         /*
          * Outgoing edges
          */
-        msg.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)));
+        msg.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)).toString());
         if (displayEdgeTypes) {
           Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
-          msg.println("* Outgoing edge types: %s", entFormat.format(typeToCount));
+          msg.println("* Outgoing edge types: %s", entFormat.format(typeToCount).toString());
         }
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
 //            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
             msg.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
-                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), 1, 2));
+                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), maxUids, maxNames).toString());
           }
         }
       }

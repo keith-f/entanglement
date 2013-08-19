@@ -76,12 +76,12 @@ public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime>
       GraphCursor current = cursor.jump(cursorContext, newLocation);
 
       String outputText = String.format("Cursor %s moved %s %s %s %s. Movement type %s",
-          entFormat.formatCursorName(cursor.getName()),
-          entFormat.customFormat("from", Colors.BOLD),
-          entFormat.formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames),
-          entFormat.customFormat("to", Colors.BOLD),
-          entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames),
-          entFormat.formatMovementType(current.getMovementType()));
+          entFormat.formatCursorName(cursor.getName()).toString(),
+          entFormat.customFormat("from", Colors.BOLD).toString(),
+          entFormat.formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames).toString(),
+          entFormat.customFormat("to", Colors.BOLD).toString(),
+          entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames).toString(),
+          entFormat.formatMovementType(current.getMovementType()).toString());
 
       Message result = new Message(channel);
       result.println(outputText);

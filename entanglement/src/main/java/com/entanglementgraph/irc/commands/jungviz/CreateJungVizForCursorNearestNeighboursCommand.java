@@ -89,6 +89,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
 
+  private int maxUids;
+  private int maxNames;
   private String tempCluster;
 
   private int depth;
@@ -108,8 +110,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
 
-    int maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
+    maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
+    maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
     boolean track = parsedArgs.get("track").parseValueAsBoolean();
 
     layoutSizeX = parsedArgs.get("layout-size-x").parseValueAsInteger();
@@ -157,10 +159,10 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
       boolean isAtDeadEnd = cursor.isAtDeadEnd();
       int historyIdx = cursor.getCursorHistoryIdx();
       msg.println("Cursor %s (%s) is currently located at: %s; Dead end? %s; Steps taken: %s",
-          entFormat.formatCursorName(cursor.getName()), cursorName,
-          entFormat.formatNodeKeyset(currentPos), entFormat.formatBoolean(isAtDeadEnd),
-          entFormat.formatHistoryIndex(historyIdx));
-      msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
+          entFormat.formatCursorName(cursor.getName()).toString(), cursorName,
+          entFormat.formatNodeKeyset(currentPos).toString(), entFormat.formatBoolean(isAtDeadEnd).toString(),
+          entFormat.formatHistoryIndex(historyIdx).toString());
+      msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames).toString());
 
 
       return msg;
@@ -183,8 +185,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
       bot.println("%s Received notification that cursor: %s has moved to %s",
           CreateJungVizForCursorNearestNeighboursCommand.class.getSimpleName(),
-          entFormat.formatCursorName(event.getValue().getName()),
-          entFormat.formatNodeKeysetShort(event.getValue().getPosition(), 1, 1));
+          entFormat.formatCursorName(event.getValue().getName()).toString(),
+          entFormat.formatNodeKeysetShort(event.getValue().getPosition(), maxUids, maxNames).toString());
       notifyGraphCursorUpdated(event.getValue());
     }
 
