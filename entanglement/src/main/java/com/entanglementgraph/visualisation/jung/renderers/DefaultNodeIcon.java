@@ -41,8 +41,8 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   private static final Color DEFAULT_PICKED_COLOUR = Color.YELLOW;
   private static final Color DEFAULT_UNPICKED_COLOUR = Color.GRAY;
 
-  private final DbObjectMarshaller marshaller;
-  private final EntityDisplayNameRegistry displayNameFactory;
+  protected final DbObjectMarshaller marshaller;
+  protected final EntityDisplayNameRegistry displayNameFactory;
 
   protected final VisualizationViewer<V, E> vv;
   protected final V vertexData;
