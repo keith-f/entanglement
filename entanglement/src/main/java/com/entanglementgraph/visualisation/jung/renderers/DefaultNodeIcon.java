@@ -95,4 +95,28 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   protected String createNodeLabel() {
     return null;
   }
+
+  public int getDimension() {
+    return dimension;
+  }
+
+  public void setDimension(int dimension) {
+    this.dimension = dimension;
+  }
+
+  public Color getPickedColour() {
+    return pickedColour;
+  }
+
+  public void setPickedColour(Color pickedColour) {
+    this.pickedColour = pickedColour;
+  }
+
+  public Color getUnpickedColour() {
+    return unpickedColour;
+  }
+
+  public void setUnpickedColour(Color unpickedColour) {
+    this.unpickedColour = unpickedColour;
+  }
 }
