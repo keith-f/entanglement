@@ -48,8 +48,6 @@ import com.scalesinformatics.util.UidGenerator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
-
 /**
  * This command opens a JFrame and tracks a specified cursor by displaying lists of incoming/outgoing edges of the
  * current node, as well as a Jung-rendered image of the immediate neighbourhood.
@@ -58,8 +56,8 @@ import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
  *
  * @author Keith Flanagan
  */
-public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-  private static final Logger logger = Logger.getLogger(CreateJungVizForCursorNearestNeighboursCommand.class.getName());
+public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
+  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
 
   @Override
   public String getDescription() {
@@ -85,7 +83,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     return params;
   }
 
-  public CreateJungVizForCursorNearestNeighboursCommand() {
+  public GuiNearestNeighboursCommand() {
     super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
 
@@ -197,7 +195,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     @Override
     public void entryUpdated(EntryEvent<String, GraphCursor> event) {
       bot.println("%s Received notification that cursor: %s has moved to %s",
-          CreateJungVizForCursorNearestNeighboursCommand.class.getSimpleName(),
+          GuiNearestNeighboursCommand.class.getSimpleName(),
           entFormat.formatCursorName(event.getValue().getName()).toString(),
           entFormat.formatNodeKeysetShort(event.getValue().getPosition(), maxUids, maxNames).toString());
       notifyGraphCursorUpdated(event.getValue());
