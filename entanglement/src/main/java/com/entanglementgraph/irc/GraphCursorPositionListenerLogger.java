@@ -84,11 +84,11 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
     GraphCursor previousCursor = event.getOldValue();
     GraphCursor cursor = event.getValue();
     log(String.format("Acknowledging GraphCursor %s moved from %s ==> %s. Index: %s. Type: %s. (by host: %s)",
-        cursor.getName(), entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3),
+        cursor.getName(), entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
         entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3).toString(),
         entFormat.format(cursor.getCursorHistoryIdx()).toString(),
         entFormat.formatMovementType(cursor.getMovementType()).toString(),
-        event.getMember()));
+        entFormat.formatHost(event.getMember().toString()).toString()));
   }
 
   @Override
