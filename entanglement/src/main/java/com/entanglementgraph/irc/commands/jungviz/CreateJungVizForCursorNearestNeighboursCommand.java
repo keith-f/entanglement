@@ -89,6 +89,8 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
     super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
 
+  private EntityDisplayNameRegistry displayNameFactories;
+  private CustomRendererRegistry customVertexRenderers;
   private int maxUids;
   private int maxNames;
   private String tempCluster;
@@ -121,10 +123,7 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 
     // Here, we use generic Entanglement display name and Jung renderer registries
     // These could be replaced with project-specific classes, if necessary
-    EntityDisplayNameRegistry displayNameFactories = new EntityDisplayNameRegistry();
-    CustomRendererRegistry customVertexRenderers = new CustomRendererRegistry(graphConn.getMarshaller(), displayNameFactories);
-    customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
-    customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
+    configureDefaultRenderers();
 
     trackingVisualisation = new TrackingVisualisation(
         customVertexRenderers,
@@ -168,6 +167,20 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
       return msg;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
+    }
+  }
+
+  /**
+   * If custom renderers (eg, set by a subclass) have not been configured, then create default ones instead.
+   */
+  private void configureDefaultRenderers() {
+    if (displayNameFactories == null) {
+      displayNameFactories = new EntityDisplayNameRegistry();
+    }
+    if (customVertexRenderers == null) {
+      customVertexRenderers = new CustomRendererRegistry(graphConn.getMarshaller(), displayNameFactories);
+      customVertexRenderers.addTypeToRendererMapping(CategoryChartNode.getTypeName(), CategoryDatasetChartRenderer.class);
+      customVertexRenderers.addTypeToRendererMapping(XYChartNode.getTypeName(), XYDatasetChartRenderer.class);
     }
   }
 
@@ -266,5 +279,19 @@ public class CreateJungVizForCursorNearestNeighboursCommand extends AbstractEnta
 //  }
 
 
+  public CustomRendererRegistry getCustomVertexRenderers() {
+    return customVertexRenderers;
+  }
 
+  public void setCustomVertexRenderers(CustomRendererRegistry customVertexRenderers) {
+    this.customVertexRenderers = customVertexRenderers;
+  }
+
+  public EntityDisplayNameRegistry getDisplayNameFactories() {
+    return displayNameFactories;
+  }
+
+  public void setDisplayNameFactories(EntityDisplayNameRegistry displayNameFactories) {
+    this.displayNameFactories = displayNameFactories;
+  }
 }
