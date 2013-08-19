@@ -16,7 +16,11 @@
  */
 package com.entanglementgraph.visualisation.jung.renderers;
 
+import com.entanglementgraph.graph.data.GraphEntity;
+import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 
 import javax.swing.*;
@@ -37,6 +41,9 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   private static final Color DEFAULT_PICKED_COLOUR = Color.YELLOW;
   private static final Color DEFAULT_UNPICKED_COLOUR = Color.GRAY;
 
+  private final DbObjectMarshaller marshaller;
+  private final EntityDisplayNameRegistry displayNameFactory;
+
   protected final VisualizationViewer<V, E> vv;
   protected final V vertexData;
 
@@ -44,11 +51,15 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   private Color pickedColour;
   private Color unpickedColour;
 
-  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V vertexData) {
-    this(vv, vertexData, DEFAULT_PICKED_COLOUR, DEFAULT_UNPICKED_COLOUR);
+  public DefaultNodeIcon(DbObjectMarshaller marshaller, EntityDisplayNameRegistry displayNameFactory,
+                         VisualizationViewer<V, E> vv, V vertexData) {
+    this(marshaller, displayNameFactory, vv, vertexData, DEFAULT_PICKED_COLOUR, DEFAULT_UNPICKED_COLOUR);
   }
 
-  public DefaultNodeIcon(VisualizationViewer<V, E> vv, V vertexData, Color pickedColour, Color unpickedColour) {
+  public DefaultNodeIcon(DbObjectMarshaller marshaller, EntityDisplayNameRegistry displayNameFactory,
+                         VisualizationViewer<V, E> vv, V vertexData, Color pickedColour, Color unpickedColour) {
+    this.marshaller = marshaller;
+    this.displayNameFactory = displayNameFactory;
     this.vv = vv;
     this.vertexData = vertexData;
     this.pickedColour = pickedColour;
@@ -96,6 +107,18 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
     return null;
   }
 
+  /**
+   * Covenience function to deserialise objects
+   */
+  public <T extends GraphEntity> T deserialzeOrError(DBObject document, Class<T> type) {
+    try {
+      return marshaller.deserialize(document, type);
+    } catch (DbObjectMarshallerException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Failed to deserialize document to type: "+type+", doc: "+document);
+    }
+  }
+
   public int getDimension() {
     return dimension;
   }
@@ -118,5 +141,13 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
 
   public void setUnpickedColour(Color unpickedColour) {
     this.unpickedColour = unpickedColour;
+  }
+
+  public EntityDisplayNameRegistry getDisplayNameFactory() {
+    return displayNameFactory;
+  }
+
+  public DbObjectMarshaller getMarshaller() {
+    return marshaller;
   }
 }

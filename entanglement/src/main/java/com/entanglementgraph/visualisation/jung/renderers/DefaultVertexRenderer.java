@@ -65,7 +65,7 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
     return new Transformer<DBObject, Icon>() {
       @Override
       public Icon transform(DBObject data) {
-        return new DefaultNodeIcon<>(visualiser, data);
+        return new DefaultNodeIcon<>(marshaller, displayNameFactories, visualiser, data);
       }
     };
   }
