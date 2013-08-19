@@ -16,10 +16,12 @@
  */
 package com.entanglementgraph.visualisation.jung.renderers;
 
+import com.entanglementgraph.graph.data.GraphEntity;
 import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
@@ -39,6 +41,18 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
   protected VisualizationViewer<DBObject, DBObject> visualiser;
   protected EntityDisplayNameRegistry displayNameFactories;
   private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
+
+  /**
+   * Covenience function to deserialise objects
+   */
+  public <T extends GraphEntity> T deserialzeOrError(DBObject document, Class<T> type) {
+    try {
+      return marshaller.deserialize(document, type);
+    } catch (DbObjectMarshallerException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Failed to deserialize document to type: "+type+", doc: "+document);
+    }
+  }
 
   @Override
   public void setVisualiser(VisualizationViewer<DBObject, DBObject> visualiser) {
