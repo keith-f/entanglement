@@ -50,6 +50,8 @@ public class IrcEntanglementFormat extends IrcFormat {
 
   public static String COLOR_EDGE_ARROW = Colors.OLIVE;
   public static String COLOR_EDGE_ARROW_TEXT = Colors.OLIVE;
+
+  public static String COLOR_HOSTNAME = Colors.RED;
 //
 //  public IrcFormat nodeKey() {
 //    text.append(String.format("%s<%s", pushFormat(COLOR_NODE_KEY), popFormat()));
@@ -167,6 +169,10 @@ public class IrcEntanglementFormat extends IrcFormat {
 
   public IrcEntanglementFormat formatHistoryIndex(int index) {
     return (IrcEntanglementFormat) pushFormat(COLOR_HISTORY_GENERIC).append(index).popFormat();
+  }
+
+  public IrcEntanglementFormat formatHost(String hostname) {
+    return (IrcEntanglementFormat) customFormat(hostname, COLOR_HOSTNAME);
   }
 
 //  public IrcEntanglementFormat printCursorMovementText(GraphCursor previous, GraphCursor current) {
