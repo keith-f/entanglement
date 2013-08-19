@@ -47,7 +47,10 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   protected final VisualizationViewer<V, E> vv;
   protected final V vertexData;
 
-  private int dimension;
+  protected int iconWidth;
+  protected int iconHeight;
+  protected int circleWidth;
+  protected int circleHeight;
   private Color pickedColour;
   private Color unpickedColour;
 
@@ -64,26 +67,37 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
     this.vertexData = vertexData;
     this.pickedColour = pickedColour;
     this.unpickedColour = unpickedColour;
-    this.dimension = DEFAULT_DIMENSION;
+    this.iconWidth = DEFAULT_DIMENSION;
+    this.iconHeight = DEFAULT_DIMENSION;
+    this.circleWidth = DEFAULT_DIMENSION;
+    this.circleHeight = DEFAULT_DIMENSION;
   }
 
   public int getIconHeight() {
-    return dimension;
+    return iconHeight;
   }
 
   public int getIconWidth() {
-    return dimension;
+    return iconWidth;
   }
 
   public void paintIcon(Component c, Graphics g, int x, int y) {
+    if (iconWidth > circleWidth) {
+      x = x + (iconWidth / 2) - (circleWidth / 2);
+    }
+    if (iconHeight > circleHeight) {
+      y = y + (iconHeight / 2) - (circleHeight / 2);
+    }
+
+
     if (vv.getPickedVertexState().isPicked(vertexData)) {
       g.setColor(pickedColour);
     } else {
       g.setColor(unpickedColour);
     }
-    g.fillOval(x, y, dimension, dimension);
+    g.fillOval(x, y, (int) circleWidth, (int) circleHeight);
     g.setColor(Color.black);
-    g.drawOval(x, y, dimension, dimension);
+    g.drawOval(x, y, (int) circleWidth, (int) circleHeight);
 
     // If we want a text label within the node (space for about 1 character)
     String label = createNodeLabel();
@@ -119,14 +133,6 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
     }
   }
 
-  public int getDimension() {
-    return dimension;
-  }
-
-  public void setDimension(int dimension) {
-    this.dimension = dimension;
-  }
-
   public Color getPickedColour() {
     return pickedColour;
   }
@@ -149,5 +155,29 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
 
   public DbObjectMarshaller getMarshaller() {
     return marshaller;
+  }
+
+  public void setIconWidth(int iconWidth) {
+    this.iconWidth = iconWidth;
+  }
+
+  public void setIconHeight(int iconHeight) {
+    this.iconHeight = iconHeight;
+  }
+
+  public int getCircleWidth() {
+    return circleWidth;
+  }
+
+  public void setCircleWidth(int circleWidth) {
+    this.circleWidth = circleWidth;
+  }
+
+  public int getCircleHeight() {
+    return circleHeight;
+  }
+
+  public void setCircleHeight(int circleHeight) {
+    this.circleHeight = circleHeight;
   }
 }
