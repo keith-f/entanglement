@@ -33,6 +33,7 @@ import java.awt.*;
 /**
  *
  * @author Keith Flanagan
+ * @deprecated Use <code>TrackingVisualisation</code> instead
  */
 public class Visualiser {
 
