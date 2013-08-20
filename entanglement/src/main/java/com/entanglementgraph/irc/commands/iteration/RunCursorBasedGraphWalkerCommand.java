@@ -70,6 +70,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     params.add(new OptionalParam("destination-conn", String.class, "The graph connection name of the destination graph. If this parameter is not specified, then a temporary graph with a randomised name will be created."));
 
     params.add(new OptionalParam("enable-gui", Boolean.class, Boolean.FALSE.toString(), "If set true, displays the destination graph ."));
+    params.add(new OptionalParam("track", Boolean.class, Boolean.TRUE.toString(), "Specifies whether the GUI should track cursor events and update itself when the cursor moves to a new position."));
     params.add(new OptionalParam("layout-size-x", Integer.class, "800", "The width (in pixels) that the node layout engine will use for performing layouts."));
     params.add(new OptionalParam("layout-size-y", Integer.class, "800", "The height (in pixels) that the node layout engine will use for performing layouts."));
     params.add(new OptionalParam("display-size-x", Integer.class, "850", "The preferred width (in pixels) of the graph viewport."));
@@ -87,6 +88,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   private EntityDisplayNameRegistry displayNameFactories;
   private CustomRendererRegistry customVertexRenderers;
   private boolean enableGui;
+  boolean track;
   private int layoutSizeX;
   private int layoutSizeY;
   private int displaySizeX;
@@ -106,6 +108,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
 
     enableGui = parsedArgs.get("enable-gui").parseValueAsBoolean();
+    track = parsedArgs.get("track").parseValueAsBoolean();
     layoutSizeX = parsedArgs.get("layout-size-x").parseValueAsInteger();
     layoutSizeY = parsedArgs.get("layout-size-y").parseValueAsInteger();
     displaySizeX = parsedArgs.get("display-size-x").parseValueAsInteger();
@@ -148,6 +151,13 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       if (enableGui) {
         logger.println("GUI visualisation requested. Populating Jung graph.");
         configureDefaultRenderers();
+        trackingVisualisation = new TrackingVisualisation(
+            customVertexRenderers,
+            track
+                ? TrackingVisualisation.UpdateType.APPEND_ON_CURSOR_MOVE
+                : TrackingVisualisation.UpdateType.REPLACE_ON_CURSOR_MOVE,
+            layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
+
         display(destination);
       }
 

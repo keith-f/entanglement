@@ -122,7 +122,6 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
     // Here, we use generic Entanglement display name and Jung renderer registries
     // These could be replaced with project-specific classes, if necessary
     configureDefaultRenderers();
-
     trackingVisualisation = new TrackingVisualisation(
         customVertexRenderers,
         track
