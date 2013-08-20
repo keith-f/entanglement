@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.visualisation.jung.renderers;
 
+import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.data.GraphEntity;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
@@ -40,6 +41,13 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
 
   private static final Color DEFAULT_PICKED_COLOUR = Color.YELLOW;
   private static final Color DEFAULT_UNPICKED_COLOUR = Color.GRAY;
+
+  private static final Color DEFAULT_NORMAL_NODE_COLOUR = Color.BLACK;
+  private static final Color DEFAULT_VIRTUAL_NODE_COLOUR = Color.ORANGE;
+
+  private static final Stroke THICKER = new BasicStroke(2);
+  private static final Stroke DOTTED = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] {2,2}, 0);
+
 
   protected final DbObjectMarshaller marshaller;
   protected final EntityDisplayNameRegistry displayNameFactory;
@@ -82,6 +90,12 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   }
 
   public void paintIcon(Component c, Graphics g, int x, int y) {
+    Graphics2D g2 = (Graphics2D) g;
+
+    // Set true if this node is from a 'hanging edge' - i.e., its existence has been inferred.
+    boolean isVirtual = vertexData.containsField(GraphEntityDAO.FIELD_VIRTUAL);
+
+    // This avoids the node being drawn in a strange position (wrt edge lines) when the icon size is 'large'
     if (iconWidth > circleWidth) {
       x = x + (iconWidth / 2) - (circleWidth / 2);
     }
@@ -89,15 +103,33 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
       y = y + (iconHeight / 2) - (circleHeight / 2);
     }
 
-
+    Color fillColour;
     if (vv.getPickedVertexState().isPicked(vertexData)) {
-      g.setColor(pickedColour);
+      fillColour = pickedColour;
     } else {
-      g.setColor(unpickedColour);
+      fillColour = unpickedColour;
     }
-    g.fillOval(x, y, (int) circleWidth, (int) circleHeight);
-    g.setColor(Color.black);
-    g.drawOval(x, y, (int) circleWidth, (int) circleHeight);
+
+
+
+    /*
+     * Draw a normal circle if this node exists as a document.
+     * Otherwise, indicate that this node doesn't actually exist (for example, as a hanging edge) by .
+     */
+
+    if (isVirtual) {
+      Stroke original = g2.getStroke();
+      g2.setStroke(DOTTED);
+      g.setColor(fillColour);
+      g2.drawOval(x, y, circleWidth, circleHeight);
+      g2.setStroke(original);
+    } else {
+      g.setColor(fillColour);
+      g.fillOval(x, y, circleWidth, circleHeight);
+      g.setColor(DEFAULT_NORMAL_NODE_COLOUR);
+      g.drawOval(x, y, circleWidth, circleHeight);
+    }
+
 
     // If we want a text label within the node (space for about 1 character)
     String label = createNodeLabel();

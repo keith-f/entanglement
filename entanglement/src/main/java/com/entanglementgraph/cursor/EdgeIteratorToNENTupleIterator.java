@@ -18,6 +18,7 @@
 package com.entanglementgraph.cursor;
 
 import com.entanglementgraph.graph.AbstractGraphEntityDAO;
+import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
@@ -111,7 +112,8 @@ public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.Node
             logger.info("Potential hanging edge found: "+queryKeys);
             if (fillNodeDocsOfHangingEdges) {
               BasicDBObject filler = new BasicDBObject();
-              filler.put(AbstractGraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
+              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
+              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
               logger.info("Created 'filler' document for missing node: "+filler);
               queryNode = filler;
             }

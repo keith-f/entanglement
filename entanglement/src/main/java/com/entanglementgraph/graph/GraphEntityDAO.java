@@ -38,6 +38,7 @@ public interface GraphEntityDAO
   public static final String FIELD_KEYS_TYPE = FIELD_KEYS+".type";
   public static final String FIELD_KEYS_UIDS = FIELD_KEYS+".uids";
   public static final String FIELD_KEYS_NAMES = FIELD_KEYS+".names";
+  public static final String FIELD_VIRTUAL = "entanglement_virtual_node";
 
   public DBCollection getCollection();
   
