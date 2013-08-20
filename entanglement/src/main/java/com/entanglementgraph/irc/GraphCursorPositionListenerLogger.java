@@ -23,6 +23,7 @@ import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.GenericIrcBot;
+import org.jibble.pircbot.Colors;
 
 import java.util.logging.Logger;
 
@@ -83,8 +84,10 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
   public void entryUpdated(EntryEvent<String, GraphCursor> event) {
     GraphCursor previousCursor = event.getOldValue();
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging GraphCursor %s moved from %s ==> %s. Index: %s. Type: %s. (by host: %s)",
-        cursor.getName(), entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
+    log(String.format("Acknowledging GraphCursor %s moved from %s %s %s. Index: %s. Type: %s. (by host: %s)",
+        entFormat.formatCursorName(cursor.getName()).toString(),
+        entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
+        entFormat.customFormat("==>", Colors.CYAN).toString(),
         entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3).toString(),
         entFormat.format(cursor.getCursorHistoryIdx()).toString(),
         entFormat.formatMovementType(cursor.getMovementType()).toString(),

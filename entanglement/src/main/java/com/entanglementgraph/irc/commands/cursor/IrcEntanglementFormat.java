@@ -136,13 +136,13 @@ public class IrcEntanglementFormat extends IrcFormat {
   public IrcEntanglementFormat formatEdge(Edge edge) {
     openSquareBracket();
     formatNodeKeysetShort(edge.getFrom(), 0, 1);
-
-    IrcEntanglementFormat tmpFormat = new IrcEntanglementFormat();
-    append(String.format("  %s---%s--->%s  ",
-        tmpFormat.pushFormat(COLOR_EDGE_ARROW),
-        tmpFormat.customFormat(edge.getKeys().getType(), COLOR_EDGE_ARROW_TEXT),
-        tmpFormat.popFormat()));
-
+    pushFormat(COLOR_EDGE_ARROW).append("---")
+        .customFormat(edge.getKeys().getType(), COLOR_EDGE_ARROW_TEXT)
+        .append("--->").popFormat();
+//    IrcEntanglementFormat tmpFormat = new IrcEntanglementFormat();
+//    append(String.format("  ---%s--->  ",
+//        tmpFormat.customFormat(edge.getKeys().getType(), COLOR_EDGE_ARROW_TEXT).toString()));
+//    popFormat();
     formatNodeKeysetShort(edge.getTo(), 0, 1);
 
     closeSquareBracket();
