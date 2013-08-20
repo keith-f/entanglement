@@ -42,16 +42,16 @@ public class StopAfterDepthRule extends AbstractRule {
   }
 
   @Override
-  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth, EntityKeys<? extends Node> currentPosition) throws RuleException {
+  public HandlerAction preEdgeIteration(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition) throws RuleException {
     /*
      * Greater than or equal, since if the 'current' depth is already the target depth, then there's no point in
      * iterating any edges
      */
-    if (currentEdgeDepth >= targetDepth) {
+    if (currentDepth >= targetDepth) {
       HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
       return action;
     }
-    return super.preEdgeIteration(cursorName, currentEdgeDepth, currentPosition);
+    return super.preEdgeIteration(cursorName, currentDepth, currentPosition);
   }
 
   @Override
