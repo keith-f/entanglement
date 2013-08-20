@@ -215,6 +215,9 @@ public class DepthFirstGraphIterator {
       EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
 
       // FIXME for now, we're just caching 'seen' edges in memory. We need to store these in a temporary mongo collection for large graphs
+//      logger.info("Seen edge? "+seenEdge(edge.getKeys())+" (current depth: "+currentDepth+"): "+edge
+//          +"\n:  * Known IDs: "+seenEdgeUids
+//          +"\n:  * Known names: "+seenEdgeNames.get(edge.getKeys().getType()));
       if (seenEdge(edge.getKeys())) {
         continue;
       }
