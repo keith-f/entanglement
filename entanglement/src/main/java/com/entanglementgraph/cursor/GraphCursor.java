@@ -23,6 +23,7 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -52,6 +53,7 @@ import java.util.logging.Logger;
  */
 public class GraphCursor implements Serializable {
   private static final Logger logger = Logger.getLogger(GraphCursor.class.getName());
+  private static final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   public static class CursorContext {
     final GraphConnection conn;
@@ -234,9 +236,7 @@ public class GraphCursor implements Serializable {
    *                        Even specifying a single 'name' may be appropriate as long as the name is unique among
    *                        directly connected nodes.
    * @return a new graph cursor representing the new position.
-   * @throws GraphCursorException if the specified node was not directly connected to the current location, or if
-   * <code>destinationNode</code> wsa ambiguous - for instance, if only a node name was specified, and there were two
-   * directly connected nodes with the same name.
+   * @throws GraphCursorException if the specified node was not directly connected to the current location.
    */
   public GraphCursor stepToNode(CursorContext c,
                                 EntityKeys<? extends Node> specifiedDestination)
@@ -260,11 +260,9 @@ public class GraphCursor implements Serializable {
       boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, true);
 
       if (fromContainsDestinationSpec && toContainsDestinationSpec) {
-        //We couldn't tell the difference between from/to - the specifiedDestination was ambiguous
-        throw new GraphCursorException("Found an edge between the cursor and the specified node. However, the edge " +
-            "matched both from/to parts of the edge and was therefore ambiguous. Cursor node: "+ position +
-            "; Specifed destination node: "+specifiedDestination +
-            "; Edge was: "+edge);
+        //We couldn't tell the difference between from/to
+        logger.info("For information - 'from' and 'to' refer to the same node. " +
+            "This is probably a circular reference and nothing to worry about!. Edge was: "+edge.toString());
       }
       actualDestination = fromContainsDestinationSpec ? edge.getFrom() : edge.getTo();
     } catch (GraphModelException e) {
@@ -461,7 +459,7 @@ public class GraphCursor implements Serializable {
       final GraphConnection conn, final boolean outgoingEdges)
       throws GraphCursorException {
     final BasicDBObject subjectNode = resolve(conn);
-    return new EdgeIteratorToNENTupleIterator(conn, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
       @Override
       public DBCursor call() throws Exception {
         return outgoingEdges
@@ -500,7 +498,7 @@ public class GraphCursor implements Serializable {
       final GraphConnection conn, final boolean outgoingEdges, final String remoteNodeType)
       throws GraphCursorException {
     final BasicDBObject subjectNode = resolve(conn);
-    return new EdgeIteratorToNENTupleIterator(conn, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
       @Override
       public DBCursor call() throws Exception {
         return outgoingEdges
