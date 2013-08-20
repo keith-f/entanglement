@@ -71,6 +71,9 @@ public class NodeModification
   {
     this.mergePol = mergePol;
     this.node = node;
+    if (node == null) {
+      throw new RuntimeException("The specified node was NULL!");
+    }
   }
 
   @Override
@@ -84,6 +87,9 @@ public class NodeModification
 
   public void setNode(BasicDBObject node) {
     this.node = node;
+    if (node == null) {
+      throw new RuntimeException("The specified node was NULL!");
+    }
   }
 
   public MergePolicy getMergePol() {
