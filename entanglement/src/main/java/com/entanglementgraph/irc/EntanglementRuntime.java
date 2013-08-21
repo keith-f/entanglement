@@ -93,8 +93,8 @@ public class EntanglementRuntime {
      * This is a Hazelcast listener on graphCursors that gets informed when a GraphCursor is added or updated
      * on local or remote processes.
      */
-    this.cursorRegistry.getCurrentPositions().addEntryListener(
-        new GraphCursorPositionListenerLogger(bot, channel, hzInstance), true);
+//    this.cursorRegistry.getCurrentPositions().addEntryListener(
+//        new GraphCursorPositionListenerLogger(bot, channel, hzInstance), true);
   }
 
   /**
