@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class DefaultRule extends AbstractRule {
+public class AddByDefaultRule extends AbstractRule {
 
   @Override
   public boolean ruleMatches(String cursorName, int currentDepth,
@@ -57,6 +57,7 @@ public class DefaultRule extends AbstractRule {
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
                              throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
+    action.setProcessFurtherRules(false);
 
     action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
     action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
