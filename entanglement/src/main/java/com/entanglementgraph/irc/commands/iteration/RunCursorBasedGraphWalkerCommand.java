@@ -268,17 +268,17 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
         new Dimension(vis.getGraphLayout().getSize()));
 
     if (enablePng) {
-      File outFile =generateOutputFile(outputDirPath, ".png");
+      File outFile =generateOutputFile(outputDirPath, ".png", layoutSizeX, layoutSizeY, exportAnimationSeconds);
       logger.println("Writing file %s", entFormat.format(outFile).toString());
       ImageIO.write(image, "png", outFile);
     }
     if (enableJpeg) {
-      File outFile =generateOutputFile(outputDirPath, ".jpeg");
+      File outFile =generateOutputFile(outputDirPath, ".jpeg", layoutSizeX, layoutSizeY, exportAnimationSeconds);
       logger.println("Writing file %s", entFormat.format(outFile).toString());
       ImageIO.write(image, "jpeg", outFile);
     }
     if (enableBmp) {
-      File outFile =generateOutputFile(outputDirPath, ".bmp");
+      File outFile =generateOutputFile(outputDirPath, ".bmp", layoutSizeX, layoutSizeY, exportAnimationSeconds);
       logger.println("Writing file %s", entFormat.format(outFile).toString());
       ImageIO.write(image, "bmp", outFile);
     }
@@ -295,7 +295,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     return outputFile;
   }
 
-  protected File generateOutputFile(String directory, String extension, int xDim, int yDim, int animationSeconds) {
+  protected File generateOutputFile(String directory, String extension, int xDim, int yDim, long animationSeconds) {
     File outputDir = new File(directory);
     if (!outputDir.exists()) {
       boolean success = outputDir.mkdirs();
