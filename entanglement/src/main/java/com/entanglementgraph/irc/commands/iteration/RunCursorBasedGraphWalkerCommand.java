@@ -104,13 +104,15 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   }
 
   private String tempCluster;
+  protected GraphConnection destination;
 
-  private EntityDisplayNameRegistry displayNameFactories;
-  private CustomRendererRegistry customVertexRenderers;
+  protected EntityDisplayNameRegistry displayNameFactories;
+  protected CustomRendererRegistry customVertexRenderers;
   private boolean enableGui;
   private boolean enablePng;
   private boolean enableJpeg;
   private boolean enableBmp;
+  protected String outputDirPath;
 
   boolean track;
   private int layoutSizeX;
@@ -139,7 +141,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     displaySizeY = parsedArgs.get("display-size-y").parseValueAsInteger();
 
 
-    String outputDirPath = parsedArgs.get("output-dir").getStringValue();
+    outputDirPath = parsedArgs.get("output-dir").getStringValue();
     enablePng = parsedArgs.get("enable-png").parseValueAsBoolean();
     enableJpeg = parsedArgs.get("enable-jpeg").parseValueAsBoolean();
     enableBmp = parsedArgs.get("enable-bmp").parseValueAsBoolean();
@@ -159,7 +161,6 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
     try {
       // Use either a named destination connection, or create a temporary graph.
-      GraphConnection destination;
       if (destinationConnName != null) {
         destination = state.getUserObject().createGraphConnectionFor(destinationConnName);
       } else {
@@ -272,7 +273,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
   }
 
-  private File generateOutputFile(String directory, String extension) {
+  protected File generateOutputFile(String directory, String extension) {
     File outputDir = new File(directory);
     if (!outputDir.exists()) {
       boolean success = outputDir.mkdirs();
@@ -292,6 +293,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     layout.setSize(new Dimension(layoutSizeX, layoutSizeY));
     VisualizationViewer<DBObject, DBObject> vv =  new VisualizationViewer<>(layout);
     vv.setDoubleBuffered(false);
+    customVertexRenderers.setVisualiser(vv);
     return vv;
   }
 
