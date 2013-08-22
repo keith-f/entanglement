@@ -180,7 +180,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
       logger.println("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
           graphConnName, walker.getClass().getName(),
-          graphConn.getPoolName(), graphConn.getDatabaseName(), graphConn.getGraphName());
+          destination.getPoolName(), destination.getDatabaseName(), destination.getGraphName());
 
 
       Graph<DBObject, DBObject> jungGraph = null;
@@ -262,13 +262,19 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
         new Dimension(vis.getGraphLayout().getSize()));
 
     if (enablePng) {
-      ImageIO.write(image, "png", generateOutputFile(outputDirPath, ".png"));
+      File outFile =generateOutputFile(outputDirPath, ".png");
+      logger.println("Writing file %s", entFormat.format(outFile).toString());
+      ImageIO.write(image, "png", outFile);
     }
     if (enableJpeg) {
-      ImageIO.write(image, "jpeg", generateOutputFile(outputDirPath, ".jpeg"));
+      File outFile =generateOutputFile(outputDirPath, ".jpeg");
+      logger.println("Writing file %s", entFormat.format(outFile).toString());
+      ImageIO.write(image, "jpeg", outFile);
     }
     if (enableBmp) {
-      ImageIO.write(image, "bmp", generateOutputFile(outputDirPath, ".bmp"));
+      File outFile =generateOutputFile(outputDirPath, ".bmp");
+      logger.println("Writing file %s", entFormat.format(outFile).toString());
+      ImageIO.write(image, "bmp", outFile);
     }
 
   }
