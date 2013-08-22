@@ -22,6 +22,7 @@ import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
@@ -35,7 +36,7 @@ import java.util.Map;
 public class CustomRendererRegistry implements CustomVertexRenderer {
   private DbObjectMarshaller marshaller;
   private EntityDisplayNameRegistry displayNameFactories;
-  private VisualizationViewer<DBObject, DBObject> visualiser;
+  private BasicVisualizationServer<DBObject, DBObject> visualiser;
 
   /**
    * A set of node types to custom visualisation providers.
@@ -72,7 +73,7 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
   }
 
   @Override
-  public void setVisualiser(VisualizationViewer<DBObject, DBObject> visualiser) {
+  public void setVisualiser(BasicVisualizationServer<DBObject, DBObject> visualiser) {
     this.visualiser = visualiser;
   }
 

@@ -22,6 +22,7 @@ import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 
 import javax.swing.*;
@@ -52,7 +53,7 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   protected final DbObjectMarshaller marshaller;
   protected final EntityDisplayNameRegistry displayNameFactory;
 
-  protected final VisualizationViewer<V, E> vv;
+  protected final BasicVisualizationServer<V, E> vv;
   protected final V vertexData;
 
   protected int iconWidth;
@@ -63,12 +64,12 @@ public class DefaultNodeIcon<V extends DBObject, E extends DBObject> implements 
   private Color unpickedColour;
 
   public DefaultNodeIcon(DbObjectMarshaller marshaller, EntityDisplayNameRegistry displayNameFactory,
-                         VisualizationViewer<V, E> vv, V vertexData) {
+                         BasicVisualizationServer<V, E> vv, V vertexData) {
     this(marshaller, displayNameFactory, vv, vertexData, DEFAULT_PICKED_COLOUR, DEFAULT_UNPICKED_COLOUR);
   }
 
   public DefaultNodeIcon(DbObjectMarshaller marshaller, EntityDisplayNameRegistry displayNameFactory,
-                         VisualizationViewer<V, E> vv, V vertexData, Color pickedColour, Color unpickedColour) {
+                         BasicVisualizationServer<V, E> vv, V vertexData, Color pickedColour, Color unpickedColour) {
     this.marshaller = marshaller;
     this.displayNameFactory = displayNameFactory;
     this.vv = vv;

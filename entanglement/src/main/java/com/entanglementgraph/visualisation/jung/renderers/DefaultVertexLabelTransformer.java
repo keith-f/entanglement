@@ -22,6 +22,7 @@ import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
@@ -38,10 +39,10 @@ public class DefaultVertexLabelTransformer<V extends DBObject, E> implements Tra
 
   protected DbObjectMarshaller marshaller;
   private final EntityDisplayNameRegistry displayNameFactories;
-  private final VisualizationViewer<V, E> vv;
+  private final BasicVisualizationServer<V, E> vv;
   private boolean enabled;
 
-  public DefaultVertexLabelTransformer(VisualizationViewer<V, E> vv, DbObjectMarshaller marshaller,
+  public DefaultVertexLabelTransformer(BasicVisualizationServer<V, E> vv, DbObjectMarshaller marshaller,
                                        EntityDisplayNameRegistry displayNameFactories) {
     this.vv = vv;
     this.marshaller = marshaller;

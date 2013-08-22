@@ -161,4 +161,24 @@ public class TrackingVisualisation {
   public VisualizationViewer<DBObject, DBObject> getJungViewer() {
     return jungViewer;
   }
+
+  public int getLayoutDimensionX() {
+    return layoutDimensionX;
+  }
+
+  public int getLayoutDimensionY() {
+    return layoutDimensionY;
+  }
+
+  public int getDisplayDimensionX() {
+    return displayDimensionX;
+  }
+
+  public int getDisplayDimensionY() {
+    return displayDimensionY;
+  }
+
+  public CustomVertexRenderer getCustomVertexRenderer() {
+    return customVertexRenderer;
+  }
 }
