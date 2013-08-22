@@ -33,6 +33,7 @@ import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
+import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
@@ -42,13 +43,16 @@ import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.StaticLayout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.VisualizationImageServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
+import edu.uci.ics.jung.visualization.layout.LayoutTransition;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
+import edu.uci.ics.jung.visualization.util.Animator;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -95,6 +99,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     params.add(new OptionalParam("enable-png", Boolean.class, Boolean.FALSE.toString(), "If set true, saves an image of the destination graph as a PNG file."));
     params.add(new OptionalParam("enable-jpeg", Boolean.class, Boolean.FALSE.toString(), "If set true, saves an image of the destination graph as a JPEG file."));
     params.add(new OptionalParam("enable-bmp", Boolean.class, Boolean.FALSE.toString(), "If set true, saves an image of the destination graph as a BMP file."));
+    params.add(new OptionalParam("export-animation-seconds", Long.class, "15", "Sets the length of time (in seconds) that layout algorithms are run for (used only for image file exports)."));
 
     return params;
   }
@@ -112,6 +117,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   private boolean enablePng;
   private boolean enableJpeg;
   private boolean enableBmp;
+  private long exportAnimationSeconds;
   protected String outputDirPath;
 
   boolean track;
@@ -120,7 +126,6 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   private int displaySizeX;
   private int displaySizeY;
 
-//  private TrackingVisualisation trackingVisualisation;
   private JungGraphFrame frame;
 
   @Override
@@ -145,6 +150,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     enablePng = parsedArgs.get("enable-png").parseValueAsBoolean();
     enableJpeg = parsedArgs.get("enable-jpeg").parseValueAsBoolean();
     enableBmp = parsedArgs.get("enable-bmp").parseValueAsBoolean();
+    exportAnimationSeconds = parsedArgs.get("export-animation-seconds").parseValueAsLong();
 
 
 
@@ -258,7 +264,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     // Export to image
     BufferedImage image = (BufferedImage) vis.getImage(
         new Point2D.Double(vis.getGraphLayout().getSize().getWidth() / 2,
-            vis.getGraphLayout().getSize().getHeight() / 2),
+        vis.getGraphLayout().getSize().getHeight() / 2),
         new Dimension(vis.getGraphLayout().getSize()));
 
     if (enablePng) {
@@ -289,6 +295,16 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     return outputFile;
   }
 
+  protected File generateOutputFile(String directory, String extension, int xDim, int yDim, int animationSeconds) {
+    File outputDir = new File(directory);
+    if (!outputDir.exists()) {
+      boolean success = outputDir.mkdirs();
+    }
+    String startNodeDisplayName = displayNameFactories.createNameForEntity(cursor.getPosition());
+    File outputFile = new File(outputDir, startNodeDisplayName+"-"+xDim+"x"+yDim+"-"+animationSeconds+"s"+extension);
+    return outputFile;
+  }
+
 
   private VisualizationViewer<DBObject, DBObject> createVisualisationViewerForFileExports(Graph<DBObject, DBObject> graph) {
     /*
@@ -300,6 +316,18 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     VisualizationViewer<DBObject, DBObject> vv =  new VisualizationViewer<>(layout);
     vv.setDoubleBuffered(false);
     customVertexRenderers.setVisualiser(vv);
+
+//    StaticLayout<DBObject, DBObject> staticLayout = new StaticLayout<>(graph, layout, new Dimension(layoutSizeX, layoutSizeY));
+    LayoutTransition<DBObject, DBObject> lt =
+        new LayoutTransition<>(vv, vv.getGraphLayout(), vv.getGraphLayout());
+    logger.println("Animating the image export layout for %s seconds ...", entFormat.format(exportAnimationSeconds).toString());
+    Animator animator = new Animator(lt);
+    animator.setSleepTime(1);
+    animator.start();
+//    logger.println("Waiting for animation to finish");
+    ThreadUtils.sleep(exportAnimationSeconds * 1000);
+    animator.stop();
+    logger.println("Animation finished.");
     return vv;
   }
 
