@@ -60,6 +60,7 @@ import java.util.logging.Logger;
  */
 public class GraphConnectionFactory {
   private static final Logger logger = Logger.getLogger(GraphConnectionFactory.class.getName());
+  public static final String DEFAULT_TMP_DB_NAME = "temp";
 
   private static final Map<String, MongoClient> mongoPools = new HashMap<>();
 
@@ -159,18 +160,5 @@ public class GraphConnectionFactory {
       throw new GraphConnectionFactoryException("Failed to connect to Entanglement", e);
     }
   }
-
-//  @SuppressWarnings("UnusedDeclaration")
-//  public static void silentClose(GraphConnection conn) {
-//    if (conn == null) {
-//      return;
-//    }
-//    try {
-//      conn.getMongo().close();
-//    } catch (Exception e) {
-//      logger.info("Failed to close connection. Nothing we can do here. Ignoring this problem, but stack trace follows");
-//      e.printStackTrace();
-//    }
-//  }
 
 }

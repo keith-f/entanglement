@@ -18,7 +18,6 @@ package com.entanglementgraph.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.cursor.GraphCursorException;
-import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
@@ -27,11 +26,8 @@ import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoUtils;
-import com.entanglementgraph.util.TxnUtils;
+import com.entanglementgraph.util.*;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.*;
@@ -63,8 +59,13 @@ public class DepthFirstGraphIterator {
   private static final int DEFAULT_BATCH_SIZE = 5000;
 
   private int batchSize = DEFAULT_BATCH_SIZE;
-  private final List<EntityRule> rules;
-  private final EntityRule defaultRule;
+
+  private final List<EntityRule> highPriorityRules;
+  private final List<EntityRule> normalRules;
+  private final List<EntityRule> lowPriorityRules;
+
+  private final List<EntityRule> allRules; // The combined list of high priority, normal, and low priority rules
+//  private final EntityRule defaultRule;
 
 
   private final EntanglementRuntime runtime;
@@ -83,8 +84,8 @@ public class DepthFirstGraphIterator {
    * iterating over edges that we've already seen. Eventually, this information should be stored in a temporary
    * MongoDB collection because large graphs won't all fit into memory.
    */
-  private final Set<String> seenEdgeUids;
-  private final Map<String, Set<String>> seenEdgeNames;
+//  private final Set<String> seenEdgeUids;
+//  private final Map<String, Set<String>> seenEdgeNames;
 
 
   public DepthFirstGraphIterator(GraphConnection sourceGraph, GraphConnection destinationGraph,
@@ -95,13 +96,28 @@ public class DepthFirstGraphIterator {
     this.runtime = runtime;
     this.cursorContext = cursorContext;
     this.addStartNode = addStartNode;
-    rules = new LinkedList<>();
+    highPriorityRules = new LinkedList<>();
+    normalRules = new LinkedList<>();
+    lowPriorityRules = new LinkedList<>();
+    allRules = new LinkedList<>();
     this.graphUpdates = new LinkedList<>();
 
 
-    this.seenEdgeUids = new HashSet<>();
-    this.seenEdgeNames = new HashMap<>();
-    this.defaultRule = new DefaultRule();
+//    this.seenEdgeUids = new HashSet<>();
+//    this.seenEdgeNames = new HashMap<>();
+
+
+    // Add default rules
+    addHighPriorityRule(new StopIfSeenEdgeOrDestNodeRule());
+    addLowPriorityRule(new AddByDefaultRule());
+  }
+
+  public void addHighPriorityRule(EntityRule rule) {
+    rule.setSourceGraph(sourceGraph);
+    rule.setDestinationGraph(destinationGraph);
+    rule.setEntanglementRuntime(runtime);
+    rule.setCursorContext(cursorContext);
+    highPriorityRules.add(rule);
   }
 
   public void addRule(EntityRule rule) {
@@ -109,7 +125,15 @@ public class DepthFirstGraphIterator {
     rule.setDestinationGraph(destinationGraph);
     rule.setEntanglementRuntime(runtime);
     rule.setCursorContext(cursorContext);
-    rules.add(rule);
+    normalRules.add(rule);
+  }
+
+  public void addLowPriorityRule(EntityRule rule) {
+    rule.setSourceGraph(sourceGraph);
+    rule.setDestinationGraph(destinationGraph);
+    rule.setEntanglementRuntime(runtime);
+    rule.setCursorContext(cursorContext);
+    lowPriorityRules.add(rule);
   }
 
 
@@ -120,21 +144,27 @@ public class DepthFirstGraphIterator {
    * @throws GraphCursorException
    */
   public void execute(GraphCursor start) throws GraphIteratorException {
+    // Re-create 'all rules', by adding the rules from the other datasets
+    allRules.clear();
+    allRules.addAll(highPriorityRules);
+    allRules.addAll(normalRules);
+    allRules.addAll(lowPriorityRules);
+
+    // Inform all rules that we're about to start graph walking
+    try {
+      for (EntityRule rule : allRules) {
+        graphUpdates.addAll(rule.iterationStarted(start.getName(), start.getPosition()));
+      }
+    } catch(Exception e) {
+      throw new GraphIteratorException("Failed rule initialisation step", e);
+    }
+
     try {
       // Begin database transaction
       txnId = TxnUtils.beginNewTransaction(destinationGraph);
       txnPart = 0;
     } catch(Exception e) {
       throw new GraphIteratorException("Failed to start transaction", e);
-    }
-
-    // Inform all rules that we're about to start graph walking
-    try {
-      for (EntityRule rule : rules) {
-        graphUpdates.addAll(rule.iterationStarted(start.getName(), start.getPosition()));
-      }
-    } catch(Exception e) {
-      throw new GraphIteratorException("Failed rule initialisation step", e);
     }
 
     // Start iterations
@@ -146,11 +176,11 @@ public class DepthFirstGraphIterator {
       }
 
       // Iterate child nodes recursively
-      addChildNodes(start.getName(), 0, null);
+      addChildNodes(start.getName(), 0);
 
       // Inform all rules that we've finished graph walking
       try {
-        for (EntityRule rule : rules) {
+        for (EntityRule rule : allRules) {
           graphUpdates.addAll(rule.iterationFinished(start.getName()));
         }
       } catch(Exception e) {
@@ -170,23 +200,30 @@ public class DepthFirstGraphIterator {
     }
   }
 
-  private void addChildNodes(String cursorName, int currentDepth, EntityKeys<? extends Node> previousPosition)
+  private void addChildNodes(String cursorName, int currentDepth)
       throws GraphCursorException, GraphIteratorException, DbObjectMarshallerException, RevisionLogException, RuleException {
     if (killSwitchActive) {
       return;
     }
     GraphCursor current = getCurrentCursorPosition(cursorName);
-    processEdges(cursorName, currentDepth, previousPosition, current.getPosition(), false,
+    logger.info(String.format("We are here: %s, with an edge depth of: %d. Running rule 'pre edge iteration' checks.",
+        current.getPosition(), currentDepth));
+    EntityRule.NextEdgeIteration preIterationInstruction =
+        executePreIterationRules(cursorName, currentDepth, current.getPosition());
+    if (preIterationInstruction != EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+      return;
+    }
+
+    logger.info(String.format("We are here: %s, with an edge depth of: %d. Going to iterate edges from this node.",
+        current.getPosition(), currentDepth));
+    processEdges(cursorName, currentDepth, current.getPosition(), false,
         current.iterateAndResolveEdgeDestPairs(sourceGraph, false));
-//        current.iterateAndResolveIncomingEdgeDestPairs(sourceGraph));
     current = getCurrentCursorPosition(cursorName);
-    processEdges(cursorName, currentDepth, previousPosition, current.getPosition(), true,
+    processEdges(cursorName, currentDepth, current.getPosition(), true,
         current.iterateAndResolveEdgeDestPairs(sourceGraph, true));
-//        current.iterateAndResolveOutgoingEdgeDestPairs(sourceGraph));
   }
 
   private void processEdges(String cursorName, int currentDepth,
-                            EntityKeys<? extends Node> previousPosition,
                             EntityKeys<? extends Node> currentPosition,
                             boolean outgoingEdges, Iterable<GraphCursor.NodeEdgeNodeTuple> edges)
       throws RevisionLogException, DbObjectMarshallerException, GraphIteratorException, GraphCursorException, RuleException {
@@ -198,41 +235,43 @@ public class DepthFirstGraphIterator {
         writeUpdates();
       }
 
-      BasicDBObject remoteNode = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
-      BasicDBObject edge = nen.getRawEdge();
+      BasicDBObject localNodeDoc = outgoingEdges ? nen.getRawSourceNode() : nen.getRawDestinationNode();
+      BasicDBObject edgeDoc = nen.getRawEdge();
+      BasicDBObject remoteNodeDoc = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
 
-      EntityKeys<Node> remoteNodeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), remoteNode, GraphEntityDAO.FIELD_KEYS);
-      EntityKeys<Edge> edgeId = MongoUtils.parseKeyset(sourceGraph.getMarshaller(), edge, GraphEntityDAO.FIELD_KEYS);
+      Edge edge = sourceGraph.getMarshaller().deserialize(edgeDoc, Edge.class);
+      EntityKeys<Node> localNodeId = outgoingEdges ? edge.getFrom() : edge.getTo();
+      EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
 
       // FIXME for now, we're just caching 'seen' edges in memory. We need to store these in a temporary mongo collection for large graphs
-      if (seenEdge(edgeId)) {
-        continue;
-      }
-      cacheEdgeIds(edgeId);
+//      logger.info("Seen edge? "+seenEdge(edge.getKeys())+" (current depth: "+currentDepth+"): "+edge
+//          +"\n:  * Known IDs: "+seenEdgeUids
+//          +"\n:  * Known names: "+seenEdgeNames.get(edge.getKeys().getType()));
+//      if (seenEdge(edge.getKeys())) {
+//        continue;
+//      }
+//      cacheEdgeIds(edge.getKeys());
 
       EntityRule.NextEdgeIteration nextIterationDecision =
-          executeRules(cursorName, currentDepth, currentPosition, nen, outgoingEdges, remoteNodeId, edgeId);
+          executeRules(cursorName, currentDepth, currentPosition, edge.getKeys(), outgoingEdges, remoteNodeId,
+              localNodeDoc, edgeDoc, remoteNodeDoc);
 
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
-          // Step the cursor to the next level deep
-          GraphCursor current = getCurrentCursorPosition(cursorName);
-          GraphCursor nextLevel = current.stepToNode(cursorContext, remoteNodeId);
-          addChildNodes(cursorName, currentDepth+1, current.getPosition());
+          // Step the cursor from 'here' to the next level down
+          GraphCursor here = getCurrentCursorPosition(cursorName);
+          GraphCursor child = here.stepToNode(cursorContext, remoteNodeId); // Child ref not currently needed
+          addChildNodes(cursorName, currentDepth+1);
+          // After we've done with this child, jump back to its parent (i.e., 'here')
+          getCurrentCursorPosition(cursorName).jump(cursorContext, here.getPosition());
           break;
         case TERMINATE_BRANCH:
-          // Simply do nothing here. We'll skip over the children of the current remote node
+          // Simply do nothing here. We'll skip over the children of the remote node
           break;
         case TERMINATE:
           killSwitchActive = true;
           break;
-
       }
-    }
-    // We've finished iterating the children of this node. Step back to the parent (if there is one).
-    if (previousPosition != null) {
-      GraphCursor current = getCurrentCursorPosition(cursorName);
-      current.jump(cursorContext, previousPosition);
     }
   }
 
@@ -244,58 +283,65 @@ public class DepthFirstGraphIterator {
     }
     return current;
   }
-
-  private void cacheEdgeIds(EntityKeys<Edge> edgeKeys) {
-    seenEdgeUids.addAll(edgeKeys.getUids());
-
-    if (edgeKeys.getNames().isEmpty()) {
-      return;
-    }
-
-    Set<String> names = seenEdgeNames.get(edgeKeys.getType());
-    if (names == null) {
-      names = new HashSet<>();
-      seenEdgeNames.put(edgeKeys.getType(), names);
-    }
-    names.addAll(edgeKeys.getNames());
-  }
-
-  private boolean seenEdge(EntityKeys<Edge> edgeKey) {
-    for (String edgeUid : edgeKey.getUids()) {
-      if (seenEdgeUids.contains(edgeUid)) {
-        return true;
-      }
-    }
-
-    Set<String> names = seenEdgeNames.get(edgeKey.getType());
-    if (names == null) {
-      return false;
-    }
-    for (String edgeName : edgeKey.getNames()) {
-      if (names.contains(edgeName)) {
-        return true;
-      }
-    }
-    return false;
-  }
   
   private void writeUpdates() throws RevisionLogException {
-    logger.info("Writing "+graphUpdates.size()+" graph update commands to the destination graph");
+    logger.info(String.format("Writing %d graph update commands to the destination graph", graphUpdates.size()));
 
     TxnUtils.submitTxnPart(destinationGraph, txnId, txnPart, graphUpdates);
     txnPart++;
     graphUpdates.clear();
   }
 
-  protected EntityRule.NextEdgeIteration executeRules(String cursorName, int currentDepth,
-          EntityKeys<? extends Node> currentPosition, GraphCursor.NodeEdgeNodeTuple nenTuple,
-          boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId)
+  protected EntityRule.NextEdgeIteration executePreIterationRules(
+      String cursorName, int currentEdgeDepth, EntityKeys<? extends Node> currentPosition) throws RuleException, GraphIteratorException {
+    // If there are no rules, or no rules have special requirements, then go ahead with edge iteration.
+    EntityRule.NextEdgeIteration instruction = EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL;
+
+    // Override the default if a rule requires it
+    for (EntityRule rule : allRules) {
+      EntityRule.HandlerAction result = rule.preEdgeIteration(cursorName, currentEdgeDepth, currentPosition);
+      graphUpdates.addAll(result.getOperations());
+      if (result.isProcessFurtherRules() &&
+          result.getNextIterationBehaviour() != EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL) {
+        // We can't not 'continue as normal' AND process other rules, since further rules might conflict
+        throw new GraphIteratorException(
+            "A rule cannot have ProcessFurtherRules="+result.isProcessFurtherRules() +
+                " at the same time as NextIterationBehaviour="+ EntityRule.NextEdgeIteration.CONTINUE_AS_NORMAL);
+      }
+      if (!result.isProcessFurtherRules()) {
+        // No further rules need to be processed for this edge iteration.
+        instruction = result.getNextIterationBehaviour();
+      }
+    }
+
+    switch (instruction) {
+      case CONTINUE_AS_NORMAL:
+      case TERMINATE_BRANCH:
+        // Simply do nothing for these cases.
+        break;
+      case TERMINATE:
+        // We need to flip the kill switch if a rule told us to stop all iteration.
+        killSwitchActive = true;
+        break;
+    }
+
+    return instruction;
+  }
+
+  protected EntityRule.NextEdgeIteration executeRules
+      (String cursorName, int currentDepth,
+       EntityKeys<? extends Node> currentPosition,
+       EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+       EntityKeys<? extends Node> remoteNodeId,
+       BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
         throws GraphIteratorException, RuleException {
 
-    for (EntityRule rule : rules) {
-      if (rule.ruleMatches(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId)) {
+    for (EntityRule rule : allRules) {
+      if (rule.ruleMatches(cursorName, currentDepth, currentPosition, edgeId, outgoingEdge, remoteNodeId,
+          rawLocalNode, rawEdge, rawRemoteNode)) {
         EntityRule.HandlerAction result =
-            rule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
+            rule.apply(cursorName, currentDepth, currentPosition, edgeId, outgoingEdge, remoteNodeId,
+                rawLocalNode, rawEdge, rawRemoteNode);
         graphUpdates.addAll(result.getOperations());
 
 
@@ -314,10 +360,11 @@ public class DepthFirstGraphIterator {
     }
 
     // No rule in the list matched this node. Apply the default rule
-    EntityRule.HandlerAction result =
-        defaultRule.apply(cursorName, currentDepth, currentPosition, nenTuple, outgoingEdge, nodeId, edgeId);
-    graphUpdates.addAll(result.getOperations());
-    return result.getNextIterationBehaviour();
+    throw new GraphIteratorException("No rule matched the current edge. Depth: "+currentDepth
+        + ". Current location: "+currentPosition
+        + ". Edge: " + edgeId
+        + ". Remote node: "+remoteNodeId
+        + ".\nPerhaps you forgot to include a default 'catch all' rule?");
   }
 
 }

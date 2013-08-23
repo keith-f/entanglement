@@ -19,9 +19,6 @@ package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -29,10 +26,9 @@ import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,7 +38,7 @@ import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
  * To change this template use File | Settings | File Templates.
  */
 public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
-
+  private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   @Override
   public String getDescription() {
@@ -70,8 +66,9 @@ public class UseCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
       runtime.setCurrentCursorName(cursor.getName());
 
+
       Message result = new Message(channel);
-      result.println("Current cursor set to: %s", formatCursorName(cursorName));
+      result.println("Current cursor set to: %s", entFormat.formatCursorName(cursorName).toString());
       return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);

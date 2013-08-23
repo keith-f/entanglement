@@ -25,6 +25,8 @@ import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.revlog.commands.NodeModification;
 import com.mongodb.BasicDBObject;
 
+import java.util.logging.Logger;
+
 /**
  * A rule that causes graph iterations to stop when a particular depth (steps away from the starting node)
  * is reached.
@@ -32,6 +34,7 @@ import com.mongodb.BasicDBObject;
  * @author Keith Flanagan
  */
 public class StopAfterDepthRule extends AbstractRule {
+  private static final Logger logger = Logger.getLogger(StopAfterDepthRule.class.getName());
   private final int targetDepth;
 
   public StopAfterDepthRule(int targetDepth) {
@@ -39,16 +42,35 @@ public class StopAfterDepthRule extends AbstractRule {
   }
 
   @Override
-  public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException  {
-    return currentDepth > targetDepth;
+  public HandlerAction preEdgeIteration(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition) throws RuleException {
+    /*
+     * Greater than or equal, since if the 'current' depth is already the target depth, then there's no point in
+     * iterating any edges
+     */
+    if (currentDepth >= targetDepth) {
+      HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+      return action;
+    }
+    return super.preEdgeIteration(cursorName, currentDepth, currentPosition);
   }
 
   @Override
-  public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+//    logger.info(String.format("Current depth: %d; Target depth: %d; Current position: %s; Remote node: %s\n" +
+//        "Edge: %s", currentDepth, targetDepth, currentPosition, remoteNodeId, edgeId));
+    return currentDepth >= targetDepth;
+  }
+
+  @Override
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
     return action;
   }

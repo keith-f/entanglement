@@ -127,10 +127,16 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildFromNodeQuery(from);
     //Add a restriction on the type of edge returned
     query.put(FIELD_KEYS_TYPE, edgeType);
-    query.putAll(customQuery);
+    if (customQuery != null) {
+      query.putAll(customQuery);
+    }
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
-      return col.find(query).skip(offset).limit(limit).sort(sort);
+      if (sort != null) {
+        return col.find(query).skip(offset).limit(limit).sort(sort);
+      } else {
+        return col.find(query).skip(offset).limit(limit);
+      }
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }
@@ -203,10 +209,16 @@ public class EdgeDAOSeparateDocImpl
     DBObject query = buildToNodeQuery(to);
     //Add a restriction on the type of edge returned
     query.put(FIELD_KEYS_TYPE, edgeType);
-    query.putAll(customQuery);
+    if (customQuery != null) {
+      query.putAll(customQuery);
+    }
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
     try {
-      return col.find(query).skip(offset).limit(limit).sort(sort);
+      if (sort != null) {
+        return col.find(query).skip(offset).limit(limit).sort(sort);
+      } else {
+        return col.find(query).skip(offset).limit(limit);
+      }
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform database operation:\nQuery: " + query, e);
     }

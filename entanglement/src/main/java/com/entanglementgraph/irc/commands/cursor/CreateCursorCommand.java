@@ -17,19 +17,16 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import static com.entanglementgraph.irc.commands.cursor.CursorCommandUtils.*;
+import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils;
-import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -38,7 +35,7 @@ import java.util.List;
  * @author Keith Flanagan
  */
 public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
-
+  private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
   @Override
   public String getDescription() {
@@ -77,8 +74,10 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
-    BotLogger logger = new BotLogger(bot, channel, cursorName, cursorName);
-    logger.infoln("Created new graph cursor: %s at location: %s",cursorName, nodeLocation);
+
+    logger.infoln("Created new graph cursor: %s at location: %s",
+        entFormat.formatCursorName(cursorName).toString(),
+        entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
 
     try {
       GraphCursor newCursor = new GraphCursor(cursorName, nodeLocation);
@@ -89,8 +88,8 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
       runtime.getCursorRegistry().addCursor(newCursor);
 
       String outputText = String.format("New cursor %s created at node: %s",
-          formatCursorName(cursorName),
-          formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
+          entFormat.formatCursorName(cursorName).toString(),
+          entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames)).toString();
 
       Message result = new Message(channel);
       result.println(outputText);

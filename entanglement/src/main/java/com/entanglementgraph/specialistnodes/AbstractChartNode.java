@@ -44,6 +44,8 @@ public class AbstractChartNode extends Node {
     STACKED_XY_AREA,
     TIMESERIES,
     XY_AREA,
+    XY_STEP_AREA,
+    XY_STEP,
     XY_BAR,
     XY_LINE
   }
@@ -51,6 +53,7 @@ public class AbstractChartNode extends Node {
   private String chartTitle;
   private String axisTitleX;
   private String axisTitleY;
+  private boolean displayLegend;
   private ChartType suggestedType;
 
   public AbstractChartNode() {
@@ -96,5 +99,13 @@ public class AbstractChartNode extends Node {
 
   public void setSuggestedType(ChartType suggestedType) {
     this.suggestedType = suggestedType;
+  }
+
+  public boolean isDisplayLegend() {
+    return displayLegend;
+  }
+
+  public void setDisplayLegend(boolean displayLegend) {
+    this.displayLegend = displayLegend;
   }
 }

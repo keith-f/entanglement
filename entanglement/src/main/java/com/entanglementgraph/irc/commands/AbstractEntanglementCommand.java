@@ -19,7 +19,10 @@ package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
@@ -27,6 +30,7 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
+import com.scalesinformatics.util.UidGenerator;
 
 import java.util.List;
 
@@ -49,6 +53,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   protected GraphCursor cursor;
   protected GraphCursor.CursorContext cursorContext;
 
+  protected final IrcEntanglementFormat entFormat;
 
 
   protected static enum Requirements {
@@ -72,6 +77,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   protected AbstractEntanglementCommand(Requirements... requirements)
   {
+    entFormat = new IrcEntanglementFormat();
     for (Requirements req : requirements) {
       switch (req) {
         case GRAPH_CONN_NEEDED:
@@ -90,6 +96,10 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     if (graphConnNeeded) {
       graphConnName = parsedArgs.get("conn").getStringValue();
       graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(state.getUserObject(), graphConnName);
+      // Make sure that graphConnName reflects the chosen connection, even if no name was specified by the user
+      if (graphConn != null) {
+        graphConnName = state.getUserObject().getCurrentConnectionName();
+      }
     }
     if (graphCursorNeeded) {
       cursorName = parsedArgs.get("cursor").getStringValue();
@@ -100,6 +110,22 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
       }
       cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
     }
+  }
+
+  /**
+   * Creates a graph connection intended for local, temporary use. Usages might include temporarily extracting
+   * a subset of nodes/edges for display or export purposes.
+   * This method creates temporary graph collections within the default MongoDB database used for such graphs
+   * (usually, 'temp'),
+   *
+   * @param tempClusterName the name of a MongoDB cluster to use for storing the graph.
+   * @return a graph connection on the specified database cluster.
+   * @throws GraphConnectionFactoryException
+   */
+  protected GraphConnection createTemporaryGraphConnection(String tempClusterName)
+      throws GraphConnectionFactoryException {
+    GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
+    return factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
   }
 
 }

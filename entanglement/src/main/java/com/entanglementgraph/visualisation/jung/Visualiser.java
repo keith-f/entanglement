@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.visualisation.jung;
 
+import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -24,7 +25,6 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
 import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
-import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 
@@ -33,6 +33,7 @@ import java.awt.*;
 /**
  *
  * @author Keith Flanagan
+ * @deprecated Use <code>TrackingVisualisation</code> instead
  */
 public class Visualiser {
 
@@ -43,17 +44,20 @@ public class Visualiser {
    */
   private VisualizationViewer<DBObject, DBObject> vv;
 
-  public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexRenderer customVertexRenderer) {
+  public Visualiser(Graph<DBObject, DBObject> graph, CustomVertexRenderer customVertexRenderer,
+                    int layoutDimensionX, int layoutDimensionY,
+                    int displayDimensionX, int displayDimensionY) {
     this.graph = graph;
-    customVertexRenderer.setVisualiser(this);
+
 
     Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
-    layout.setSize(new Dimension(800, 800));
+    layout.setSize(new Dimension(layoutDimensionX, layoutDimensionY));
 //    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
     vv =  new VisualizationViewer<>(layout);
+    customVertexRenderer.setVisualiser(vv);
     vv.setDoubleBuffered(true);
 
-    vv.setPreferredSize(new Dimension(850,850)); //Sets the viewing area size
+    vv.setPreferredSize(new Dimension(displayDimensionX, displayDimensionY)); //Sets the viewing area size
     vv.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
     vv.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     vv.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));

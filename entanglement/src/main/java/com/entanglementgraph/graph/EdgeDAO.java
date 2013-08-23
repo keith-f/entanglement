@@ -137,8 +137,8 @@ public interface EdgeDAO
   public DBCursor iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
-  public Iterable<DBObject> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
-                                                 Integer offset, Integer limit, DBObject customQuery, DBObject sort)
+  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
+                                     Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
   /**

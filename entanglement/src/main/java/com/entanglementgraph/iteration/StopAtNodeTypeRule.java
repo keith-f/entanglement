@@ -27,7 +27,8 @@ import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
 
 /**
- * A rule that causes graph iterations to stop when a particular node type is encountered.
+ * A rule that causes graph iterations to stop when a particular (remote) node type at the end of the current
+ * edge is encountered.
  * The rule can be configured to include or exclude the target node type in the destination graph, as desired.
  *
  * User: keith
@@ -45,22 +46,25 @@ public class StopAtNodeTypeRule extends AbstractRule {
   }
 
   @Override
-  public boolean ruleMatches(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException  {
-    return nodeId.getType().equals(nodeType);
+  public boolean ruleMatches(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+    return remoteNodeId.getType().equals(nodeType);
   }
 
   @Override
-  public HandlerAction apply(String cursorName, int currentDepth, EntityKeys<? extends Node> currentPosition,
-                             GraphCursor.NodeEdgeNodeTuple nenTuple,
-                             boolean outgoingEdge, EntityKeys<Node> nodeId, EntityKeys<Edge> edgeId) throws RuleException {
+  public HandlerAction apply(String cursorName, int currentDepth,
+                             EntityKeys<? extends Node> currentPosition,
+                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+                             EntityKeys<? extends Node> remoteNodeId,
+                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
     HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
-    BasicDBObject remoteNode = outgoingEdge ? nenTuple.getRawDestinationNode() : nenTuple.getRawSourceNode();
 
     if (includeNodeInDestination) {
-      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, remoteNode));
-      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, nenTuple.getRawEdge()));
+      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
     }
 
     return action;

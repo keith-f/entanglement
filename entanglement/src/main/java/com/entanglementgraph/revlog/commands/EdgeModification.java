@@ -68,6 +68,9 @@ public class EdgeModification
   {
     this.mergePol = MergePolicy.NONE;
     this.edge = edge;
+    if (edge == null) {
+      throw new RuntimeException("The specified edge was NULL!");
+    }
   }
   
   public EdgeModification(MergePolicy mergePol, BasicDBObject edge)
@@ -87,6 +90,9 @@ public class EdgeModification
 
   public void setEdge(BasicDBObject edge) {
     this.edge = edge;
+    if (edge == null) {
+      throw new RuntimeException("The specified edge was NULL!");
+    }
   }
 
   public MergePolicy getMergePol() {

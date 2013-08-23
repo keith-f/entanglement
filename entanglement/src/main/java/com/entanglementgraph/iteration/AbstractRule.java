@@ -66,6 +66,15 @@ abstract public class AbstractRule implements EntityRule {
   }
 
   @Override
+  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth,
+                                        EntityKeys<? extends Node> currentPosition) throws RuleException {
+    // The default action is to perform no action, and not to affect other rules.
+    HandlerAction defaultAction = new HandlerAction();
+    defaultAction.setProcessFurtherRules(true);
+    return defaultAction;
+  }
+
+  @Override
   public List<GraphOperation> iterationFinished(String cursorName)
       throws RuleException {
     return new LinkedList<>();

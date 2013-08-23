@@ -20,13 +20,9 @@ package com.entanglementgraph.visualisation.jung.renderers;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.visualisation.jung.*;
 import com.mongodb.DBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import org.apache.commons.collections15.Transformer;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.DefaultCategoryDataset;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -35,23 +31,12 @@ import java.util.logging.Logger;
 /**
  * @author Keith Flanagan
  */
-public class CategoryDatasetChartRenderer implements CustomVertexRenderer {
+public class CategoryDatasetChartRenderer extends DefaultVertexRenderer {
   private static final Logger logger = Logger.getLogger(CategoryDatasetChartRenderer.class.getName());
 
-  private Visualiser visualiser;
-
-  private DbObjectMarshaller marshaller;
-
   private Transformer<DBObject, Icon> iconTransformer;
-  private DefaultVertexLabelTransformer defaultVertexLabelTransformer;
 
   public CategoryDatasetChartRenderer() {
-  }
-
-  @Override
-  public void setVisualiser(Visualiser visualiser) {
-    this.visualiser = visualiser;
-    defaultVertexLabelTransformer = new DefaultVertexLabelTransformer(visualiser.getVv());
   }
 
   @Override
@@ -86,23 +71,4 @@ public class CategoryDatasetChartRenderer implements CustomVertexRenderer {
     return iconTransformer;
   }
 
-//  @Override
-//  public Transformer<DBObject, Shape> getVertexShapeTransformer() {
-//    return null;  //To change body of implemented methods use File | Settings | File Templates.
-//  }
-
-  @Override
-  public Transformer<DBObject, String> getVertexLabelTransformer() {
-    return defaultVertexLabelTransformer;
-  }
-
-  @Override
-  public Transformer<DBObject, String> getTooltipTransformer() {
-    return defaultVertexLabelTransformer;
-  }
-
-  @Override
-  public void setMarshaller(DbObjectMarshaller marshaller) {
-    this.marshaller = marshaller;
-  }
 }
