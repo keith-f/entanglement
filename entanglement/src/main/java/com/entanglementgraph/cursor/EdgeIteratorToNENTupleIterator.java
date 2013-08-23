@@ -111,11 +111,12 @@ public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.Node
             //This is probably a 'hanging' edge - we have the node reference, but no node exists.
             logger.info("Potential hanging edge found: "+queryKeys);
             if (fillNodeDocsOfHangingEdges) {
-              BasicDBObject filler = new BasicDBObject();
-              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
-              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
-              logger.info("Created 'filler' document for missing node: "+filler);
-              queryNode = filler;
+//              BasicDBObject filler = new BasicDBObject();
+//              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
+//              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
+//              logger.info("Created 'filler' document for missing node: "+filler);
+//              queryNode = filler;
+              queryNode = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, queryKeys);
             }
           }
 

@@ -358,8 +358,13 @@ public class GraphCursor implements Serializable {
     BasicDBObject nodeDoc;
     try {
       nodeDoc = conn.getNodeDao().getByKey(position);
+      if (nodeDoc == null) {
+        nodeDoc = VirtualNodeFactory.createVirtualNodeForLocation(conn.getMarshaller(), position);
+      }
     } catch (GraphModelException e) {
       throw new GraphCursorException("Failed to query database", e);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphCursorException("Failed to create virtual node", e);
     }
     if (nodeDoc == null) {
       throw new GraphCursorException("The current position could not be resolved (no database object exists) for: "+position);

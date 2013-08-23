@@ -19,6 +19,7 @@
 package com.entanglementgraph.visualisation.jung;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.cursor.VirtualNodeFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.GraphModelException;
@@ -304,12 +305,16 @@ public class MongoToJungGraphExporter {
     DBObject fromNodeObj = getDBObjectNodeFromCache(edge.getFrom());
     DBObject toNodeObj = getDBObjectNodeFromCache(edge.getTo());
 
-//    logger.info("Adding Jung edge. Edge: "+edgeObj+"\nFrom: "+fromNodeObj+"\nTo: "+toNodeObj);
+    // Deal with hanging edges. We haven't come across these yet, because previously we only iterated of the set of existing nodes.
     if (fromNodeObj == null) {
-      throw new DbObjectMarshallerException("The resolved 'from' DBObject was NULL for edge: "+edge.toString());
+//      throw new DbObjectMarshallerException("The resolved 'from' DBObject was NULL for edge: "+edge.toString());
+      fromNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getFrom());
+      cacheDBObject(edge.getFrom(), fromNodeObj);
     }
     if (toNodeObj == null) {
-      throw new DbObjectMarshallerException("The resolved 'to' DBObject was NULL for edge: "+edge.toString());
+//      throw new DbObjectMarshallerException("The resolved 'to' DBObject was NULL for edge: "+edge.toString());
+      toNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getTo());
+      cacheDBObject(edge.getTo(), toNodeObj);
     }
     graph.addEdge(edgeObj, fromNodeObj, toNodeObj, EdgeType.DIRECTED);
   }

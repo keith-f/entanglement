@@ -108,8 +108,8 @@ public class DepthFirstGraphIterator {
 
 
     // Add default rules
-    highPriorityRules.add(new StopIfSeenEdgeOrDestNodeRule());
-    lowPriorityRules.add(new AddByDefaultRule());
+    addHighPriorityRule(new StopIfSeenEdgeOrDestNodeRule());
+    addLowPriorityRule(new AddByDefaultRule());
   }
 
   public void addHighPriorityRule(EntityRule rule) {
@@ -283,40 +283,6 @@ public class DepthFirstGraphIterator {
     }
     return current;
   }
-
-//  private void cacheEdgeIds(EntityKeys<Edge> edgeKeys) {
-//    seenEdgeUids.addAll(edgeKeys.getUids());
-//
-//    if (edgeKeys.getNames().isEmpty()) {
-//      return;
-//    }
-//
-//    Set<String> names = seenEdgeNames.get(edgeKeys.getType());
-//    if (names == null) {
-//      names = new HashSet<>();
-//      seenEdgeNames.put(edgeKeys.getType(), names);
-//    }
-//    names.addAll(edgeKeys.getNames());
-//  }
-
-//  private boolean seenEdge(EntityKeys<Edge> edgeKey) {
-//    for (String edgeUid : edgeKey.getUids()) {
-//      if (seenEdgeUids.contains(edgeUid)) {
-//        return true;
-//      }
-//    }
-//
-//    Set<String> names = seenEdgeNames.get(edgeKey.getType());
-//    if (names == null) {
-//      return false;
-//    }
-//    for (String edgeName : edgeKey.getNames()) {
-//      if (names.contains(edgeName)) {
-//        return true;
-//      }
-//    }
-//    return false;
-//  }
   
   private void writeUpdates() throws RevisionLogException {
     logger.info(String.format("Writing %d graph update commands to the destination graph", graphUpdates.size()));
