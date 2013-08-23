@@ -33,7 +33,6 @@ import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
-import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
@@ -41,24 +40,8 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.algorithms.layout.StaticLayout;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.visualization.VisualizationImageServer;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
-import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
-import edu.uci.ics.jung.visualization.layout.LayoutTransition;
-import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
-import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
-import edu.uci.ics.jung.visualization.util.Animator;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -173,38 +156,25 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
         destination = createTemporaryGraphConnection(tempCluster);
       }
 
-      bot.infoln(channel, "Exporting a subgraph from %s to %s", graphConnName, destination.getGraphName());
+      // Renderers are used for GUI and file export visualisations.
+      configureDefaultRenderers();
 
-      walker.setRuntime(state.getUserObject());
-      walker.setCursorContext(cursorContext);
-      walker.setSourceGraph(graphConn);
-      walker.setDestinationGraph(destination);
-      walker.setStartPosition(cursor);
+      CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
+          logger, state.getUserObject(), graphConn, destination, walker, cursor.getPosition());
+      worker.setCustomVertexRenderers(customVertexRenderers);
+      worker.setDisplayNameFactories(displayNameFactories);
+      worker.setDisplaySizeX(displaySizeX);
+      worker.setDisplaySizeY(displaySizeY);
+      worker.setEnableBmp(enableBmp);
+      worker.setEnableGui(enableGui);
+      worker.setEnableJpeg(enableJpeg);
+      worker.setEnablePng(enablePng);
+      worker.setExportAnimationSeconds(exportAnimationSeconds);
+      worker.setLayoutSizeX(layoutSizeX);
+      worker.setLayoutSizeY(layoutSizeY);
+      worker.setOutputDirPath(outputDirPath);
 
-      walker.initialise();
-      walker.execute();
-
-      logger.println("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
-          graphConnName, walker.getClass().getName(),
-          destination.getPoolName(), destination.getDatabaseName(), destination.getGraphName());
-
-
-      Graph<DBObject, DBObject> jungGraph = null;
-      if (enableGui || enablePng || enableBmp || enableJpeg) {
-        logger.println("Creating in-memory JUNG representation of the destination Entanglement graph: %s", destination.getGraphName());
-        // Renderers are used for GUI and file export visualisations.
-        configureDefaultRenderers();
-        jungGraph = entanglementToJung(destination);
-      }
-
-
-      if (enableGui) {
-        runGui(jungGraph);
-      }
-
-      if (enablePng || enableBmp || enableJpeg) {
-        doImageFileExports(jungGraph, outputDirPath);
-      }
+      worker.run();
 
       Message msg = new Message(channel, "Completed.");
       return msg;
@@ -212,7 +182,6 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
-
 
   /**
    * If custom renderers (eg, set by a subclass) have not been configured, then create default ones instead.
@@ -255,99 +224,6 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       frame.getFrame().setVisible(true);
     }
   }
-
-
-  private void doImageFileExports(Graph<DBObject, DBObject> jungGraph, String outputDirPath) throws IOException {
-    VisualizationViewer<DBObject, DBObject> vv = createVisualisationViewerForFileExports(jungGraph);
-    VisualizationImageServer<DBObject, DBObject> vis = createImageServerForFileExports(vv);
-
-    // Export to image
-    BufferedImage image = (BufferedImage) vis.getImage(
-        new Point2D.Double(vis.getGraphLayout().getSize().getWidth() / 2,
-        vis.getGraphLayout().getSize().getHeight() / 2),
-        new Dimension(vis.getGraphLayout().getSize()));
-
-    if (enablePng) {
-      File outFile =generateOutputFile(outputDirPath, ".png", layoutSizeX, layoutSizeY, exportAnimationSeconds);
-      logger.println("Writing file %s", entFormat.format(outFile).toString());
-      ImageIO.write(image, "png", outFile);
-    }
-    if (enableJpeg) {
-      File outFile =generateOutputFile(outputDirPath, ".jpeg", layoutSizeX, layoutSizeY, exportAnimationSeconds);
-      logger.println("Writing file %s", entFormat.format(outFile).toString());
-      ImageIO.write(image, "jpeg", outFile);
-    }
-    if (enableBmp) {
-      File outFile =generateOutputFile(outputDirPath, ".bmp", layoutSizeX, layoutSizeY, exportAnimationSeconds);
-      logger.println("Writing file %s", entFormat.format(outFile).toString());
-      ImageIO.write(image, "bmp", outFile);
-    }
-
-  }
-
-  protected File generateOutputFile(String directory, String extension) {
-    File outputDir = new File(directory);
-    if (!outputDir.exists()) {
-      boolean success = outputDir.mkdirs();
-    }
-    String startNodeDisplayName = displayNameFactories.createNameForEntity(cursor.getPosition());
-    File outputFile = new File(outputDir, startNodeDisplayName+extension);
-    return outputFile;
-  }
-
-  protected File generateOutputFile(String directory, String extension, int xDim, int yDim, long animationSeconds) {
-    File outputDir = new File(directory);
-    if (!outputDir.exists()) {
-      boolean success = outputDir.mkdirs();
-    }
-    String startNodeDisplayName = displayNameFactories.createNameForEntity(cursor.getPosition());
-    File outputFile = new File(outputDir, startNodeDisplayName+"-"+xDim+"x"+yDim+"-"+animationSeconds+"s"+extension);
-    return outputFile;
-  }
-
-
-  private VisualizationViewer<DBObject, DBObject> createVisualisationViewerForFileExports(Graph<DBObject, DBObject> graph) {
-    /*
-     * Create an exporter-specific layout an VisualisationViewer here. We can't just use a TrackingVisualisation
-     * here because we'd get artifacts from the animation present in the exported image file.
-     */
-    Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
-    layout.setSize(new Dimension(layoutSizeX, layoutSizeY));
-    VisualizationViewer<DBObject, DBObject> vv =  new VisualizationViewer<>(layout);
-    vv.setDoubleBuffered(false);
-    customVertexRenderers.setVisualiser(vv);
-
-//    StaticLayout<DBObject, DBObject> staticLayout = new StaticLayout<>(graph, layout, new Dimension(layoutSizeX, layoutSizeY));
-    LayoutTransition<DBObject, DBObject> lt =
-        new LayoutTransition<>(vv, vv.getGraphLayout(), vv.getGraphLayout());
-    logger.println("Animating the image export layout for %s seconds ...", entFormat.format(exportAnimationSeconds).toString());
-    Animator animator = new Animator(lt);
-    animator.setSleepTime(1);
-    animator.start();
-//    logger.println("Waiting for animation to finish");
-    ThreadUtils.sleep(exportAnimationSeconds * 1000);
-    animator.stop();
-    logger.println("Animation finished.");
-    return vv;
-  }
-
-  private VisualizationImageServer<DBObject, DBObject> createImageServerForFileExports(VisualizationViewer<DBObject, DBObject> vv) {
-    // Create a VisualizationImageServer
-    // vv is the VisualizationViewer containing the Jung graph (within the tracking visualisation)
-    VisualizationImageServer<DBObject, DBObject> vis =
-        new VisualizationImageServer<>(vv.getGraphLayout(), vv.getGraphLayout().getSize());
-
-    vis.getRenderContext().setVertexLabelTransformer(customVertexRenderers.getVertexLabelTransformer());
-    vis.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
-    vis.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
-
-    vis.getRenderContext().setVertexIconTransformer(customVertexRenderers.getVertexIconTransformer());
-    vis.getRenderContext().setVertexFillPaintTransformer(new PickableVertexPaintTransformer<>(vis.getPickedVertexState(), Color.white, Color.yellow));
-    vis.getRenderContext().setEdgeDrawPaintTransformer(new PickableEdgePaintTransformer<>(vis.getPickedEdgeState(), Color.black, Color.lightGray));
-
-    return vis;
-  }
-
 
   public EntityDisplayNameRegistry getDisplayNameFactories() {
     return displayNameFactories;
