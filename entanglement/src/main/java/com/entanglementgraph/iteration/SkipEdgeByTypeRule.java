@@ -19,6 +19,8 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.revlog.commands.MergePolicy;
+import com.entanglementgraph.revlog.commands.NodeModification;
 import com.mongodb.BasicDBObject;
 
 import java.util.logging.Logger;
@@ -28,6 +30,8 @@ import java.util.logging.Logger;
  * at a given type here, but excluding it from the target graph, and continuing the graph iteration as if nothing had
  * happened.
  *
+ * Even though the edge is skipped, you can optionally specify whether one or both of the nodes are added instead.
+ *
  * User: keith
  * Date: 25/07/13; 16:06
  *
@@ -36,10 +40,19 @@ import java.util.logging.Logger;
 public class SkipEdgeByTypeRule extends AbstractRule {
   private static final Logger logger = Logger.getLogger(SkipEdgeByTypeRule.class.getName());
 
-  private String targetEdgeType;
+  public static enum Option {
+    INCLUDE_FROM_NODE,
+    INCLUDE_TO_NODE,
+    INCLUDE_LOCAL_NODE,
+    INCLUDE_REMOTE_NODE;
+  }
 
-  public SkipEdgeByTypeRule(String targetEdgeType) {
+  private String targetEdgeType;
+  private Option[] options;
+
+  public SkipEdgeByTypeRule(String targetEdgeType, Option... options) {
     this.targetEdgeType = targetEdgeType;
+    this.options = options;
   }
 
   @Override
@@ -60,6 +73,29 @@ public class SkipEdgeByTypeRule extends AbstractRule {
     HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
     action.setProcessFurtherRules(false);
     logger.info("Excluding edge based on type: "+targetEdgeType);
+
+
+    BasicDBObject fromNode = outgoingEdge ? rawLocalNode : rawRemoteNode;
+    BasicDBObject toNode = !outgoingEdge ? rawLocalNode : rawRemoteNode;
+    for (Option option : options) {
+      switch (option) {
+        case INCLUDE_FROM_NODE:
+          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, fromNode));
+          break;
+        case INCLUDE_TO_NODE:
+          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, toNode));
+          break;
+        case INCLUDE_LOCAL_NODE:
+          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawLocalNode));
+          break;
+        case INCLUDE_REMOTE_NODE:
+          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawRemoteNode));
+          break;
+        default:
+          throw new RuleException("Unsupported option type: "+option);
+      }
+    }
+
     return action;
   }
 }
