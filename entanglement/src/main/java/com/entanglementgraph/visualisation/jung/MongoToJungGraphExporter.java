@@ -297,11 +297,20 @@ public class MongoToJungGraphExporter {
 
 
   private void addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
+    if (edgeObj == null) {
+      throw new DbObjectMarshallerException("The specified edge DBObject was null!");
+    }
     Edge edge = marshaller.deserialize(edgeObj, Edge.class);
     DBObject fromNodeObj = getDBObjectNodeFromCache(edge.getFrom());
     DBObject toNodeObj = getDBObjectNodeFromCache(edge.getTo());
 
 //    logger.info("Adding Jung edge. Edge: "+edgeObj+"\nFrom: "+fromNodeObj+"\nTo: "+toNodeObj);
+    if (fromNodeObj == null) {
+      throw new DbObjectMarshallerException("The resolved 'from' DBObject was NULL for edge: "+edge.toString());
+    }
+    if (toNodeObj == null) {
+      throw new DbObjectMarshallerException("The resolved 'to' DBObject was NULL for edge: "+edge.toString());
+    }
     graph.addEdge(edgeObj, fromNodeObj, toNodeObj, EdgeType.DIRECTED);
   }
 
