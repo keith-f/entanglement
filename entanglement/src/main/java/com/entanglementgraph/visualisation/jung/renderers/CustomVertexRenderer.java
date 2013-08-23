@@ -47,4 +47,5 @@ public interface CustomVertexRenderer {
 //  public Transformer<DBObject, Shape> getVertexShapeTransformer();
   public Transformer<DBObject, String> getVertexLabelTransformer();
   public Transformer<DBObject, String> getTooltipTransformer();
+//  public Transformer<DBObject, String> getEdgeLabelTransformer();
 }

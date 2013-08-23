@@ -81,6 +81,11 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
     return defaultVertexLabelTransformer;
   }
 
+//  @Override
+//  public Transformer<DBObject, String> getEdgeLabelTransformer() {
+//    return defaultEdgeLabelTransformer;
+//  }
+
   @Override
   public void setMarshaller(DbObjectMarshaller marshaller) {
     this.marshaller = marshaller;

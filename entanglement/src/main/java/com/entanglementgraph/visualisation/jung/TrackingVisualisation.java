@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.visualisation.jung;
 
+import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
@@ -33,6 +34,7 @@ import edu.uci.ics.jung.visualization.layout.LayoutTransition;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 import edu.uci.ics.jung.visualization.util.Animator;
+import org.apache.commons.collections15.Transformer;
 
 import java.awt.*;
 
@@ -121,6 +123,13 @@ public class TrackingVisualisation {
     jungViewer.getRenderContext().setVertexLabelTransformer(customVertexRenderer.getVertexLabelTransformer());
     jungViewer.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     jungViewer.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
+//    jungViewer.getRenderContext().setEdgeLabelTransformer(customVertexRenderer.getEdgeLabelTransformer());
+    jungViewer.getRenderContext().setEdgeLabelTransformer(new Transformer<DBObject, String>() {
+      @Override
+      public String transform(DBObject dbObject) {
+        return (String) dbObject.get(GraphEntityDAO.FIELD_KEYS_TYPE);
+      }
+    });
 
     jungViewer.getRenderContext().setVertexIconTransformer(customVertexRenderer.getVertexIconTransformer());
 //    jungViewer.getRenderContext().setVertexShapeTransformer(customVertexRenderer.getVertexShapeTransformer());

@@ -107,6 +107,16 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
     };
   }
 
+//  @Override
+//  public Transformer<DBObject, String> getEdgeLabelTransformer() {
+//    return new Transformer<DBObject, String>() {
+//      @Override
+//      public String transform(DBObject data) {
+//        return findRendererForValue(data).getTooltipTransformer().transform(data);
+//      }
+//    };
+//  }
+
   /**
    * Given a DBObject (representing an Entanglement node), return an existing renderer, or instantiate a new one
    * if we haven't seen this data item before.
