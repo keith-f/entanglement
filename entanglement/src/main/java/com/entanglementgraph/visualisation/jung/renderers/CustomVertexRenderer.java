@@ -42,6 +42,7 @@ public interface CustomVertexRenderer {
   public void setVisualiser(BasicVisualizationServer<DBObject, DBObject> visualiser);
   public void setMarshaller(DbObjectMarshaller marshaller);
   public void setDisplayNameFactories(EntityDisplayNameRegistry displayNameFactories);
+  public EntityDisplayNameRegistry getDisplayNameFactories();
 
   public Transformer<DBObject, Icon> getVertexIconTransformer();
 //  public Transformer<DBObject, Shape> getVertexShapeTransformer();

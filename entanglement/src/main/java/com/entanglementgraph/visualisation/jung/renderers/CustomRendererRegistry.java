@@ -68,6 +68,11 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
     this.displayNameFactories = displayNameFactories;
   }
 
+  @Override
+  public EntityDisplayNameRegistry getDisplayNameFactories() {
+    return displayNameFactories;
+  }
+
   public void addTypeToRendererMapping(String nodeType, Class<? extends CustomVertexRenderer> renderer) {
     entanglementTypeToAppearance.put(nodeType, renderer);
   }

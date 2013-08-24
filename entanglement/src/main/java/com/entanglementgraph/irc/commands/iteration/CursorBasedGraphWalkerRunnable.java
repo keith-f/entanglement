@@ -23,25 +23,18 @@ import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.iteration.CursorBasedGraphWalker;
-import com.entanglementgraph.iteration.GraphWalkerException;
 import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.specialistnodes.CategoryChartNode;
-import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
-import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
-import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
-import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.BotCommandException;
-import com.scalesinformatics.uibot.commands.UserException;
 import com.scalesinformatics.util.UidGenerator;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -191,12 +184,12 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
 
     if (frame == null) {
       //This is the first refresh. We need a JFrame to display the visualisation.
-      frame = new JungGraphFrame(trackingVis.getJungViewer());
+      frame = new JungGraphFrame(logger, trackingVis, trackingVis.getJungViewer());
       frame.getFrame().setVisible(true);
     }
   }
 
-
+  //FIXME delete this - it's now in JungToBufferedImage
   private void doImageFileExports(Graph<DBObject, DBObject> jungGraph, String outputDirPath) throws IOException {
     VisualizationViewer<DBObject, DBObject> vv = createVisualisationViewerForFileExports(jungGraph);
     VisualizationImageServer<DBObject, DBObject> vis = createImageServerForFileExports(vv);
@@ -245,7 +238,7 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
     return outputFile;
   }
 
-
+  //FIXME delete this - it's now in JungToBufferedImage
   private VisualizationViewer<DBObject, DBObject> createVisualisationViewerForFileExports(Graph<DBObject, DBObject> graph) {
     /*
      * Create an exporter-specific layout an VisualisationViewer here. We can't just use a TrackingVisualisation
@@ -270,7 +263,7 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
     logger.println("Animation finished.");
     return vv;
   }
-
+  //FIXME delete this - it's now in JungToBufferedImage
   private VisualizationImageServer<DBObject, DBObject> createImageServerForFileExports(VisualizationViewer<DBObject, DBObject> vv) {
     // Create a VisualizationImageServer
     // vv is the VisualizationViewer containing the Jung graph (within the tracking visualisation)

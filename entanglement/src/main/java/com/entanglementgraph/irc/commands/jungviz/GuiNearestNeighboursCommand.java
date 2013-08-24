@@ -30,6 +30,7 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
+import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
@@ -57,7 +58,7 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
+//  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
 
   @Override
   public String getDescription() {
@@ -220,7 +221,7 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
 
       if (frame == null) {
         //This is the first refresh. We need a JFrame to display the visualisation.
-        frame = new JungGraphFrame(trackingVisualisation.getJungViewer());
+        frame = new JungGraphFrame(logger, trackingVisualisation, trackingVisualisation.getJungViewer());
         frame.getFrame().setVisible(true);
       }
 

@@ -95,4 +95,9 @@ public class DefaultVertexRenderer implements CustomVertexRenderer {
   public void setDisplayNameFactories(EntityDisplayNameRegistry displayNameFactories) {
     this.displayNameFactories = displayNameFactories;
   }
+
+  @Override
+  public EntityDisplayNameRegistry getDisplayNameFactories() {
+    return displayNameFactories;
+  }
 }

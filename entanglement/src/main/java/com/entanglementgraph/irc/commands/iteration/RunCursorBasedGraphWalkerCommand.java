@@ -26,7 +26,7 @@ import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
-import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
@@ -220,7 +220,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
     if (frame == null) {
       //This is the first refresh. We need a JFrame to display the visualisation.
-      frame = new JungGraphFrame(trackingVis.getJungViewer());
+      frame = new JungGraphFrame(logger, trackingVis, trackingVis.getJungViewer());
       frame.getFrame().setVisible(true);
     }
   }

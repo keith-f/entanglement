@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.visualisation.jung;
+package com.entanglementgraph.visualisation.jung.export;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cursor.VirtualNodeFactory;
@@ -39,18 +39,13 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.EdgeType;
-import edu.uci.ics.jung.io.GraphFile;
 import edu.uci.ics.jung.io.GraphMLWriter;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.freehep.graphics2d.VectorGraphics;
 import org.freehep.graphicsio.svg.SVGGraphics2D;
-import org.w3c.dom.Element;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -84,6 +79,13 @@ public class MongoToJungGraphExporter {
 
   }
 
+  public MongoToJungGraphExporter(Graph<DBObject, DBObject> existing) {
+    uidToNode = new HashMap<>();
+    typeToNameToNode = new HashMap<>();
+    this.graph = existing;
+
+  }
+
   public void clearGraph() {
     graph = new DirectedSparseGraph<>();
 
@@ -100,6 +102,7 @@ public class MongoToJungGraphExporter {
     writer.save(graph, fw);
     fw.flush();
     fw.close();
+    logger.info("Written: " + outputFile.getAbsolutePath());
   }
 
 
@@ -136,11 +139,12 @@ public class MongoToJungGraphExporter {
 
     Properties p = new Properties();
     p.setProperty("PageSize","A5");
-    VectorGraphics g = new SVGGraphics2D(new File("Output.svg"), new Dimension(400,300));
+    VectorGraphics g = new SVGGraphics2D(outputFile, new Dimension(400,300));
     g.setProperties(p);
     g.startExport();
     vv.print(g);
     g.endExport();
+    logger.info("Written: " + outputFile.getAbsolutePath());
   }
 
 
