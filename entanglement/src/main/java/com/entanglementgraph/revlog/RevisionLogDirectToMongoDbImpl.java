@@ -291,4 +291,7 @@ public class RevisionLogDirectToMongoDbImpl
     return new DeserialisingIterable<>(cursor, marshaller, RevisionItemContainer.class);
   }
 
+  public DBCollection getRevLogCol() {
+    return revLogCol;
+  }
 }

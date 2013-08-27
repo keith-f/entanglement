@@ -21,6 +21,7 @@ package com.entanglementgraph.revlog;
 import java.util.List;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.data.RevisionItemContainer;
+import com.mongodb.DBCollection;
 
 /**
  * This interface defines the operations that can be performed on a revision
@@ -125,4 +126,6 @@ public interface RevisionLog
   public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(String graphId, String branchId);
   
 //  public Iterable<RevisionItem> iterateCommittedRevisionsForGraph(String graphId, String branchId, long fromRevId);
+
+  public DBCollection getRevLogCol();
 }
