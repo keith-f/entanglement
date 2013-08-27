@@ -153,7 +153,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   protected void disposeOfTempConnection(GraphConnection tmpConnection) throws GraphConnectionFactoryException {
     logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
-    if (!graphConn.getGraphName().startsWith("tmp_")) {
+    if (!tmpConnection.getGraphName().startsWith("tmp_")) {
       throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
         + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
     }
