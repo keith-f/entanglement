@@ -63,7 +63,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Runs the specified"+ CursorBasedGraphWalker.class.getSimpleName()+" implementation, which iterates " +
+    txt.append("Runs the specified "+ CursorBasedGraphWalker.class.getSimpleName()+" implementation, which iterates " +
         "over a source graph, performs some queries or executes some rules before writing the results into a " +
         "destination graph.");
     return txt.toString();

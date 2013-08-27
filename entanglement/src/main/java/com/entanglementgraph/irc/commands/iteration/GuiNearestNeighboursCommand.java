@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands.jungviz;
+package com.entanglementgraph.irc.commands.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;

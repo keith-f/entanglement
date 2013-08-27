@@ -21,7 +21,7 @@ import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
-import com.entanglementgraph.irc.commands.jungviz.GuiNearestNeighboursCommand;
+import com.entanglementgraph.irc.commands.iteration.GuiNearestNeighboursCommand;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
