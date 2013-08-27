@@ -18,7 +18,7 @@
 package com.entanglementgraph.irc.commands.jungviz;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.irc.commands.iteration.CursorBasedGraphWalkerRunnable;
+import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
 import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
@@ -31,7 +31,7 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
-import com.entanglementgraph.visualisation.jung.imageexport.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
@@ -45,7 +45,6 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.scalesinformatics.util.UidGenerator;
 
 import java.util.List;
 

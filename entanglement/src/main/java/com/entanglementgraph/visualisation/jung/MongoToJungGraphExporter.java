@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.visualisation.jung.imageexport;
+package com.entanglementgraph.visualisation.jung;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cursor.VirtualNodeFactory;
@@ -335,7 +335,7 @@ public class MongoToJungGraphExporter {
    *
    */
   public void addEntireGraph(GraphConnection graphConn)
-      throws IOException, GraphModelException, RevisionLogException, DbObjectMarshallerException {
+      throws GraphModelException, DbObjectMarshallerException {
 
     for (DBObject node : graphConn.getNodeDao().iterateAll()) {
       addNode(node);

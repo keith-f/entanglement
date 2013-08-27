@@ -20,7 +20,7 @@ package com.entanglementgraph.visualisation.jung;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.visualisation.jung.imageexport.ImageUtil;
 import com.entanglementgraph.visualisation.jung.imageexport.JungToBufferedImage;
-import com.entanglementgraph.visualisation.jung.imageexport.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.imageexport.OutputFileUtil;
 import com.mongodb.DBObject;
 import com.scalesinformatics.uibot.BotLogger;
