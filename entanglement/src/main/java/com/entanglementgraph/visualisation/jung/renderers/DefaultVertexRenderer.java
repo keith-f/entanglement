@@ -17,7 +17,6 @@
 package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.graph.data.GraphEntity;
-import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;

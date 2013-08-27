@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung.export;
+package com.entanglementgraph.visualisation.jung.imageexport;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

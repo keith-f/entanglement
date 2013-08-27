@@ -26,7 +26,7 @@ import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
-import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.imageexport.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;

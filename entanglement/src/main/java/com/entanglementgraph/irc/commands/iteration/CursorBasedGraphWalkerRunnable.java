@@ -26,7 +26,7 @@ import com.entanglementgraph.iteration.CursorBasedGraphWalker;
 import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
-import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.imageexport.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
@@ -56,9 +56,14 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * A runnable for executing a graph walker.
+ * A runnable for executing a graph walker. This class takes a <code>CursorBasedGraphWalker</code> and manages
+ * its execution with a provided Entanglement environment. Data is taken from a source graph, and written to
+ * a destination graph. This class also manages the creation and removal of a temporary graph cursor to be used
+ * for the iteration.
  *
- * FIXME there is far too much functionality here. We should be running walkers only. Move export code elsewhere.
+ * This class is convenient for situations where you need to run multiple graph walkers in parallel. The extension of
+ * the <code>Runnable</code> interface means that a configured <code>CursorBasedGraphWalkerRunnable</code> can be added
+ * to a thread pool for scheduled execution.
  *
  * User: keith
  * Date: 19/08/13; 15:38
@@ -113,7 +118,6 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
       runtime.getCursorRegistry().addCursor(tmpCursor);
 
       //Configure walker
-
       walker.setRuntime(runtime);
       GraphCursor.CursorContext cursorContext = new GraphCursor.CursorContext(sourceGraph, runtime.getHzInstance());
       walker.setCursorContext(cursorContext);
@@ -121,7 +125,7 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
       walker.setDestinationGraph(destinationGraph);
       walker.setStartPosition(tmpCursor);
 
-      // For for a walk
+      // Go for a walk
       logger.println("Exporting a subgraph from %s to %s", sourceGraph.getGraphName(), destinationGraph.getGraphName());
       walker.initialise();
       walker.execute();

@@ -15,10 +15,9 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung.export;
+package com.entanglementgraph.visualisation.jung.imageexport;
 
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
-import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
@@ -38,7 +37,6 @@ import edu.uci.ics.jung.visualization.util.Animator;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.logging.Logger;
 
 /**
  * @author Keith Flanagan

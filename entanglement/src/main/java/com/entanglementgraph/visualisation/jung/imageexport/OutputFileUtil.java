@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.visualisation.jung.export;
+package com.entanglementgraph.visualisation.jung.imageexport;
 
 import java.io.File;
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.visualisation.jung.export;
+package com.entanglementgraph.visualisation.jung.imageexport;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.cursor.VirtualNodeFactory;

@@ -30,7 +30,7 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
-import com.entanglementgraph.visualisation.jung.export.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.imageexport.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
@@ -47,7 +47,6 @@ import com.scalesinformatics.uibot.commands.UserException;
 import com.scalesinformatics.util.UidGenerator;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * This command opens a JFrame and tracks a specified cursor by displaying lists of incoming/outgoing edges of the
