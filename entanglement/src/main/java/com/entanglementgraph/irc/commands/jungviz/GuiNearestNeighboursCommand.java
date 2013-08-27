@@ -18,7 +18,8 @@
 package com.entanglementgraph.irc.commands.jungviz;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.export.DepthBasedSubgraphCreator;
+import com.entanglementgraph.irc.commands.iteration.CursorBasedGraphWalkerRunnable;
+import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
@@ -234,14 +235,11 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
   private GraphConnection exportSubgraph(GraphCursor graphCursor) throws GraphIteratorException, GraphConnectionFactoryException {
     GraphConnection sourceGraph = graphConn;
     GraphConnection destinationGraph = createTemporaryGraphConnection(tempCluster);
-    DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(
-        sourceGraph, destinationGraph, state.getUserObject(), cursorContext, depth);
+    DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(depth);
+    CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
+        logger, state.getUserObject(), sourceGraph, destinationGraph, exporter, graphCursor.getPosition());
 
-    //Use a throwaway cursor so as not to alter the cursor we're listening to, which may have unintended side effects
-    GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), graphCursor.getPosition());
-    state.getUserObject().getCursorRegistry().addCursor(tmpCursor);
-    exporter.execute(tmpCursor);
-    state.getUserObject().getCursorRegistry().removeCursor(tmpCursor);
+    worker.run();
     return destinationGraph;
   }
 

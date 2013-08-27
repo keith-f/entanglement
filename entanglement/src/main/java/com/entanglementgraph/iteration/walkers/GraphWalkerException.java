@@ -14,7 +14,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.iteration;
+package com.entanglementgraph.iteration.walkers;
 
 /**
  * User: keith
