@@ -16,7 +16,7 @@
  * File created: 15-Nov-2012, 12:29:45
  */
 
-package com.entanglementgraph.export.misc;
+package com.entanglementgraph.visualisation.text;
 
 import com.entanglementgraph.shell.gdfexport.GdfWriter;
 import com.entanglementgraph.util.GraphConnection;
