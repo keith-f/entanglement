@@ -28,4 +28,6 @@ public interface Benchmark extends Runnable {
   public long getTotalTimeMs();
   public int getTotalIterationCount();
   public Exception getError();
+
+  public void printFinalReport();
 }

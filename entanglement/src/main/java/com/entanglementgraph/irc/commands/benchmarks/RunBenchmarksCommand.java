@@ -16,6 +16,8 @@
  */
 package com.entanglementgraph.irc.commands.benchmarks;
 
+import com.entanglementgraph.benchmarks.Benchmark;
+import com.entanglementgraph.benchmarks.CreateAndDestroyCursorsBenchmark;
 import com.entanglementgraph.benchmarks.IterateByTypeBenchmark;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
@@ -26,6 +28,7 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -60,12 +63,21 @@ public class RunBenchmarksCommand extends AbstractEntanglementCommand<Entangleme
   protected Message _processLine() throws UserException, BotCommandException {
     String nodeType = parsedArgs.get("iterate-by-type.type").getStringValue();
 
+    List<Benchmark> benchmarks = new LinkedList<>();
     try {
 
       if (nodeType != null) {
         IterateByTypeBenchmark benchmark = new IterateByTypeBenchmark(
             new BotLogger(bot, channel, IterateByTypeBenchmark.class.getSimpleName()), graphConn, nodeType);
+        benchmarks.add(benchmark);
+      }
+      benchmarks.add(new CreateAndDestroyCursorsBenchmark(logger, state.getUserObject(), 10000));
+
+      logger.infoln("Running benchmarks ... ");
+      for (Benchmark benchmark : benchmarks) {
+        logger.infoln("Running: %s", benchmark.getClass().getName());
         benchmark.run();
+        benchmark.printFinalReport();
       }
 
       Message msg = new Message(channel);

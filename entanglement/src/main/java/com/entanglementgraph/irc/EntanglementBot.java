@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.irc.commands.benchmarks.RunBenchmarksCommand;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
@@ -152,6 +153,8 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     addCommand("gui-nearest-neighbours", GuiNearestNeighboursCommand.class);
     addCommand("run-cursor-based-graph-walker", RunCursorBasedGraphWalkerCommand.class);
     addCommand("list-known-graph-walkers", ListKnownGraphWalkersCommand.class);
+
+    addCommand("run-benchmarks", RunBenchmarksCommand.class);
   }
 
 
