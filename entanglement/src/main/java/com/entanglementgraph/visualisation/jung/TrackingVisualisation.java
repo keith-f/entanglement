@@ -74,6 +74,8 @@ public class TrackingVisualisation {
 
   private UpdateType updateType;
 
+  private Animator animator;
+
   public TrackingVisualisation(CustomVertexRenderer customVertexRenderer, UpdateType updateType,
                                int layoutDimensionX, int layoutDimensionY,
                                int displayDimensionX, int displayDimensionY) {
@@ -105,7 +107,10 @@ public class TrackingVisualisation {
     StaticLayout<DBObject, DBObject> staticLayout = new StaticLayout<>(g, layout);
     LayoutTransition<DBObject, DBObject> lt =
         new LayoutTransition<>(jungViewer, jungViewer.getGraphLayout(), staticLayout);
-    Animator animator = new Animator(lt);
+    if (animator != null) {
+      animator.stop();
+    }
+    animator = new Animator(lt);
     animator.start();
     jungViewer.repaint();
   }
@@ -189,5 +194,9 @@ public class TrackingVisualisation {
 
   public CustomVertexRenderer getCustomVertexRenderer() {
     return customVertexRenderer;
+  }
+
+  public Animator getAnimator() {
+    return animator;
   }
 }

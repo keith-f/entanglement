@@ -14,31 +14,18 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.iteration;
+
+package com.entanglementgraph.visualisation.jung.imageexport;
+
+import java.io.File;
 
 /**
- * User: keith
- * Date: 19/08/13; 15:05
- *
  * @author Keith Flanagan
  */
-public class GraphWalkerException extends Exception {
-  public GraphWalkerException() {
-  }
+public class OutputFileUtil {
 
-  public GraphWalkerException(String message) {
-    super(message);
-  }
-
-  public GraphWalkerException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  public GraphWalkerException(Throwable cause) {
-    super(cause);
-  }
-
-  public GraphWalkerException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-    super(message, cause, enableSuppression, writableStackTrace);
+  public static File createFile(File directory, String baseName, String extension, int xDim, int yDim, long animationSeconds) {
+    File outputFile = new File(directory, baseName+"-"+xDim+"x"+yDim+"-"+animationSeconds+"s"+extension);
+    return outputFile;
   }
 }

@@ -1,4 +1,4 @@
-package com.entanglementgraph.export.gephi;
+package com.entanglementgraph.visualisation.gephi;
 
 import java.awt.*;
 import java.io.File;

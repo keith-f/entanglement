@@ -18,7 +18,6 @@
 package com.entanglementgraph.visualisation.jung.renderers;
 
 import com.entanglementgraph.graph.AbstractGraphEntityDAO;
-import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -66,6 +65,11 @@ public class CustomRendererRegistry implements CustomVertexRenderer {
   @Override
   public void setDisplayNameFactories(EntityDisplayNameRegistry displayNameFactories) {
     this.displayNameFactories = displayNameFactories;
+  }
+
+  @Override
+  public EntityDisplayNameRegistry getDisplayNameFactories() {
+    return displayNameFactories;
   }
 
   public void addTypeToRendererMapping(String nodeType, Class<? extends CustomVertexRenderer> renderer) {

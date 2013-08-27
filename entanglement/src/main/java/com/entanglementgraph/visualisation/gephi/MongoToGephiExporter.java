@@ -16,7 +16,7 @@
  * limitations under the License.
  * 
  */
-package com.entanglementgraph.export.gephi;
+package com.entanglementgraph.visualisation.gephi;
 
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;

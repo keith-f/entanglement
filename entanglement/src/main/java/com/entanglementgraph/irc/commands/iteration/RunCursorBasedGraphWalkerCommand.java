@@ -19,20 +19,24 @@ package com.entanglementgraph.irc.commands.iteration;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.iteration.CursorBasedGraphWalker;
-import com.entanglementgraph.iteration.GraphWalkerException;
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalker;
+import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
+import com.entanglementgraph.iteration.walkers.GraphWalkerException;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
 import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
+import com.entanglementgraph.visualisation.jung.imageexport.ImageUtil;
+import com.entanglementgraph.visualisation.jung.imageexport.JungToBufferedImage;
+import com.entanglementgraph.visualisation.jung.imageexport.OutputFileUtil;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
@@ -42,6 +46,8 @@ import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import edu.uci.ics.jung.graph.Graph;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -57,7 +63,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   @Override
   public String getDescription() {
     StringBuilder txt = new StringBuilder();
-    txt.append("Runs the specified"+ CursorBasedGraphWalker.class.getSimpleName()+" implementation, which iterates " +
+    txt.append("Runs the specified "+ CursorBasedGraphWalker.class.getSimpleName()+" implementation, which iterates " +
         "over a source graph, performs some queries or executes some rules before writing the results into a " +
         "destination graph.");
     return txt.toString();
@@ -83,6 +89,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     params.add(new OptionalParam("enable-jpeg", Boolean.class, Boolean.FALSE.toString(), "If set true, saves an image of the destination graph as a JPEG file."));
     params.add(new OptionalParam("enable-bmp", Boolean.class, Boolean.FALSE.toString(), "If set true, saves an image of the destination graph as a BMP file."));
     params.add(new OptionalParam("export-animation-seconds", Long.class, "15", "Sets the length of time (in seconds) that layout algorithms are run for (used only for image file exports)."));
+    params.add(new OptionalParam("export-filename-base", String.class, "The file name 'stem' to use for image files that are exported. If not specified, the name of the destination graph will be used."));
 
     return params;
   }
@@ -109,6 +116,8 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
   private int displaySizeX;
   private int displaySizeY;
 
+  private String exportFilenameBase;
+
   private JungGraphFrame frame;
 
   @Override
@@ -134,6 +143,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     enableJpeg = parsedArgs.get("enable-jpeg").parseValueAsBoolean();
     enableBmp = parsedArgs.get("enable-bmp").parseValueAsBoolean();
     exportAnimationSeconds = parsedArgs.get("export-animation-seconds").parseValueAsLong();
+    exportFilenameBase = parsedArgs.get("export-filename-base").getStringValue();
 
 
 
@@ -156,27 +166,23 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
         destination = createTemporaryGraphConnection(tempCluster);
       }
 
+      if (exportFilenameBase == null) {
+        exportFilenameBase = destination.getGraphName();
+      }
+
       // Renderers are used for GUI and file export visualisations.
       configureDefaultRenderers();
 
       CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
           logger, state.getUserObject(), graphConn, destination, walker, cursor.getPosition());
-      worker.setCustomVertexRenderers(customVertexRenderers);
-      worker.setDisplayNameFactories(displayNameFactories);
-      worker.setDisplaySizeX(displaySizeX);
-      worker.setDisplaySizeY(displaySizeY);
-      worker.setEnableBmp(enableBmp);
-      worker.setEnableGui(enableGui);
-      worker.setEnableJpeg(enableJpeg);
-      worker.setEnablePng(enablePng);
-      worker.setExportAnimationSeconds(exportAnimationSeconds);
-      worker.setLayoutSizeX(layoutSizeX);
-      worker.setLayoutSizeY(layoutSizeY);
-      worker.setOutputDirPath(outputDirPath);
 
+      // Runs the graph walker. Results have been placed in the destination graph.
       worker.run();
 
-      Message msg = new Message(channel, "Completed.");
+      // Now, optionally run one or more image exporters over the destination graph.
+      runVisualisations(destination.getMarshaller(), destination);
+
+      Message msg = new Message(channel, "Completed. Destination graph is: "+destination.getGraphName());
       return msg;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
@@ -197,21 +203,51 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     }
   }
 
-  private Graph<DBObject, DBObject> entanglementToJung(GraphConnection destGraph)
-      throws DbObjectMarshallerException, RevisionLogException, GraphModelException, IOException {
-    // Create an in-memory Jung graph representation of destGraph.
-    MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
-    dbToJung.addEntireGraph(destGraph);
-    return dbToJung.getGraph();
+  private void runVisualisations(DbObjectMarshaller marshaller, GraphConnection graph)
+      throws DbObjectMarshallerException, GraphModelException, IOException {
+    Graph<DBObject, DBObject> jungGraph = null;
+    if (enableGui || enablePng || enableBmp || enableJpeg) {
+      logger.println("Creating in-memory JUNG representation of the destinationGraph Entanglement graph: %s", graph.getGraphName());
+      MongoToJungGraphExporter dbToJung = new MongoToJungGraphExporter();
+      dbToJung.addEntireGraph(graph);
+      jungGraph = dbToJung.getGraph();
+    }
+
+    if (enableGui) {
+      runGui(jungGraph);
+    }
+
+    if (enablePng || enableBmp || enableJpeg) {
+
+      JungToBufferedImage graphToImage = new JungToBufferedImage(logger,
+          layoutSizeX, layoutSizeY, exportAnimationSeconds, customVertexRenderers, jungGraph);
+      logger.println("Exporting image...");
+      BufferedImage image = graphToImage.createImage();
+      if (enablePng) {
+        File file = OutputFileUtil.createFile(new File("."), exportFilenameBase, ".png",
+            layoutSizeX, layoutSizeY, exportAnimationSeconds);
+        ImageUtil.writePng(image, file);
+        logger.infoln("Written: %s", entFormat.format(file).toString());
+      }
+      if (enableJpeg) {
+        File file = OutputFileUtil.createFile(new File("."), exportFilenameBase, ".jpeg",
+            layoutSizeX, layoutSizeY, exportAnimationSeconds);
+        ImageUtil.writeJpeg(image, file);
+        logger.infoln("Written: %s", entFormat.format(file).toString());
+      }
+      if (enableBmp) {
+        File file = OutputFileUtil.createFile(new File("."), exportFilenameBase, ".bmp",
+            layoutSizeX, layoutSizeY, exportAnimationSeconds);
+        ImageUtil.writeBmp(image, file);
+        logger.infoln("Written: %s", entFormat.format(file).toString());
+      }
+    }
   }
 
   private void runGui(Graph<DBObject, DBObject> jungGraph) {
     // Used for interactive GUIs
     TrackingVisualisation trackingVis = new TrackingVisualisation(
-        customVertexRenderers,
-        track
-            ? TrackingVisualisation.UpdateType.APPEND_ON_CURSOR_MOVE
-            : TrackingVisualisation.UpdateType.REPLACE_ON_CURSOR_MOVE,
+        customVertexRenderers, TrackingVisualisation.UpdateType.REPLACE_ON_CURSOR_MOVE,
         layoutSizeX, layoutSizeY, displaySizeX, displaySizeY);
 
     // Pass this graph to the TrackingVisualisation
@@ -220,7 +256,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
     if (frame == null) {
       //This is the first refresh. We need a JFrame to display the visualisation.
-      frame = new JungGraphFrame(trackingVis.getJungViewer());
+      frame = new JungGraphFrame(logger, trackingVis, trackingVis.getJungViewer());
       frame.getFrame().setVisible(true);
     }
   }

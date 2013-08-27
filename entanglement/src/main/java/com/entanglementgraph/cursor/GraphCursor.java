@@ -280,56 +280,88 @@ public class GraphCursor implements Serializable {
     return cursor;
   }
 
+  public GraphCursor stepToFirstNodeOfType(CursorContext c, String remoteNodeType)
+      throws GraphCursorException {
+    //DBObject chosenEdgeDoc = null;
+    Edge chosenEdge = null;
+    EntityKeys<Node> destination = null;
+    GraphConnection conn = c.getConn();
+    // Choose first matching edge - ends at a node of a specified type.
+    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)) {
+      for (DBObject edgeDoc : dbCursor) {
+        //chosenEdgeDoc = edgeDoc;
+        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+        destination = chosenEdge.getTo();
+        break;
+      }
+    } catch (Exception e) {
+      throw new GraphCursorException("Failed to query database", e);
+    }
+    // If we didn't find a suitable outgoing edge, check for an incoming edge
+    if (chosenEdge == null) {
+      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType)) {
+        for (DBObject edgeDoc : dbCursor) {
+          //chosenEdgeDoc = edgeDoc;
+          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+          destination = chosenEdge.getFrom();
+          break;
+        }
+      } catch (Exception e) {
+        throw new GraphCursorException("Failed to query database", e);
+      }
+    }
+    if (chosenEdge == null) {
+      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+remoteNodeType);
+    }
 
-  //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
-//  public GraphCursor stepToFirstNodeOfType(GraphConnection conn, String nodeType) throws GraphCursorException {
-//    DbObjectMarshaller m = conn.getMarshaller();
-//    Map<String, Object> parameters = new HashMap<>();
-//    parameters.put("nodeType", nodeType);
-//    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, parameters);
-//
-//    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, nodeType)) {
-//      if (!edgeItr.hasNext()) {
-//        return new GraphCursor(name, this, historyItem);
-//      }
-//      DBObject edgeObj = edgeItr.next();
-//      edgeItr.close();
-//
-//      Edge edge = m.deserialize(edgeObj, Edge.class);
-//      historyItem.setVia(edge.getKeys());
-//      historyItem.setDestination(edge.getTo());
-//      return new GraphCursor(name, this, historyItem);
-//    } catch (GraphModelException e) {
-//      throw new GraphCursorException("Failed to query graph.", e);
-//    } catch (DbObjectMarshallerException e) {
-//      throw new GraphCursorException("Failed to deserialise object.", e);
-//    }
-//  }
+    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+    humanReadableProvenanceParams.put("destinationType", remoteNodeType);
 
-  //FIXME check this method - does it do want we want? Do we need it? What about incoming edges?
-//  public GraphCursor stepViaFirstEdgeOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
-//    DbObjectMarshaller m = conn.getMarshaller();
-//    Map<String, Object> parameters = new HashMap<>();
-//    parameters.put("edgeType", edgeType);
-//    HistoryItem historyItem = new HistoryItem(MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, parameters);
-//
-//
-//    try (DBCursor edgeItr = conn.getEdgeDao().iterateEdgesFromNode(edgeType, position)) {
-//      if (!edgeItr.hasNext()) {
-//        return new GraphCursor(name, this, historyItem);
-//      }
-//      DBObject edgeObj = edgeItr.next();
-//
-//      Edge edge = m.deserialize(edgeObj, Edge.class);
-//      historyItem.setVia(edge.getKeys());
-//      historyItem.setDestination(edge.getTo());
-//      return new GraphCursor(name, this, historyItem);
-//    } catch (GraphModelException e) {
-//      throw new GraphCursorException("Failed to query graph.", e);
-//    } catch (DbObjectMarshallerException e) {
-//      throw new GraphCursorException("Failed to deserialise object.", e);
-//    }
-//  }
+    GraphCursor cursor = new GraphCursor(
+        name, MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
+    recordHistoryAndNotify(c.getHz(), cursor);
+    return cursor;
+  }
+
+  public GraphCursor stepToFirstEdgeOfType(CursorContext c, String edgeType)
+      throws GraphCursorException {
+    Edge chosenEdge = null;
+    EntityKeys<Node> destination = null;
+    GraphConnection conn = c.getConn();
+    // Choose first matching outgoing edge.
+    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNode(edgeType, position)) {
+      for (DBObject edgeDoc : dbCursor) {
+        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+        destination = chosenEdge.getTo();
+        break;
+      }
+    } catch (Exception e) {
+      throw new GraphCursorException("Failed to query database", e);
+    }
+    // If we didn't find a suitable outgoing edge, check for an incoming edge
+    if (chosenEdge == null) {
+      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNode(edgeType, position)) {
+        for (DBObject edgeDoc : dbCursor) {
+          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+          destination = chosenEdge.getFrom();
+          break;
+        }
+      } catch (Exception e) {
+        throw new GraphCursorException("Failed to query database", e);
+      }
+    }
+    if (chosenEdge == null) {
+      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+destinationType);
+    }
+
+    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+    humanReadableProvenanceParams.put("edgeType", edgeType);
+
+    GraphCursor cursor = new GraphCursor(
+        name, MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
+    recordHistoryAndNotify(c.getHz(), cursor);
+    return cursor;
+  }
 
   /*
    * Cursor queries

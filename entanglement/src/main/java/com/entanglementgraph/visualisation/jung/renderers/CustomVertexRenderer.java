@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.visualisation.jung.renderers;
 
-import com.entanglementgraph.visualisation.jung.Visualiser;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -42,6 +41,7 @@ public interface CustomVertexRenderer {
   public void setVisualiser(BasicVisualizationServer<DBObject, DBObject> visualiser);
   public void setMarshaller(DbObjectMarshaller marshaller);
   public void setDisplayNameFactories(EntityDisplayNameRegistry displayNameFactories);
+  public EntityDisplayNameRegistry getDisplayNameFactories();
 
   public Transformer<DBObject, Icon> getVertexIconTransformer();
 //  public Transformer<DBObject, Shape> getVertexShapeTransformer();

@@ -1,7 +1,8 @@
-package com.entanglementgraph.iteration;
+package com.entanglementgraph.iteration.walkers;
 
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.iteration.DepthFirstGraphIterator;
 import com.entanglementgraph.util.GraphConnection;
 
 import java.util.ServiceLoader;
@@ -47,7 +48,7 @@ public interface CursorBasedGraphWalker {
 
   public void setRuntime(EntanglementRuntime runtime);
   public void setCursorContext(GraphCursor.CursorContext cursorContext);
-  public void setGraphIterator(DepthFirstGraphIterator graphIterator);
+//  public void setGraphIterator(DepthFirstGraphIterator graphIterator);
   public void setSourceGraph(GraphConnection sourceGraph);
   public void setDestinationGraph(GraphConnection destinationGraph);
   public void setStartPosition(GraphCursor startPosition);

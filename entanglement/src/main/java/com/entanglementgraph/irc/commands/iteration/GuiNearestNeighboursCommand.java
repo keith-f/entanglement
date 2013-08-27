@@ -15,10 +15,11 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands.jungviz;
+package com.entanglementgraph.irc.commands.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.export.DepthBasedSubgraphCreator;
+import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
+import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
@@ -30,6 +31,7 @@ import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
 import com.entanglementgraph.visualisation.jung.*;
+import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
@@ -43,10 +45,8 @@ import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.scalesinformatics.util.UidGenerator;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * This command opens a JFrame and tracks a specified cursor by displaying lists of incoming/outgoing edges of the
@@ -57,7 +57,7 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
+//  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
 
   @Override
   public String getDescription() {
@@ -220,7 +220,7 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
 
       if (frame == null) {
         //This is the first refresh. We need a JFrame to display the visualisation.
-        frame = new JungGraphFrame(trackingVisualisation.getJungViewer());
+        frame = new JungGraphFrame(logger, trackingVisualisation, trackingVisualisation.getJungViewer());
         frame.getFrame().setVisible(true);
       }
 
@@ -234,14 +234,11 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
   private GraphConnection exportSubgraph(GraphCursor graphCursor) throws GraphIteratorException, GraphConnectionFactoryException {
     GraphConnection sourceGraph = graphConn;
     GraphConnection destinationGraph = createTemporaryGraphConnection(tempCluster);
-    DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(
-        sourceGraph, destinationGraph, state.getUserObject(), cursorContext, depth);
+    DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(depth);
+    CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
+        logger, state.getUserObject(), sourceGraph, destinationGraph, exporter, graphCursor.getPosition());
 
-    //Use a throwaway cursor so as not to alter the cursor we're listening to, which may have unintended side effects
-    GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), graphCursor.getPosition());
-    state.getUserObject().getCursorRegistry().addCursor(tmpCursor);
-    exporter.execute(tmpCursor);
-    state.getUserObject().getCursorRegistry().removeCursor(tmpCursor);
+    worker.run();
     return destinationGraph;
   }
 

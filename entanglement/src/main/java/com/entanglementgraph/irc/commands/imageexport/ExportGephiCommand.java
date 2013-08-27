@@ -17,23 +17,18 @@
 
 package com.entanglementgraph.irc.commands.imageexport;
 
-import com.entanglementgraph.export.gephi.MongoToGephiExporter;
+import com.entanglementgraph.visualisation.gephi.MongoToGephiExporter;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
 import java.awt.*;
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
 
 /**
  * Created with IntelliJ IDEA.
