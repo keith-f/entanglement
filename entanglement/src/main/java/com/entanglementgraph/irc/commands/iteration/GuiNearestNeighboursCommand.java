@@ -233,7 +233,7 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
 
   private GraphConnection exportSubgraph(GraphCursor graphCursor) throws GraphIteratorException, GraphConnectionFactoryException {
     GraphConnection sourceGraph = graphConn;
-    GraphConnection destinationGraph = createTemporaryGraphConnection(tempCluster);
+    GraphConnection destinationGraph = createTemporaryGraph(tempCluster);
     DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(depth);
     CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
         logger, state.getUserObject(), sourceGraph, destinationGraph, exporter, graphCursor.getPosition());

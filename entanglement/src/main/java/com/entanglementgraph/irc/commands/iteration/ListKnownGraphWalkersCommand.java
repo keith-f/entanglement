@@ -84,7 +84,7 @@ public class ListKnownGraphWalkersCommand extends AbstractEntanglementCommand<En
 
     int count = 0;
     try {
-      CursorBasedGraphWalker.Provider provider = new CursorBasedGraphWalker.Provider(graphConn.getClassLoader());
+      CursorBasedGraphWalker.Provider provider = new CursorBasedGraphWalker.Provider(state.getUserObject().getClassLoader());
       for (CursorBasedGraphWalker walker : provider.getLoader()) {
         count++;
         entFormat.bullet(2).append(" ").customFormat(walker.getClass().getSimpleName(), Colors.TEAL);
@@ -93,7 +93,7 @@ public class ListKnownGraphWalkersCommand extends AbstractEntanglementCommand<En
     } catch (Exception e) {
       e.printStackTrace();
       throw new BotCommandException(
-          "Failed to iterate implementations of: "+CursorBasedGraphWalker.class.getSimpleName());
+          "Failed to iterate implementations of: "+CursorBasedGraphWalker.class.getSimpleName(), e);
     }
 
     Message msg = new Message(channel);

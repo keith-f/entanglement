@@ -131,7 +131,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    * @return a graph connection on the specified database cluster.
    * @throws GraphConnectionFactoryException
    */
-  protected GraphConnection createTemporaryGraphConnection(String tempClusterName)
+  protected GraphConnection createTemporaryGraph(String tempClusterName)
       throws GraphConnectionFactoryException {
     GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
     GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
@@ -140,18 +140,24 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   }
 
   /**
-   * Same as <code>createTemporaryGraphConnection(String)</code>, except that we use the MongoDB cluster named
+   * Same as <code>createTemporaryGraph(String)</code>, except that we use the MongoDB cluster named
    * on the command line by property 'temp-cluster'. To use this method, you must have specified
    * <code>TEMP_CLUSTER_NAME_NEEDED</code> in the constructor of this <code>AbstractEntanglementCommand</code>.
    * @return
    * @throws GraphConnectionFactoryException
    */
-  protected GraphConnection createTemporaryGraphConnection()
+  protected GraphConnection createTemporaryGraph()
       throws GraphConnectionFactoryException {
-    return createTemporaryGraphConnection(tempClusterName);
+    return createTemporaryGraph(tempClusterName);
   }
 
-  protected void disposeOfTempConnection(GraphConnection tmpConnection) throws GraphConnectionFactoryException {
+  /**
+   * Given a graph connection, deletes all MongoDB collections relating to the connection.  This is a destructive
+   * operation - as a failsafe, only connections with graph names beginning with 'tmp_' will be deleted.
+   * @param tmpConnection
+   * @throws GraphConnectionFactoryException
+   */
+  protected void disposeOfTempGraph(GraphConnection tmpConnection) throws GraphConnectionFactoryException {
     logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
     if (!tmpConnection.getGraphName().startsWith("tmp_")) {
       throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()

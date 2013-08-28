@@ -163,7 +163,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       if (destinationConnName != null) {
         destination = state.getUserObject().createGraphConnectionFor(destinationConnName);
       } else {
-        destination = createTemporaryGraphConnection(tempCluster);
+        destination = createTemporaryGraph(tempCluster);
       }
 
       if (exportFilenameBase == null) {
