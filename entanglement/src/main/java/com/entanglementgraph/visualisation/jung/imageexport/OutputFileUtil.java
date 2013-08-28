@@ -28,4 +28,17 @@ public class OutputFileUtil {
     File outputFile = new File(directory, baseName+"-"+xDim+"x"+yDim+"-"+animationSeconds+"s"+extension);
     return outputFile;
   }
+
+  /**
+   * Convenience function to remove characters from a string that are not usually permitted in filenames
+   * @param rawString
+   * @return
+   */
+  public static String prepareStringForUseAsFilename(String rawString) {
+    return rawString.replace(' ', '_')
+        .replace(':', '_')
+        .replace('`', '_')
+        .replace('"', '_')
+        .replace('\"', '_');
+  }
 }
