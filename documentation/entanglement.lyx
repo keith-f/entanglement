@@ -96,27 +96,199 @@ LatexCommand tableofcontents
 
 \end_layout
 
+\begin_layout Part
+\begin_inset CommandInset label
+LatexCommand label
+name "part:Graphs-and-data"
+
+\end_inset
+
+Graphs and data integration
+\end_layout
+
 \begin_layout Chapter
 Introduction
 \end_layout
 
 \begin_layout Standard
-Entanglement is a high-performance graph database, built on top of MongoDB.
- Entanglement is not a desktop graph browser, rather, it is intended for
- developers who need a programatic means of creating, manipulating and querying
- extremely large graphs.
- Entanglement enables users to create integratable data sets.
+This document is an instruction manual for Entanglement (
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www.entanglementgraph.com
+\end_layout
+
+\end_inset
+
+), a high-performance graph database, built on top of MongoDB
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www.mongodb.org/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ Entanglement is designed from the ground-up to facillitate the creation,
+ manipulation and querying of large graphs -- we currently define `large'
+ as being in the region of hundreds of millions of nodes and edges.
+ Entanglement is primarilly intended for developers who need a programatic
+ means of creating, manipulating and querying extremely large graphs.
+ However, there is growing support for graph visualisation and browsing,
+ akin to desktop data integration systems such as Ondex
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www.ondex.org/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ and Gephi
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://gephi.org/
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Standard
-This document is divided into two parts.
- The first part is indended for Entanglement users, and explains how to
- build and query graphs using the system.
- The second part is intended for developers of the Entanglement system iteself.
+The structure of this document is as follows:
 \end_layout
 
-\begin_layout Part
-User Documentation
+\begin_layout Itemize
+The first part, 
+\begin_inset CommandInset ref
+LatexCommand nameref
+reference "part:Graphs-and-data"
+
+\end_inset
+
+, contains an introduction to graphs and data integration.
+ 
+\end_layout
+
+\begin_layout Itemize
+Then, in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "part:User-DocumentationFirst-steps"
+
+\end_inset
+
+ - 
+\begin_inset CommandInset ref
+LatexCommand nameref
+reference "part:User-DocumentationFirst-steps"
+
+\end_inset
+
+ 
+\begin_inset CommandInset ref
+LatexCommand vpageref
+reference "part:User-DocumentationFirst-steps"
+
+\end_inset
+
+, we describe how to install Entanglement.
+ A number of example programs programs are provided that show how to connect
+ to a database and perform a number of common data intregrations tasks such
+ as imorting and exporting data.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "part:Entanglement-User-Intefaces"
+
+\end_inset
+
+ - 
+\begin_inset CommandInset ref
+LatexCommand nameref
+reference "part:Entanglement-User-Intefaces"
+
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand vpageref
+reference "part:Entanglement-User-Intefaces"
+
+\end_inset
+
+, introduces the Entanglement user interface.
+ In this section, we describe how graphs can be edited and queried in a
+ distributed, collaborative way by several people or software agents simultaneou
+sly.
+ You will also learn how to simultaneously construct different automatically
+ updating views over the same dataset.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "part:Design-patterns-for"
+
+\end_inset
+
+ - 
+\begin_inset CommandInset ref
+LatexCommand nameref
+reference "part:Design-patterns-for"
+
+\end_inset
+
+ 
+\begin_inset CommandInset ref
+LatexCommand vpageref
+reference "part:Design-patterns-for"
+
+\end_inset
+
+, contains information about how to build large graphs in practise by making
+ the most of parallelism and data isolation.
 \end_layout
 
 \begin_layout Chapter
@@ -125,6 +297,20 @@ Graphs
 
 \begin_layout Standard
 Graphs represent information as a set of nodes, edges and properties.
+\end_layout
+
+\begin_layout Chapter
+Data Integration
+\end_layout
+
+\begin_layout Part
+\begin_inset CommandInset label
+LatexCommand label
+name "part:User-DocumentationFirst-steps"
+
+\end_inset
+
+First steps in Entanglement
 \end_layout
 
 \begin_layout Chapter
@@ -385,6 +571,16 @@ The first time you compile Entanglement, many Maven dependencies will be
  Subsequent builds should be much faster.
 \end_layout
 
+\begin_layout Part
+\begin_inset CommandInset label
+LatexCommand label
+name "part:Entanglement-User-Intefaces"
+
+\end_inset
+
+Entanglement User Intefaces
+\end_layout
+
 \begin_layout Chapter
 IRC User interface
 \end_layout
@@ -627,11 +823,95 @@ status open
 \end_layout
 
 \begin_layout Part
-Entanglement Development Documentation
+\begin_inset CommandInset label
+LatexCommand label
+name "part:Design-patterns-for"
+
+\end_inset
+
+Design patterns for performant data integration
 \end_layout
 
 \begin_layout Chapter
-Programmatic interface to Entanglement graphs
+Designing for performance
+\end_layout
+
+\begin_layout Standard
+Entanglement is designed from the ground-up to facillitate the creation,
+ manipulation and querying of large graphs -- we currently define `large'
+ as being somewhere in the region of hundreds of millions of nodes and edges.
+ Being based on MongoDB allows large graphs to be split over a cluster of
+ machines.
+ However, building graphs of this size efficiently can be challenging.
+ Regardless of how powerful your compute clusters are, an ad-hoc or poorly
+ thought-out graph building approach will often result in graphs taking
+ much longer to build than necessary.
+ Your program's import processes and data structures must be therefore carefully
+ designed.
+ 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "part:Design-patterns-for"
+
+\end_inset
+
+ of this instruction manual comprises of a set of graph building design
+ patterns.
+ Every data integration project is different, and not all patterns may be
+ applicable in all cases.
+ You may need to experiment with your data in order to decide which approach
+ is best, or whether a new approach is needed.
+\end_layout
+
+\begin_layout Standard
+Before reading each design pattern in detail, bear in mind the following:
+\end_layout
+
+\begin_layout Verse
+
+\emph on
+Where possible, structure code and data so that data can be imported as
+ independent chunks.
+ This approach has two advantages: a) if an error occurs, only the chunk
+ that fails needs to be repeated; b) if your hardware allows, multiple chunks
+ can be imported in parallel without interference.
+ 
+\end_layout
+
+\begin_layout Itemize
+Try to perform 'write only' operations.
+ Constantly checking whether nodes/edges exist can lead to significant slowdowns.
+ Use 'hanging' edges for data imports, particularly for hub nodes such as
+ nodes representing genes or chromosomes where many thousands of edges may
+ coneect to.
+\end_layout
+
+\begin_layout Itemize
+Entanglement supports 'hanging' edges.
+ Make use of them to split data nodes into different graphs at suitable
+ points.
+ Hanging edges allow you to perform out-of-order imports, where different
+ parts of the same graph can be imported.
+ They also facillitate write-only operations by allowing edges to refer
+ to nodes that do not (yet) exist.
+\end_layout
+
+\begin_layout Itemize
+Although software architecutre has a huge influence on performance, the
+ properties of the underlying hardware should also be considered.
+ One of MongoDB's strengths is its high write performance.
+ A cluster of machines, whether part of the same database cluster or working
+ independently, has a huge potential for writing data compared to a single
+ machine.
+ You could write different data sets to databases stored on different physical
+ drives to increase performance.
+ Entanglement supports multiple individual MongoDB servers, so no complicated
+ cluster setup is necessarilly required.
+ 
+\end_layout
+
+\begin_layout Section
+Segregating data by dataset
 \end_layout
 
 \end_body
