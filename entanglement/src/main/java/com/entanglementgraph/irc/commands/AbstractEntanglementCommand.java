@@ -133,6 +133,9 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    */
   protected GraphConnection createTemporaryGraph(String tempClusterName)
       throws GraphConnectionFactoryException {
+    if (tempClusterName == null) {
+      throw new GraphConnectionFactoryException("No temporary cluster name was specified");
+    }
     GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
     GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
     logger.infoln("Created temporary graph: %s", conn.getGraphName());
