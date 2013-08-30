@@ -119,30 +119,31 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     createCustomUserObjectForBotState(null, getGlobalState());
 
 
-    addCommand("connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
-    addCommand("connect-graph", ConnectGraphCommand.class);
-    addCommand("create-edge", CreateEdgeCommand.class);
-    addCommand("create-node", CreateNodeCommand.class);
-    addCommand("export-gephi", ExportGephiCommand.class);
-    addCommand("list-edges", ListEdgesCommand.class);
-    addCommand("list-connections", ListGraphConnectionsCommand.class);
-    addCommand("list-nodes", ListNodesCommand.class);
-    addCommand("playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
-    addCommand("show-edge", ShowEdgeCommand.class);
-    addCommand("show-node", ShowNodeCommand.class);
-    addCommand("use", UseGraphCommand.class);
+    addCommand("/entanglement/db/connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
+    addCommand("/entanglement/db/connect-graph", ConnectGraphCommand.class);
+    addCommand("/entanglement/db/use-graph", UseGraphCommand.class);
+    addCommand("/entanglement/db/list-connections", ListGraphConnectionsCommand.class);
+    addCommand("/entanglement/db/playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
+    addCommand("/entanglement/graph/create-edge", CreateEdgeCommand.class);
+    addCommand("/entanglement/graph/create-node", CreateNodeCommand.class);
+    addCommand("/entanglement/graph/export-gephi", ExportGephiCommand.class);
+    addCommand("/entanglement/graph/list-edges", ListEdgesCommand.class);
+    addCommand("/entanglement/graph/list-nodes", ListNodesCommand.class);
+    addCommand("/entanglement/graph/show-edge", ShowEdgeCommand.class);
+    addCommand("/entanglement/graph/show-node", ShowNodeCommand.class);
 
-    addCommand("import-graph", ImportGraphCommand.class);
+
+    addCommand("/entanglement/graph/import-graph", ImportGraphCommand.class);
 
     /*
      * Cursor commands
      */
-    addCommand("create-cursor", CreateCursorCommand.class);
-    addCommand("list-cursors", ListGraphCursorsCommand.class);
-    addCommand("use-cursor", UseCursorCommand.class);
-    addCommand("cDescribe", CursorDescribe.class);
-    addCommand("cGoto", CursorGoto.class);
-    addCommand("cStep", CursorStepToNode.class);
+    addCommand("/entanglement/cursor/create", CreateCursorCommand.class);
+    addCommand("/entanglement/cursor/list", ListGraphCursorsCommand.class);
+    addCommand("/entanglement/cursor/use", UseCursorCommand.class);
+    addCommand("/entanglement/cursor/describe", CursorDescribe.class);
+    addCommand("/entanglement/cursor/goto", CursorGoto.class);
+    addCommand("/entanglement/cursor/step", CursorStepToNode.class);
 
     /*
      * Swing-based commands
@@ -150,11 +151,11 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
 //    addCommand("gui-cursor-display-nearest-neighbours", CreateSwingCursorNearestNeighboursCommand.class);
 //    addCommand("gui-display-entire-graph", CreateSwingGuiEntireGraphCommand.class);
 
-    addCommand("gui-nearest-neighbours", GuiNearestNeighboursCommand.class);
-    addCommand("run-cursor-based-graph-walker", RunCursorBasedGraphWalkerCommand.class);
-    addCommand("list-known-graph-walkers", ListKnownGraphWalkersCommand.class);
+    addCommand("/entanglement/visualise/nearest-neighbours", GuiNearestNeighboursCommand.class);
+    addCommand("/entanglement/analyse/run-graph-walker", RunCursorBasedGraphWalkerCommand.class);
+    addCommand("/entanglement/analyse/list-walkers", ListKnownGraphWalkersCommand.class);
 
-    addCommand("run-benchmarks", RunBenchmarksCommand.class);
+    addCommand("/entanglement/benchmarks/run-benchmarks", RunBenchmarksCommand.class);
   }
 
 
