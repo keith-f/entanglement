@@ -316,6 +316,9 @@ abstract public class AbstractGraphEntityDAO
   public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException
   {
+    if (uids.isEmpty()) {
+      return null;
+    }
     DBObject query = buildAnyUidQuery(uids);
     try {
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
@@ -337,6 +340,9 @@ abstract public class AbstractGraphEntityDAO
   public BasicDBObject getByAnyName(String entityType, Set<String> entityNames)
       throws GraphModelException
   {
+    if (entityNames.isEmpty()) {
+      return null;
+    }
     DBObject query = buildAnyNameQuery(entityNames);
     try {
       DBCursor result = col.find(query);
