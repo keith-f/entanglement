@@ -31,12 +31,12 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class CollectByTypeRule extends AbstractRule {
-  private static final Logger logger = Logger.getLogger(CollectByTypeRule.class.getName());
+public class CollectRemoteNodeByTypeRule extends AbstractRule {
+  private static final Logger logger = Logger.getLogger(CollectRemoteNodeByTypeRule.class.getName());
   private final String targetType;
   private final Set<BasicDBObject> collectedObjects;
 
-  public CollectByTypeRule(String targetType) {
+  public CollectRemoteNodeByTypeRule(String targetType) {
     this.targetType = targetType;
     this.collectedObjects = new HashSet<>();
   }
