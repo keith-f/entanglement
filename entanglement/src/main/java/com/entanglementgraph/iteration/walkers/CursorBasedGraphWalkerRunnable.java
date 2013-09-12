@@ -110,10 +110,10 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
       walker.setStartPosition(tmpCursor);
 
       // Go for a walk
-      logger.println("Exporting a subgraph from %s to %s", sourceGraph.getGraphName(), destinationGraph.getGraphName());
+     logger.infoln("Exporting a subgraph from %s to %s", sourceGraph.getGraphName(), destinationGraph.getGraphName());
       walker.initialise();
       walker.execute();
-      logger.println("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
+      logger.infoln("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
           sourceGraph.getGraphName(), walker.getClass().getName(),
           destinationGraph.getPoolName(), destinationGraph.getDatabaseName(), destinationGraph.getGraphName());
 
@@ -122,7 +122,7 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
       // At this point, we've run the walker. The destination graph should contain the required nodes/edges.
     } catch (Exception e) {
       e.printStackTrace();
-      logger.getBot().printException(logger.getChannel(), "Graph walker failure", e);
+      logger.printException("Graph walker failure", e);
     }
 
   }

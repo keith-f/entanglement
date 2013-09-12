@@ -20,6 +20,8 @@ import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.scalesinformatics.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLoggerIrc;
+import com.scalesinformatics.uibot.BotLoggerStdOut;
 import com.scalesinformatics.uibot.GenericIrcBot;
 
 import java.util.logging.Logger;
@@ -34,47 +36,39 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class GraphConnectionListenerLogger implements EntryListener<String, GraphConnectionDetails> {
-  private static final Logger logger = Logger.getLogger(GraphConnectionListenerLogger.class.getName());
   private static final String LOGGER_NAME = GraphConnectionListenerLogger.class.getSimpleName();
 
-  private final BotLogger botLogger;
+  private final BotLogger logger;
   public GraphConnectionListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
     if (channel != null) {
-      botLogger = new BotLogger(bot, channel, LOGGER_NAME);
+      logger = new BotLoggerIrc(bot, channel, LOGGER_NAME);
     } else {
-      botLogger = null;
+      logger = new BotLoggerStdOut(LOGGER_NAME);
     }
   }
 
-  private void log(String text) {
-    if (botLogger == null) {
-      logger.info(text);
-    } else {
-      botLogger.infoln(text);
-    }
-  }
 
   @Override
   public void entryAdded(EntryEvent<String, GraphConnectionDetails> event) {
-    log(String.format("Acknowledging new GraphConnectionDetails object: %s => %s (added by host: %s)",
-        event.getName(), event.getValue().toString(), event.getMember()));
+    logger.infoln("Acknowledging new GraphConnectionDetails object: %s => %s (added by host: %s)",
+        event.getName(), event.getValue().toString(), event.getMember());
   }
 
   @Override
   public void entryRemoved(EntryEvent<String, GraphConnectionDetails> event) {
-    log(String.format("Acknowledging removal of GraphConnectionDetails object: %s (removed by host: %s)",
-        event.getName(), event.getMember()));
+    logger.infoln("Acknowledging removal of GraphConnectionDetails object: %s (removed by host: %s)",
+        event.getName(), event.getMember());
   }
 
   @Override
   public void entryUpdated(EntryEvent<String, GraphConnectionDetails> event) {
-    log(String.format("Acknowledging revised GraphConnectionDetails object: %s => %s (updated by host: %s)",
-        event.getName(), event.getValue().toString(), event.getMember()));
+    logger.infoln("Acknowledging revised GraphConnectionDetails object: %s => %s (updated by host: %s)",
+        event.getName(), event.getValue().toString(), event.getMember());
   }
 
   @Override
   public void entryEvicted(EntryEvent<String, GraphConnectionDetails> event) {
-    log(String.format("Acknowledging eviction GraphConnectionDetails object: %s (evicted by host: %s)",
-        event.getName(), event.getMember()));
+    logger.infoln("Acknowledging eviction GraphConnectionDetails object: %s (evicted by host: %s)",
+        event.getName(), event.getMember());
   }
 }

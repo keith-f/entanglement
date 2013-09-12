@@ -22,6 +22,8 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLoggerIrc;
+import com.scalesinformatics.uibot.BotLoggerStdOut;
 import com.scalesinformatics.uibot.GenericIrcBot;
 import org.jibble.pircbot.Colors;
 
@@ -37,12 +39,11 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 public class GraphCursorPositionListenerLogger implements EntryListener<String, GraphCursor> {
-  private static final Logger logger = Logger.getLogger(GraphCursorPositionListenerLogger.class.getName());
   private static final String LOGGER_NAME = GraphCursorPositionListenerLogger.class.getSimpleName();
 
   private final GenericIrcBot<EntanglementRuntime> bot;
   private final String channel;
-  private final BotLogger botLogger;
+  private final BotLogger logger;
   private final HazelcastInstance hzInstance;
   private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
@@ -52,52 +53,44 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
     this.channel = channel;
     this.hzInstance = hzInstance;
     if (channel != null) {
-      botLogger = new BotLogger(bot, channel, LOGGER_NAME);
+      logger = new BotLoggerIrc(bot, channel, LOGGER_NAME);
     } else {
-      botLogger = null;
-    }
-  }
-
-  private void log(String text) {
-    if (botLogger == null) {
-      logger.info(text);
-    } else {
-      botLogger.infoln(text);
+      logger = new BotLoggerStdOut(LOGGER_NAME);
     }
   }
 
   @Override
   public void entryAdded(EntryEvent<String, GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging new GraphCursor: %s at position %s (added by host: %s)",
-        event.getKey(), cursor.getPosition(), event.getMember()));
+    logger.println("Acknowledging new GraphCursor: %s at position %s (added by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember());
   }
 
   @Override
   public void entryRemoved(EntryEvent<String, GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
-        event.getKey(), cursor.getPosition(), event.getMember()));
+    logger.println("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember());
   }
 
   @Override
   public void entryUpdated(EntryEvent<String, GraphCursor> event) {
     GraphCursor previousCursor = event.getOldValue();
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging GraphCursor %s moved from %s %s %s. Index: %s. Type: %s. (by host: %s)",
+    logger.println("Acknowledging GraphCursor %s moved from %s %s %s. Index: %s. Type: %s. (by host: %s)",
         entFormat.formatCursorName(cursor.getName()).toString(),
         entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
         entFormat.customFormat("==>", Colors.CYAN).toString(),
         entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3).toString(),
         entFormat.format(cursor.getCursorHistoryIdx()).toString(),
         entFormat.formatMovementType(cursor.getMovementType()).toString(),
-        entFormat.formatHost(event.getMember().toString()).toString()));
+        entFormat.formatHost(event.getMember().toString()).toString());
   }
 
   @Override
   public void entryEvicted(EntryEvent<String,GraphCursor> event) {
     GraphCursor cursor = event.getValue();
-    log(String.format("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
-        event.getKey(), cursor.getPosition(), event.getMember()));
+    logger.println("Acknowledging removal of GraphCursor: %s at position %s (by host: %s)",
+        event.getKey(), cursor.getPosition(), event.getMember());
   }
 }
