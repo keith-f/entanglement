@@ -77,6 +77,23 @@ public class Edge<E extends Edge, F extends Node, T extends Node>
         '}';
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    Edge edge = (Edge) o;
+
+    if (!keys.equals(edge.keys)) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return keys.hashCode();
+  }
+
   public EntityKeys<E> getKeys() {
     return keys;
   }
