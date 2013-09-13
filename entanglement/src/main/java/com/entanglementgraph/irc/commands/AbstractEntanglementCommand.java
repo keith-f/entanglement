@@ -160,15 +160,23 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    * @param tmpConnection
    * @throws GraphConnectionFactoryException
    */
-  protected void disposeOfTempGraph(GraphConnection tmpConnection) throws GraphConnectionFactoryException {
-    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
-    if (!tmpConnection.getGraphName().startsWith("tmp_")) {
-      throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
-        + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
+  protected void disposeOfTempGraph(GraphConnection tmpConnection) {
+    if (tmpConnection == null) {
+      return;
     }
-    tmpConnection.getRevisionLog().getRevLogCol().drop();
-    tmpConnection.getNodeDao().getCollection().drop();
-    tmpConnection.getEdgeDao().getCollection().drop();
+    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
+    try {
+      if (!tmpConnection.getGraphName().startsWith("tmp_")) {
+        throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
+          + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
+      }
+      tmpConnection.getRevisionLog().getRevLogCol().drop();
+      tmpConnection.getNodeDao().getCollection().drop();
+      tmpConnection.getEdgeDao().getCollection().drop();
+    } catch (Exception e) {
+      logger.printException("Failed to dispose of one or more temporary graph collections.", e);
+    }
+
   }
 
 }
