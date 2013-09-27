@@ -23,6 +23,7 @@ import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.util.TmpGraphConnectionFactory;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -58,6 +59,8 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
 
   protected final IrcEntanglementFormat entFormat;
+
+  private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
 
 
   protected static enum Requirements {
@@ -152,8 +155,8 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     if (tempClusterName == null) {
       throw new GraphConnectionFactoryException("No temporary cluster name was specified");
     }
-    GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
-    GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
+
+    GraphConnection conn = tmpConnFact.createTemporaryGraph(tempClusterName);
 
     if (disposeOnCommandCompletion) {
       temporaryConnections.add(conn);
@@ -211,13 +214,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     }
     logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
     try {
-      if (!tmpConnection.getGraphName().startsWith("tmp_")) {
-        throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
-          + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
-      }
-      tmpConnection.getRevisionLog().getRevLogCol().drop();
-      tmpConnection.getNodeDao().getCollection().drop();
-      tmpConnection.getEdgeDao().getCollection().drop();
+      tmpConnFact.disposeOfTempGraph(tmpConnection);
     } catch (Exception e) {
       logger.printException("Failed to dispose of one or more temporary graph collections.", e);
     }
