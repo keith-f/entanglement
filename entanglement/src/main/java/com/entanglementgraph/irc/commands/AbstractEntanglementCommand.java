@@ -221,4 +221,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   }
 
+  public String getTempClusterName() {
+    return tempClusterName;
+  }
 }
