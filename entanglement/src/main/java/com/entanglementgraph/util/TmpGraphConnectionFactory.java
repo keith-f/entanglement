@@ -66,4 +66,13 @@ public class TmpGraphConnectionFactory {
     }
 
   }
+
+  public void disposeOfTempGraphSilent(GraphConnection tmpConnection) {
+    try {
+      disposeOfTempGraph(tmpConnection);
+    } catch (Exception e) {
+      logger.warning("Failed to dispose of graph: "+tmpConnection.getDatabaseName()+"/"+tmpConnection.getGraphName());
+      e.printStackTrace();
+    }
+  }
 }
