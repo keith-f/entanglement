@@ -47,6 +47,8 @@ public class XYDatasetJFreeChartFactory {
         return createScatterPlot(node);
       case XY_AREA:
         return createXYAreaChart(node);
+      case XY_LINE:
+        return createXYLineChart(node);
       case XY_STEP_AREA:
         return createXYStepAreaChart(node);
       case XY_STEP:
