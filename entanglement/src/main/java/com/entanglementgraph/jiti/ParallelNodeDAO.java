@@ -184,6 +184,11 @@ public class ParallelNodeDAO implements NodeDAO {
   }
 
   @Override
+  public <T> T getByKey(EntityKeys keyset, Class<T> castToType) throws GraphModelException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
   public BasicDBObject getByUid(String uid) throws GraphModelException {
     Map<GraphConnection, BasicDBObject> results = new HashMap<>(graphs.size());
     // TODO parallelise this loop

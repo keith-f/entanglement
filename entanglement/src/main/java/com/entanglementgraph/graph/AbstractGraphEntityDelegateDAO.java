@@ -90,6 +90,11 @@ abstract public class AbstractGraphEntityDelegateDAO
   }
 
   @Override
+  public <T> T getByKey(EntityKeys keyset, Class<T> castToType) throws GraphModelException {
+    return delegate.getByKey(keyset, castToType);
+  }
+
+  @Override
   public BasicDBObject getByUid(String uid) throws GraphModelException {
     return delegate.getByUid(uid);
   }

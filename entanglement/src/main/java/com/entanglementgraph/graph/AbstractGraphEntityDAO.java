@@ -305,6 +305,16 @@ abstract public class AbstractGraphEntityDAO
     }
   }
 
+  @Override
+  public <T> T getByKey(EntityKeys keyset, Class<T> castToType) throws GraphModelException {
+    try {
+      return marshaller.deserialize(getByKey(keyset), castToType);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphModelException(
+          "Failed to convert entity with keyset: "+keyset+" to a bean of type: "+castToType.getName(), e);
+    }
+  }
+
 
   @Override
   public BasicDBObject getByUid(String entityUid)
