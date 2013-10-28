@@ -69,6 +69,16 @@ public class ParallelNodeDAO implements NodeDAO {
   }
 
   @Override
+  public <T> T getByUid(String uid, Class<T> castToType) throws GraphModelException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public <T> T getByName(String entityType, String entityName, Class<T> castToType) throws GraphModelException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
   public DBCollection getCollection() {
     throw new UnsupportedOperationException("Attempt to call getCollection on a meta-DAO. This method doesn't make" +
         "sense in a multi-graph environment.");
