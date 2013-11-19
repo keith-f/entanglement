@@ -55,4 +55,21 @@ public class Node<N extends Node>
   public void setKeys(EntityKeys<N> keys) {
     this.keys = keys;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    Node node = (Node) o;
+
+    if (!keys.equals(node.keys)) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return keys.hashCode();
+  }
 }

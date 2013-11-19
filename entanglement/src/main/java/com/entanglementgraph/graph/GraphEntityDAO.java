@@ -111,6 +111,18 @@ public interface GraphEntityDAO
       throws GraphModelException;
 
   /**
+   * A convenience method that performs a standard <code>getByKey</code> lookup, and then attempts to deserialise
+   * the raw JSON document to a Java class of the specified type.
+   *
+   * @param keyset the EntityKeys representing the target graph entity
+   * @param castToType the Java type to attempt to deserialise to.
+   * @return
+   * @throws GraphModelException
+   */
+  public <T> T getByKey(EntityKeys keyset, Class<T> castToType)
+      throws GraphModelException;
+
+  /**
    * Returns an instance by its unique ID. If no entity with the specified ID
    * exists, then null is returned.
    * @param uid the ID of the entity to return
@@ -120,10 +132,35 @@ public interface GraphEntityDAO
   public BasicDBObject getByUid(String uid)
       throws GraphModelException;
 
+  /**
+   * A convenience method that performs a standard <code>getByUid</code> lookup, and then attempts to deserialise
+   * the raw JSON document to a Java class of the specified type.
+   *
+   * @param uid the ID of the entity to return
+   * @param castToType the Java type to attempt to deserialise to.
+   * @return
+   * @throws GraphModelException
+   */
+  public <T> T getByUid(String uid, Class<T> castToType)
+      throws GraphModelException;
+
   public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException;
-  
+
   public BasicDBObject getByName(String entityType, String entityName)
+      throws GraphModelException;
+
+  /**
+   * A convenience method that performs a standard <code>getByName</code> lookup, and then attempts to deserialise
+   * the raw JSON document to a Java class of the specified type.
+   *
+   * @param entityType the Entanglement entity type name
+   * @param entityName the name of the entity to return
+   * @param castToType the Java type to attempt to deserialise to.
+   * @return
+   * @throws GraphModelException
+   */
+  public <T> T getByName(String entityType, String entityName, Class<T> castToType)
       throws GraphModelException;
   
   /**

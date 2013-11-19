@@ -16,9 +16,11 @@
  */
 package com.entanglementgraph.cursor;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.MultiMap;
+import com.hazelcast.core.*;
+import com.scalesinformatics.util.UidGenerator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A node-local object that stores graph cursor information in distributed Hazelcast data structures.
@@ -31,6 +33,34 @@ import com.hazelcast.core.MultiMap;
 public class GraphCursorRegistry {
   static final String HZ_CURSOR_POSITIONS_MAP = GraphCursorRegistry.class.getName()+".current_cursors_positions";
   static final String HZ_CURSOR_HISTORIES_MULTIMAP = GraphCursorRegistry.class.getName()+".cursor_histories";
+
+  /**
+   * A Hazelcast event listener that can be used to forward events to Entanglement <code>CursorListener</code>
+   * implementations
+   */
+  private static final class CursorListenerHazelcastForwarder implements EntryListener<String, GraphCursor> {
+    private final CursorListener cursorListener;
+
+    public CursorListenerHazelcastForwarder(CursorListener cursorListener) {
+      this.cursorListener = cursorListener;
+    }
+    @Override
+    public void entryAdded(EntryEvent<String, GraphCursor> event) {
+    }
+
+    @Override
+    public void entryRemoved(EntryEvent<String, GraphCursor> event) {
+    }
+
+    @Override
+    public void entryUpdated(EntryEvent<String, GraphCursor> event) {
+      cursorListener.notifyNewPosition(event.getValue());
+    }
+
+    @Override
+    public void entryEvicted(EntryEvent<String, GraphCursor> event) {
+    }
+  }
 
   private final HazelcastInstance hzInstance;
   private final IMap<String, GraphCursor> currentPositions;
@@ -54,6 +84,28 @@ public class GraphCursorRegistry {
   public void removeCursorByName(String cursorName) {
     currentPositions.remove(cursorName);
     cursorHistories.remove(cursorName);
+  }
+
+  /**
+   * Registers a <code>CursorListener</code> so that it starts receiving updates on the movements of the specified
+   * cursor. The same <code>CursorListener</code> instance may be registered with multiple cursors, if required.
+   * @param cursorName the name of the cursor to attach the listener to.
+   * @param listener the listener instance to associate.
+   * @return an identifier for the association between <code>listener</code> and <code>cursorName</code>. This UID can
+   * be used to detatch the listener from this cursor at a future time.
+   */
+  public String addCursorListener(String cursorName, CursorListener listener) {
+    CursorListenerHazelcastForwarder hzForwarder = new CursorListenerHazelcastForwarder(listener);
+    return getCurrentPositions().addEntryListener(hzForwarder , cursorName, true);
+  }
+
+  /**
+   * Removes a previously registered listener so that it no longer receives events from a particular graph cursor.
+   *
+   * @param registrationUid the registration UID as previously returned by <code>addCursorListener</code>.
+   */
+  public void removeCursorListener(String registrationUid) {
+    getCurrentPositions().removeEntryListener(registrationUid);
   }
 
   public GraphCursor getCursorCurrentPosition(String cursorName) {

@@ -92,6 +92,12 @@ public class GraphConnectionFactory {
     }
   }
 
+  public static boolean containsNamedPool(String poolName) {
+    synchronized (mongoPools) {
+      return mongoPools.containsKey(poolName);
+    }
+  }
+
   private final ClassLoader classLoader;
   private final MongoClient connectionPool;
   private final String poolName;

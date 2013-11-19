@@ -27,6 +27,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
@@ -49,17 +50,16 @@ public class EntanglementRuntime {
   private static final String HZ_CONN_DETAILS = EntanglementRuntime.class.getSimpleName()+".GraphConnectionDetails";
 //  private static final String HZ_GRAPH_CURSORS = EntanglementRuntime.class.getSimpleName()+".GraphCursors";
 
+  private static final String ENV_DEFAULT_CONN = "default-graph-connection";
+  private static final String ENV_DEFAULT_CURSOR = "default-graph-cursor";
 
+private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
 
-
-  private String currentConnectionName;
   private final IMap<String, GraphConnectionDetails> graphConnectionDetails;
 
-
-  private String currentCursorName;
   private final GraphCursorRegistry cursorRegistry;
 
 
@@ -74,9 +74,10 @@ public class EntanglementRuntime {
    * @param classLoader
    * @param marshaller
    */
-  public EntanglementRuntime(EntanglementBot bot, String channel,
+  public EntanglementRuntime(EntanglementBot bot, String channel, BotState<EntanglementRuntime> state,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               HazelcastInstance hzInstance) {
+    this.state = state;
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
@@ -127,10 +128,11 @@ public class EntanglementRuntime {
   }
 
   public GraphConnection createGraphConnectionForCurrentConnection() throws UserException, BotCommandException {
-    if (currentConnectionName == null) {
+    String defaultConnectionnName = state.getEnvironment().get(ENV_DEFAULT_CONN);
+    if (defaultConnectionnName == null) {
       throw new UserException("No 'current' connection was set!");
     }
-    return createGraphConnectionFor(currentConnectionName);
+    return createGraphConnectionFor(defaultConnectionnName);
   }
 
 
@@ -144,26 +146,27 @@ public class EntanglementRuntime {
   }
 
   public String getCurrentConnectionName() {
-    return currentConnectionName;
+    return state.getEnvironment().get(ENV_DEFAULT_CONN);
   }
 
   public void setCurrentConnectionName(String currentConnectionName) {
-    this.currentConnectionName = currentConnectionName;
+    state.getEnvironment().put(ENV_DEFAULT_CONN, currentConnectionName);
   }
 
   public GraphCursor getCurrentCursor() {
-    if (getCurrentCursorName() == null) {
+    String currentCursorName = getCurrentCursorName();
+    if (currentCursorName == null) {
       return null;
     }
     return cursorRegistry.getCursorCurrentPosition(currentCursorName);
   }
 
   public String getCurrentCursorName() {
-    return currentCursorName;
+    return state.getEnvironment().get(ENV_DEFAULT_CURSOR);
   }
 
   public void setCurrentCursorName(String currentCursorName) {
-    this.currentCursorName = currentCursorName;
+    state.getEnvironment().put(ENV_DEFAULT_CURSOR, currentCursorName);
   }
 
   public IMap<String, GraphConnectionDetails> getGraphConnectionDetails() {

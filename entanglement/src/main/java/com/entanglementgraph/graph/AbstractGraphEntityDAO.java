@@ -27,6 +27,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.dbobject.KeyExtractingIterable;
 import java.util.Collection;
 import java.util.Collections;
@@ -304,6 +305,16 @@ abstract public class AbstractGraphEntityDAO
     }
   }
 
+  @Override
+  public <T> T getByKey(EntityKeys keyset, Class<T> castToType) throws GraphModelException {
+    try {
+      return marshaller.deserialize(getByKey(keyset), castToType);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphModelException(
+          "Failed to convert entity with keyset: "+keyset+" to a bean of type: "+castToType.getName(), e);
+    }
+  }
+
 
   @Override
   public BasicDBObject getByUid(String entityUid)
@@ -313,9 +324,22 @@ abstract public class AbstractGraphEntityDAO
   }
 
   @Override
+  public <T> T getByUid(String uid, Class<T> castToType) throws GraphModelException {
+    try {
+      return marshaller.deserialize(getByUid(uid), castToType);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphModelException(
+          "Failed to convert entity with UID: "+uid+" to a bean of type: "+castToType.getName(), e);
+    }
+  }
+
+  @Override
   public BasicDBObject getByAnyUid(Set<String> uids)
       throws GraphModelException
   {
+    if (uids.isEmpty()) {
+      return null;
+    }
     DBObject query = buildAnyUidQuery(uids);
     try {
       BasicDBObject obj = (BasicDBObject)  col.findOne(query);
@@ -332,11 +356,25 @@ abstract public class AbstractGraphEntityDAO
   {
     return getByAnyName(type, Collections.singleton(entityName));
   }
-  
+
+  @Override
+  public <T> T getByName(String entityType, String entityName, Class<T> castToType) throws GraphModelException {
+    try {
+      return marshaller.deserialize(getByName(entityType, entityName), castToType);
+    } catch (DbObjectMarshallerException e) {
+      throw new GraphModelException(
+          "Failed to convert entity with type: "+entityType+", name: "+entityName
+              +" to a bean of type: "+castToType.getName(), e);
+    }
+  }
+
   @Override
   public BasicDBObject getByAnyName(String entityType, Set<String> entityNames)
       throws GraphModelException
   {
+    if (entityNames.isEmpty()) {
+      return null;
+    }
     DBObject query = buildAnyNameQuery(entityNames);
     try {
       DBCursor result = col.find(query);

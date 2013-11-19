@@ -21,10 +21,7 @@ import com.entanglementgraph.benchmarks.CreateAndDestroyCursorsBenchmark;
 import com.entanglementgraph.benchmarks.IterateByTypeBenchmark;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.scalesinformatics.uibot.BotLogger;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.OptionalParam;
-import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
@@ -68,7 +65,7 @@ public class RunBenchmarksCommand extends AbstractEntanglementCommand<Entangleme
 
       if (nodeType != null) {
         IterateByTypeBenchmark benchmark = new IterateByTypeBenchmark(
-            new BotLogger(bot, channel, IterateByTypeBenchmark.class.getSimpleName()), graphConn, nodeType);
+            new BotLoggerIrc(bot, channel, IterateByTypeBenchmark.class.getSimpleName()), graphConn, nodeType);
         benchmarks.add(benchmark);
       }
       benchmarks.add(new CreateAndDestroyCursorsBenchmark(logger, state.getUserObject(), 10000));

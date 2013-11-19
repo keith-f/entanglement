@@ -23,13 +23,16 @@ import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.util.TmpGraphConnectionFactory;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import com.scalesinformatics.util.UidGenerator;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A partial command implementation that is useful for many Entanglement-based IRC commands. Includes support for
@@ -50,9 +53,14 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   protected String cursorName;
   protected GraphCursor cursor;
   protected GraphCursor.CursorContext cursorContext;
+
   private String tempClusterName;
+  private final Set<GraphConnection> temporaryConnections;
+
 
   protected final IrcEntanglementFormat entFormat;
+
+  private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
 
 
   protected static enum Requirements {
@@ -80,6 +88,7 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   protected AbstractEntanglementCommand(Requirements... requirements)
   {
+    this.temporaryConnections = new HashSet<>();
     entFormat = new IrcEntanglementFormat();
     for (Requirements req : requirements) {
       switch (req) {
@@ -121,6 +130,14 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
     }
   }
 
+  @Override
+  protected void postProcessLine() throws UserException, BotCommandException {
+    super.postProcessLine();
+    for (GraphConnection tmpConn : temporaryConnections) {
+      disposeOfTempGraph(tmpConn);
+    }
+  }
+
   /**
    * Creates a graph connection intended for local, temporary use. Usages might include temporarily extracting
    * a subset of nodes/edges for display or export purposes.
@@ -128,13 +145,23 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    * (usually, 'temp'),
    *
    * @param tempClusterName the name of a MongoDB cluster to use for storing the graph.
+   * @param disposeOnCommandCompletion if set <code>true</code>, then the this connection will be disposed of (MongoDB
+   *                                   collections will be deleted) once the command has finished executing.
    * @return a graph connection on the specified database cluster.
    * @throws GraphConnectionFactoryException
    */
-  protected GraphConnection createTemporaryGraph(String tempClusterName)
+  protected GraphConnection createTemporaryGraph(String tempClusterName, boolean disposeOnCommandCompletion)
       throws GraphConnectionFactoryException {
-    GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
-    GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
+    if (tempClusterName == null) {
+      throw new GraphConnectionFactoryException("No temporary cluster name was specified");
+    }
+
+    GraphConnection conn = tmpConnFact.createTemporaryGraph(tempClusterName);
+
+    if (disposeOnCommandCompletion) {
+      temporaryConnections.add(conn);
+    }
+
     logger.infoln("Created temporary graph: %s", conn.getGraphName());
     return conn;
   }
@@ -143,7 +170,12 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    * Same as <code>createTemporaryGraph(String)</code>, except that we use the MongoDB cluster named
    * on the command line by property 'temp-cluster'. To use this method, you must have specified
    * <code>TEMP_CLUSTER_NAME_NEEDED</code> in the constructor of this <code>AbstractEntanglementCommand</code>.
-   * @return
+   *
+   * Any GraphConnection created by this method will be destroyed (including the database content) after the IRC
+   * command implementation has finished executing.
+   *
+   * @return a short-term GraphConnection whose database-backed content will be deleted once the IRC command has
+   * finished executing.
    * @throws GraphConnectionFactoryException
    */
   protected GraphConnection createTemporaryGraph()
@@ -152,20 +184,44 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   }
 
   /**
+   * Creates a graph connection intended for local, temporary use. Usages might include temporarily extracting
+   * a subset of nodes/edges for display or export purposes.
+   * This method creates temporary graph collections within the default MongoDB database used for such graphs
+   * (usually, 'temp'),
+   *
+   * Any GraphConnection created by this method will be destroyed (including the database content) after the IRC
+   * command implementation has finished executing.
+   *
+   * @param tempClusterName the name of a MongoDB cluster to use for storing the graph.
+   * @return a short-term GraphConnection whose database-backed content will be deleted once the IRC command has
+   * finished executing.
+   * @throws GraphConnectionFactoryException
+   */
+  protected GraphConnection createTemporaryGraph(String tempClusterName)
+      throws GraphConnectionFactoryException {
+    return createTemporaryGraph(tempClusterName, true);
+  }
+
+  /**
    * Given a graph connection, deletes all MongoDB collections relating to the connection.  This is a destructive
    * operation - as a failsafe, only connections with graph names beginning with 'tmp_' will be deleted.
    * @param tmpConnection
    * @throws GraphConnectionFactoryException
    */
-  protected void disposeOfTempGraph(GraphConnection tmpConnection) throws GraphConnectionFactoryException {
-    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
-    if (!tmpConnection.getGraphName().startsWith("tmp_")) {
-      throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
-        + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
+  protected void disposeOfTempGraph(GraphConnection tmpConnection) {
+    if (tmpConnection == null) {
+      return;
     }
-    tmpConnection.getRevisionLog().getRevLogCol().drop();
-    tmpConnection.getNodeDao().getCollection().drop();
-    tmpConnection.getEdgeDao().getCollection().drop();
+    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
+    try {
+      tmpConnFact.disposeOfTempGraph(tmpConnection);
+    } catch (Exception e) {
+      logger.printException("Failed to dispose of one or more temporary graph collections.", e);
+    }
+
   }
 
+  public String getTempClusterName() {
+    return tempClusterName;
+  }
 }
