@@ -17,20 +17,33 @@
 
 package com.entanglementgraph.restlet;
 
+import org.restlet.Request;
+import org.restlet.Response;
+import org.restlet.Restlet;
+import org.restlet.data.MediaType;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
 /**
  * @author Keith Flanagan
  */
-public class TestServerResource extends ServerResource {
+public class TestRestlet extends Restlet {
 
-  @Get
-  public String toString() {
+  @Override
+  public void handle(Request request, Response response) {
     // Print the requested URI path
-    return "Resource URI  : " + getReference() + '\n' + "Root URI      : "
-        + getRootRef() + '\n' + "Routed part   : "
-        + getReference().getBaseRef() + '\n' + "Remaining part: "
-        + getReference().getRemainingPart();
+    String message = "Account of user \""
+        + request.getAttributes().get("user") + "\"";
+
+    message = message + "\n\n";
+
+    message = message + "Resource URI  : " + request.getResourceRef() + '\n' + "Root URI      : "
+        + request.getRootRef() + '\n' + "Routed part   : "
+        + request.getResourceRef().getBaseRef() + '\n' + "Remaining part: "
+        + request.getResourceRef().getRemainingPart();
+
+
+    response.setEntity(message, MediaType.TEXT_PLAIN);
+
   }
 }
