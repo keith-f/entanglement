@@ -25,6 +25,7 @@ import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.iteration.GuiNearestNeighboursCommand;
 import com.entanglementgraph.irc.commands.iteration.ListKnownGraphWalkersCommand;
 import com.entanglementgraph.irc.commands.iteration.RunCursorBasedGraphWalkerCommand;
+import com.entanglementgraph.irc.commands.restlet.StartRestletCommand;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
@@ -144,6 +145,11 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     addCommand("/entanglement/cursor/describe", CursorDescribe.class);
     addCommand("/entanglement/cursor/goto", CursorGoto.class);
     addCommand("/entanglement/cursor/step", CursorStepToNode.class);
+
+    /*
+     * REST services
+     */
+    addCommand("/entanglement/rest/start-server", StartRestletCommand.class);
 
     /*
      * Swing-based commands
