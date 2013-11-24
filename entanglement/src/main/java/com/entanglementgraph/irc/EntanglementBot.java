@@ -110,6 +110,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     //Regenerate global config object
     this.hazelcastClusterName = hazelcastClusterName;
     DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
+    hzConfig.setProperty("hazelcast.rest.enabled", "true");
     if (bindAddresses.length == 0) {
       String hostname = InetAddress.getLocalHost().getHostAddress();
       hzConfig.specifyNetworkInterfaces(hostname);
