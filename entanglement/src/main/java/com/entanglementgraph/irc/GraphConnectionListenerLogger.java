@@ -39,12 +39,8 @@ public class GraphConnectionListenerLogger implements EntryListener<String, Grap
   private static final String LOGGER_NAME = GraphConnectionListenerLogger.class.getSimpleName();
 
   private final BotLogger logger;
-  public GraphConnectionListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel) {
-    if (channel != null) {
-      logger = new BotLoggerIrc(bot, channel, LOGGER_NAME);
-    } else {
-      logger = new BotLoggerStdOut(LOGGER_NAME);
-    }
+  public GraphConnectionListenerLogger(BotLogger botLogger) {
+    this.logger = botLogger;
   }
 
 

@@ -30,6 +30,8 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLoggerIrc;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.GenericIrcBot;
 
@@ -174,7 +176,8 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     }
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
-    EntanglementRuntime runtime = new EntanglementRuntime(this, channel, newBotState, cl, m, hzInstance);
+    BotLogger logger = new BotLoggerIrc(this, channel, EntanglementBot.class.getSimpleName());
+    EntanglementRuntime runtime = new EntanglementRuntime(logger, newBotState, cl, m, hzInstance);
     newBotState.setUserObject(runtime);
   }
 }
