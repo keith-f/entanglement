@@ -43,18 +43,18 @@ import java.util.Set;
  */
 abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime> extends AbstractCommand<T> {
 
-  private boolean graphConnNeeded = false;
-  private boolean graphCursorNeeded = false;
-  private boolean tempClusterNameNeeded = false;
+//  private boolean graphConnNeeded = false;
+//  private boolean graphCursorNeeded = false;
+//  private boolean tempClusterNameNeeded = false;
+//
+//
+//  protected String graphConnName;
+//  protected GraphConnection graphConn;
+//  protected String cursorName;
+//  protected GraphCursor cursor;
+//  protected GraphCursor.CursorContext cursorContext;
 
-
-  protected String graphConnName;
-  protected GraphConnection graphConn;
-  protected String cursorName;
-  protected GraphCursor cursor;
-  protected GraphCursor.CursorContext cursorContext;
-
-  private String tempClusterName;
+//  private String tempClusterName;
   private final Set<GraphConnection> temporaryConnections;
 
 
@@ -63,76 +63,84 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
 
 
-  protected static enum Requirements {
-    GRAPH_CONN_NEEDED,
-    CURSOR_NEEDED,
-    TEMP_CLUSTER_NAME_NEEDED
-  };
+//  protected static enum Requirements {
+//    GRAPH_CONN_NEEDED,
+//    CURSOR_NEEDED,
+//    TEMP_CLUSTER_NAME_NEEDED
+//  };
 
 
-  @Override
-  public List<Param> getParams() {
-    List<Param> params = super.getParams();
-    if (graphConnNeeded) {
-      params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
-    }
-    if (graphCursorNeeded) {
-      params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
-    }
-    if (tempClusterNameNeeded) {
-      params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
-    }
-    return params;
-  }
+//  @Override
+//  public List<Param> getParams() {
+//    List<Param> params = super.getParams();
+//    if (graphConnNeeded) {
+//      params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
+//    }
+//    if (graphCursorNeeded) {
+//      params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
+//    }
+//    if (tempClusterNameNeeded) {
+//      params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
+//    }
+//    return params;
+//  }
 
 
-  protected AbstractEntanglementCommand(Requirements... requirements)
-  {
+  protected AbstractEntanglementCommand() {
     this.temporaryConnections = new HashSet<>();
     entFormat = new IrcEntanglementFormat();
-    for (Requirements req : requirements) {
-      switch (req) {
-        case GRAPH_CONN_NEEDED:
-          graphConnNeeded = true;
-          break;
-        case CURSOR_NEEDED:
-          graphCursorNeeded = true;
-          break;
-        case TEMP_CLUSTER_NAME_NEEDED:
-          tempClusterNameNeeded = true;
-          break;
-      }
-    }
   }
 
-  @Override
-  protected void preProcessLine() throws UserException, BotCommandException {
-    super.preProcessLine();
-    if (graphConnNeeded) {
-      graphConnName = parsedArgs.get("conn").getStringValue();
-      graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(state.getUserObject(), graphConnName);
-      // Make sure that graphConnName reflects the chosen connection, even if no name was specified by the user
-      if (graphConn != null) {
-        graphConnName = state.getUserObject().getCurrentConnectionName();
-      }
-    }
-    if (graphCursorNeeded) {
-      cursorName = parsedArgs.get("cursor").getStringValue();
-      cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(state.getUserObject(), cursorName);
-      // Make sure that cursorName reflects the chosen cursor, even if no name was specified by the user
-      if (cursor != null) {
-        cursorName = cursor.getName();
-      }
-      cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
-    }
-    if (tempClusterNameNeeded) {
-      tempClusterName = parsedArgs.get("temp-cluster").getStringValue();
-    }
-  }
+
+//  protected AbstractEntanglementCommand(Requirements... requirements)
+//  {
+//    this.temporaryConnections = new HashSet<>();
+//    entFormat = new IrcEntanglementFormat();
+//    for (Requirements req : requirements) {
+//      switch (req) {
+//        case GRAPH_CONN_NEEDED:
+//          graphConnNeeded = true;
+//          break;
+//        case CURSOR_NEEDED:
+//          graphCursorNeeded = true;
+//          break;
+//        case TEMP_CLUSTER_NAME_NEEDED:
+//          tempClusterNameNeeded = true;
+//          break;
+//      }
+//    }
+//  }
+
+//  @Override
+//  protected void preProcessLine() throws UserException, BotCommandException {
+//    super.preProcessLine();
+//    if (graphConnNeeded) {
+//      graphConnName = parsedArgs.get("conn").getStringValue();
+//      graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(state.getUserObject(), graphConnName);
+//      // Make sure that graphConnName reflects the chosen connection, even if no name was specified by the user
+//      if (graphConn != null) {
+//        graphConnName = state.getUserObject().getCurrentConnectionName();
+//      }
+//    }
+//    if (graphCursorNeeded) {
+//      cursorName = parsedArgs.get("cursor").getStringValue();
+//      cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(state.getUserObject(), cursorName);
+//      // Make sure that cursorName reflects the chosen cursor, even if no name was specified by the user
+//      if (cursor != null) {
+//        cursorName = cursor.getName();
+//      }
+//      cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
+//    }
+//    if (tempClusterNameNeeded) {
+//      tempClusterName = parsedArgs.get("temp-cluster").getStringValue();
+//    }
+//  }
 
   @Override
   protected void postProcessLine() throws UserException, BotCommandException {
     super.postProcessLine();
+
+    // Tidy up any temporary connections that were requested
     for (GraphConnection tmpConn : temporaryConnections) {
       disposeOfTempGraph(tmpConn);
     }
@@ -178,10 +186,10 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
    * finished executing.
    * @throws GraphConnectionFactoryException
    */
-  protected GraphConnection createTemporaryGraph()
-      throws GraphConnectionFactoryException {
-    return createTemporaryGraph(tempClusterName);
-  }
+//  protected GraphConnection createTemporaryGraph()
+//      throws GraphConnectionFactoryException {
+//    return createTemporaryGraph(tempClusterName);
+//  }
 
   /**
    * Creates a graph connection intended for local, temporary use. Usages might include temporarily extracting
@@ -221,7 +229,4 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
 
   }
 
-  public String getTempClusterName() {
-    return tempClusterName;
-  }
 }

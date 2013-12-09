@@ -21,6 +21,7 @@ import com.entanglementgraph.benchmarks.CreateAndDestroyCursorsBenchmark;
 import com.entanglementgraph.benchmarks.IterateByTypeBenchmark;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -46,23 +47,24 @@ public class RunBenchmarksCommand extends AbstractEntanglementCommand<Entangleme
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
+    params.add(new RequiredParam("conn", String.class, "Name of the graph connection to use"));
     params.add(new OptionalParam("iterate-by-type.type", String.class, null, "Set to the node type to run with "+ IterateByTypeBenchmark.class.getSimpleName()));
     return params;
   }
 
   public RunBenchmarksCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED);//, Requirements.CURSOR_NEEDED);
   }
 
 
 
   @Override
   protected Message _processLine() throws UserException, BotCommandException {
+    String connName = parsedArgs.get("conn").getStringValue();
     String nodeType = parsedArgs.get("iterate-by-type.type").getStringValue();
 
     List<Benchmark> benchmarks = new LinkedList<>();
     try {
-
+      GraphConnection graphConn = state.getUserObject().createGraphConnectionFor(connName);
       if (nodeType != null) {
         IterateByTypeBenchmark benchmark = new IterateByTypeBenchmark(
             new BotLoggerIrc(bot, channel, IterateByTypeBenchmark.class.getSimpleName()), graphConn, nodeType);
