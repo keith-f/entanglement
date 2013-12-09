@@ -27,6 +27,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLoggerFactory;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -74,7 +76,7 @@ private final BotState<EntanglementRuntime> state; // The channel state for whic
    * @param classLoader
    * @param marshaller
    */
-  public EntanglementRuntime(EntanglementBot bot, String channel, BotState<EntanglementRuntime> state,
+  public EntanglementRuntime(BotLogger botLogger, BotState<EntanglementRuntime> state,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               HazelcastInstance hzInstance) {
     this.state = state;
@@ -84,7 +86,9 @@ private final BotState<EntanglementRuntime> state; // The channel state for whic
     this.graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);;
 
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
-    this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
+    this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(
+        BotLoggerFactory.createNewLogger(botLogger, GraphConnectionListenerLogger.class.getSimpleName())),
+        true);
 //
 
 //    this.graphCursors.addEntryListener(new GraphCursorPositionListenerLogger(bot, channel), true);
