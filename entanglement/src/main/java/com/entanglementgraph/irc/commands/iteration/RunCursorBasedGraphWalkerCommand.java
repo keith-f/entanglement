@@ -17,8 +17,7 @@
 package com.entanglementgraph.irc.commands.iteration;
 
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalker;
 import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
 import com.entanglementgraph.iteration.walkers.GraphWalkerException;
@@ -38,7 +37,6 @@ import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -57,7 +55,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
+public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementCursorCommand {
 
 
   @Override
@@ -94,10 +92,6 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     return params;
   }
 
-  public RunCursorBasedGraphWalkerCommand() {
-    super(AbstractEntanglementCommand.Requirements.GRAPH_CONN_NEEDED, AbstractEntanglementCommand.Requirements.CURSOR_NEEDED);
-  }
-
   private String tempCluster;
   protected GraphConnection destination;
 
@@ -118,16 +112,17 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
 
   private String exportFilenameBase;
 
+  private String walkerName;
+  private String destinationConnName;
+
   private JungGraphFrame frame;
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-
-    //String graphConnName = parsedArgs.get("conn").getStringValue();
-    String walkerName = parsedArgs.get("walker").getStringValue();
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    walkerName = parsedArgs.get("walker").getStringValue();
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
-    String destinationConnName = parsedArgs.get("destination-conn").getStringValue();
-
+    destinationConnName = parsedArgs.get("destination-conn").getStringValue();
 
 
     enableGui = parsedArgs.get("enable-gui").parseValueAsBoolean();
@@ -145,10 +140,10 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     exportAnimationSeconds = parsedArgs.get("export-animation-seconds").parseValueAsLong();
     exportFilenameBase = parsedArgs.get("export-filename-base").getStringValue();
 
+  }
 
-
-
-
+  @Override
+  protected void processLine() throws UserException, BotCommandException {
     CursorBasedGraphWalker walker;
     try {
       walker = new CursorBasedGraphWalker.Provider(graphConn.getClassLoader()).getForName(walkerName);
@@ -161,7 +156,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
     try {
       // Use either a named destination connection, or create a temporary graph.
       if (destinationConnName != null) {
-        destination = state.getUserObject().createGraphConnectionFor(destinationConnName);
+        destination = entRuntime.createGraphConnectionFor(destinationConnName);
       } else {
         destination = createTemporaryGraph(tempCluster);
       }
@@ -174,7 +169,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       configureDefaultRenderers();
 
       CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
-          logger, state.getUserObject(), graphConn, destination, walker, cursor.getPosition());
+          logger, entRuntime, graphConn, destination, walker, cursor.getPosition());
 
       // Runs the graph walker. Results have been placed in the destination graph.
       worker.run();
@@ -182,8 +177,7 @@ public class RunCursorBasedGraphWalkerCommand extends AbstractEntanglementComman
       // Now, optionally run one or more image exporters over the destination graph.
       runVisualisations(destination.getMarshaller(), destination);
 
-      Message msg = new Message(channel, "Completed. Destination graph is: "+destination.getGraphName());
-      return msg;
+      logger.println("Completed. Destination graph is: "+destination.getGraphName());
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

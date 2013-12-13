@@ -19,32 +19,30 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.irc.EntanglementBotException;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.revlog.commands.EdgeModification;
 import com.entanglementgraph.revlog.commands.GraphOperation;
 import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.mongodb.BasicDBObject;
+import com.scalesinformatics.uibot.OptionalParam;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.mongodb.BasicDBObject;
 
 import java.util.*;
 
-import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
-
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
+ *
+ * //TODO not yet fully implemented
  */
-public class CreateEdgeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
+  private String type;
+  private String entityName;
+  private Map<String, String> attributes;
 
   @Override
   public String getDescription() {
@@ -66,32 +64,33 @@ public class CreateEdgeCommand extends AbstractEntanglementCommand<EntanglementR
     return params;
   }
 
-  public CreateEdgeCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED);
-  }
-
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String type = parsedArgs.get("type").getStringValue();
-    String entityName = parsedArgs.get("entityName").getStringValue();
-
-    EntanglementRuntime runtime = state.getUserObject();
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    type = parsedArgs.get("type").getStringValue();
+    entityName = parsedArgs.get("entityName").getStringValue();
+    //TODO from/to
 
     // Parse annotations
-    Map<String, String> attributes = parseAttributes(args);
+    attributes = parseAttributes(args);
     //FIXME do this properly - remove entries that are used as part of the command.
     attributes.remove("type");
     attributes.remove("entityName");
+    //TODO from/to
+  }
 
+  @Override
+  protected void processLine() throws UserException, BotCommandException {
     try {
       bot.infoln(channel, "Going to create an edge: %s/%s with properties: %s", type, entityName, attributes);
 
       Edge edge = new Edge();
       edge.getKeys().setType(type);
       edge.getKeys().addName(entityName);
+      //TODO from/to
 
       // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject edgeObj = runtime.getMarshaller().serialize(edge);
+      BasicDBObject edgeObj = entRuntime.getMarshaller().serialize(edge);
       // Add further custom properties
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
         edgeObj.append(attr.getKey(), attr.getValue());
@@ -102,9 +101,7 @@ public class CreateEdgeCommand extends AbstractEntanglementCommand<EntanglementR
       edgeUpdateCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
 
       writeOperation(graphConn, edgeUpdateCommand);
-      Message result = new Message(channel);
-      result.println("Edge created/updated: %s", entityName);
-      return result;
+      logger.println("Edge created/updated: %s", entityName);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

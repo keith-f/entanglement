@@ -17,28 +17,25 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
-
+public class ConnectGraphCommand extends AbstractEntanglementCommand {
+  private String connectionName;
+  private String poolName;
+  private String database;
+  private String graph;
+  private String branch;
 
   @Override
   public String getDescription() {
@@ -58,37 +55,25 @@ public class ConnectGraphCommand extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    connectionName = parsedArgs.get("conn").getStringValue();
+    poolName = parsedArgs.get("pool").getStringValue();
+    database = parsedArgs.get("database").getStringValue();
+    graph = parsedArgs.get("graph").getStringValue();
+    branch = parsedArgs.get("branch").getStringValue();
+  }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String connectionName = parsedArgs.get("conn").getStringValue();
-    String poolName = parsedArgs.get("pool").getStringValue();
-    String database = parsedArgs.get("database").getStringValue();
-    String graph = parsedArgs.get("graph").getStringValue();
-    String branch = parsedArgs.get("branch").getStringValue();
-
-    EntanglementRuntime runtime = state.getUserObject();
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
       GraphConnectionDetails details = new GraphConnectionDetails(poolName, database, graph, branch);
-//      GraphConnection connection = connect(runtime, hostname, database, graph, branch);
-      runtime.registerGraphConnectionDetails(connectionName, details);
-      Message result = new Message(channel);
-      result.println("Graph %s on %s is now available with connection name: %s", graph, poolName, connectionName);
-      return result;
+      entRuntime.registerGraphConnectionDetails(connectionName, details);
+      logger.println("Graph %s on %s is now available with connection name: %s", graph, poolName, connectionName);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 
-//  public GraphConnection connect(EntanglementRuntime runtime,
-//                                 String hostname, String database, String graphName, String branchName)
-//      throws RevisionLogException, MongoDbFactoryException, GraphConnectionFactoryException {
-//    ClassLoader classLoader = runtime.getClassLoader();
-//
-//    GraphConnectionFactory factory = new GraphConnectionFactory(classLoader, hostname, database);
-//    GraphConnection connection = factory.connect(graphName, branchName);
-//    bot.debugln(channel, "Connected to: %s/%s!", graphName, branchName);
-//    return connection;
-//  }
 }

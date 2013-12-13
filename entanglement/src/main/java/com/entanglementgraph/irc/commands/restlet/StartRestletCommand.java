@@ -17,38 +17,23 @@
 
 package com.entanglementgraph.irc.commands.restlet;
 
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementBotException;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.restlet.EntanglementRestServer;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.TxnUtils;
-import com.mongodb.BasicDBObject;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 import org.restlet.routing.Route;
 
 import java.net.InetAddress;
-import java.util.*;
+import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class StartRestletCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+public class StartRestletCommand extends AbstractEntanglementGraphCommand {
+  private int port;
 
   @Override
   public String getDescription() {
@@ -58,28 +43,22 @@ public class StartRestletCommand extends AbstractEntanglementCommand<Entanglemen
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
-//    params.add(new RequiredParam("type", String.class, "The type name of the node to create/modify"));
-//    params.add(new RequiredParam("entityName", String.class, "A unique name for the node to create/modify"));
-//    params.add(new OptionalParam("{ key=value pairs }", null, "A set of key=value pairs that will be added to the node as attributes"));
     params.add(new OptionalParam("port", Integer.class, "4000", "Port for the server"));
     return params;
   }
 
-  public StartRestletCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED);
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    port = parsedArgs.get("port").parseValueAsInteger();
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    int port = parsedArgs.get("port").parseValueAsInteger();
-
-    EntanglementRuntime runtime = state.getUserObject();
-
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
       logger.println("Going to start a REST interface for the graph: %s", graphConn.getGraphName());
 
-      EntanglementRestServer server = new EntanglementRestServer(port, runtime, graphConn);
+      EntanglementRestServer server = new EntanglementRestServer(port, entRuntime, graphConn);
 
       String hostname = InetAddress.getLocalHost().getHostName();
 
@@ -92,7 +71,6 @@ public class StartRestletCommand extends AbstractEntanglementCommand<Entanglemen
 
       server.getComponent().start();
       logger.println("Done.");
-      return null;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

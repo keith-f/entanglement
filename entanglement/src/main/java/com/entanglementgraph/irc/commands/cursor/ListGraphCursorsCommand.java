@@ -18,13 +18,10 @@
 package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.scalesinformatics.uibot.Message;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import org.jibble.pircbot.Colors;
 
 import java.util.List;
 import java.util.Map;
@@ -34,8 +31,7 @@ import java.util.Map;
  *
  * @author Keith Flanagan
  */
-public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime> {
-  private static final String CURRENT_CURSOR_TXT = Colors.BROWN + "[Active]" + Colors.NORMAL;
+public class ListGraphCursorsCommand extends AbstractEntanglementCommand {
 
 
   @Override
@@ -50,24 +46,16 @@ public class ListGraphCursorsCommand extends AbstractCommand<EntanglementRuntime
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    Message msg = new Message(channel);
-
-    EntanglementRuntime runtime = state.getUserObject();
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
-      GraphCursor current = runtime.getCurrentCursor();
-      msg.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : runtime.getCursorRegistry().getCurrentPositions().entrySet()) {
+      logger.println("Graph cursors [");
+      for (Map.Entry<String, GraphCursor> entry : entRuntime.getCursorRegistry().getCurrentPositions().entrySet()) {
         GraphCursor cursor = entry.getValue();
-        String currentText = current == entry.getValue() ? CURRENT_CURSOR_TXT : "";
-        msg.println("  %s => %s %s",
+        logger.println("  %s => %s",
             entry.getKey(),
-            cursor.getPosition().toString(),
-            currentText);
+            cursor.getPosition().toString());
       }
-      msg.println("]");
-      return msg;
+      logger.println("]");
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

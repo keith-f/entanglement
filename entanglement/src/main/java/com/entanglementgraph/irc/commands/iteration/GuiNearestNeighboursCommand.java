@@ -18,20 +18,20 @@
 package com.entanglementgraph.irc.commands.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
-import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.entanglementgraph.iteration.GraphIteratorException;
+import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
+import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.MongoUtils;
-import com.entanglementgraph.visualisation.jung.*;
+import com.entanglementgraph.visualisation.jung.JungGraphFrame;
 import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
+import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
 import com.entanglementgraph.visualisation.jung.renderers.CategoryDatasetChartRenderer;
 import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
 import com.entanglementgraph.visualisation.jung.renderers.XYDatasetChartRenderer;
@@ -39,7 +39,6 @@ import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.mongodb.DBObject;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -56,8 +55,7 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-//  private static final Logger logger = Logger.getLogger(GuiNearestNeighboursCommand.class.getName());
+public class GuiNearestNeighboursCommand extends AbstractEntanglementCursorCommand {
 
   @Override
   public String getDescription() {
@@ -83,16 +81,13 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
     return params;
   }
 
-  public GuiNearestNeighboursCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
-  }
 
   private EntityDisplayNameRegistry displayNameFactories;
   private CustomRendererRegistry customVertexRenderers;
   private int maxUids;
   private int maxNames;
   private String tempCluster;
-
+  private boolean track;
   private int depth;
 
   private int layoutSizeX;
@@ -103,22 +98,26 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
   private TrackingVisualisation trackingVisualisation;
   private JungGraphFrame frame;
 
-
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+
     depth = parsedArgs.get("depth").parseValueAsInteger();
 
     tempCluster = parsedArgs.get("temp-cluster").getStringValue();
 
     maxUids = parsedArgs.get("maxUids").parseValueAsInteger();
     maxNames = parsedArgs.get("maxNames").parseValueAsInteger();
-    boolean track = parsedArgs.get("track").parseValueAsBoolean();
+    track = parsedArgs.get("track").parseValueAsBoolean();
 
     layoutSizeX = parsedArgs.get("layout-size-x").parseValueAsInteger();
     layoutSizeY = parsedArgs.get("layout-size-y").parseValueAsInteger();
     displaySizeX = parsedArgs.get("display-size-x").parseValueAsInteger();
     displaySizeY = parsedArgs.get("display-size-y").parseValueAsInteger();
+  }
 
+  @Override
+  protected void processLine() throws UserException, BotCommandException {
     // Here, we use generic Entanglement display name and Jung renderer registries
     // These could be replaced with project-specific classes, if necessary
     configureDefaultRenderers();
@@ -136,9 +135,7 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
 
       // Register a listener to take care of future cursor movements
       CursorListener listener = new CursorListener();
-      state.getUserObject().getCursorRegistry().getCurrentPositions().addEntryListener(listener, cursorName, true);
-
-      Message msg = new Message(channel);
+      entRuntime.getCursorRegistry().getCurrentPositions().addEntryListener(listener, cursorName, true);
 
       EntityKeys<? extends Node> currentPos = cursor.getPosition();
       DBObject currentNodeObj = null;
@@ -154,14 +151,11 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
 
       boolean isAtDeadEnd = cursor.isAtDeadEnd();
       int historyIdx = cursor.getCursorHistoryIdx();
-      msg.println("Cursor %s (%s) is currently located at: %s; Dead end? %s; Steps taken: %s",
+      logger.println("Cursor %s (%s) is currently located at: %s; Dead end? %s; Steps taken: %s",
           entFormat.formatCursorName(cursor.getName()).toString(), cursorName,
           entFormat.formatNodeKeyset(currentPos).toString(), entFormat.formatBoolean(isAtDeadEnd).toString(),
           entFormat.formatHistoryIndex(historyIdx).toString());
-      msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames).toString());
-
-
-      return msg;
+      logger.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames).toString());
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
@@ -236,7 +230,7 @@ public class GuiNearestNeighboursCommand extends AbstractEntanglementCommand<Ent
     GraphConnection destinationGraph = createTemporaryGraph(tempCluster);
     DepthBasedSubgraphCreator exporter = new DepthBasedSubgraphCreator(depth);
     CursorBasedGraphWalkerRunnable worker = new CursorBasedGraphWalkerRunnable(
-        logger, state.getUserObject(), sourceGraph, destinationGraph, exporter, graphCursor.getPosition());
+        logger, entRuntime, sourceGraph, destinationGraph, exporter, graphCursor.getPosition());
 
     worker.run();
     return destinationGraph;

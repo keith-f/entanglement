@@ -24,6 +24,7 @@ import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -37,7 +38,13 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime> {
+public class CursorGoto extends AbstractEntanglementCursorCommand {
+
+  private String nodeType;
+  private String nodeName;
+  private String nodeUid;
+  private int maxUids;
+  private int maxNames;
 
   @Override
   public String getDescription() {
@@ -56,22 +63,26 @@ public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime>
     return params;
   }
 
-  public CursorGoto() {
-    super(AbstractEntanglementCommand.Requirements.GRAPH_CONN_NEEDED, AbstractEntanglementCommand.Requirements.CURSOR_NEEDED);
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    nodeType = parsedArgs.get("node-type").getStringValue();
+    nodeName = parsedArgs.get("node-name").getStringValue();
+    nodeUid = parsedArgs.get("node-uid").getStringValue();
+    maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
+
+
+    if ((nodeType==null && nodeName==null) || nodeUid==null) {
+      throw new UserException(sender, "You must specify at least a UID or a name.");
+    }
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String nodeType = parsedArgs.get("node-type").getStringValue();
-    String nodeName = parsedArgs.get("node-name").getStringValue();
-    String nodeUid = parsedArgs.get("node-uid").getStringValue();
-    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
-
+  protected void processLine() throws UserException, BotCommandException {
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
     try {
-
       GraphCursor previous = cursor;
       GraphCursor current = cursor.jump(cursorContext, newLocation);
 
@@ -83,9 +94,7 @@ public class CursorGoto extends AbstractEntanglementCommand<EntanglementRuntime>
           entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames).toString(),
           entFormat.formatMovementType(current.getMovementType()).toString());
 
-      Message result = new Message(channel);
-      result.println(outputText);
-      return result;
+      logger.println(outputText);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

@@ -18,29 +18,23 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
+import com.mongodb.BasicDBObject;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.mongodb.BasicDBObject;
 import org.jibble.pircbot.Colors;
 
-import java.util.*;
-
-import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ShowNodeCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+public class ShowNodeCommand extends AbstractEntanglementGraphCommand {
+  private String type;
+  private String entityName;
 
   @Override
   public String getDescription() {
@@ -57,41 +51,35 @@ public class ShowNodeCommand extends AbstractEntanglementCommand<EntanglementRun
     return params;
   }
 
-  public ShowNodeCommand() {
-    super(AbstractEntanglementCommand.Requirements.GRAPH_CONN_NEEDED);
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    type = parsedArgs.get("type").getStringValue();
+    entityName = parsedArgs.get("entityName").getStringValue();
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
-    String type = parsedArgs.get("type").getStringValue();
-    String entityName = parsedArgs.get("entityName").getStringValue();
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
       // Create a keyset in order to query the database
       EntityKeys keyset = new EntityKeys(type, entityName);
       // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
       BasicDBObject node = graphConn.getNodeDao().getByKey(keyset);
 
-      Message result = new Message(channel);
       if (node == null) {
-        result.println("A graph entity of type %s with name %s could not be found!", type, entityName);
+        logger.println("A graph entity of type %s with name %s could not be found!", type, entityName);
       } else {
-        result.println("Found the following entity with properties:");
-        result.println("[");
+        logger.println("Found the following entity with properties:");
+        logger.println("[");
         Map nodeAsMap = node.toMap();
         for (Object key : nodeAsMap.keySet()) {
           Object val = nodeAsMap.get(key);
           String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
           String valStr = val.toString();
-          result.println("  %s => %s", keyStr, valStr);
+          logger.println("  %s => %s", keyStr, valStr);
         }
-        result.println("]");
-
+        logger.println("]");
       }
-
-
-      return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

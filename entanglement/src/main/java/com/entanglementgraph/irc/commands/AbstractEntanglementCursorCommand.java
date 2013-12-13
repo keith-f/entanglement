@@ -49,12 +49,7 @@ abstract public class AbstractEntanglementCursorCommand extends AbstractEntangle
 
     cursorName = parsedArgs.get("cursor").getStringValue();
     cursor = entRuntime.getCursorRegistry().getCursorCurrentPosition(cursorName);
-    // Make sure that cursorName reflects the chosen cursor, even if no name was specified by the user
-    if (cursor != null) {
-      cursorName = cursor.getName();
-    }
     cursorContext = new GraphCursor.CursorContext(graphConn, hazelcast);
-
   }
 
 }

@@ -21,6 +21,7 @@ import com.entanglementgraph.benchmarks.CreateAndDestroyCursorsBenchmark;
 import com.entanglementgraph.benchmarks.IterateByTypeBenchmark;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -35,8 +36,9 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class RunBenchmarksCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-//  private static final Logger logger = Logger.getLogger(GeneCentricMethylationSummaryChartCommand.class.getName());
+public class RunBenchmarksCommand extends AbstractEntanglementGraphCommand {
+  private String connName;
+  private String nodeType;
 
   @Override
   public String getDescription() {
@@ -52,25 +54,25 @@ public class RunBenchmarksCommand extends AbstractEntanglementCommand<Entangleme
     return params;
   }
 
-  public RunBenchmarksCommand() {
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    connName = parsedArgs.get("conn").getStringValue();
+    nodeType = parsedArgs.get("iterate-by-type.type").getStringValue();
+
   }
 
-
-
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String connName = parsedArgs.get("conn").getStringValue();
-    String nodeType = parsedArgs.get("iterate-by-type.type").getStringValue();
-
+  protected void processLine() throws UserException, BotCommandException {
     List<Benchmark> benchmarks = new LinkedList<>();
     try {
-      GraphConnection graphConn = state.getUserObject().createGraphConnectionFor(connName);
+      GraphConnection graphConn = entRuntime.createGraphConnectionFor(connName);
       if (nodeType != null) {
         IterateByTypeBenchmark benchmark = new IterateByTypeBenchmark(
             new BotLoggerIrc(bot, channel, IterateByTypeBenchmark.class.getSimpleName()), graphConn, nodeType);
         benchmarks.add(benchmark);
       }
-      benchmarks.add(new CreateAndDestroyCursorsBenchmark(logger, state.getUserObject(), 10000));
+      benchmarks.add(new CreateAndDestroyCursorsBenchmark(logger, entRuntime, 10000));
 
       logger.infoln("Running benchmarks ... ");
       for (Benchmark benchmark : benchmarks) {
@@ -79,10 +81,7 @@ public class RunBenchmarksCommand extends AbstractEntanglementCommand<Entangleme
         benchmark.printFinalReport();
       }
 
-      Message msg = new Message(channel);
-      msg.println("Done.");
-
-      return msg;
+      logger.println("Done.");
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

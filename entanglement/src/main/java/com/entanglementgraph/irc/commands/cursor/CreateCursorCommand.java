@@ -17,13 +17,13 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
 import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.scalesinformatics.uibot.OptionalParam;
+import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
@@ -34,8 +34,15 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
+public class CreateCursorCommand extends AbstractEntanglementCommand {
   private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
+
+  private String cursorName;
+  private String nodeType;
+  private String nodeName;
+  private String nodeUid;
+  private int maxUids;
+  private int maxNames;
 
   @Override
   public String getDescription() {
@@ -57,20 +64,19 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
     return params;
   }
 
-
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    cursorName = parsedArgs.get("cursor").getStringValue();
+    nodeType = parsedArgs.get("node-type").getStringValue();
+    nodeName = parsedArgs.get("node-name").getStringValue();
+    nodeUid = parsedArgs.get("node-uid").getStringValue();
+    maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
+  }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String cursorName = parsedArgs.get("cursor").getStringValue();
-//    String connName = parsedArgs.get("conn").getStringValue();
-    String nodeType = parsedArgs.get("node-type").getStringValue();
-    String nodeName = parsedArgs.get("node-name").getStringValue();
-    String nodeUid = parsedArgs.get("node-uid").getStringValue();
-    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
-
-    EntanglementRuntime runtime = state.getUserObject();
-//    GraphConnection graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(runtime, connName);
+  protected void processLine() throws UserException, BotCommandException {
 
     EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
@@ -85,15 +91,13 @@ public class CreateCursorCommand extends AbstractCommand<EntanglementRuntime> {
        * Add the cursor to the runtime. It will then be accessible to other distributed processes.
        * The EntanglementRuntime will also receive GraphCursorListener updates.
        */
-      runtime.getCursorRegistry().addCursor(newCursor);
+      entRuntime.getCursorRegistry().addCursor(newCursor);
 
       String outputText = String.format("New cursor %s created at node: %s",
           entFormat.formatCursorName(cursorName).toString(),
           entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames)).toString();
 
-      Message result = new Message(channel);
-      result.println(outputText);
-      return result;
+      logger.println(outputText);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

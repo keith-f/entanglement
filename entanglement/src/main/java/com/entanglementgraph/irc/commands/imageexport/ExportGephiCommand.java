@@ -17,10 +17,10 @@
 
 package com.entanglementgraph.irc.commands.imageexport;
 
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.visualisation.gephi.MongoToGephiExporter;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.scalesinformatics.uibot.*;
+import com.scalesinformatics.uibot.BotState;
+import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
@@ -31,17 +31,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ExportGephiCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
+public class ExportGephiCommand extends AbstractEntanglementGraphCommand {
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
   private static final String NODE_COLOR_PREFIX = "node.color.";
   private static final String EDGE_COLOR_PREFIX = "edge.color.";
+
+  private Map<String, Color> colorMappings;
 
   @Override
   public String getDescription() {
@@ -54,17 +52,15 @@ public class ExportGephiCommand extends AbstractEntanglementCommand<Entanglement
     return params;
   }
 
-  public ExportGephiCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED);
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    colorMappings = parseColoursFromEnvironment(state);
+    bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-
-    Map<String, Color> colorMappings = parseColoursFromEnvironment(state);
-    bot.debugln(channel, "Found the following colour mappings: %s", colorMappings);
-
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
       File outputFile = new File(graphConn.getGraphName()+".gexf");
 
@@ -74,15 +70,13 @@ public class ExportGephiCommand extends AbstractEntanglementCommand<Entanglement
       exporter.writeToFile(outputFile);
       exporter.close();
 
-      Message result = new Message(channel);
-      result.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
-      return result;
+      logger.println("Graph %s has been exported to a Gephi file: %s", graphConn.getGraphName(), outputFile.getAbsolutePath());
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }
   }
 
-  public static Map<String, Color> parseColoursFromEnvironment(BotState<? extends EntanglementRuntime> state) {
+  public static Map<String, Color> parseColoursFromEnvironment(BotState state) {
     Map<String, Color> entityTypeToColor = new HashMap<>();
     for (Map.Entry<String, String> entry : state.getEnvironment().entrySet()) {
       String key = entry.getKey();
