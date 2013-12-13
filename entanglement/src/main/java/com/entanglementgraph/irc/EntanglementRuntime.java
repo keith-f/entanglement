@@ -51,7 +51,7 @@ import java.util.Map;
 public class EntanglementRuntime {
   private static final String HZ_CONN_DETAILS = EntanglementRuntime.class.getSimpleName()+".GraphConnectionDetails";
 
-private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
+//  private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
@@ -69,10 +69,10 @@ private final BotState<EntanglementRuntime> state; // The channel state for whic
    * @param classLoader
    * @param marshaller
    */
-  public EntanglementRuntime(BotLogger botLogger, BotState<EntanglementRuntime> state,
+  public EntanglementRuntime(BotLogger botLogger,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               HazelcastInstance hzInstance) {
-    this.state = state;
+//    this.state = state;
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
