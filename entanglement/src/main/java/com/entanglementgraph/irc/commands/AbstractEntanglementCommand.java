@@ -18,12 +18,14 @@
 package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.cursor.GraphCursor;
+import com.entanglementgraph.irc.EntanglementIRCBotConfigNames;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnectionFactoryException;
 import com.entanglementgraph.util.TmpGraphConnectionFactory;
+import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -41,50 +43,15 @@ import java.util.Set;
  *
  * @author Keith Flanagan
  */
-abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime> extends AbstractCommand<T> {
+abstract public class AbstractEntanglementCommand extends AbstractCommand {
 
-//  private boolean graphConnNeeded = false;
-//  private boolean graphCursorNeeded = false;
-//  private boolean tempClusterNameNeeded = false;
-//
-//
-//  protected String graphConnName;
-//  protected GraphConnection graphConn;
-//  protected String cursorName;
-//  protected GraphCursor cursor;
-//  protected GraphCursor.CursorContext cursorContext;
-
-//  private String tempClusterName;
+  private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
   private final Set<GraphConnection> temporaryConnections;
-
 
   protected final IrcEntanglementFormat entFormat;
 
-  private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
-
-
-//  protected static enum Requirements {
-//    GRAPH_CONN_NEEDED,
-//    CURSOR_NEEDED,
-//    TEMP_CLUSTER_NAME_NEEDED
-//  };
-
-
-//  @Override
-//  public List<Param> getParams() {
-//    List<Param> params = super.getParams();
-//    if (graphConnNeeded) {
-//      params.add(new OptionalParam("conn", String.class, "Graph connection to use. If no connection name is specified, the 'current' connection will be used."));
-//    }
-//    if (graphCursorNeeded) {
-//      params.add(new OptionalParam("cursor", String.class, "The name of the cursor to use. If not specified, the default cursor will be used"));
-//    }
-//    if (tempClusterNameNeeded) {
-//      params.add(new RequiredParam("temp-cluster", String.class, "The name of a configured MongoDB cluster to use for storing temporary graphs."));
-//    }
-//    return params;
-//  }
-
+  protected EntanglementRuntime entRuntime;
+  protected HazelcastInstance hazelcast;
 
   protected AbstractEntanglementCommand() {
     this.temporaryConnections = new HashSet<>();
@@ -92,49 +59,27 @@ abstract public class AbstractEntanglementCommand<T extends EntanglementRuntime>
   }
 
 
-//  protected AbstractEntanglementCommand(Requirements... requirements)
-//  {
-//    this.temporaryConnections = new HashSet<>();
-//    entFormat = new IrcEntanglementFormat();
-//    for (Requirements req : requirements) {
-//      switch (req) {
-//        case GRAPH_CONN_NEEDED:
-//          graphConnNeeded = true;
-//          break;
-//        case CURSOR_NEEDED:
-//          graphCursorNeeded = true;
-//          break;
-//        case TEMP_CLUSTER_NAME_NEEDED:
-//          tempClusterNameNeeded = true;
-//          break;
-//      }
-//    }
-//  }
 
-//  @Override
-//  protected void preProcessLine() throws UserException, BotCommandException {
-//    super.preProcessLine();
-//    if (graphConnNeeded) {
-//      graphConnName = parsedArgs.get("conn").getStringValue();
-//      graphConn = EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault(state.getUserObject(), graphConnName);
-//      // Make sure that graphConnName reflects the chosen connection, even if no name was specified by the user
-//      if (graphConn != null) {
-//        graphConnName = state.getUserObject().getCurrentConnectionName();
-//      }
-//    }
-//    if (graphCursorNeeded) {
-//      cursorName = parsedArgs.get("cursor").getStringValue();
-//      cursor = EntanglementIrcCommandUtils.getSpecifiedCursorOrDefault(state.getUserObject(), cursorName);
-//      // Make sure that cursorName reflects the chosen cursor, even if no name was specified by the user
-//      if (cursor != null) {
-//        cursorName = cursor.getName();
-//      }
-//      cursorContext = new GraphCursor.CursorContext(graphConn, state.getUserObject().getHzInstance());
-//    }
-//    if (tempClusterNameNeeded) {
-//      tempClusterName = parsedArgs.get("temp-cluster").getStringValue();
-//    }
-//  }
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+
+    try {
+      entRuntime = (EntanglementRuntime) bot.getGlobalState().getUserObjs()
+          .get(EntanglementIRCBotConfigNames.STATE_PROP_ENTANGLEMENT);
+      hazelcast = (HazelcastInstance) bot.getGlobalState().getUserObjs()
+          .get(EntanglementIRCBotConfigNames.STATE_PROP_HAZELCAST);
+    } catch (Exception e) {
+      throw new BotCommandException("Failed to obtain required state objects", e);
+    }
+
+    if (entRuntime == null) {
+      throw new UserException("No Entanglement runtime object could be found");
+    }
+    if (hazelcast == null) {
+      throw new UserException("No HazelcastInstance object could be found");
+    }
+  }
 
   @Override
   protected void postProcessLine() throws UserException, BotCommandException {

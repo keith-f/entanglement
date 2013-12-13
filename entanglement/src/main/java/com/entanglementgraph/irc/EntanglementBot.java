@@ -34,16 +34,14 @@ import com.scalesinformatics.uibot.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import static com.entanglementgraph.irc.EntanglementIRCBotConfigNames.*;
+
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 16:59
- * To change this template use File | Settings | File Templates.
+ * An IRC bot for interacting with Entanglement graphs
+ *
+ * @author Keith Flanagan
  */
-public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBot<T> {
-  private static final String STATE_PROP_HAZELCAST = "Hazelcast";
-  private static final String STATE_PROP_ENTANGLEMENT = "EntanglementRuntime";
+public class EntanglementBot extends GenericIrcBot {
 
   private static final String USAGE = "Usage:\n"
       + "  * Nickname\n"
@@ -87,7 +85,7 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     System.out.println("Connected to Hazelcast");
 
 
-    EntanglementBot<EntanglementRuntime> bot = new EntanglementBot(nick, hzInstance);
+    EntanglementBot bot = new EntanglementBot(nick, hzInstance);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -115,7 +113,6 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
 
     addCommand("/entanglement/db/connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
     addCommand("/entanglement/db/connect-graph", ConnectGraphCommand.class);
-    addCommand("/entanglement/db/use-graph", UseGraphCommand.class);
     addCommand("/entanglement/db/list-connections", ListGraphConnectionsCommand.class);
     addCommand("/entanglement/db/playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
     addCommand("/entanglement/graph/create-edge", CreateEdgeCommand.class);
@@ -134,7 +131,6 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
      */
     addCommand("/entanglement/cursor/create", CreateCursorCommand.class);
     addCommand("/entanglement/cursor/list", ListGraphCursorsCommand.class);
-    addCommand("/entanglement/cursor/use", UseCursorCommand.class);
     addCommand("/entanglement/cursor/describe", CursorDescribe.class);
     addCommand("/entanglement/cursor/goto", CursorGoto.class);
     addCommand("/entanglement/cursor/step", CursorStepToNode.class);
