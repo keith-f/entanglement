@@ -41,13 +41,13 @@ import java.util.logging.Logger;
 public class GraphCursorPositionListenerLogger implements EntryListener<String, GraphCursor> {
   private static final String LOGGER_NAME = GraphCursorPositionListenerLogger.class.getSimpleName();
 
-  private final GenericIrcBot<EntanglementRuntime> bot;
+  private final GenericIrcBot bot;
   private final String channel;
   private final BotLogger logger;
   private final HazelcastInstance hzInstance;
   private final IrcEntanglementFormat entFormat = new IrcEntanglementFormat();
 
-  public GraphCursorPositionListenerLogger(GenericIrcBot<EntanglementRuntime> bot, String channel,
+  public GraphCursorPositionListenerLogger(GenericIrcBot bot, String channel,
                                            HazelcastInstance hzInstance) {
     this.bot = bot;
     this.channel = channel;
