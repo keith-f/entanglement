@@ -20,13 +20,11 @@ package com.entanglementgraph.irc.commands.cursor;
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.entanglementgraph.util.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -41,8 +39,12 @@ import java.util.*;
  *
  * @author Keith Flanagan
  */
-public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+public class CursorDescribe extends AbstractEntanglementCursorCommand {
+  private boolean displayEdgeCounts;
+  private boolean displayEdgeTypes;
+  private boolean verbose;
+  private int maxUids;
+  private int maxNames;
 
   @Override
   public String getDescription() {
@@ -62,16 +64,21 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
   }
 
   public CursorDescribe() {
-    super(Requirements.GRAPH_CONN_NEEDED, Requirements.CURSOR_NEEDED);
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    boolean displayEdgeCounts = parsedArgs.get("display-edge-counts").parseValueAsBoolean();
-    boolean displayEdgeTypes = parsedArgs.get("display-edge-types").parseValueAsBoolean();
-    boolean verbose = parsedArgs.get("verbose").parseValueAsBoolean();
-    int maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
-    int maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    displayEdgeCounts = parsedArgs.get("display-edge-counts").parseValueAsBoolean();
+    displayEdgeTypes = parsedArgs.get("display-edge-types").parseValueAsBoolean();
+    verbose = parsedArgs.get("verbose").parseValueAsBoolean();
+    maxUids = parsedArgs.get("display-max-uids").parseValueAsInteger();
+    maxNames = parsedArgs.get("display-max-names").parseValueAsInteger();
+  }
+
+  @Override
+  protected void processLine() throws UserException, BotCommandException {
+
 
 //    EntanglementRuntime runtime = state.getUserObject();
     DbObjectMarshaller m = graphConn.getMarshaller();
@@ -80,9 +87,6 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
     int historyIdx = cursor.getCursorHistoryIdx();
 
     try {
-
-      Message msg = new Message(channel);
-
       EntityKeys<? extends Node> currentPos = cursor.getPosition();
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
@@ -90,27 +94,27 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
         currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
       }
 
-      msg.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
+      logger.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
           entFormat.formatCursorName(cursor.getName()).toString(),
           entFormat.formatNodeKeyset(currentPos).toString(),
           entFormat.formatBoolean(isAtDeadEnd).toString(),
           entFormat.formatHistoryIndex(historyIdx).toString());
-      msg.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
+      logger.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
 
       if (displayEdgeCounts) {
         /*
          * Incoming edges
          */
-        msg.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)).toString());
+        logger.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)).toString());
         if (displayEdgeTypes) {
           Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
-          msg.println("* Incoming edge types: %s", entFormat.format(typeToCount).toString());
+          logger.println("* Incoming edge types: %s", entFormat.format(typeToCount).toString());
         }
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
 //            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
-            msg.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
+            logger.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
                 edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames).toString());
           }
         }
@@ -118,23 +122,21 @@ public class CursorDescribe extends AbstractEntanglementCommand<EntanglementRunt
         /*
          * Outgoing edges
          */
-        msg.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)).toString());
+        logger.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)).toString());
         if (displayEdgeTypes) {
           Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
-          msg.println("* Outgoing edge types: %s", entFormat.format(typeToCount).toString());
+          logger.println("* Outgoing edge types: %s", entFormat.format(typeToCount).toString());
         }
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
 //            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
             Edge edge = m.deserialize(edgeObj, Edge.class);
-            msg.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
+            logger.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
                 edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), maxUids, maxNames).toString());
           }
         }
       }
 
-
-      return msg;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

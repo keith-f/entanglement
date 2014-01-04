@@ -17,17 +17,12 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.data.GraphConnectionDetails;
-import com.entanglementgraph.shell.EntanglementStatePropertyNames;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.util.GraphConnectionFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
-import com.scalesinformatics.uibot.Message;
-import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
@@ -39,9 +34,12 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-public class ConnectMongoDbClusterCommand extends AbstractCommand<EntanglementRuntime> {
+public class ConnectMongoDbClusterCommand extends AbstractEntanglementCommand {
 
   private static final int DEFAULT_MONGODB_PORT = 27017;
+
+  private String poolName;
+  private String rawHosts;
 
   @Override
   public String getDescription() {
@@ -57,15 +55,15 @@ public class ConnectMongoDbClusterCommand extends AbstractCommand<EntanglementRu
     return params;
   }
 
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    poolName = parsedArgs.get("pool").getStringValue();
+    rawHosts = parsedArgs.get("hosts").getStringValue();
+  }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String poolName = parsedArgs.get("pool").getStringValue();
-    String rawHosts = parsedArgs.get("hosts").getStringValue();
-
-
-    EntanglementRuntime runtime = state.getUserObject();
-
+  protected void processLine() throws UserException, BotCommandException {
     try {
       List<ServerAddress> servers = new LinkedList<>();
       for (String hostPort : rawHosts.split(",")) {
@@ -84,11 +82,8 @@ public class ConnectMongoDbClusterCommand extends AbstractCommand<EntanglementRu
       MongoClient pool = GraphConnectionFactory.registerNamedPool(
           poolName, servers.toArray(new ServerAddress[servers.size()]));
 
-
-      Message result = new Message(channel);
-      result.println("Connection pool '%s' is now available, containing %d servers and %d databases.",
+      logger.println("Connection pool '%s' is now available, containing %d servers and %d databases.",
           poolName, pool.getAllAddress().size(), pool.getDatabaseNames().size());
-      return result;
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

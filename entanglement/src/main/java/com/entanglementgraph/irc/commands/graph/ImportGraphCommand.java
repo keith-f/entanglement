@@ -17,30 +17,23 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.revlog.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.scalesinformatics.uibot.BotState;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
-
+public class ImportGraphCommand extends AbstractEntanglementCommand {
+  private String sourceConnName;
+  private String destinationConnName;
 
   @Override
   public String getDescription() {
@@ -58,14 +51,18 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String sourceConnName = parsedArgs.get("source").getStringValue();
-    String destinationConnName = parsedArgs.get("destination").getStringValue();
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    sourceConnName = parsedArgs.get("source").getStringValue();
+    destinationConnName = parsedArgs.get("destination").getStringValue();
+  }
+
+  @Override
+  protected void processLine() throws UserException, BotCommandException {
 
     try {
-      EntanglementRuntime runtime = state.getUserObject();
-      GraphConnection sourceConn = runtime.createGraphConnectionFor(sourceConnName);
-      GraphConnection destinationConn = runtime.createGraphConnectionFor(destinationConnName);
+      GraphConnection sourceConn = entRuntime.createGraphConnectionFor(sourceConnName);
+      GraphConnection destinationConn = entRuntime.createGraphConnectionFor(destinationConnName);
       if (sourceConn == null) throw new UserException(sender, "No graph connection exists with the name: "+sourceConnName);
       if (destinationConn == null) throw new UserException(sender, "No graph connection exists with the name: "+destinationConnName);
 
@@ -73,9 +70,7 @@ public class ImportGraphCommand extends AbstractCommand<EntanglementRuntime> {
       BranchImport graphOp = new BranchImport(sourceConn.getGraphName(), sourceConn.getGraphBranch());
       TxnUtils.submitAsTxn(destinationConn, graphOp);
 
-      Message result = new Message(channel);
-      result.println("Import of %s to %s complete", sourceConnName, destinationConnName);
-      return result;
+      logger.println("Import of %s to %s complete", sourceConnName, destinationConnName);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

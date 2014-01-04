@@ -29,8 +29,9 @@
     <scales-common.version>SC-SNAPSHOT</scales-common.version>
     <cliche.version>1.0-SNAPSHOT</cliche.version>
     <gephi.version>0.8.2</gephi.version>
-     <jung.version>2.0.1</jung.version>
+    <jung.version>2.0.1</jung.version>
     <jfreechart.version>1.0.14</jfreechart.version>
+    <restlet.version>2.1.4</restlet.version>
   </properties>
 
 
@@ -151,6 +152,13 @@
     <repository>
       <id>sonatype-nexus-snapshots</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+
+
+    <repository>
+      <id>maven-restlet</id>
+      <name>Public online Restlet repository</name>
+      <url>http://maven.restlet.org</url>
     </repository>
   </repositories>
 
@@ -278,6 +286,20 @@
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>
       <version>${jfreechart.version}</version>
+    </dependency>
+
+
+    <!-- Restlet -->
+    <dependency>
+      <groupId>org.restlet.jse</groupId>
+      <artifactId>org.restlet</artifactId>
+      <version>${restlet.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.restlet.jse</groupId>
+      <artifactId>org.restlet.ext.json</artifactId>
+      <version>${restlet.version}</version>
     </dependency>
 
 

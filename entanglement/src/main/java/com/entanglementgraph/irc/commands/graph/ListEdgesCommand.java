@@ -19,29 +19,22 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.data.Edge;
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.*;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
+import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
+import com.mongodb.BasicDBObject;
+import com.scalesinformatics.uibot.OptionalParam;
+import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import com.mongodb.BasicDBObject;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import static com.entanglementgraph.irc.commands.EntanglementIrcCommandUtils.getSpecifiedGraphOrDefault;
-
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ListEdgesCommand extends AbstractEntanglementCommand<EntanglementRuntime> {
-
+public class ListEdgesCommand extends AbstractEntanglementGraphCommand {
+  private String type;
+  private int offset;
+  private int limit;
 
   @Override
   public String getDescription() {
@@ -58,17 +51,16 @@ public class ListEdgesCommand extends AbstractEntanglementCommand<EntanglementRu
     return params;
   }
 
-  public ListEdgesCommand() {
-    super(Requirements.GRAPH_CONN_NEEDED);
+  @Override
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+    type = parsedArgs.get("type").getStringValue();
+    offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
+    limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    String type = parsedArgs.get("type").getStringValue();
-    int offset = Integer.parseInt(parsedArgs.get("offset").getStringValue());
-    int limit = Integer.parseInt(parsedArgs.get("limit").getStringValue());
-
-
+  protected void processLine() throws UserException, BotCommandException {
     int count = 0;
     try {
       if (type == null) {
@@ -95,9 +87,7 @@ public class ListEdgesCommand extends AbstractEntanglementCommand<EntanglementRu
         }
       }
 
-      Message result = new Message(channel);
-      result.println("Printed %d nodes.", count);
-      return result;
+      logger.println("Printed %d nodes.", count);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

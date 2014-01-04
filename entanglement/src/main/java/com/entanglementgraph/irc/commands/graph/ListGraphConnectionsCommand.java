@@ -17,31 +17,20 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.irc.EntanglementRuntime;
+import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
-import com.entanglementgraph.util.GraphConnection;
-import com.scalesinformatics.uibot.BotState;
-import com.scalesinformatics.uibot.Message;
 import com.scalesinformatics.uibot.Param;
-import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 15:07
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRuntime> {
-  private static final String CURRENT_GRAPH_TXT = Colors.BROWN + "[Active]" + Colors.NORMAL;
-
+public class ListGraphConnectionsCommand extends AbstractEntanglementCommand {
 
   @Override
   public String getDescription() {
@@ -55,24 +44,17 @@ public class ListGraphConnectionsCommand extends AbstractCommand<EntanglementRun
   }
 
   @Override
-  protected Message _processLine() throws UserException, BotCommandException {
-    Message msg = new Message(channel);
+  protected void processLine() throws UserException, BotCommandException {
     try {
-      EntanglementRuntime runtime = state.getUserObject();
-
-      String current = runtime.getCurrentConnectionName();
-      msg.println("Graph connections [");
-      for (Map.Entry<String, GraphConnectionDetails> entry : runtime.getGraphConnectionDetails().entrySet()) {
+      logger.println("Graph connections [");
+      for (Map.Entry<String, GraphConnectionDetails> entry : entRuntime.getGraphConnectionDetails().entrySet()) {
         GraphConnectionDetails details = entry.getValue();
-        String currentText = current == entry.getKey() ? CURRENT_GRAPH_TXT : "";
-        msg.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
+        logger.println("  %s => %s/%s; %s/%s %s", entry.getKey(),
             details.getPoolName(),
             details.getDatabase(),
-            details.getGraphName(), details.getGraphBranch(),
-            currentText);
+            details.getGraphName(), details.getGraphBranch());
       }
-      msg.println("]");
-      return msg;
+      logger.println("]");
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

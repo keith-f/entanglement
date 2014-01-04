@@ -28,11 +28,8 @@ import org.jibble.pircbot.Colors;
 
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 04/07/2013
- * Time: 22:10
- * To change this template use File | Settings | File Templates.
+ *
+ * @author Keith Flanagan
  */
 public class IrcEntanglementFormat extends IrcFormat {
 

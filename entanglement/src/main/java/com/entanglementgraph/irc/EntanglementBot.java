@@ -25,24 +25,24 @@ import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.iteration.GuiNearestNeighboursCommand;
 import com.entanglementgraph.irc.commands.iteration.ListKnownGraphWalkersCommand;
 import com.entanglementgraph.irc.commands.iteration.RunCursorBasedGraphWalkerCommand;
-import com.hazelcast.core.Hazelcast;
+import com.entanglementgraph.irc.commands.restlet.StartRestletCommand;
 import com.hazelcast.core.HazelcastInstance;
-import com.scalesinformatics.hazelcast.DefaultHazelcastConfig;
+import com.scalesinformatics.hazelcast.ScalesHazelcastInstanceFactory;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.uibot.BotState;
-import com.scalesinformatics.uibot.GenericIrcBot;
+import com.scalesinformatics.uibot.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import static com.entanglementgraph.irc.EntanglementIRCBotConfigNames.*;
+
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 13/05/2013
- * Time: 16:59
- * To change this template use File | Settings | File Templates.
+ * An IRC bot for interacting with Entanglement graphs
+ *
+ * @author Keith Flanagan
  */
-public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBot<T> {
+public class EntanglementBot extends GenericIrcBot {
+
   private static final String USAGE = "Usage:\n"
       + "  * Nickname\n"
       + "  * Server\n"
@@ -65,11 +65,6 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
       channel = args[4];
     }
 
-    //FIXME this should work for now, but do this better...
-    String[] addresses = new String[] {
-        "192.168.*.*", "10.*.*.*", "128.240.*.*"
-    };
-
     String address = InetAddress.getLocalHost().getHostAddress();
     System.out.println("Address: "+address);
     String hostname = InetAddress.getLocalHost().getHostName();
@@ -83,8 +78,14 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     System.out.println("Server: " + server);
     System.out.println("Channel: " + channel);
 
+    System.out.println("Connecting to Hazelcast ...");
+    HazelcastInstance hzInstance = ScalesHazelcastInstanceFactory
+        .createInstanceBoundToLocalNets(hazelcastClusterName, hazelcastClusterName);
 
-    EntanglementBot<EntanglementRuntime> bot = new EntanglementBot(nick, hazelcastClusterName, addresses);
+    System.out.println("Connected to Hazelcast");
+
+
+    EntanglementBot bot = new EntanglementBot(nick, hzInstance);
 
     // Enable debugging output.
     bot.setVerbose(true);
@@ -99,29 +100,19 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     bot.setMessageDelay(5); // 5 MS between messages - effectively no delay
   }
 
-  private final String hazelcastClusterName;
   protected HazelcastInstance hzInstance = null;
 
-  public EntanglementBot(String nickname, String hazelcastClusterName, String... bindAddresses)
+  public EntanglementBot(String nickname, HazelcastInstance hzInstance)
       throws UnknownHostException {
     super(nickname);
 
-    //Regenerate global config object
-    this.hazelcastClusterName = hazelcastClusterName;
-    DefaultHazelcastConfig hzConfig = new DefaultHazelcastConfig(hazelcastClusterName, hazelcastClusterName);
-    if (bindAddresses.length == 0) {
-      String hostname = InetAddress.getLocalHost().getHostAddress();
-      hzConfig.specifyNetworkInterfaces(hostname);
-    } else {
-      hzConfig.specifyNetworkInterfaces(bindAddresses);
-    }
-    hzInstance = Hazelcast.newHazelcastInstance(hzConfig);
-    createCustomUserObjectForBotState(null, getGlobalState());
+    this.hzInstance = hzInstance;
+    addHazelcastToBotState();
+    addEntanglementToBotState();
 
 
     addCommand("/entanglement/db/connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
     addCommand("/entanglement/db/connect-graph", ConnectGraphCommand.class);
-    addCommand("/entanglement/db/use-graph", UseGraphCommand.class);
     addCommand("/entanglement/db/list-connections", ListGraphConnectionsCommand.class);
     addCommand("/entanglement/db/playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
     addCommand("/entanglement/graph/create-edge", CreateEdgeCommand.class);
@@ -140,10 +131,14 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
      */
     addCommand("/entanglement/cursor/create", CreateCursorCommand.class);
     addCommand("/entanglement/cursor/list", ListGraphCursorsCommand.class);
-    addCommand("/entanglement/cursor/use", UseCursorCommand.class);
     addCommand("/entanglement/cursor/describe", CursorDescribe.class);
     addCommand("/entanglement/cursor/goto", CursorGoto.class);
     addCommand("/entanglement/cursor/step", CursorStepToNode.class);
+
+    /*
+     * REST services
+     */
+    addCommand("/entanglement/rest/start-server", StartRestletCommand.class);
 
     /*
      * Swing-based commands
@@ -158,16 +153,21 @@ public class EntanglementBot<T extends EntanglementRuntime> extends GenericIrcBo
     addCommand("/entanglement/benchmarks/run-benchmarks", RunBenchmarksCommand.class);
   }
 
+  protected void addHazelcastToBotState() {
+    getGlobalState().getUserObjs().put(STATE_PROP_HAZELCAST, hzInstance);
+  }
 
-  @Override
-  protected void createCustomUserObjectForBotState(String channel, BotState newBotState) {
+  protected void addEntanglementToBotState() {
     if (hzInstance == null) {
       System.out.println("hzInstance is null. Skipping state creation for now.");
       return;
     }
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
-    EntanglementRuntime runtime = new EntanglementRuntime(this, channel, newBotState, cl, m, hzInstance);
-    newBotState.setUserObject(runtime);
+    // Set EntanglementRuntime logging to STDOUT by default (since we don't currently know of any channels).
+    BotLogger logger = new BotLoggerStdOut(EntanglementBot.class.getSimpleName());
+    EntanglementRuntime runtime = new EntanglementRuntime(logger, cl, m, hzInstance);
+
+    getGlobalState().getUserObjs().put(STATE_PROP_ENTANGLEMENT, runtime);
   }
 }

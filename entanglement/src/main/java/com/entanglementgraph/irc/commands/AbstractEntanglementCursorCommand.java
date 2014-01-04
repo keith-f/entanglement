@@ -15,50 +15,41 @@
  * 
  */
 
-package com.entanglementgraph.irc.commands.cursor;
+package com.entanglementgraph.irc.commands;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.scalesinformatics.uibot.Param;
+import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * Lists the currently configured graph cursors. Marks the current 'default' cursor,
+ * An Entanglement command implementation that requires that a graph cursor name is specified.
+ * Extends <code>AbstractEntanglementGraphCommand</code> because graph and Hazelcast objects are required too.
  *
  * @author Keith Flanagan
  */
-public class ListGraphCursorsCommand extends AbstractEntanglementCommand {
-
-
-  @Override
-  public String getDescription() {
-    return "Lists known graph cursors.";
-  }
+abstract public class AbstractEntanglementCursorCommand extends AbstractEntanglementGraphCommand {
+  protected String cursorName;
+  protected GraphCursor cursor;
+  protected GraphCursor.CursorContext cursorContext;
 
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
+    params.add(new RequiredParam("cursor", String.class, "Name of the graph cursor to use"));
     return params;
   }
 
   @Override
-  protected void processLine() throws UserException, BotCommandException {
-    try {
-      logger.println("Graph cursors [");
-      for (Map.Entry<String, GraphCursor> entry : entRuntime.getCursorRegistry().getCurrentPositions().entrySet()) {
-        GraphCursor cursor = entry.getValue();
-        logger.println("  %s => %s",
-            entry.getKey(),
-            cursor.getPosition().toString());
-      }
-      logger.println("]");
-    } catch (Exception e) {
-      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
-    }
+  protected void preProcessLine() throws UserException, BotCommandException {
+    super.preProcessLine();
+
+    cursorName = parsedArgs.get("cursor").getStringValue();
+    cursor = entRuntime.getCursorRegistry().getCursorCurrentPosition(cursorName);
+    cursorContext = new GraphCursor.CursorContext(graphConn, hazelcast);
   }
 
 }

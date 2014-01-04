@@ -27,6 +27,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.uibot.BotLogger;
+import com.scalesinformatics.uibot.BotLoggerFactory;
 import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
@@ -48,12 +50,8 @@ import java.util.Map;
  */
 public class EntanglementRuntime {
   private static final String HZ_CONN_DETAILS = EntanglementRuntime.class.getSimpleName()+".GraphConnectionDetails";
-//  private static final String HZ_GRAPH_CURSORS = EntanglementRuntime.class.getSimpleName()+".GraphCursors";
 
-  private static final String ENV_DEFAULT_CONN = "default-graph-connection";
-  private static final String ENV_DEFAULT_CURSOR = "default-graph-cursor";
-
-private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
+//  private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
   private final ClassLoader classLoader;
   private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
@@ -67,24 +65,23 @@ private final BotState<EntanglementRuntime> state; // The channel state for whic
    * Creates a new EntanglementRuntime object. This constructor is typically used for processes that may share some
    * of their configuration items (such as graph connection information, or graph cursors) with other, distributed
    * processes.
-   *
-   * @param bot the IRC bot that this EntanglementRuntime instance exists in
-   * @param channel the channel that this EntanglementRuntime instance holds information for, or NULL if this is the
-   *                global state object for this bot.
+`  *
    * @param classLoader
    * @param marshaller
    */
-  public EntanglementRuntime(EntanglementBot bot, String channel, BotState<EntanglementRuntime> state,
+  public EntanglementRuntime(BotLogger botLogger,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               HazelcastInstance hzInstance) {
-    this.state = state;
+//    this.state = state;
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
     this.graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);;
 
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
-    this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(bot, channel), true);
+    this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(
+        BotLoggerFactory.createNewLogger(botLogger, GraphConnectionListenerLogger.class.getSimpleName())),
+        true);
 //
 
 //    this.graphCursors.addEntryListener(new GraphCursorPositionListenerLogger(bot, channel), true);
@@ -127,46 +124,12 @@ private final BotState<EntanglementRuntime> state; // The channel state for whic
     }
   }
 
-  public GraphConnection createGraphConnectionForCurrentConnection() throws UserException, BotCommandException {
-    String defaultConnectionnName = state.getEnvironment().get(ENV_DEFAULT_CONN);
-    if (defaultConnectionnName == null) {
-      throw new UserException("No 'current' connection was set!");
-    }
-    return createGraphConnectionFor(defaultConnectionnName);
-  }
-
-
-
   public ClassLoader getClassLoader() {
     return classLoader;
   }
 
   public DbObjectMarshaller getMarshaller() {
     return marshaller;
-  }
-
-  public String getCurrentConnectionName() {
-    return state.getEnvironment().get(ENV_DEFAULT_CONN);
-  }
-
-  public void setCurrentConnectionName(String currentConnectionName) {
-    state.getEnvironment().put(ENV_DEFAULT_CONN, currentConnectionName);
-  }
-
-  public GraphCursor getCurrentCursor() {
-    String currentCursorName = getCurrentCursorName();
-    if (currentCursorName == null) {
-      return null;
-    }
-    return cursorRegistry.getCursorCurrentPosition(currentCursorName);
-  }
-
-  public String getCurrentCursorName() {
-    return state.getEnvironment().get(ENV_DEFAULT_CURSOR);
-  }
-
-  public void setCurrentCursorName(String currentCursorName) {
-    state.getEnvironment().put(ENV_DEFAULT_CURSOR, currentCursorName);
   }
 
   public IMap<String, GraphConnectionDetails> getGraphConnectionDetails() {
