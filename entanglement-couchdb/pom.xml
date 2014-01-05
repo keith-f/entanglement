@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.entanglementgraph</groupId>
+  <artifactId>entanglement-couchdb</artifactId>
+  <version>ENT-SNAPSHOT</version>
+
+  <name>Entanglement</name>
+
+  <licenses>
+    <license>
+      <name>Apache, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <!-- Environment -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+    <encoding>UTF-8</encoding>
+
+    <!-- version constants -->
+    <ektorp.version>1.4.1</ektorp.version>
+  </properties>
+
+
+  <!-- Build options -->
+  <build>
+    <finalName>entanglement-couchdb</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+
+        <configuration>
+          <executable>java</executable>
+          <arguments>
+            <argument>-DXmx=512m</argument>
+            <argument>-classpath</argument>
+            <!-- automatically creates the classpath using all project dependencies,
+            also adding the project build directory -->
+            <classpath/>
+            <argument>com.entanglementgraph.shell.EntanglementShell</argument>
+          </arguments>
+          <environmentVariables>
+            <!--            <MICROBASE_HOME>/tmp</MICROBASE_HOME>-->
+            <!--            <MICROBASE_LOG>/tmp/log</MICROBASE_LOG>-->
+            <!--            <MICROBASE_CONFIG>/tmp/config</MICROBASE_CONFIG>-->
+          </environmentVariables>
+          <systemProperties>
+            <systemProperty>
+              <key>test</key>
+              <value>1234</value>
+            </systemProperty>
+          </systemProperties>
+        </configuration>
+      </plugin>
+
+      <!-- Assembly plugin -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assemble/exe.xml</descriptor>
+          </descriptors>
+          <archive>
+            <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <extensions>
+      <!-- Required for upload/download to Amazon S3 -->
+      <extension>
+        <groupId>org.kuali.maven.wagons</groupId>
+        <artifactId>maven-s3-wagon</artifactId>
+        <!-- Note: versions 1.1.16 to 1.1.19 fail with a 'HTTP 301' error -->
+        <version>1.1.15</version>
+      </extension>
+    </extensions>
+  </build>
+
+  <!--Destination for Maven deployment of artifacts to S3 -->
+  <distributionManagement>
+    <site>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/site</url>
+    </site>
+    <repository>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/release/</url>
+    </repository>
+    <snapshotRepository>
+      <id>intbio.maven</id>
+      <url>s3://intbio.maven/snapshot/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <!-- Remote repository info -->
+  <repositories>
+    <repository>
+      <id>scalesinformatics-snapshot</id>
+      <url>http://scalesinformatics.maven.s3.amazonaws.com/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>intbio-snapshot</id>
+      <url>http://intbio.maven.s3.amazonaws.com/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>com.entanglementgraph</groupId>
+      <artifactId>entanglement</artifactId>
+      <version>ENT-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.ektorp</groupId>
+      <artifactId>org.ektorp</artifactId>
+      <version>${ektorp.version}</version>
+    </dependency>
+
+  </dependencies>
+
+</project>
+
+
