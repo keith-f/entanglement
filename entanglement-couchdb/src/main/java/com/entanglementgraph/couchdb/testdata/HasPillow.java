@@ -15,27 +15,40 @@
  * 
  */
 
-package com.entanglementgraph.couchdb;
+package com.entanglementgraph.couchdb.testdata;
 
-import org.codehaus.jackson.annotate.JsonCreator;
+import com.entanglementgraph.graph.data.Edge;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.ektorp.support.CouchDbDocument;
 
 /**
  * @author Keith Flanagan
  */
-public class Pillow extends CouchDbDocument {
+public class HasPillow extends Edge<HasPillow, Sofa, Pillow> {
+  private static final String TYPE_NAME = HasPillow.class.getSimpleName();
 
-  public enum Softness {SOFT, MEDIUM, FIRM}
+//  @JsonProperty("_id")
+//  private String uid; //Mapped to CouchDB's '_id' field.
+//
+//  @JsonProperty("_rev")
+//  private String rev; //Used internally by CouchDB
 
-  private final Softness softness;
-
-  @JsonCreator
-  public Pillow(@JsonProperty("softness") Softness s) {
-    softness = s;
+  public HasPillow() {
+    getKeys().setType(TYPE_NAME);
   }
 
-  public Softness getSoftness() {
-    return softness;
-  }
+//  public String getUid() {
+//    return uid;
+//  }
+//
+//  public void setUid(String uid) {
+//    this.uid = uid;
+//  }
+//
+//  public String getRev() {
+//    return rev;
+//  }
+//
+//  public void setRev(String rev) {
+//    this.rev = rev;
+//  }
 }

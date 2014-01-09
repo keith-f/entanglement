@@ -19,11 +19,12 @@
 package com.entanglementgraph.couchdb.revlog.commands;
 
 import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,56 +41,83 @@ public class NodeModification
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(com.entanglementgraph.revlog.commands.NodeModification.class.getName());
+      Logger.getLogger(NodeModification.class.getName());
 
-  public static com.entanglementgraph.revlog.commands.NodeModification create(GraphConnection graphConn, MergePolicy mergePol, Node node)
+//  public static NodeModification create(GraphConnection graphConn, MergePolicy mergePol, Node node)
+//      throws DbObjectMarshallerException {
+////    BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
+//    String nodeSer = graphConn.getMarshaller().serializeToString(node);
+//    NodeModification op = new NodeModification(mergePol, nodeSer);
+//    return op;
+//  }
+//
+//
+//  public static List<NodeModification> create(GraphConnection graphConn, MergePolicy mergePol, Collection<Node> nodes)
+//      throws DbObjectMarshallerException {
+//    List<NodeModification> ops = new ArrayList<>(nodes.size());
+//    for (Node node : nodes) {
+////      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
+//      String nodeSer = graphConn.getMarshaller().serializeToString(node);
+//      NodeModification op = new NodeModification(mergePol, nodeSer);
+//      ops.add(op);
+//    }
+//    return ops;
+//  }
+
+  public static NodeModification create(DbObjectMarshaller m, MergePolicy mergePol, Node node)
       throws DbObjectMarshallerException {
-    BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-    com.entanglementgraph.revlog.commands.NodeModification op = new com.entanglementgraph.revlog.commands.NodeModification(mergePol, nodeSer);
+    ObjectMapper jsonMapper = new ObjectMapper();
+//    String nodeSer = m.serializeToString(node);
+//    NodeModification op = new NodeModification(mergePol, nodeSer);
+      NodeModification op = new NodeModification(mergePol, node);
     return op;
   }
 
-  public static List<com.entanglementgraph.revlog.commands.NodeModification> create(GraphConnection graphConn,
-                                              MergePolicy mergePol, Collection<Node> nodes)
+  public static List<NodeModification> create(DbObjectMarshaller m, MergePolicy mergePol, Collection<Node> nodes)
       throws DbObjectMarshallerException {
-    List<com.entanglementgraph.revlog.commands.NodeModification> ops = new ArrayList<>(nodes.size());
+    List<NodeModification> ops = new ArrayList<>(nodes.size());
     for (Node node : nodes) {
-      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-      com.entanglementgraph.revlog.commands.NodeModification op = new com.entanglementgraph.revlog.commands.NodeModification(mergePol, nodeSer);
+//      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
+//      String nodeSer = m.serializeToString(node);
+//      NodeModification op = new NodeModification(mergePol, nodeSer);
+      NodeModification op = new NodeModification(mergePol, node);
       ops.add(op);
     }
     return ops;
   }
 
+
   private MergePolicy mergePol;
-  
-  private BasicDBObject node;
+
+  private Node nodeAsJson;
+//  private String nodeAsJson;
+//  private JsonNode nodeAsJson;
   
   public NodeModification()
   {
   }
 
-  public NodeModification(MergePolicy mergePol, BasicDBObject node)
+  public NodeModification(MergePolicy mergePol, Node nodeAsJson)
   {
     this.mergePol = mergePol;
-    this.node = node;
-    if (node == null) {
+    this.nodeAsJson = nodeAsJson;
+    if (nodeAsJson == null) {
       throw new RuntimeException("The specified node was NULL!");
     }
   }
 
   @Override
   public String toString() {
-    return "NodeModification{" + "node=" + node + '}';
+    return "NodeModification{" + "node=" + nodeAsJson + '}';
   }
 
-  public BasicDBObject getNode() {
-    return node;
+  public Node getNodeAsJson() {
+    return nodeAsJson;
   }
 
-  public void setNode(BasicDBObject node) {
-    this.node = node;
-    if (node == null) {
+  public void setNodeAsJson(Node nodeAsJson) {
+    this.nodeAsJson = nodeAsJson;
+    if (nodeAsJson == null) {
       throw new RuntimeException("The specified node was NULL!");
     }
   }

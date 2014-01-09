@@ -18,9 +18,12 @@
 
 package com.entanglementgraph.couchdb.revlog.data;
 
-import com.entanglementgraph.revlog.data.RevisionItem;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.entanglementgraph.couchdb.revlog.commands.EdgeModification;
+import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.ektorp.support.CouchDbDocument;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,77 +33,93 @@ import java.util.List;
  * @author Keith Flanagan
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RevisionItemContainer
-{ 
+public class RevisionItemContainer extends CouchDbDocument
+{
+//  @JsonProperty("_id")
+//  private String id; // Mapped to _id for CouchDB
+//  @JsonProperty("_rev")
+//  private String revision;  // Mapped to _rev for CouchDB
+//
+//  @JsonProperty("_id")
+//  private String _id;
+//  @JsonProperty("_rev")
+//  private String _rev;
+
   private Date timestamp;
-  private String graphUniqueId;
-  private String graphBranchId;
- 
-  private String uniqueId;
-  
-  
-  private String transactionUid;
-  private int txnSubmitId;
+  private String graphUid;
+
+  private String patchUid;
+  private int patchIdx;
   private boolean committed;
   private Date dateCommitted;
   
-  List<com.entanglementgraph.revlog.data.RevisionItem> items;
+  private List<NodeModification> nodeUpdates;
+  private List<EdgeModification> edgeUpdates;
 
   public RevisionItemContainer()
   {
-    items = new LinkedList<>();
+    nodeUpdates = new LinkedList<>();
+    edgeUpdates = new LinkedList<>();
   }
 
   @Override
   public String toString() {
-    return "RevisionItem{" + "timestamp=" + timestamp + ", graphUniqueId=" + graphUniqueId
-            + ", graphBranchId=" + graphBranchId + ", uniqueId=" + uniqueId
-            + ", transactionUid=" + transactionUid + ", txnSubmitId=" + txnSubmitId
-            + ", items=" + items.size() + '}';
+    return "RevisionItemContainer{" +
+        super.toString() +
+//        "id='" + _id + '\'' +
+//        ", revision='" + _rev + '\'' +
+        ", timestamp=" + timestamp +
+        ", graphUid='" + graphUid + '\'' +
+        ", patchUid='" + patchUid + '\'' +
+        ", patchIdx=" + patchIdx +
+        ", committed=" + committed +
+        ", dateCommitted=" + dateCommitted +
+        ", nodeUpdates=" + nodeUpdates +
+        ", edgeUpdates=" + edgeUpdates +
+        '}';
   }
 
-  public String getGraphBranchId()
+  public void addOperation(NodeModification op) {
+    nodeUpdates.add(op);
+  }
+
+  public void addOperation(EdgeModification op) {
+    edgeUpdates.add(op);
+  }
+
+  public String getGraphUid()
   {
-    return graphBranchId;
+    return graphUid;
   }
 
-  public void setGraphBranchId(String graphBranchId)
+  public void setGraphUid(String graphUid)
   {
-    this.graphBranchId = graphBranchId;
+    this.graphUid = graphUid;
   }
 
-  public String getGraphUniqueId()
-  {
-    return graphUniqueId;
+
+  public int getPatchIdx() {
+    return patchIdx;
   }
 
-  public void setGraphUniqueId(String graphUniqueId)
-  {
-    this.graphUniqueId = graphUniqueId;
+  public void setPatchIdx(int patchIdx) {
+    this.patchIdx = patchIdx;
   }
 
-  public String getUniqueId() {
-    return uniqueId;
+  public List<NodeModification> getNodeUpdates() {
+    return nodeUpdates;
   }
 
-  public void setUniqueId(String uniqueId) {
-    this.uniqueId = uniqueId;
+  public void setNodeUpdates(List<NodeModification> nodeUpdates) {
+    this.nodeUpdates = nodeUpdates;
   }
 
-  public int getTxnSubmitId() {
-    return txnSubmitId;
+  public List<EdgeModification> getEdgeUpdates() {
+    return edgeUpdates;
   }
 
-  public void setTxnSubmitId(int txnSubmitId) {
-    this.txnSubmitId = txnSubmitId;
-  }
-
-  public List<com.entanglementgraph.revlog.data.RevisionItem> getItems() {
-    return items;
-  }
-
-  public void setItems(List<RevisionItem> items) {
-    this.items = items;
+  public void setEdgeUpdates(List<EdgeModification> edgeUpdates) {
+    this.edgeUpdates = edgeUpdates;
   }
 
   public Date getTimestamp()
@@ -113,14 +132,14 @@ public class RevisionItemContainer
     this.timestamp = timestamp;
   }
 
-  public String getTransactionUid()
+  public String getPatchUid()
   {
-    return transactionUid;
+    return patchUid;
   }
 
-  public void setTransactionUid(String transactionUid)
+  public void setPatchUid(String patchUid)
   {
-    this.transactionUid = transactionUid;
+    this.patchUid = patchUid;
   }
 
   public boolean isCommitted() {

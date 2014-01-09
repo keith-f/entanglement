@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Keith Flanagan
+ * Copyright 2013 Keith Flanagan
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,33 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * File created: 08-Nov-2012, 16:41:04
  */
 
-package com.entanglementgraph.couchdb.revlog.commands;
+package com.entanglementgraph.couchdb.testdata;
 
-import com.entanglementgraph.revlog.commands.GraphOperation;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- *
  * @author Keith Flanagan
  */
-public class GraphOperationEvent
-{
-  private GraphOperation operation;
-  
-  public GraphOperationEvent()
-  {
-  }
-
-  public GraphOperation getOperation()
-  {
-    return operation;
-  }
-
-  public void setOperation(GraphOperation operation)
-  {
-    this.operation = operation;
-  }
-  
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type2")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = ANode.class, name = "a-node"),
+    @JsonSubTypes.Type(value = BNode.class, name = "b-node") })
+abstract public class ABNodeMixinTest {
 }

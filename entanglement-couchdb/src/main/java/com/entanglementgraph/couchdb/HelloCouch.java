@@ -17,18 +17,35 @@
 
 package com.entanglementgraph.couchdb;
 
+import com.entanglementgraph.couchdb.revlog.RevisionLog;
+import com.entanglementgraph.couchdb.revlog.RevisionLogCouchDBImpl;
+import com.entanglementgraph.couchdb.revlog.RevisionsCouchDbDAO;
+import com.entanglementgraph.couchdb.revlog.commands.EdgeModification;
+import com.entanglementgraph.couchdb.revlog.commands.GraphOperation;
+import com.entanglementgraph.couchdb.revlog.commands.MergePolicy;
+import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
+import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
+import com.entanglementgraph.couchdb.testdata.*;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
+import com.scalesinformatics.mongodb.jackson.JacksonDBObjectMarshaller;
+import com.scalesinformatics.util.UidGenerator;
+import org.codehaus.jackson.JsonNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 
-import java.net.MalformedURLException;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Keith Flanagan
  */
 public class HelloCouch {
+  private static final DbObjectMarshaller m = new JacksonDBObjectMarshaller();
+
   public static void main(String[] args) throws Exception {
     HttpClient httpClient = new StdHttpClient.Builder()
         .url("http://localhost:5984")
@@ -40,8 +57,60 @@ public class HelloCouch {
 // if the second parameter is true, the database will be created if it doesn't exists
     CouchDbConnector db = dbInstance.createConnector("my_first_database", true);
 
-    System.out.println("Connected");
+//    db.create("testobj2", new Sofa2());
+//    Sofa2DAO dao = new Sofa2DAO(db);
+//    Sofa2 sofa2 = new Sofa2();
+//    sofa2.setColor("blue");
+//    sofa2.setId(UidGenerator.generateSimpleUid());
+//    dao.add(sofa2);
 
-    db.get
+    // Write sample document
+    RevisionLog revLog = new RevisionLogCouchDBImpl(db);
+    System.out.println("Connected");
+    System.out.println("Committing objects");
+    List<GraphOperation> ops = createTestGraph();
+    String patchUid = UidGenerator.generateUid();
+    String revDocDbId = revLog.submitRevisions("my-graph", patchUid, 0, ops);
+    System.out.println("Written patch set");
+
+
+    // Read document back from DB
+    System.out.println("Reading document: "+revDocDbId);
+
+//    RevisionsCouchDbDAO dao = new RevisionsCouchDbDAO(db);
+//    RevisionsCouchDbDAO dao = new RevisionsCouchDbDAO(db);
+//    RevisionItemContainer container = dao.get(revDocDbId);
+    JsonNode doc = db.get(JsonNode.class, revDocDbId);
+    JsonNode address = doc.findPath("address");
+
+//    System.out.println("Loaded succesfully: "+container);
+  }
+
+  private static List<GraphOperation> createTestGraph() throws DbObjectMarshallerException {
+    List<GraphOperation> ops = new LinkedList<>();
+
+    Sofa sofa = new Sofa();
+//    sofa.setUid(UidGenerator.generateUid());
+    sofa.getKeys().addName("blue-{sofa}");
+    sofa.setColor("blue");
+
+    Pillow firmPillow = new Pillow(Pillow.Softness.FIRM);
+//    firmPillow.setUid(UidGenerator.generateUid());
+    firmPillow.getKeys().addName("\"firm\"-pillow");
+
+    HasPillow hasFirmPillow = new HasPillow();
+//    hasFirmPillow.set(UidGenerator.generateUid());
+    hasFirmPillow.getKeys().addUid(UidGenerator.generateUid());
+    hasFirmPillow.setFrom(sofa.getKeys());
+    hasFirmPillow.setTo(firmPillow.getKeys());
+
+
+    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, sofa));
+    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, firmPillow));
+    ops.add(EdgeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
+
+//    ops.add(NodeModification.create())
+
+    return ops;
   }
 }

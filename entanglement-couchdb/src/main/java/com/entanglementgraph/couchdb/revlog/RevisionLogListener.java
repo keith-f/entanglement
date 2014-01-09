@@ -17,9 +17,8 @@
 
 package com.entanglementgraph.couchdb.revlog;
 
-import com.entanglementgraph.revlog.RevisionLogListenerException;
-import com.entanglementgraph.revlog.commands.TransactionCommit;
-import com.entanglementgraph.revlog.commands.TransactionRollback;
+import com.entanglementgraph.couchdb.revlog.commands.TransactionCommit;
+import com.entanglementgraph.couchdb.revlog.commands.TransactionRollback;
 
 /**
  *
@@ -32,16 +31,16 @@ public interface RevisionLogListener
       throws com.entanglementgraph.revlog.RevisionLogListenerException;
 
   public void notifyPreCommit(TransactionCommit op)
-      throws com.entanglementgraph.revlog.RevisionLogListenerException;
+      throws RevisionLogListenerException;
   public void notifyPostCommit(TransactionCommit op)
-      throws com.entanglementgraph.revlog.RevisionLogListenerException;
+      throws RevisionLogListenerException;
   public void notifyCommitFailed(TransactionCommit op)
-      throws com.entanglementgraph.revlog.RevisionLogListenerException;
+      throws RevisionLogListenerException;
 
   public void notifyPreRollback(TransactionRollback op)
-      throws com.entanglementgraph.revlog.RevisionLogListenerException;
+      throws RevisionLogListenerException;
   public void notifyPostRollback(TransactionRollback op)
-      throws com.entanglementgraph.revlog.RevisionLogListenerException;
+      throws RevisionLogListenerException;
   public void notifyRollbackFailed(TransactionRollback op)
       throws RevisionLogListenerException;
   

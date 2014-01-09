@@ -15,37 +15,43 @@
  * 
  */
 
-package com.entanglementgraph.couchdb;
+package com.entanglementgraph.couchdb.testdata;
 
+import com.entanglementgraph.graph.data.Node;
 import org.codehaus.jackson.annotate.*;
 
 /**
  * @author Keith Flanagan
  */
-public class Sofa {
-  @JsonProperty("_id")
-  private String id;
-  @JsonProperty("_rev")
-  private String revision;
+public class Sofa extends Node<Sofa> {
+  private static final String TYPE_NAME = Sofa.class.getSimpleName();
+
+//  @JsonProperty("_id")
+//  private String uid;
+//  @JsonProperty("_rev")
+//  private String rev;
+
   private String color;
 
-
-  public String getId() {
-    return id;
+  public Sofa() {
+    getKeys().setType(TYPE_NAME);
   }
 
-  public void setId(String s) {
-    id = s;
-  }
-
-
-  public String getRevision() {
-    return revision;
-  }
-
-  public void setRevision(String s) {
-    revision = s;
-  }
+//  public String getUid() {
+//    return uid;
+//  }
+//
+//  public void setUid(String uid) {
+//    this.uid = uid;
+//  }
+//
+//  public String getRev() {
+//    return rev;
+//  }
+//
+//  public void setRev(String rev) {
+//    this.rev = rev;
+//  }
 
   public void setColor(String s) {
     color = s;

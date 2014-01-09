@@ -17,8 +17,6 @@
 
 package com.entanglementgraph.couchdb.revlog.commands;
 
-import com.entanglementgraph.revlog.commands.GraphOperation;
-
 import java.util.logging.Logger;
 
 /**
@@ -29,7 +27,7 @@ public class TransactionCommit
     extends GraphOperation
 {
   private static final Logger logger = 
-      Logger.getLogger(com.entanglementgraph.revlog.commands.TransactionCommit.class.getName());
+      Logger.getLogger(TransactionCommit.class.getName());
   
   private String uid; 
   
