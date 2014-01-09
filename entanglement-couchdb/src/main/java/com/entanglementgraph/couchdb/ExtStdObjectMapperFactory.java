@@ -23,7 +23,9 @@ import com.entanglementgraph.couchdb.testdata.BNode;
 import com.entanglementgraph.couchdb.testdata.NewNode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.impl.StdObjectMapperFactory;
 
@@ -56,6 +58,10 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
 //    om.addMixInAnnotations(NewNode.class, BNode.class);
 
 //    om.addMixInAnnotations(NewNode.class, ABNodeMixinTest.class);
+
+//    om.getSerializationConfig().
+    om.registerSubtypes(new NamedType(ANode.class, "a-node3"));
+    om.registerSubtypes(new NamedType(BNode.class, "b-node3"));
 
 
     return om;
