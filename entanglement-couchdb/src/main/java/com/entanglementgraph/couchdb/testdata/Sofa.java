@@ -23,7 +23,7 @@ import org.codehaus.jackson.annotate.*;
 /**
  * @author Keith Flanagan
  */
-public class Sofa extends Node<Sofa> {
+public class Sofa extends NewNode2<Sofa> {
   private static final String TYPE_NAME = Sofa.class.getSimpleName();
 
 //  @JsonProperty("_id")

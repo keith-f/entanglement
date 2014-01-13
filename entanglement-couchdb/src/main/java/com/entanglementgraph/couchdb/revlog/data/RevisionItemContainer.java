@@ -47,7 +47,6 @@ public class RevisionItemContainer extends CouchDbDocument
 
   private Date timestamp;
   private String graphUid;
-
   private String patchUid;
   private int patchIdx;
   private boolean committed;

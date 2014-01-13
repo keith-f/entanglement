@@ -17,37 +17,42 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * @author Keith Flanagan
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type3")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = ANode.class, name = "a-node") })
-//    @Type(value = Dog.class, name = "dog") })
-public class ANode extends NewNode {
+public class ANode extends NewNode2<ANode> {
 
+  private double a;
+  private String anotherPropertyStoredInTheMap;
   public ANode() {
-    setType(ANode.class.getSimpleName());
+    getKeys().setType(ANode.class.getSimpleName());
   }
 
-  public ANode(String uid, Double a) {
-    this();
-    setA(a);
-    setId(uid);
+  public double getA() {
+    return a;
   }
 
-
-  public Double getA() {
-    return (Double) getDataProperty("a");
+  public void setA(double a) {
+    this.a = a;
   }
 
-  public void setA(Double a) {
-    setDataProperty("a", a);
+  public String getAnotherPropertyStoredInTheMap() {
+    return anotherPropertyStoredInTheMap;
+  }
+
+  public void setAnotherPropertyStoredInTheMap(String anotherPropertyStoredInTheMap) {
+    this.anotherPropertyStoredInTheMap = anotherPropertyStoredInTheMap;
+  }
+
+  public String getYetAnotherPropertyStoredInTheMap() {
+    return (String) props.get("another_property_stored_in_the_map");
+  }
+  @JsonIgnore
+  public void setYetAnotherPropertyStoredInTheMap(String yetAnotherPropertyStoredInTheMap) {
+    props.put("another_property_stored_in_the_map", yetAnotherPropertyStoredInTheMap);
   }
 }

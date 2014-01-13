@@ -19,52 +19,37 @@ package com.entanglementgraph.couchdb.testdata;
 
 import com.entanglementgraph.graph.data.EntityKeys;
 import com.entanglementgraph.graph.data.GraphEntity;
-import com.entanglementgraph.graph.data.Node;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.BaseJsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.ektorp.support.CouchDbDocument;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Keith Flanagan
  */
+@JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "+jt")
-public class NewNode extends CouchDbDocument implements GraphEntity { //extends Node<NewNode> implements Map<String, JsonNode> {
+public class NewNode2<T>  implements GraphEntity<T> { //extends Node<NewNode> implements Map<String, JsonNode> {
   protected EntityKeys keys;
-//  @JsonProperty("+type")
-  protected String type;
-  protected Map<String, Object> data;
-//  protected NodeData data;
+  protected Map<String, Object> props;
 
-  public NewNode() {
-    data = new HashMap<>();
-//    values.
+  public NewNode2() {
+    keys = new EntityKeys();
   }
 
   @Override
   public String toString() {
     return "NewNode{" +
         "keys=" + keys +
-        ", type='" + type + '\'' +
-        ", data=" + data +
+//        ", data=" + data +
         '}';
   }
 
-  @JsonProperty("+type")
-  public String getType() {
-    return type;
-  }
-
-  @JsonProperty("+type")
-  public void setType(String type) {
-    this.type = type;
-  }
 
   @Override
   public EntityKeys getKeys() {
@@ -75,19 +60,11 @@ public class NewNode extends CouchDbDocument implements GraphEntity { //extends 
     this.keys = keys;
   }
 
-  public void setDataProperty(String name, Object value) {
-    data.put(name, value);
+  public Map<String, Object> getProps() {
+    return props;
   }
 
-  public Object getDataProperty(String name) {
-    return data.get(name);
-  }
-
-  public Map<String, Object> getData() {
-    return data;
-  }
-
-  public void setData(Map<String, Object> data) {
-    this.data = data;
+  public void setProps(Map<String, Object> props) {
+    this.props = props;
   }
 }

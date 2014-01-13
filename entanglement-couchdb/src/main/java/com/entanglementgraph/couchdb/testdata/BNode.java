@@ -23,32 +23,25 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /**
  * @author Keith Flanagan
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type3")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = BNode.class, name = "b-node") })
+//@JsonTypeInfo(
+//    use = JsonTypeInfo.Id.NAME,
+//    include = JsonTypeInfo.As.PROPERTY,
+//    property = "type4")
+//@JsonSubTypes({
+//    @JsonSubTypes.Type(value = BNode.class, name = "b-node") })
 //    @Type(value = Dog.class, name = "dog") })
-public class BNode extends NewNode {
-
+public class BNode extends NewNode2<BNode> {
+  private double b;
 
   public BNode() {
-    setType(BNode.class.getSimpleName());
+    getKeys().setType(BNode.class.getSimpleName());
   }
 
-  public BNode(String uid, Double b) {
-    this();
-    setB(b);
-    setId(uid);
+  public double getB() {
+    return b;
   }
 
-
-  public Double getB() {
-    return (Double) getDataProperty("b");
-  }
-
-  public void setB(Double b) {
-    setDataProperty("b", b);
+  public void setB(double b) {
+    this.b = b;
   }
 }

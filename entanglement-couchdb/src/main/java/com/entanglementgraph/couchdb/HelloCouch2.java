@@ -35,8 +35,10 @@ import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 import org.ektorp.impl.StdObjectMapperFactory;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Keith Flanagan
@@ -72,8 +74,19 @@ public class HelloCouch2 {
     NodeCouchDbDAO dao = new NodeCouchDbDAO(db);
     List<String> uids = new LinkedList<>();
 
-    dao.add(new ANode(newUid(uids), 4.4));
-    dao.add(new BNode(newUid(uids), 5.5));
+    ANode aNode = new ANode();
+    aNode.getKeys().addUid(UidGenerator.generateSimpleUid());
+
+//    dao.add(new ANode(newUid(uids), 4.4, "hello world!<>"));
+//    dao.add(new BNode(newUid(uids), 5.5));
+
+//    Map<String, Object> nodeAsMap = new HashMap<>();
+//    nodeAsMap.put("+jcl", "a-node3");
+//    nodeAsMap.put("keys.type", "a-node3");
+//    nodeAsMap.put("foo", "foo");
+//    nodeAsMap.put("boo", "boo");
+//    db.create(newUid(uids), nodeAsMap);
+
 
 
 
@@ -86,6 +99,8 @@ public class HelloCouch2 {
       NewNode doc = db.get(NewNode.class, dbUid);
       System.out.println("Java class: "+doc.getClass().getName());
       System.out.println("toString: "+doc);
+      System.out.println("As Map: "+db.get(Map.class, dbUid));
+      System.out.println();
 //      JsonNode b = doc.findPath("b");
 //      System.out.println("b: "+a);
     }

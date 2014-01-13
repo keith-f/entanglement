@@ -20,6 +20,8 @@ package com.entanglementgraph.couchdb.revlog.commands;
 
 //import net.sourceforge.ondex.core.ONDEXGraph;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +31,7 @@ import java.util.Set;
  *
  * @author Keith Flanagan
  */
-//@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+@JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
 abstract public class GraphOperation
     implements Serializable
 {

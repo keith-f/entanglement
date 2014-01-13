@@ -17,10 +17,7 @@
 
 package com.entanglementgraph.couchdb;
 
-import com.entanglementgraph.couchdb.testdata.ABNodeMixinTest;
-import com.entanglementgraph.couchdb.testdata.ANode;
-import com.entanglementgraph.couchdb.testdata.BNode;
-import com.entanglementgraph.couchdb.testdata.NewNode;
+import com.entanglementgraph.couchdb.testdata.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -63,7 +60,13 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
     om.registerSubtypes(new NamedType(ANode.class, "a-node3"));
     om.registerSubtypes(new NamedType(BNode.class, "b-node3"));
 
+    om.registerSubtypes(new NamedType(Sofa.class, "sofa"));
+    om.registerSubtypes(new NamedType(Pillow.class, "pillow"));
+    om.registerSubtypes(new NamedType(HasPillow.class, "has-pillow"));
+
 
     return om;
   }
+
+
 }
