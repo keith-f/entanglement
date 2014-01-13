@@ -33,10 +33,16 @@ abstract public class AbstractEntanglementGraphCommand extends AbstractEntanglem
   protected String connName;
   protected GraphConnection graphConn;
 
+  protected String tempClusterName; // The name of a database pool to use for short-lived graphs.
+
   @Override
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "Name of the graph connection to use"));
+    params.add(new OptionalParam("temp-cluster", String.class,
+        "The name of a configured database cluster to use for storing temporary graphs. Some commands require a" +
+            "short-lived graph (usually deleted when the command terminates) for intermediate results. " +
+            "If you don't specify a temporary cluster name, then the cluster used by 'conn' will be used instead."));
     return params;
   }
 
@@ -46,6 +52,12 @@ abstract public class AbstractEntanglementGraphCommand extends AbstractEntanglem
 
     connName = parsedArgs.get("conn").getStringValue();
     graphConn = entRuntime.createGraphConnectionFor(connName);
+
+    if (parsedArgs.containsKey("temp-cluster")) {
+      tempClusterName = parsedArgs.get("temp-cluster").getStringValue();
+    } else {
+      tempClusterName = graphConn.getPoolName();
+    }
   }
 
 }
