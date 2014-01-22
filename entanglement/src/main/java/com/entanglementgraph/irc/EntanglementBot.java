@@ -100,7 +100,7 @@ public class EntanglementBot extends GenericIrcBot {
     bot.setMessageDelay(5); // 5 MS between messages - effectively no delay
   }
 
-  protected HazelcastInstance hzInstance = null;
+  protected HazelcastInstance hzInstance;
 
   public EntanglementBot(String nickname, HazelcastInstance hzInstance)
       throws UnknownHostException {
@@ -158,10 +158,6 @@ public class EntanglementBot extends GenericIrcBot {
   }
 
   protected void addEntanglementToBotState() {
-    if (hzInstance == null) {
-      System.out.println("hzInstance is null. Skipping state creation for now.");
-      return;
-    }
     ClassLoader cl = EntanglementBot.class.getClassLoader();
     DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
     // Set EntanglementRuntime logging to STDOUT by default (since we don't currently know of any channels).
