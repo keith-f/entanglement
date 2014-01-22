@@ -18,6 +18,9 @@
 package com.entanglementgraph.irc;
 
 /**
+ * This class contains the 'well-known' names of several properties whose values are stored in the bot's global
+ * state Map.
+ *
  * @author Keith Flanagan
  */
 public class EntanglementIRCBotConfigNames {
