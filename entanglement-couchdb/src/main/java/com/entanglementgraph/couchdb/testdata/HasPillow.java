@@ -23,7 +23,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Keith Flanagan
  */
-public class HasPillow extends NewEdge<HasPillow, Sofa, Pillow> {
+public class HasPillow extends NewEdge<HasPillow, NewNode2, Pillow> {
   private static final String TYPE_NAME = HasPillow.class.getSimpleName();
 
 //  @JsonProperty("_id")

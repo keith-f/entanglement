@@ -47,8 +47,8 @@ public class NodeViews extends CouchDbRepositorySupport<NewNode> {
     StreamingViewResult vr = db.queryForStreamingView(createQuery("nodes_by_name"));
     List<NewNode2> nodes = new LinkedList<>();
     for (ViewResult.Row r : vr) {
-      db.getO
-      nodes.add(r.getValue());
+//      db.getO
+//      nodes.add(r.getValue());
     }
     return nodes;
   }

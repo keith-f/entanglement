@@ -51,18 +51,21 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
     om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 //    om.addMixInAnnotations(Rectangle.class, MixIn.class);
-    om.addMixInAnnotations(NewNode.class, ANode.class);
+//    om.addMixInAnnotations(NewNode.class, ANode.class);
 //    om.addMixInAnnotations(NewNode.class, BNode.class);
 
 //    om.addMixInAnnotations(NewNode.class, ABNodeMixinTest.class);
 
 //    om.getSerializationConfig().
-    om.registerSubtypes(new NamedType(ANode.class, "a-node3"));
-    om.registerSubtypes(new NamedType(BNode.class, "b-node3"));
-
-    om.registerSubtypes(new NamedType(Sofa.class, "sofa"));
+//    om.registerSubtypes(new NamedType(ANode.class, "a-node3"));
+//    om.registerSubtypes(new NamedType(BNode.class, "b-node3"));
+//
+    om.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
     om.registerSubtypes(new NamedType(Pillow.class, "pillow"));
     om.registerSubtypes(new NamedType(HasPillow.class, "has-pillow"));
+//
+//    om.registerSubtypes(new NamedType(NodeWithContent.class, "NodeWithContent"));
+    om.registerSubtypes(new NamedType(GeneContent.class, "GC"));
 
 
     return om;

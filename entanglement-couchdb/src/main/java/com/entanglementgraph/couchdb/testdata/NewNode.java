@@ -56,15 +56,15 @@ public class NewNode extends CouchDbDocument implements GraphEntity { //extends 
         '}';
   }
 
-  @JsonProperty("+type")
-  public String getType() {
-    return type;
-  }
-
-  @JsonProperty("+type")
-  public void setType(String type) {
-    this.type = type;
-  }
+//  @JsonProperty("+type")
+//  public String getType() {
+//    return type;
+//  }
+//
+//  @JsonProperty("+type")
+//  public void setType(String type) {
+//    this.type = type;
+//  }
 
   @Override
   public EntityKeys getKeys() {

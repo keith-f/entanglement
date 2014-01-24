@@ -19,6 +19,7 @@
 package com.entanglementgraph.couchdb.revlog.commands;
 
 import com.entanglementgraph.couchdb.testdata.NewNode2;
+import com.entanglementgraph.couchdb.testdata.NodeWithContent;
 import com.entanglementgraph.graph.data.Node;
 import com.entanglementgraph.util.GraphConnection;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -72,13 +73,14 @@ public class NodeModification
   private MergePolicy mergePol;
 
 //  private Node node;
-  private NewNode2 node;
+//  private NewNode2 node;
+  private NodeWithContent node;
   
   public NodeModification()
   {
   }
 
-  public NodeModification(MergePolicy mergePol, NewNode2 node)
+  public NodeModification(MergePolicy mergePol, NodeWithContent node)
   {
     this.mergePol = mergePol;
     this.node = node;
@@ -92,11 +94,11 @@ public class NodeModification
     return "NodeModification{" + "node=" + node + '}';
   }
 
-  public NewNode2 getNode() {
+  public NodeWithContent getNode() {
     return node;
   }
 
-  public void setNode(NewNode2 node) {
+  public void setNode(NodeWithContent node) {
     this.node = node;
     if (node == null) {
       throw new RuntimeException("The specified node was NULL!");

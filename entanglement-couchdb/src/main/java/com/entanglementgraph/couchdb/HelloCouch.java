@@ -26,6 +26,7 @@ import com.entanglementgraph.couchdb.revlog.commands.MergePolicy;
 import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
 import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
 import com.entanglementgraph.couchdb.testdata.*;
+import com.entanglementgraph.graph.data.EntityKeys;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.jackson.JacksonDBObjectMarshaller;
@@ -82,6 +83,10 @@ public class HelloCouch {
     System.out.println("NodeModifications:");
     for (NodeModification nodeModification : container.getNodeUpdates()) {
       System.out.println(" * "+nodeModification.getNode().getClass().getName());
+      System.out.println(" * " + nodeModification.getNode().getKeys().getClass().getName());
+      System.out.println(" * "+nodeModification.getNode().getContent().getClass().getName());
+      System.out.println(" * content: "+nodeModification.getNode().getContent());
+      System.out.println("----");
     }
   }
 
@@ -102,9 +107,11 @@ public class HelloCouch {
     hasFirmPillow.setFrom(sofa.getKeys());
     hasFirmPillow.setTo(firmPillow.getKeys());
 
-    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, sofa));
-    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, firmPillow));
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<Sofa>(sofa.getKeys(), sofa)));
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<Pillow>(firmPillow.getKeys(), firmPillow)));
     ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
+
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<GeneContent>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
 
 //    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, sofa));
 //    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, firmPillow));

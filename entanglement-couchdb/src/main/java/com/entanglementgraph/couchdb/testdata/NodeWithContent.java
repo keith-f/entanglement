@@ -18,52 +18,37 @@
 package com.entanglementgraph.couchdb.testdata;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import org.codehaus.jackson.annotate.*;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * @author Keith Flanagan
  */
-//public class Sofa extends NewNode2<Sofa> implements NodeContent {
-public class Sofa implements NodeContent {
-  private static final String TYPE_NAME = Sofa.class.getSimpleName();
-
-//  @JsonProperty("_id")
-//  private String uid;
-//  @JsonProperty("_rev")
-//  private String rev;
-
+//@JsonTypeInfo(
+//    use = JsonTypeInfo.Id.NAME,
+//    include = JsonTypeInfo.As.PROPERTY,
+//    property = "+jt")
+public class NodeWithContent<C extends NodeContent> {
   protected EntityKeys keys;
+  protected C content;
 
-  private String color;
-
-  public Sofa() {
-    keys = new EntityKeys();
-    getKeys().setType(TYPE_NAME);
+  public NodeWithContent() {
   }
 
-//  public String getUid() {
-//    return uid;
-//  }
-//
-//  public void setUid(String uid) {
-//    this.uid = uid;
-//  }
-//
-//  public String getRev() {
-//    return rev;
-//  }
-//
-//  public void setRev(String rev) {
-//    this.rev = rev;
-//  }
-
-  public void setColor(String s) {
-    color = s;
+  public NodeWithContent(EntityKeys keys, C content) {
+    this.keys = keys;
+    this.content = content;
   }
 
-  public String getColor() {
-    return color;
+  public NodeWithContent(EntityKeys keys) {
+    this.keys = keys;
+  }
+
+  @Override
+  public String toString() {
+    return "NodeWithContent{" +
+        "keys=" + keys +
+        ", content=" + content +
+        '}';
   }
 
   public EntityKeys getKeys() {
@@ -73,4 +58,13 @@ public class Sofa implements NodeContent {
   public void setKeys(EntityKeys keys) {
     this.keys = keys;
   }
+
+  public C getContent() {
+    return content;
+  }
+
+  public void setContent(C content) {
+    this.content = content;
+  }
 }
+

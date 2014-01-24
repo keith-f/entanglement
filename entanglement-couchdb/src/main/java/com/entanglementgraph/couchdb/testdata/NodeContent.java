@@ -17,35 +17,16 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
-import com.entanglementgraph.graph.data.Node;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * @author Keith Flanagan
  */
-public class Pillow extends NewNode2<Pillow> implements NodeContent {
-  private static final String TYPE_NAME = Pillow.class.getSimpleName();
-
-  public static enum Softness {SOFT, MEDIUM, FIRM}
-
-  private Softness softness;
-
-//  @JsonCreator
-//  public Pillow(@JsonProperty("softness") Softness s) {
-//    getKeys().setType(TYPE_NAME);
-//    softness = s;
-//  }
-
-
-  public Pillow() {
-  }
-
-  public Softness getSoftness() {
-    return softness;
-  }
-
-  public void setSoftness(Softness softness) {
-    this.softness = softness;
-  }
+@JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "+jt")
+public interface NodeContent {
 }

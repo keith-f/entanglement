@@ -17,35 +17,40 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
-import com.entanglementgraph.graph.data.Node;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * @author Keith Flanagan
  */
-public class Pillow extends NewNode2<Pillow> implements NodeContent {
-  private static final String TYPE_NAME = Pillow.class.getSimpleName();
+//@JsonTypeInfo(
+//    use = JsonTypeInfo.Id.NAME,
+//    include = JsonTypeInfo.As.PROPERTY,
+//    property = "+jt")
+public class GeneContent implements NodeContent{
+  private String geneName;
+  private String embl;
 
-  public static enum Softness {SOFT, MEDIUM, FIRM}
-
-  private Softness softness;
-
-//  @JsonCreator
-//  public Pillow(@JsonProperty("softness") Softness s) {
-//    getKeys().setType(TYPE_NAME);
-//    softness = s;
-//  }
-
-
-  public Pillow() {
+  public GeneContent() {
   }
 
-  public Softness getSoftness() {
-    return softness;
+  public GeneContent(String geneName, String embl) {
+    this.geneName = geneName;
+    this.embl = embl;
   }
 
-  public void setSoftness(Softness softness) {
-    this.softness = softness;
+  public String getGeneName() {
+    return geneName;
+  }
+
+  public void setGeneName(String geneName) {
+    this.geneName = geneName;
+  }
+
+  public String getEmbl() {
+    return embl;
+  }
+
+  public void setEmbl(String embl) {
+    this.embl = embl;
   }
 }
