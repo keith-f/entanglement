@@ -18,20 +18,9 @@
 
 package com.entanglementgraph.couchdb.revlog.commands;
 
-import com.entanglementgraph.couchdb.testdata.NewNode2;
 import com.entanglementgraph.couchdb.testdata.NodeWithContent;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.util.GraphConnection;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.mongodb.BasicDBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**

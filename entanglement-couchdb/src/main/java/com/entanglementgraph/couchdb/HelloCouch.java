@@ -48,6 +48,10 @@ public class HelloCouch {
   private static final DbObjectMarshaller m = new JacksonDBObjectMarshaller();
 
   public static void main(String[] args) throws Exception {
+
+    System.setProperty("org.ektorp.support.AutoUpdateViewOnChange", "true");
+
+
     HttpClient httpClient = new StdHttpClient.Builder()
         .url("http://localhost:5984")
 //        .username("admin")
@@ -88,36 +92,51 @@ public class HelloCouch {
       System.out.println(" * content: "+nodeModification.getNode().getContent());
       System.out.println("----");
     }
+
+    System.out.println("\n\nNow testing our first node view:\n");
+
+//    NodeByTypeNameView nbtnView = new NodeByTypeNameView(db);
+//    List<NodeWithContent> allNodes = nbtnView.getAllNodes();
+    List<NodeWithContent> allNodes = dao.getAllNodes2();
+    System.out.println("Found nodes: "+allNodes.size());
+    for (NodeWithContent node : allNodes) {
+      System.out.println(" * "+node);
+    }
+
+
   }
 
   private static List<GraphOperation> createTestGraph() throws DbObjectMarshallerException {
     List<GraphOperation> ops = new LinkedList<>();
 
+    NodeWithContent<Sofa> sofaNode = new NodeWithContent<>();
+    sofaNode.getKeys().setType("Sofa");
+    sofaNode.getKeys().addNames("a-sofa-name", "another-name-for-this-sofa", "a-blue-sofa");
     Sofa sofa = new Sofa();
-//    sofa.setUid(UidGenerator.generateUid());
-    sofa.getKeys().addName("blue-{sofa}");
     sofa.setColor("blue");
+    sofa.setNumSeats(3);
+    sofaNode.setContent(sofa);
+
+
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, sofaNode));
 
     Pillow firmPillow = new Pillow();
     firmPillow.setSoftness(Pillow.Softness.FIRM);
-    firmPillow.getKeys().addName("\"firm\"-pillow");
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
+        new NodeWithContent<>(
+            new EntityKeys("Pillow", "firm-pillow"), firmPillow)));
 
-    HasPillow hasFirmPillow = new HasPillow();
-    hasFirmPillow.getKeys().addUid(UidGenerator.generateUid());
-    hasFirmPillow.setFrom(sofa.getKeys());
-    hasFirmPillow.setTo(firmPillow.getKeys());
+//    HasPillow hasFirmPillow = new HasPillow();
+//    hasFirmPillow.getKeys().addUid(UidGenerator.generateUid());
+//    hasFirmPillow.setFrom(sofa.getKeys());
+//    hasFirmPillow.setTo(firmPillow.getKeys());
 
-    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<Sofa>(sofa.getKeys(), sofa)));
-    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<Pillow>(firmPillow.getKeys(), firmPillow)));
-    ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
 
-    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, new NodeWithContent<GeneContent>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
 
-//    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, sofa));
-//    ops.add(NodeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, firmPillow));
-//    ops.add(EdgeModification.create(m, MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
+//    ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
 
-//    ops.add(NodeModification.create())
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
+        new NodeWithContent<>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
 
     return ops;
   }

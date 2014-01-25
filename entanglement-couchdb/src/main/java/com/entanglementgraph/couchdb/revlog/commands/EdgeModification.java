@@ -18,17 +18,9 @@
 
 package com.entanglementgraph.couchdb.revlog.commands;
 
-import com.entanglementgraph.couchdb.testdata.NewEdge;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.couchdb.testdata.EdgeWithContent;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.mongodb.BasicDBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -82,7 +74,7 @@ public class EdgeModification
 
   private MergePolicy mergePol;
 //  private BasicDBObject edge;
-  private NewEdge edge;
+  private EdgeWithContent edge;
 
  
 
@@ -108,7 +100,7 @@ public class EdgeModification
 //    }
 //  }
   
-  public EdgeModification(MergePolicy mergePol, NewEdge edge)
+  public EdgeModification(MergePolicy mergePol, EdgeWithContent edge)
   {
     this.mergePol = mergePol;
     this.edge = edge;
@@ -119,11 +111,11 @@ public class EdgeModification
     return "EdgeModification{" + "edge=" + edge + '}';
   }
 
-  public NewEdge getEdge() {
+  public EdgeWithContent getEdge() {
     return edge;
   }
 
-  public void setEdge(NewEdge edge) {
+  public void setEdge(EdgeWithContent edge) {
     this.edge = edge;
   }
 

@@ -7,7 +7,7 @@ function(doc) {
       keys = node.keys;
       if (keys.names) {
         for (i=0; i<keys.names.length; i=i+1) {
-          outKey = [keys.names[i], doc.timestamp];
+          outKey = [keys.type, keys.names[i], doc.timestamp];
           //outKey = [doc.timestamp, keys.names[i]];
           emit(outKey, entry.node);
         }

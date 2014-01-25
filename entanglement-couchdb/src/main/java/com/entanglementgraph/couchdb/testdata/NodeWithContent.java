@@ -23,15 +23,21 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /**
  * @author Keith Flanagan
  */
-//@JsonTypeInfo(
-//    use = JsonTypeInfo.Id.NAME,
-//    include = JsonTypeInfo.As.PROPERTY,
-//    property = "+jt")
+  //@JsonTypeInfo(
+  //    use = JsonTypeInfo.Id.NAME,
+  //    include = JsonTypeInfo.As.PROPERTY,
+  //    property = "+jt")
 public class NodeWithContent<C extends NodeContent> {
   protected EntityKeys keys;
   protected C content;
 
   public NodeWithContent() {
+    this.keys = new EntityKeys();
+  }
+
+  public NodeWithContent(String typeName) {
+    this.keys = new EntityKeys();
+    this.keys.setType(typeName);
   }
 
   public NodeWithContent(EntityKeys keys, C content) {
@@ -47,6 +53,7 @@ public class NodeWithContent<C extends NodeContent> {
   public String toString() {
     return "NodeWithContent{" +
         "keys=" + keys +
+        ", Content type: "+ content==null ? "NULL" : content.getClass().getName() +
         ", content=" + content +
         '}';
   }

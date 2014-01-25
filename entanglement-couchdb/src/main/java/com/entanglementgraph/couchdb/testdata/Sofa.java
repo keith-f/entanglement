@@ -26,37 +26,13 @@ import org.codehaus.jackson.annotate.*;
  */
 //public class Sofa extends NewNode2<Sofa> implements NodeContent {
 public class Sofa implements NodeContent {
-  private static final String TYPE_NAME = Sofa.class.getSimpleName();
-
-//  @JsonProperty("_id")
-//  private String uid;
-//  @JsonProperty("_rev")
-//  private String rev;
-
-  protected EntityKeys keys;
 
   private String color;
+  private int numSeats;
 
   public Sofa() {
-    keys = new EntityKeys();
-    getKeys().setType(TYPE_NAME);
   }
 
-//  public String getUid() {
-//    return uid;
-//  }
-//
-//  public void setUid(String uid) {
-//    this.uid = uid;
-//  }
-//
-//  public String getRev() {
-//    return rev;
-//  }
-//
-//  public void setRev(String rev) {
-//    this.rev = rev;
-//  }
 
   public void setColor(String s) {
     color = s;
@@ -66,11 +42,11 @@ public class Sofa implements NodeContent {
     return color;
   }
 
-  public EntityKeys getKeys() {
-    return keys;
+  public int getNumSeats() {
+    return numSeats;
   }
 
-  public void setKeys(EntityKeys keys) {
-    this.keys = keys;
+  public void setNumSeats(int numSeats) {
+    this.numSeats = numSeats;
   }
 }

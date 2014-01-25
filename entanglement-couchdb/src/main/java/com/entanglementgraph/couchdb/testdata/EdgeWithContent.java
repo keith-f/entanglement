@@ -18,40 +18,40 @@
 package com.entanglementgraph.couchdb.testdata;
 
 import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.GraphEntity;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.ektorp.support.CouchDbDocument;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Keith Flanagan
  */
-@JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "+jt")
-public class NewNode2<T>  implements GraphEntity<T> { //extends Node<NewNode> implements Map<String, JsonNode> {
+//@JsonTypeInfo(
+//    use = JsonTypeInfo.Id.NAME,
+//    include = JsonTypeInfo.As.PROPERTY,
+//    property = "+jt")
+public class EdgeWithContent<C extends NodeContent> {
   protected EntityKeys keys;
-  protected Map<String, Object> props;
+  protected EntityKeys from;
+  protected EntityKeys to;
+  protected C content;
 
-  public NewNode2() {
-    keys = new EntityKeys();
+  public EdgeWithContent() {
+  }
+
+  public EdgeWithContent(EntityKeys keys, C content) {
+    this.keys = keys;
+    this.content = content;
+  }
+
+  public EdgeWithContent(EntityKeys keys) {
+    this.keys = keys;
   }
 
   @Override
   public String toString() {
-    return "NewNode{" +
+    return "NodeWithContent{" +
         "keys=" + keys +
-//        ", data=" + data +
+        ", content=" + content +
         '}';
   }
 
-
-  @Override
   public EntityKeys getKeys() {
     return keys;
   }
@@ -60,11 +60,28 @@ public class NewNode2<T>  implements GraphEntity<T> { //extends Node<NewNode> im
     this.keys = keys;
   }
 
-  public Map<String, Object> getProps() {
-    return props;
+  public C getContent() {
+    return content;
   }
 
-  public void setProps(Map<String, Object> props) {
-    this.props = props;
+  public void setContent(C content) {
+    this.content = content;
+  }
+
+  public EntityKeys getFrom() {
+    return from;
+  }
+
+  public void setFrom(EntityKeys from) {
+    this.from = from;
+  }
+
+  public EntityKeys getTo() {
+    return to;
+  }
+
+  public void setTo(EntityKeys to) {
+    this.to = to;
   }
 }
+

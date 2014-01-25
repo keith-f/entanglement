@@ -23,7 +23,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Keith Flanagan
  */
-public class HasPillow extends NewEdge<HasPillow, NewNode2, Pillow> {
+public class HasPillow { //extends NewEdge<HasPillow, NodeWithContent<Sofa>, Pillow> {
   private static final String TYPE_NAME = HasPillow.class.getSimpleName();
 
 //  @JsonProperty("_id")
@@ -32,9 +32,9 @@ public class HasPillow extends NewEdge<HasPillow, NewNode2, Pillow> {
 //  @JsonProperty("_rev")
 //  private String rev; //Used internally by CouchDB
 
-  public HasPillow() {
-    getKeys().setType(TYPE_NAME);
-  }
+//  public HasPillow() {
+//    getKeys().setType(TYPE_NAME);
+//  }
 
 //  public String getUid() {
 //    return uid;

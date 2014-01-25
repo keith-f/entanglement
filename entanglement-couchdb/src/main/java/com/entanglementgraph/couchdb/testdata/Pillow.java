@@ -24,7 +24,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Keith Flanagan
  */
-public class Pillow extends NewNode2<Pillow> implements NodeContent {
+public class Pillow implements NodeContent {
   private static final String TYPE_NAME = Pillow.class.getSimpleName();
 
   public static enum Softness {SOFT, MEDIUM, FIRM}
