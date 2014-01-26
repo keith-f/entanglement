@@ -138,6 +138,14 @@ public class HelloCouch {
     ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
         new NodeWithContent<>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
 
+
+    MapContent mapTest = new MapContent();
+    mapTest.getMap().put("foo", "bar");
+    mapTest.getMap().put("bar", "baz");
+    mapTest.getMap().put("number", 3);
+    ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
+        new NodeWithContent<>(new EntityKeys("MapTestNode", "map-test"), mapTest)));
+
     return ops;
   }
 }

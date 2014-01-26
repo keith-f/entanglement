@@ -43,11 +43,6 @@ import java.util.List;
  *
  * @author Keith Flanagan
  */
-//@Views({
-//    @View(name = "all_nodes_by_name", map = "classpath:/com/entanglementgraph/couchdb/testdata/nodesByName.js")
-//    @View(name = "view_2", map = "function(doc) { ... }"),
-//    @View(name = "view_3", map = "function(doc) { ... }")
-//})
 public class RevisionsCouchDbDAO
   extends CouchDbRepositorySupport<RevisionItemContainer> {
   public RevisionsCouchDbDAO(CouchDbConnector db) {
@@ -55,18 +50,6 @@ public class RevisionsCouchDbDAO
     initStandardDesignDocument();
   }
 
-//  public RevisionItemContainer
-
-//  public List<RevisionItemContainer> findByPatchUid(String patchUid) {
-//    // View name, followed by key name
-//    return queryView("by_transaction_uid", patchUid);
-//  }
-//
-//
-//  public List<RevisionItemContainer> findByPatchUid(String patchUid) {
-//    // View name, followed by key name
-//    return queryView("by_transaction_uid", patchUid);
-//  }
 
 //  @View( name = "nodes_by_name", map = "classpath:nodesByName.js")
   public List<NodeWithContent> getAllNodes() {

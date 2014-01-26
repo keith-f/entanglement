@@ -63,6 +63,7 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
     om.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
     om.registerSubtypes(new NamedType(Pillow.class, "pillow"));
     om.registerSubtypes(new NamedType(HasPillow.class, "has-pillow"));
+    om.registerSubtypes(new NamedType(MapContent.class, "map-content"));
 //
 //    om.registerSubtypes(new NamedType(NodeWithContent.class, "NodeWithContent"));
     om.registerSubtypes(new NamedType(GeneContent.class, "GC"));

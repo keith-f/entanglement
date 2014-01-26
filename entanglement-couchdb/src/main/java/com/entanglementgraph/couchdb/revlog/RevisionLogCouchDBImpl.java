@@ -70,7 +70,6 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
     {
       container.setId(UidGenerator.generateUid());
       container.setGraphUid(graphId);
-      container.setGraphUid(graphId);
       container.setPatchUid(patchUid);
       container.setPatchIdx(patchIdx);
 
