@@ -5,7 +5,7 @@
 
   <groupId>com.entanglementgraph</groupId>
   <artifactId>entanglement</artifactId>
-  <version>ENT-SNAPSHOT</version>
+  <version>1.0</version>
 
   <name>Entanglement</name>
 
