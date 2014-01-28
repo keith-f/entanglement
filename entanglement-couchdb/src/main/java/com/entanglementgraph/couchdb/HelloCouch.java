@@ -118,6 +118,22 @@ public class HelloCouch {
       }
     }
 
+    System.out.println("\n\nTesting node querying:\n");
+    for (NodeModification mod : nodeDAO.getAllNodes3()) {
+      EntityKeys<? extends Content> partial = mod.getNode().getKeys();
+      EntityKeys<? extends Content> full = nodeDAO.populateFullKeyset(partial);
+      System.out.println("#"+full);
+      Node<? extends Content> node = nodeDAO.getByKey(full, true);
+      if (node == null) {
+        System.out.println("  * Node was NULL");
+      } else {
+        System.out.println("  * Found node: "+node);
+        System.out.println("    - with content type: "+node.getContent().getClass().getName());
+      }
+
+    }
+
+
   }
 
   private static List<GraphOperation> createTestGraph() throws DbObjectMarshallerException {

@@ -79,7 +79,9 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
     //Next, specify a key or key range on to return from the view.
     // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
     // Here, we specify the Node's UID only, and want to accept any timestamp
-    query = query.key(ComplexKey.of(uid, ComplexKey.emptyObject()));
+    query = query
+        .startKey(ComplexKey.of(uid))
+        .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
     List<NodeModification> updates = db.queryView(query, NodeModification.class);
@@ -96,7 +98,9 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
     //Next, specify a key or key range on to return from the view.
     // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
     // Here, we specify the Node's type and name as the key, and want to accept any timestamp
-    query = query.key(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
+    query = query
+        .startKey(ComplexKey.of(typeName, name))
+        .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
     List<NodeModification> updates = db.queryView(query, NodeModification.class);
