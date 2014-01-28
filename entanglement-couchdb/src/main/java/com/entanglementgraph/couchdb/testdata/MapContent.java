@@ -17,13 +17,15 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
+import com.entanglementgraph.couchdb.Content;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author Keith Flanagan
  */
-public class MapContent implements NodeContent {
+public class MapContent implements Content {
   private Map<String, Object> map;
 
   public MapContent() {

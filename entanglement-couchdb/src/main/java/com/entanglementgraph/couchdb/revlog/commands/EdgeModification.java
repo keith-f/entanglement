@@ -18,7 +18,7 @@
 
 package com.entanglementgraph.couchdb.revlog.commands;
 
-import com.entanglementgraph.couchdb.testdata.EdgeWithContent;
+import com.entanglementgraph.couchdb.Edge;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.logging.Logger;
@@ -74,7 +74,7 @@ public class EdgeModification
 
   private MergePolicy mergePol;
 //  private BasicDBObject edge;
-  private EdgeWithContent edge;
+  private Edge edge;
 
  
 
@@ -100,7 +100,7 @@ public class EdgeModification
 //    }
 //  }
   
-  public EdgeModification(MergePolicy mergePol, EdgeWithContent edge)
+  public EdgeModification(MergePolicy mergePol, Edge edge)
   {
     this.mergePol = mergePol;
     this.edge = edge;
@@ -111,11 +111,11 @@ public class EdgeModification
     return "EdgeModification{" + "edge=" + edge + '}';
   }
 
-  public EdgeWithContent getEdge() {
+  public Edge getEdge() {
     return edge;
   }
 
-  public void setEdge(EdgeWithContent edge) {
+  public void setEdge(Edge edge) {
     this.edge = edge;
   }
 

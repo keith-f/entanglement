@@ -17,14 +17,12 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
-import com.entanglementgraph.graph.data.Node;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.entanglementgraph.couchdb.Content;
 
 /**
  * @author Keith Flanagan
  */
-public class Pillow implements NodeContent {
+public class Pillow implements Content {
   private static final String TYPE_NAME = Pillow.class.getSimpleName();
 
   public static enum Softness {SOFT, MEDIUM, FIRM}

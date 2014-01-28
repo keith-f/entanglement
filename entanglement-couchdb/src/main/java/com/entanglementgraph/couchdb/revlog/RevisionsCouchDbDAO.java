@@ -17,8 +17,8 @@
 
 package com.entanglementgraph.couchdb.revlog;
 
+import com.entanglementgraph.couchdb.Node;
 import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
-import com.entanglementgraph.couchdb.testdata.NodeWithContent;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.ViewQuery;
 import org.ektorp.support.CouchDbRepositorySupport;
@@ -52,18 +52,18 @@ public class RevisionsCouchDbDAO
 
 
 //  @View( name = "nodes_by_name", map = "classpath:nodesByName.js")
-  public List<NodeWithContent> getAllNodes() {
+  public List<Node> getAllNodes() {
     ViewQuery query = new ViewQuery()
         .designDocId("_design/nodes_by_name")
         .viewName("_all");
 //        .key("red");
 
-    List<NodeWithContent> nodes = db.queryView(query, NodeWithContent.class);
+    List<Node> nodes = db.queryView(query, Node.class);
     return nodes;
   }
 
   @View( name = "all_nodes_by_name", map = "classpath:nodesByName.js")
-  public List<NodeWithContent> getAllNodes2() {
+  public List<Node> getAllNodes2() {
 //    ViewQuery query = new ViewQuery()
 //        .designDocId("_design/nodes_by_name")
 //        .viewName("_all");
@@ -71,7 +71,7 @@ public class RevisionsCouchDbDAO
 
     ViewQuery query = createQuery("all_nodes_by_name");
 
-    List<NodeWithContent> nodes = db.queryView(query, NodeWithContent.class);
+    List<Node> nodes = db.queryView(query, Node.class);
     return nodes;
   }
 

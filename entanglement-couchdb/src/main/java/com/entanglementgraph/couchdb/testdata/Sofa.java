@@ -17,15 +17,14 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import org.codehaus.jackson.annotate.*;
+
+import com.entanglementgraph.couchdb.Content;
 
 /**
  * @author Keith Flanagan
  */
 //public class Sofa extends NewNode2<Sofa> implements NodeContent {
-public class Sofa implements NodeContent {
+public class Sofa implements Content {
 
   private String color;
   private int numSeats;

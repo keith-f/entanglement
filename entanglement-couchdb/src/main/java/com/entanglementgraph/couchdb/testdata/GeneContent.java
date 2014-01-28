@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
+import com.entanglementgraph.couchdb.Content;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -26,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 //    use = JsonTypeInfo.Id.NAME,
 //    include = JsonTypeInfo.As.PROPERTY,
 //    property = "+jt")
-public class GeneContent implements NodeContent{
+public class GeneContent implements Content {
   private String geneName;
   private String embl;
 

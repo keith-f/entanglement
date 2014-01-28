@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph.couchdb.testdata;
+package com.entanglementgraph.couchdb;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -28,5 +28,5 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "+jt")
-public interface NodeContent {
+public interface Content {
 }

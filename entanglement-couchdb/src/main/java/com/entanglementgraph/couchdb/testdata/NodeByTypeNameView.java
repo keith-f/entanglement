@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.couchdb.testdata;
 
+import com.entanglementgraph.couchdb.Node;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.StreamingViewResult;
 import org.ektorp.ViewQuery;
@@ -61,24 +62,24 @@ public class NodeByTypeNameView { //extends CouchDbRepositorySupport<NodeWithCon
 //  }
 
 //  @View( name = "nodes_by_name", map = "classpath:nodesByName.js")
-  public List<NodeWithContent> getAllNodes() {
+  public List<Node> getAllNodes() {
     ViewQuery query = new ViewQuery()
         .designDocId("_design/nodes_by_name")
         .viewName("all");
 //        .key("red");
 
-    List<NodeWithContent> nodes = db.queryView(query, NodeWithContent.class);
+    List<Node> nodes = db.queryView(query, Node.class);
     return nodes;
   }
 
 //  public <C extends NodeContent> List<NodeWithContent<C>> getAllNodesOfType(Class c) {
-  public List<NodeWithContent> getAllNodesOfType(Class c) {
+  public List<Node> getAllNodesOfType(Class c) {
     ViewQuery query = new ViewQuery()
         .designDocId("_design/Sofa")
         .viewName("by_color")
         .key("red");
 
-    List<NodeWithContent> nodes = db.queryView(query, NodeWithContent.class);
+    List<Node> nodes = db.queryView(query, Node.class);
     return nodes;
   }
 }

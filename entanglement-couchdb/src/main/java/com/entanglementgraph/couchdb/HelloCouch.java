@@ -20,18 +20,15 @@ package com.entanglementgraph.couchdb;
 import com.entanglementgraph.couchdb.revlog.RevisionLog;
 import com.entanglementgraph.couchdb.revlog.RevisionLogCouchDBImpl;
 import com.entanglementgraph.couchdb.revlog.RevisionsCouchDbDAO;
-import com.entanglementgraph.couchdb.revlog.commands.EdgeModification;
 import com.entanglementgraph.couchdb.revlog.commands.GraphOperation;
 import com.entanglementgraph.couchdb.revlog.commands.MergePolicy;
 import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
 import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
 import com.entanglementgraph.couchdb.testdata.*;
-import com.entanglementgraph.graph.data.EntityKeys;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.jackson.JacksonDBObjectMarshaller;
 import com.scalesinformatics.util.UidGenerator;
-import org.codehaus.jackson.JsonNode;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.http.HttpClient;
@@ -97,19 +94,36 @@ public class HelloCouch {
 
 //    NodeByTypeNameView nbtnView = new NodeByTypeNameView(db);
 //    List<NodeWithContent> allNodes = nbtnView.getAllNodes();
-    List<NodeWithContent> allNodes = dao.getAllNodes2();
+    List<Node> allNodes = dao.getAllNodes2();
     System.out.println("Found nodes: "+allNodes.size());
-    for (NodeWithContent node : allNodes) {
+    for (Node node : allNodes) {
       System.out.println(" * "+node);
     }
 
+    System.out.println("\n\nTesting resolving full keysets:\n");
+
+    NodeDAOCouchDbImpl nodeDAO = new NodeDAOCouchDbImpl(db);
+    for (NodeModification mod : nodeDAO.getAllNodes3()) {
+      EntityKeys<?> modKeys = mod.getNode().getKeys();
+      for (String uid : modKeys.getUids()) {
+        EntityKeys<?> partial = new EntityKeys();
+        partial.setType(modKeys.getType());
+        partial.addUid(uid);
+        System.out.println("Resolving full keyset for UID: " + uid + ": " + nodeDAO.populateFullKeyset(partial));
+      }
+
+      for (String name : modKeys.getNames()) {
+        EntityKeys<?> partial = new EntityKeys(modKeys.getType(), name);
+        System.out.println("Resolving full keyset for name: "+name+": "+nodeDAO.populateFullKeyset(partial));
+      }
+    }
 
   }
 
   private static List<GraphOperation> createTestGraph() throws DbObjectMarshallerException {
     List<GraphOperation> ops = new LinkedList<>();
 
-    NodeWithContent<Sofa> sofaNode = new NodeWithContent<>();
+    Node<Sofa> sofaNode = new Node<>();
     sofaNode.getKeys().setType("Sofa");
     sofaNode.getKeys().addNames("a-sofa-name", "another-name-for-this-sofa", "a-blue-sofa");
     Sofa sofa = new Sofa();
@@ -123,8 +137,7 @@ public class HelloCouch {
     Pillow firmPillow = new Pillow();
     firmPillow.setSoftness(Pillow.Softness.FIRM);
     ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
-        new NodeWithContent<>(
-            new EntityKeys("Pillow", "firm-pillow"), firmPillow)));
+        new Node<>(new EntityKeys("Pillow", "firm-pillow"), firmPillow)));
 
 //    HasPillow hasFirmPillow = new HasPillow();
 //    hasFirmPillow.getKeys().addUid(UidGenerator.generateUid());
@@ -136,7 +149,7 @@ public class HelloCouch {
 //    ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, hasFirmPillow));
 
     ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
-        new NodeWithContent<>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
+        new Node<>(new EntityKeys("gene-node-content", "some-name"), new GeneContent("boo", "bar"))));
 
 
     MapContent mapTest = new MapContent();
@@ -144,7 +157,7 @@ public class HelloCouch {
     mapTest.getMap().put("bar", "baz");
     mapTest.getMap().put("number", 3);
     ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING,
-        new NodeWithContent<>(new EntityKeys("MapTestNode", "map-test"), mapTest)));
+        new Node<>(new EntityKeys("MapTestNode", "map-test"), mapTest)));
 
     return ops;
   }
