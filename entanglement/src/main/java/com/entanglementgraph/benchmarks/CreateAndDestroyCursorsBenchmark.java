@@ -18,12 +18,9 @@
 package com.entanglementgraph.benchmarks;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoUtils;
-import com.mongodb.DBObject;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.util.UidGenerator;
 

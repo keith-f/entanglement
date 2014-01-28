@@ -16,13 +16,9 @@
  */
 package com.entanglementgraph.iteration;
 
-import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.commands.EdgeModification;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.mongodb.BasicDBObject;
 
 import java.util.logging.Logger;

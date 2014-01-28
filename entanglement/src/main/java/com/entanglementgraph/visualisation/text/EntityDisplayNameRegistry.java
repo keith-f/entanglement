@@ -16,9 +16,9 @@
  */
 package com.entanglementgraph.visualisation.text;
 
-import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.data.GraphEntity;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Node;
 
 import java.util.HashMap;
 import java.util.Map;

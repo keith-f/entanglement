@@ -17,11 +17,10 @@
 package com.entanglementgraph.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.revlog.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.util.GraphConnection;
 
 import java.util.LinkedList;

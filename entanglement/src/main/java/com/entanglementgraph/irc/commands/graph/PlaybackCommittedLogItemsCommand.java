@@ -18,8 +18,8 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
-import com.entanglementgraph.player.LogPlayer;
-import com.entanglementgraph.player.LogPlayerMongoDbImpl;
+import com.entanglementgraph.graph.mongodb.player.LogPlayer;
+import com.entanglementgraph.graph.mongodb.player.LogPlayerMongoDbImpl;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
 import org.jibble.pircbot.Colors;

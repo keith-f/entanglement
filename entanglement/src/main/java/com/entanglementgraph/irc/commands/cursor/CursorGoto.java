@@ -17,13 +17,9 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import static com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat.*;
-
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.irc.EntanglementRuntime;
-import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.uibot.commands.BotCommandException;

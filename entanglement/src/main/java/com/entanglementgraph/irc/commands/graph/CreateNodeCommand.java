@@ -17,12 +17,12 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
+import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.MergePolicy;
+import com.entanglementgraph.graph.commands.NodeModification;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.BasicDBObject;

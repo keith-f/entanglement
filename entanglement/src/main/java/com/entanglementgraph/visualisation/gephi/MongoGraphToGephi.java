@@ -18,10 +18,10 @@
 package com.entanglementgraph.visualisation.gephi;
 
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.graph.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.awt.Color;

@@ -18,8 +18,8 @@
 package com.entanglementgraph.irc.commands.iteration;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.entanglementgraph.iteration.GraphIteratorException;
 import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalkerRunnable;
@@ -27,8 +27,8 @@ import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
-import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
 import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
 import com.entanglementgraph.visualisation.jung.TrackingVisualisation;

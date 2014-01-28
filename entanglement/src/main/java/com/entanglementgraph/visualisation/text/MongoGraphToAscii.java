@@ -19,8 +19,8 @@
 package com.entanglementgraph.visualisation.text;
 
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
 import com.mongodb.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,7 +30,7 @@ import java.net.UnknownHostException;
 
 import org.apache.commons.cli.*;
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.graph.RevisionLogException;
 
 /**
  *

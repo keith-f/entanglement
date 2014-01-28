@@ -16,14 +16,13 @@
  */
 package com.entanglementgraph.visualisation.jung.renderers;
 
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 
 import java.util.logging.Logger;

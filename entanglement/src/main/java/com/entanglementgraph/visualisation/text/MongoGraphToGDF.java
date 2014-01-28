@@ -20,8 +20,8 @@ package com.entanglementgraph.visualisation.text;
 
 import com.entanglementgraph.shell.gdfexport.GdfWriter;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DeserialisingIterable;
 import java.awt.Color;
@@ -38,9 +38,9 @@ import java.util.Properties;
 import org.apache.commons.cli.*;
 import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.RevisionLogException;
 
 /**
  *

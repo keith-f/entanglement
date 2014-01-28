@@ -18,7 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.revlog.commands.BranchImport;
+import com.entanglementgraph.graph.commands.BranchImport;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.scalesinformatics.uibot.Param;

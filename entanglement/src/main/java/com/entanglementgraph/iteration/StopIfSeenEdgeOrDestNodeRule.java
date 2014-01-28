@@ -16,9 +16,9 @@
  */
 package com.entanglementgraph.iteration;
 
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.mongodb.BasicDBObject;

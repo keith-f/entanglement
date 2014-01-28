@@ -17,11 +17,11 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
-import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;

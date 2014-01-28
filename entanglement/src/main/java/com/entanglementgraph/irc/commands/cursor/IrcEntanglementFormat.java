@@ -18,9 +18,9 @@
 package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.scalesinformatics.uibot.IrcFormat;
 import org.jibble.pircbot.Colors;
 

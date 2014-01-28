@@ -18,7 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.util.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.scalesinformatics.uibot.Param;

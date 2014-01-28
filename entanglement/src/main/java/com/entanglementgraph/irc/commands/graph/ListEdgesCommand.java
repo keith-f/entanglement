@@ -17,8 +17,8 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.mongodb.BasicDBObject;
 import com.scalesinformatics.uibot.OptionalParam;

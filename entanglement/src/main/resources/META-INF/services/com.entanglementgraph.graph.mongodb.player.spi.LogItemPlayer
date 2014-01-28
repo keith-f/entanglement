@@ -1,0 +1,10 @@
+com.entanglementgraph.graph.mongodb.player.spi.BranchImportPlayer
+com.entanglementgraph.graph.mongodb.player.spi.DeleteNodePlayer
+com.entanglementgraph.graph.mongodb.player.spi.DeleteEdgePlayer
+com.entanglementgraph.graph.mongodb.player.spi.EdgeModificationPlayer
+com.entanglementgraph.graph.mongodb.player.spi.NodeModificationPlayer
+com.entanglementgraph.graph.mongodb.player.spi.SetNamedNodePropertyPlayer
+com.entanglementgraph.graph.mongodb.player.spi.SetNodePropertyPlayer
+com.entanglementgraph.graph.mongodb.player.spi.TransactionBeginPlayer
+com.entanglementgraph.graph.mongodb.player.spi.TransactionCommitPlayer
+com.entanglementgraph.graph.mongodb.player.spi.TransactionRollbackPlayer

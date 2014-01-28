@@ -20,13 +20,12 @@ package com.entanglementgraph.cursor;
 import static com.entanglementgraph.graph.EdgeDAO.*;
 
 import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;

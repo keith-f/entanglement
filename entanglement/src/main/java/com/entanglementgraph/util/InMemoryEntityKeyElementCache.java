@@ -16,7 +16,7 @@
  */
 package com.entanglementgraph.util;
 
-import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.EntityKeys;
 
 import java.util.HashMap;
 import java.util.HashSet;

@@ -16,10 +16,8 @@
  */
 package com.entanglementgraph.visualisation.text;
 
-import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.data.GraphEntity;
-
-import java.util.Iterator;
 
 /**
  * A display name factory implementation that causes the entity type to be displayed only.

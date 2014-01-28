@@ -17,7 +17,7 @@
 
 package com.entanglementgraph.specialistnodes;
 
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Node;
 
 /**
  * A node that contains enough information to generate a chart of some kind.

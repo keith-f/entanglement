@@ -17,10 +17,10 @@
 
 package com.entanglementgraph.benchmarks;
 
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.mongodb.DBObject;
 import com.scalesinformatics.uibot.BotLogger;
 

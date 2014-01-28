@@ -18,8 +18,8 @@
 package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;

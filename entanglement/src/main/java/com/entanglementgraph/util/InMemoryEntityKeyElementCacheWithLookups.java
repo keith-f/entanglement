@@ -16,12 +16,10 @@
  */
 package com.entanglementgraph.util;
 
-import com.entanglementgraph.graph.data.EntityKeys;
+import com.entanglementgraph.graph.EntityKeys;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An implementation of <code>EntityKeyElementCache</code> that stores elements in RAM.

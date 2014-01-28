@@ -17,15 +17,11 @@
 
 package com.entanglementgraph.graph;
 
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import com.entanglementgraph.player.LogPlayerException;
+import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Query methods that are common to both Nodes and Edges.
@@ -107,7 +103,7 @@ public interface GraphEntityDAO
 
   public EntityKeys getEntityKeysetForName(String type, String name) throws GraphModelException;
 
-  public BasicDBObject getByKey(EntityKeys keyset)
+  public JsonNode getByKey(EntityKeys keyset)
       throws GraphModelException;
 
   /**
@@ -129,7 +125,7 @@ public interface GraphEntityDAO
    * @return the entity with the unique ID, or null if no such entity exists.
    * @throws LogPlayerException 
    */
-  public BasicDBObject getByUid(String uid)
+  public JsonNode getByUid(String uid)
       throws GraphModelException;
 
   /**
@@ -144,10 +140,10 @@ public interface GraphEntityDAO
   public <T> T getByUid(String uid, Class<T> castToType)
       throws GraphModelException;
 
-  public BasicDBObject getByAnyUid(Set<String> uids)
+  public JsonNode getByAnyUid(Set<String> uids)
       throws GraphModelException;
 
-  public BasicDBObject getByName(String entityType, String entityName)
+  public JsonNode getByName(String entityType, String entityName)
       throws GraphModelException;
 
   /**
@@ -183,7 +179,7 @@ public interface GraphEntityDAO
    * 
    * @throws GraphModelException 
    */
-  public BasicDBObject getByAnyName(String type, Set<String> entityNames)
+  public JsonNode getByAnyName(String type, Set<String> entityNames)
       throws GraphModelException;
 
 
@@ -223,7 +219,7 @@ public interface GraphEntityDAO
   
   
   
-  public DBCursor iterateAll()
+  public Iterable<JsonNode> iterateAll()
       throws GraphModelException;
   
   public List<String> listTypes()
@@ -232,10 +228,10 @@ public interface GraphEntityDAO
   public Iterable<EntityKeys> iterateKeys(int offset, int limit)
       throws GraphModelException;
 
-  public Iterable<DBObject> iterateByType(String typeName)
+  public Iterable<JsonNode> iterateByType(String typeName)
       throws GraphModelException;
 
-  public Iterable<DBObject> iterateByType(String typeName, Integer offset, Integer limit,
+  public Iterable<JsonNode> iterateByType(String typeName, Integer offset, Integer limit,
                                               DBObject customQuery, DBObject sort)
       throws GraphModelException;
 

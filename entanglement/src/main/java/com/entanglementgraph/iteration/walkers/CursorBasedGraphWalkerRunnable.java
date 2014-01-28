@@ -17,43 +17,13 @@
 package com.entanglementgraph.iteration.walkers;
 
 import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
-import com.entanglementgraph.iteration.walkers.CursorBasedGraphWalker;
-import com.entanglementgraph.revlog.RevisionLogException;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.visualisation.jung.JungGraphFrame;
-import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;
-import com.entanglementgraph.visualisation.jung.TrackingVisualisation;
-import com.entanglementgraph.visualisation.jung.renderers.CustomRendererRegistry;
-import com.entanglementgraph.visualisation.text.EntityDisplayNameRegistry;
-import com.mongodb.DBObject;
-import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.*;
 import com.scalesinformatics.util.UidGenerator;
-import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.visualization.VisualizationImageServer;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.decorators.PickableEdgePaintTransformer;
-import edu.uci.ics.jung.visualization.decorators.PickableVertexPaintTransformer;
-import edu.uci.ics.jung.visualization.layout.LayoutTransition;
-import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
-import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
-import edu.uci.ics.jung.visualization.util.Animator;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * A runnable for executing a graph walker. This class takes a <code>CursorBasedGraphWalker</code> and manages

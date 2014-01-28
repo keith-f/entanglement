@@ -22,9 +22,9 @@ import com.scalesinformatics.mongodb.gson.GsonDBObjectMarshaller;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import com.entanglementgraph.revlog.RevisionItemDeserializer;
-import com.entanglementgraph.revlog.RevisionItemSerializer;
-import com.entanglementgraph.revlog.data.RevisionItem;
+import com.entanglementgraph.graph.mongodb.RevisionItemDeserializer;
+import com.entanglementgraph.graph.mongodb.RevisionItemSerializer;
+import com.entanglementgraph.graph.RevisionItem;
 
 /**
  *

@@ -17,24 +17,18 @@
 
 package com.entanglementgraph.irc;
 
-import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.cursor.GraphCursorRegistry;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.BotLoggerFactory;
-import com.scalesinformatics.uibot.BotState;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A per-channel Entanglement IRC bot-specific configuration object for storing configuration information such

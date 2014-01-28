@@ -16,18 +16,13 @@
  */
 package com.entanglementgraph.iteration;
 
-import com.entanglementgraph.cursor.GraphCursor;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.commands.EdgeModification;
-import com.entanglementgraph.revlog.commands.GraphOperation;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
-import com.entanglementgraph.util.GraphConnection;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.MergePolicy;
+import com.entanglementgraph.graph.commands.NodeModification;
 import com.mongodb.BasicDBObject;
-
-import java.util.List;
 
 /**
  * A rule that simply stores the edges and nodes unchanged in the destination graph.

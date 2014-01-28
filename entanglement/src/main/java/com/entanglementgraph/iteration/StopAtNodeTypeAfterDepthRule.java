@@ -16,12 +16,12 @@
  */
 package com.entanglementgraph.iteration;
 
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.commands.EdgeModification;
-import com.entanglementgraph.revlog.commands.MergePolicy;
-import com.entanglementgraph.revlog.commands.NodeModification;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.MergePolicy;
+import com.entanglementgraph.graph.commands.NodeModification;
 import com.mongodb.BasicDBObject;
 
 /**

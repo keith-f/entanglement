@@ -18,13 +18,12 @@
 
 package com.entanglementgraph;
 
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.commands.*;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.GraphConnectionFactory;
-import com.entanglementgraph.util.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
+import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
 import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -34,7 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.graph.RevisionLogException;
 
 /**
  *

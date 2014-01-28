@@ -22,7 +22,7 @@ import com.mongodb.MongoClient;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.revlog.RevisionLog;
+import com.entanglementgraph.graph.RevisionLog;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,7 +31,7 @@ import com.entanglementgraph.revlog.RevisionLog;
  * Time: 13:11
  * To change this template use File | Settings | File Templates.
  */
-public class GraphConnection {
+public class  GraphConnection {
   private MongoClient pool;
   private DB db;
 

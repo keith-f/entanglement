@@ -18,10 +18,7 @@
 
 package com.entanglementgraph.graph;
 
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Map;
 
@@ -52,7 +49,7 @@ public interface EdgeDAO
    * @return an iterable list of edge instances.
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesBetweenNodes(
+  public Iterable<JsonNode> iterateEdgesBetweenNodes(
       EntityKeys fromNode, EntityKeys to)
       throws GraphModelException;
 
@@ -68,7 +65,7 @@ public interface EdgeDAO
    *         link the two specified nodes.
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesBetweenNodes(
+  public Iterable<JsonNode> iterateEdgesBetweenNodes(
       String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException;
 
@@ -79,7 +76,7 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesFromNode(EntityKeys from)
+  public Iterable<JsonNode> iterateEdgesFromNode(EntityKeys from)
       throws GraphModelException;
 
   /**
@@ -90,10 +87,10 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys from)
+  public Iterable<JsonNode> iterateEdgesFromNode(String edgeType, EntityKeys from)
       throws GraphModelException;
 
-  public DBCursor iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
+  public Iterable<JsonNode> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
                                        Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 
@@ -104,7 +101,7 @@ public interface EdgeDAO
    * @return
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType)
+  public Iterable<JsonNode> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType)
       throws GraphModelException;
 
   /**
@@ -114,7 +111,7 @@ public interface EdgeDAO
    * @return
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType)
+  public Iterable<JsonNode> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType)
       throws GraphModelException;
 
   /**
@@ -124,7 +121,7 @@ public interface EdgeDAO
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesToNode(EntityKeys to)
+  public Iterable<JsonNode> iterateEdgesToNode(EntityKeys to)
       throws GraphModelException;
 
   /**
@@ -134,10 +131,10 @@ public interface EdgeDAO
    * @return
    * @throws GraphModelException
    */
-  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys to)
+  public Iterable<JsonNode> iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
-  public DBCursor iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
+  public Iterable<JsonNode> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,
                                      Integer offset, Integer limit, DBObject customQuery, DBObject sort)
       throws GraphModelException;
 

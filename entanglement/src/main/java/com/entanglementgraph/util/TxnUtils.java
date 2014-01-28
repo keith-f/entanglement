@@ -18,17 +18,17 @@
 
 package com.entanglementgraph.util;
 
-import com.entanglementgraph.revlog.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.GraphOperation;
 import com.scalesinformatics.util.UidGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import com.entanglementgraph.revlog.RevisionLog;
-import com.entanglementgraph.revlog.RevisionLogException;
-import com.entanglementgraph.revlog.commands.TransactionBegin;
-import com.entanglementgraph.revlog.commands.TransactionCommit;
-import com.entanglementgraph.revlog.commands.TransactionRollback;
+import com.entanglementgraph.graph.RevisionLog;
+import com.entanglementgraph.graph.RevisionLogException;
+import com.entanglementgraph.graph.commands.TransactionBegin;
+import com.entanglementgraph.graph.commands.TransactionCommit;
+import com.entanglementgraph.graph.commands.TransactionRollback;
 
 /**
  *

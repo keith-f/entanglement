@@ -17,10 +17,9 @@
 package com.entanglementgraph.cursor;
 
 import com.entanglementgraph.graph.GraphEntityDAO;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 

@@ -24,12 +24,11 @@ import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
-import com.entanglementgraph.revlog.RevisionLogException;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.util.MongoUtils;
+import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -331,7 +330,7 @@ public class MongoToJungGraphExporter {
    * @throws java.io.IOException
    * @throws com.entanglementgraph.graph.GraphModelException
    *
-   * @throws com.entanglementgraph.revlog.RevisionLogException
+   * @throws com.entanglementgraph.graph.RevisionLogException
    *
    */
   public void addEntireGraph(GraphConnection graphConn)

@@ -17,12 +17,9 @@
 
 package com.entanglementgraph.cursor;
 
-import com.entanglementgraph.graph.AbstractGraphEntityDAO;
-import com.entanglementgraph.graph.GraphEntityDAO;
-import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.graph.data.Edge;
-import com.entanglementgraph.graph.data.EntityKeys;
-import com.entanglementgraph.graph.data.Node;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
