@@ -20,6 +20,7 @@ package com.entanglementgraph.couchdb;
 import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
 import com.entanglementgraph.graph.GraphModelException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.ComplexKey;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.ViewQuery;
@@ -29,6 +30,7 @@ import org.ektorp.support.DesignDocumentFactory;
 import org.ektorp.support.View;
 import org.ektorp.support.Views;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -42,11 +44,11 @@ import java.util.*;
 })
 public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implements NodeDAO {
 
-//  private final CouchDbConnector db;
+  private final ObjectMapper om;
 
-  public NodeDAOCouchDbImpl(CouchDbConnector db)  {
+  public NodeDAOCouchDbImpl(CouchDbConnector db, ObjectMapper om)  {
     super(Node.class, db);
-//    CouchDbRepositorySupport support = new CouchDbRepositorySupport(null, null, null);
+    this.om = om;
 
     initStandardDesignDocument();
   }
@@ -91,7 +93,7 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
     return updates;
   }
 
-  private List<NodeModification> findUpdatesByName(String typeName, String name) {
+  private List<NodeModificationView> findUpdatesByName(String typeName, String name) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_nodes_by_name");
 
@@ -103,7 +105,27 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
         .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeModification> updates = db.queryView(query, NodeModification.class);
+    List<NodeModificationView> updates = db.queryView(query, NodeModificationView.class);
+
+    List<NodeModification> updates2 = new LinkedList<>();
+    ViewResult result = db.queryView(query);
+    for (ViewResult.Row row : result) {
+      JsonNode timestampField = row.getKeyAsNode().get(2);
+
+      try {
+        Date ts = om.readValue(timestampField.asText(), Date.class);
+        System.out.println("Date: "+ts+", "+ts.getTime());
+        Long tsAsLong = om.readValue(timestampField.asText(), Long.class);
+        System.out.println("Date as long: "+tsAsLong);
+
+        NodeModificationView mod = om.readValue(row.getValue(), NodeModificationView.class);
+        System.out.println("Value: "+mod.getClass().getName());
+        System.out.println("Value: "+mod.toString());
+        updates.add(mod);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
 
     System.out.println("Found "+updates.size()+" modification entries for the node with type: "+typeName+", name: "+name);
 

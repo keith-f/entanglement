@@ -15,7 +15,7 @@
  * 
  */
 
-package com.entanglementgraph;
+package com.entanglementgraph.graph.mongodb;
 
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.gson.GsonDBObjectMarshaller;

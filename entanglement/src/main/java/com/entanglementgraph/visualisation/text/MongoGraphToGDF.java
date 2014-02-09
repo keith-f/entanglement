@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.cli.*;
-import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.Node;

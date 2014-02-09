@@ -25,6 +25,7 @@ import com.entanglementgraph.couchdb.revlog.commands.MergePolicy;
 import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
 import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
 import com.entanglementgraph.couchdb.testdata.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.mongodb.jackson.JacksonDBObjectMarshaller;
@@ -55,9 +56,11 @@ public class HelloCouch {
 //        .password("secret")
         .build();
 
-    CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, new ExtStdObjectMapperFactory());
+    ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory();
+    CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
 // if the second parameter is true, the database will be created if it doesn't exists
     CouchDbConnector db = dbInstance.createConnector("my_first_database", true);
+    ObjectMapper om = omFactory.getLastCreatedObjectMapper();
 
     // Write sample document
     RevisionLog revLog = new RevisionLogCouchDBImpl(db);
@@ -102,7 +105,7 @@ public class HelloCouch {
 
     System.out.println("\n\nTesting resolving full keysets:\n");
 
-    NodeDAOCouchDbImpl nodeDAO = new NodeDAOCouchDbImpl(db);
+    NodeDAOCouchDbImpl nodeDAO = new NodeDAOCouchDbImpl(db, om);
     for (NodeModification mod : nodeDAO.getAllNodes3()) {
       EntityKeys<?> modKeys = mod.getNode().getKeys();
       for (String uid : modKeys.getUids()) {

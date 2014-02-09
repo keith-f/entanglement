@@ -73,7 +73,9 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
       container.setPatchUid(patchUid);
       container.setPatchIdx(patchIdx);
 
-      container.setTimestamp(new Date(System.currentTimeMillis()));
+      long now = System.currentTimeMillis();
+      container.setTimestamp(now);
+      container.setTimestampAsText(new Date(now).toString());
 
 
       if (op instanceof TransactionCommit) {
@@ -111,7 +113,9 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
       container.setPatchIdx(patchIdx);
 
 //      container.setRevisionId(nodeCounter.next());
-      container.setTimestamp(new Date(System.currentTimeMillis()));
+      long now = System.currentTimeMillis();
+      container.setTimestamp(now);
+      container.setTimestampAsText(new Date(now).toString());
 
       for (GraphOperation op : ops) {
         if (op instanceof TransactionBegin ||

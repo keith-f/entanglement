@@ -38,7 +38,7 @@ public class Node<C extends Content> implements Serializable {
   protected boolean loaded; // Indicates whether the content has been loaded from the database
 
   public Node() {
-    this.keys = new EntityKeys();
+    this.keys = new EntityKeys<>();
   }
 
   public Node(EntityKeys keys) {
@@ -46,11 +46,11 @@ public class Node<C extends Content> implements Serializable {
   }
 
   public Node(String typeName) {
-    this.keys = new EntityKeys();
+    this.keys = new EntityKeys<>();
     this.keys.setType(typeName);
   }
 
-  public Node(EntityKeys keys, C content) {
+  public Node(EntityKeys<C> keys, C content) {
     this.keys = keys;
     this.content = content;
   }

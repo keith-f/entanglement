@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.graph.couchdb;
 
-import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
 import com.entanglementgraph.graph.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.ektorp.ComplexKey;
@@ -28,35 +27,58 @@ import org.ektorp.support.CouchDbRepositorySupport;
 import org.ektorp.support.View;
 import org.ektorp.support.Views;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Keith Flanagan
  */
 @Views({
-    @View(name = "nameToNames", map = "classpath:nameToNamesMap.js"),
-    @View(name = "uidToUids", map = "classpath:uidToUidsMap.js"),
+    @View(name = "nameToNames", map = "classpath:nodeNameToNamesMap.js"),
+    @View(name = "uidToUids", map = "classpath:nodeUidToUidsMap.js"),
     @View(name = "all_nodes_by_name", map = "classpath:nodesByName.js"),
     @View(name = "all_nodes_by_uid", map = "classpath:nodesByUid.js")
 })
 public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implements NodeDAO {
 
-//  private final CouchDbConnector db;
+  private static class NodeModificationViewByTimestampComparator implements Comparator<NodeModificationView> {
+    @Override
+    public int compare(NodeModificationView o1, NodeModificationView o2) {
+      return Long.compare(o1.getTimestamp(), o2.getTimestamp());
+    }
+  }
 
   public NodeDAOCouchDbImpl(CouchDbConnector db)  {
     super(Node.class, db);
 //    CouchDbRepositorySupport support = new CouchDbRepositorySupport(null, null, null);
 
-    initStandardDesignDocument();
+    initStandardDesignDocument(); // Causes Ektorp to create the views listed above
+  }
+
+
+  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial) throws GraphModelException {
+    EntityKeys full = new EntityKeys();
+    full.setType(partial.getType());
+    Set<String> knownUids = full.getUids();
+    Set<String> knownNames = full.getNames();
+
+    for (String uid : partial.getUids()) {
+      if (!knownUids.contains(uid)) {
+        knownUids.addAll(findAllOtherUidsForUid(uid));
+      }
+    }
+    for (String name : partial.getNames()) {
+      if (!knownNames.contains(name)) {
+        knownNames.addAll(findAllOtherNamesForName(partial.getType(), name));
+      }
+    }
+
+    return full;
   }
 
   @Override
-  public <C extends Content> Node<C> getByKey(EntityKeys<C> keyset, boolean loadContent) throws GraphModelException {
+  public <C extends Content> Node<C> getByKey(EntityKeys<C> keyset) throws GraphModelException {
 
-    List<NodeModification> updates = new ArrayList<>();
+    List<NodeModificationView> updates = new ArrayList<>();
     for (String uid : keyset.getUids()) {
       updates.addAll(findUpdatesByUid(uid));
     }
@@ -64,17 +86,77 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
       updates.addAll(findUpdatesByName(keyset.getType(), name));
     }
 
-    //TODO sort and merge by timestamp here. For now, just return the first NodeModification
+    // Create a 'virtual' node if there's no database entry.
+    // Otherwise, find all revisions and construct a 'merged' node.
+    Node<C> node;
     if (updates.isEmpty()) {
-      return null;
+      node = new Node<>();
+      node.setKeys(keyset);
+      node.setLoaded(false);
+      node.setVirtual(true);
+    } else {
+      node = mergeRevisions(updates);
+      node.setLoaded(true);
     }
-    NodeModification first = updates.iterator().next();
-    Node<C> node = first.getNode();
-
     return node;
   }
 
-  private List<NodeModification> findUpdatesByUid(String uid) {
+  @Override
+  public <C extends Content> boolean existsByKey(EntityKeys<C> keyset) throws GraphModelException {
+    return !getByKey(keyset).isVirtual();
+  }
+
+//  @Override
+//  public Iterable<Node<? extends Content>> iterateAll() throws GraphModelException {
+//
+//    return null;
+//  }
+//
+//  @Override
+//  public long countAll() throws GraphModelException {
+//    return 0;
+//  }
+//
+//  @Override
+//  public <C extends Content> Iterable<Node<C>> iterateByType(String typeName) throws GraphModelException {
+//    return null;
+//  }
+//
+//  @Override
+//  public long countByType(String typeName) throws GraphModelException {
+//    return 0;
+//  }
+//
+//  @Override
+//  public List<String> listTypes() throws GraphModelException {
+//    return null;
+//  }
+
+
+
+
+  /*
+   * Internal methods
+   */
+
+  private <C extends Content> Node<C> mergeRevisions(List<NodeModificationView> mods) throws GraphModelException {
+    Collections.sort(mods, new NodeModificationViewByTimestampComparator());
+
+    NodeMerger<C> merger = new NodeMerger<>();
+    Node<C> merged = null;
+    for (NodeModificationView<C> mod : mods) {
+      if (merged == null) {
+        merged = mod.getNode();
+      } else {
+        Node<C> newNode = mod.getNode();
+        merged = merger.merge(mod.getMergePol(), merged, newNode);
+      }
+    }
+    return merged;
+  }
+
+
+  private List<NodeModificationView> findUpdatesByUid(String uid) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_nodes_by_uid");
 
@@ -86,14 +168,15 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
         .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeModification> updates = db.queryView(query, NodeModification.class);
+    List<NodeModificationView> updates = db.queryView(query, NodeModificationView.class);
+
 
     System.out.println("Found "+updates.size()+" modification entries for the node with UID: "+uid);
 
     return updates;
   }
 
-  private List<NodeModification> findUpdatesByName(String typeName, String name) {
+  private List<NodeModificationView> findUpdatesByName(String typeName, String name) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_nodes_by_name");
 
@@ -105,38 +188,21 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
         .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeModification> updates = db.queryView(query, NodeModification.class);
+    List<NodeModificationView> updates = db.queryView(query, NodeModificationView.class);
+
+//    ObjectMapper mapper = new ObjectMapper();
+//    ViewResult result = db.queryView(query);
+//    for (ViewResult.Row row : result) {
+//      JsonNode timestampField = row.getKeyAsNode().get(2);
+//      Date ts = mapper.readValue(timestampField.asText(), Date.class);
+//    }
 
     System.out.println("Found "+updates.size()+" modification entries for the node with type: "+typeName+", name: "+name);
 
     return updates;
   }
 
-  /**
-   * Given a partial keyset (a keyset suspected of containing less then the complete number of UIDs or names for a
-   * given node), queries the database and returns a fully populated keyset.
-   * @param partial
-   * @return
-   */
-  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial) {
-    EntityKeys full = new EntityKeys();
-    full.setType(partial.getType());
-    Set<String> knownUids = full.getUids();
-    Set<String> knownNames = full.getNames();
 
-    for (String uid : partial.getUids()) {
-      if (!knownUids.contains(uid)) {
-        knownUids.addAll(findAllUidsForUid(uid));
-      }
-    }
-    for (String name : partial.getNames()) {
-      if (!knownNames.contains(name)) {
-        knownNames.addAll(findAllNamesForNode(partial.getType(), name));
-      }
-    }
-
-    return full;
-  }
 
   /**
    * Given a node UID, finds all other UIDs that the node is known by.
@@ -150,13 +216,13 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
    * @param uid
    * @return
    */
-  private Set<String> findAllUidsForUid(String uid) {
+  private Set<String> findAllOtherUidsForUid(String uid) {
     Set<String> queriedFor = new HashSet<>();
 //    Set<String> allUids = new HashSet<>();
-    findAllUidsForUid(uid, queriedFor);
+    findAllOtherUidsForUid(uid, queriedFor);
     return queriedFor;
   }
-  private void findAllUidsForUid(String uid, Set<String> queriedFor) { //}, Set<String> allUids) {
+  private void findAllOtherUidsForUid(String uid, Set<String> queriedFor) { //}, Set<String> allUids) {
 //    allUids.add(uid);
     queriedFor.add(uid);
 
@@ -170,7 +236,7 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
       for (JsonNode uidNode : row.getValueAsNode()) {
         String nextUid = uidNode.asText();
         if (!queriedFor.contains(nextUid)) {
-          findAllUidsForUid(nextUid, queriedFor); //, allUids);
+          findAllOtherUidsForUid(nextUid, queriedFor);
         }
       }
     }
@@ -188,12 +254,12 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
    * @param name
    * @return
    */
-  private Set<String> findAllNamesForNode(String typeName, String name) {
+  private Set<String> findAllOtherNamesForName(String typeName, String name) {
     Set<String> queriedFor = new HashSet<>();
-    findAllNamesForNode(typeName, name, queriedFor);
+    findAllOtherNamesForName(typeName, name, queriedFor);
     return queriedFor;
   }
-  private void findAllNamesForNode(String typeName, String name, Set<String> queriedFor) {
+  private void findAllOtherNamesForName(String typeName, String name, Set<String> queriedFor) {
     queriedFor.add(name);
 
     ViewQuery query = createQuery("nameToNames");
@@ -206,72 +272,10 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
       for (JsonNode nameNode : row.getValueAsNode()) {
         String nextName = nameNode.asText();
         if (!queriedFor.contains(nextName)) {
-          findAllUidsForUid(nextName, queriedFor); //, allUids);
+          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
         }
       }
     }
   }
 
-//  @Override
-//  public <C extends Content> Node<C> getByUid(String uid, boolean loadContent) throws GraphModelException {
-//    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
-//    ViewQuery query = createQuery("all_nodes_by_uid");
-//
-//    //Next, specify a key or key range on to return from the view.
-//    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
-//    // Here, we specify the Node's UID only, and want to accept all modifications (will accept any timestamp)
-//    query = query.key(ComplexKey.of(uid, ComplexKey.emptyObject()));
-//
-//    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-//    List<NodeModification> updates = db.queryView(query, NodeModification.class);
-//
-//    System.out.println("Found "+updates.size()+" modification entries for the node with UID: "+uid);
-//
-//    //TODO merge here. For now, just return the first NodeModification
-//    if (updates.isEmpty()) {
-//      return null;
-//    }
-//    NodeModification first = updates.iterator().next();
-//    Node<C> node = first.getNode();
-//
-//    return node;
-//  }
-
-//  @Override
-//  public <C extends Content> Node<C> getByUid(String uid, Class<C> castToType) throws GraphModelException {
-//
-//    return null;
-//  }
-
-//  @View( name = "all_nodes_by_name", map = "classpath:nodesByName.js")
-  public List<NodeModification> getAllNodes3() {
-//    ViewQuery query = new ViewQuery()
-//        .designDocId("_design/nodes_by_name")
-//        .viewName("_all");
-////        .key("red");
-
-    ViewQuery query = createQuery("all_nodes_by_name");
-
-    List<NodeModification> nodes = db.queryView(query, NodeModification.class);
-    return nodes;
-  }
-
-//  @View( name = "all_nodes_by_uid", map = "classpath:nodesByUid.js")
-  public List<NodeModification> getAllNodes4() {
-    ViewQuery query = createQuery("all_nodes_by_uid");
-
-    List<NodeModification> nodes = db.queryView(query, NodeModification.class);
-    return nodes;
-  }
-
-//  @View( name = "all_nodes_by_name", map = "classpath:nodesByName.js")
-//  public List<Node> getAllNodes3() {
-//    ViewQuery query = new ViewQuery()
-//        .designDocId("_design/nodes_by_name")
-//        .viewName("all");
-////        .key("red");
-//
-//    List<Node> nodes = db.queryView(query, Node.class);
-//    return nodes;
-//  }
 }

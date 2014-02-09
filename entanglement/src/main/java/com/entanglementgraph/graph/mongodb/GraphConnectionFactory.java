@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.graph.mongodb;
 
-import com.entanglementgraph.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.mongodb.player.GraphCheckoutNamingScheme;

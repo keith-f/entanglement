@@ -34,6 +34,12 @@ import java.util.logging.Logger;
 public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
   private static final Logger logger = Logger.getLogger(ExtStdObjectMapperFactory.class.getName());
 
+  private ObjectMapper objectMapper;
+
+  public ObjectMapper getLastCreatedObjectMapper() {
+    return objectMapper;
+  }
+
   @Override
   public synchronized ObjectMapper createObjectMapper() {
     logger.info("CreateObjectMapper being called");
@@ -43,12 +49,12 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
   @Override
   public ObjectMapper createObjectMapper(CouchDbConnector connector) {
     logger.info("CreateObjectMapper(CouchDbConnector ...) being called");
-    ObjectMapper om = super.createObjectMapper(connector);
+    objectMapper = super.createObjectMapper(connector);
 
     logger.info("Adding serialisation customisations");
     // Exclude NULL and empty values
-    om.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-    om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 //    om.addMixInAnnotations(Rectangle.class, MixIn.class);
 //    om.addMixInAnnotations(NewNode.class, ANode.class);
@@ -60,16 +66,16 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
 //    om.registerSubtypes(new NamedType(ANode.class, "a-node3"));
 //    om.registerSubtypes(new NamedType(BNode.class, "b-node3"));
 //
-    om.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
-    om.registerSubtypes(new NamedType(Pillow.class, "pillow"));
-    om.registerSubtypes(new NamedType(HasPillow.class, "has-pillow"));
-    om.registerSubtypes(new NamedType(MapContent.class, "map-content"));
+    objectMapper.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
+    objectMapper.registerSubtypes(new NamedType(Pillow.class, "pillow"));
+    objectMapper.registerSubtypes(new NamedType(HasPillow.class, "has-pillow"));
+    objectMapper.registerSubtypes(new NamedType(MapContent.class, "map-content"));
 //
 //    om.registerSubtypes(new NamedType(NodeWithContent.class, "NodeWithContent"));
-    om.registerSubtypes(new NamedType(GeneContent.class, "GC"));
+    objectMapper.registerSubtypes(new NamedType(GeneContent.class, "GC"));
 
 
-    return om;
+    return objectMapper;
   }
 
 

@@ -17,8 +17,8 @@
 
 package com.entanglementgraph.graph.couchdb;
 
-import com.entanglementgraph.couchdb.revlog.commands.*;
-import com.entanglementgraph.couchdb.revlog.data.RevisionItemContainer;
+import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.*;
 import com.scalesinformatics.util.UidGenerator;
 import org.ektorp.CouchDbConnector;
 

@@ -18,104 +18,39 @@
 
 package com.entanglementgraph.graph.commands;
 
-import com.entanglementgraph.couchdb.Edge;
+import com.entanglementgraph.graph.Content;
+import com.entanglementgraph.graph.Edge;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import java.util.logging.Logger;
 
 /**
  *
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class EdgeModification
+public class EdgeModification<C extends Content, F extends Content, T extends Content>
     extends GraphOperation
 {
-  private static final Logger logger = Logger.getLogger(EdgeModification.class.getName());
-
-//  public static EdgeModification create(GraphConnection graphConn, MergePolicy mergePol, Edge edge)
-//      throws DbObjectMarshallerException {
-////    BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
-//    String edgeSer = graphConn.getMarshaller().serializeToString(edge);
-//    EdgeModification op = new EdgeModification(mergePol, edgeSer);
-//    return op;
-//  }
-//
-//  public static List<EdgeModification> create(GraphConnection graphConn, MergePolicy mergePol, Collection<Edge> edges)
-//      throws DbObjectMarshallerException {
-//    List<EdgeModification> ops = new ArrayList<>(edges.size());
-//    for (Edge edge : edges) {
-////      BasicDBObject edgeSer = graphConn.getMarshaller().serialize(edge);
-//      String edgeSer = graphConn.getMarshaller().serializeToString(edge);
-//      EdgeModification op = new EdgeModification(mergePol, edgeSer);
-//      ops.add(op);
-//    }
-//    return ops;
-//  }
-//
-//  public static EdgeModification create(DbObjectMarshaller m, MergePolicy mergePol, Edge edge)
-//      throws DbObjectMarshallerException {
-//    String edgeSer = m.serializeToString(edge);
-//    EdgeModification op = new EdgeModification(mergePol, edgeSer);
-//    return op;
-//  }
-//
-//  public static List<EdgeModification> create(DbObjectMarshaller m, MergePolicy mergePol, Collection<Edge> edges)
-//      throws DbObjectMarshallerException {
-//    List<EdgeModification> ops = new ArrayList<>(edges.size());
-//    for (Edge node : edges) {
-////      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-//      String edgeSer = m.serializeToString(node);
-//      EdgeModification op = new EdgeModification(mergePol, edgeSer);
-//      ops.add(op);
-//    }
-//    return ops;
-//  }
-
   private MergePolicy mergePol;
-//  private BasicDBObject edge;
-  private Edge edge;
+  private Edge<C, F, T> edge;
 
- 
-
-  public EdgeModification()
-  {
+  public EdgeModification() {
   }
 
-  public EdgeModification(String edgeAsJson)
-  {
-    this.mergePol = MergePolicy.NONE;
-    this.edge = edge;
-    if (edgeAsJson == null) {
-      throw new RuntimeException("The specified edge was NULL!");
-    }
-  }
-
-//  public EdgeModification(BasicDBObject edge)
-//  {
-//    this.mergePol = MergePolicy.NONE;
-//    this.edge = edge;
-//    if (edge == null) {
-//      throw new RuntimeException("The specified edge was NULL!");
-//    }
-//  }
-  
-  public EdgeModification(MergePolicy mergePol, Edge edge)
-  {
+  public EdgeModification(MergePolicy mergePol, Edge<C, F, T> edge)  {
     this.mergePol = mergePol;
     this.edge = edge;
   }
-  
+
   @Override
   public String toString() {
     return "EdgeModification{" + "edge=" + edge + '}';
   }
 
-  public Edge getEdge() {
+  public Edge<C, F, T> getEdge() {
     return edge;
   }
 
-  public void setEdge(Edge edge) {
+  public void setEdge(Edge<C, F, T> edge) {
     this.edge = edge;
   }
 

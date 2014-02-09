@@ -18,7 +18,7 @@
  */
 package com.entanglementgraph.visualisation.gephi;
 
-import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;

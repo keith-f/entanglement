@@ -18,7 +18,7 @@
  */
 package com.entanglementgraph.visualisation.jung;
 
-import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.cursor.VirtualNodeFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphEntityDAO;

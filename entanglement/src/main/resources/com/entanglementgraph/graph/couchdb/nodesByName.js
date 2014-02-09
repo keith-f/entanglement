@@ -7,12 +7,19 @@ function(doc) {
       keys = node.keys;
       if (keys.names && keys.names.length >=1) {
         // Pick any name as the view key. This is fine as long as we resolve all names prior to querying this view.
-          outKey = [keys.type, keys.names[0], doc.timestamp];
-          emit(outKey, update);
-//        for (i=0; i<keys.names.length; i=i+1) {
-//          outKey = [keys.type, keys.names[i], doc.timestamp];
-//          emit(outKey, update);
-//        }
+        var outKey = [keys.type, keys.names[0], doc.timestamp];
+        var outVal = new Object();
+
+        // Add all fields from the NodeModification
+        outVal.mergePol = update.mergePol;
+        outVal.node = update.node;
+
+        // Append additional fields from the root RevisionItemContainer
+        outVal.timestamp = doc.timestamp;
+        outVal.graphUid = doc.graphUid;
+        outVal.patchUid = doc.patchUid;
+        
+        emit(outKey, outVal);
       }
     }
   }

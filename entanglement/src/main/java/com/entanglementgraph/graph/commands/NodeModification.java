@@ -18,7 +18,8 @@
 
 package com.entanglementgraph.graph.commands;
 
-import com.entanglementgraph.couchdb.Node;
+import com.entanglementgraph.graph.Content;
+import com.entanglementgraph.graph.Node;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.logging.Logger;
@@ -30,40 +31,18 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class NodeModification
+public class NodeModification<C extends Content>
     extends GraphOperation
 {
   private static final Logger logger = 
       Logger.getLogger(NodeModification.class.getName());
-
-//  public static NodeModification create(DbObjectMarshaller m, MergePolicy mergePol, Node node)
-//      throws DbObjectMarshallerException {
-//    ObjectMapper jsonMapper = new ObjectMapper();
-////    String nodeSer = m.serializeToString(node);
-////    NodeModification op = new NodeModification(mergePol, nodeSer);
-//      NodeModification op = new NodeModification(mergePol, node);
-//    return op;
-//  }
-//
-//  public static List<NodeModification> create(DbObjectMarshaller m, MergePolicy mergePol, Collection<Node> nodes)
-//      throws DbObjectMarshallerException {
-//    List<NodeModification> ops = new ArrayList<>(nodes.size());
-//    for (Node node : nodes) {
-////      BasicDBObject nodeSer = graphConn.getMarshaller().serialize(node);
-////      String nodeSer = m.serializeToString(node);
-////      NodeModification op = new NodeModification(mergePol, nodeSer);
-//      NodeModification op = new NodeModification(mergePol, node);
-//      ops.add(op);
-//    }
-//    return ops;
-//  }
 
 
   private MergePolicy mergePol;
 
 //  private Node node;
 //  private NewNode2 node;
-  private Node node;
+  private Node<C> node;
   
   public NodeModification()
   {
@@ -83,11 +62,11 @@ public class NodeModification
     return "NodeModification{" + "node=" + node + '}';
   }
 
-  public Node getNode() {
+  public Node<C> getNode() {
     return node;
   }
 
-  public void setNode(Node node) {
+  public void setNode(Node<C> node) {
     this.node = node;
     if (node == null) {
       throw new RuntimeException("The specified node was NULL!");

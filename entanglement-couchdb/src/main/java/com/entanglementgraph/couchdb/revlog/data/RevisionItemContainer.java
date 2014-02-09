@@ -45,7 +45,8 @@ public class RevisionItemContainer extends CouchDbDocument
 //  @JsonProperty("_rev")
 //  private String _rev;
 
-  private Date timestamp;
+  private long timestamp;
+  private String timestampAsText;
   private String graphUid;
   private String patchUid;
   private int patchIdx;
@@ -121,14 +122,20 @@ public class RevisionItemContainer extends CouchDbDocument
     this.edgeUpdates = edgeUpdates;
   }
 
-  public Date getTimestamp()
-  {
+  public long getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(Date timestamp)
-  {
+  public void setTimestamp(long timestamp) {
     this.timestamp = timestamp;
+  }
+
+  public String getTimestampAsText() {
+    return timestampAsText;
+  }
+
+  public void setTimestampAsText(String timestampAsText) {
+    this.timestampAsText = timestampAsText;
   }
 
   public String getPatchUid()

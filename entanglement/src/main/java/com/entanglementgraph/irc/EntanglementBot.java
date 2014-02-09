@@ -17,7 +17,7 @@
 
 package com.entanglementgraph.irc;
 
-import com.entanglementgraph.ObjectMarshallerFactory;
+import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.irc.commands.benchmarks.RunBenchmarksCommand;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;

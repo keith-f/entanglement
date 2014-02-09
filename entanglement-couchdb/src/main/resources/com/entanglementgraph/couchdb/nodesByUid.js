@@ -6,11 +6,20 @@ function(doc) {
       node = update.node;
       keys = node.keys;
       if (keys.uids) {
-        for (i=0; i<keys.uids.length; i=i+1) {
-          outKey = [keys.uids[i], doc.timestamp];
-          //outKey = [doc.timestamp, keys.names[i]];
-          emit(outKey, update);
-        }
+        // Pick any UID as the view key. This is fine as long as we resolve all names prior to querying this view.
+        var outKey = [keys.uids[0], doc.timestamp];
+        var outVal = new Object();
+
+        // Add all fields from the NodeModification
+        outVal.mergePol = update.mergePol;
+        outVal.node = update.node;
+
+        // Append additional fields from the root RevisionItemContainer
+        outVal.timestamp = doc.timestamp;
+        outVal.graphUid = doc.graphUid;
+        outVal.patchUid = doc.patchUid;
+
+        emit(outKey, outVal);
       }
     }
   }

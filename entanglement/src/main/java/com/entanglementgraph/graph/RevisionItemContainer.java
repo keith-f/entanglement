@@ -18,8 +18,8 @@
 
 package com.entanglementgraph.graph;
 
-import com.entanglementgraph.couchdb.revlog.commands.EdgeModification;
-import com.entanglementgraph.couchdb.revlog.commands.NodeModification;
+import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.NodeModification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.ektorp.support.CouchDbDocument;
 
