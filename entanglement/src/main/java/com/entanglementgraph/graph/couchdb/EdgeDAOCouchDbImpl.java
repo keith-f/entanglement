@@ -118,73 +118,10 @@ public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implement
   }
 
   @Override
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullKeyset) throws GraphModelException {
+  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset) throws GraphModelException {
     try {
-      EntityKeyElementCache seenEdges = new InMemoryEntityKeyElementCache();
-
-      Set<String> nodeNamesToCheck = new HashSet<>();
-      nodeNamesToCheck.addAll(from.getNames());
-      while (!nodeNamesToCheck.isEmpty()) {
-        for (String name : nodeNamesToCheck) {
-
-          ViewQuery query = createQuery("nodes_and_edges");
-          query = query
-              .key(ComplexKey.of(from.getType(), name))
-              .reduce(true)
-              .group(true)
-              .groupLevel(2);
-
-          StreamingViewResult result2 = db.queryForStreamingView(query);
-
-
-          ViewResult result = db.queryView(query);
-          /*
-           * Read each row.
-           * Here, a keys will look like:
-           * [node_type, a, 0, [a, b, c]]               (node type, node name, followed by 0, followed by node synonyms)
-           * [node_type, a, 1, edge_type, [x, y, z]]    (node type, node name, followed by 1, followed by edge names for edges FROM the named node)
-           *
-           * Values will be of the form:
-           * TODO... (NodeMod docs for nodes, EdgeMod docs for edges??)
-           */
-          for (ViewResult.Row row : result.getRows()) {
-            JsonNode key = row.getKeyAsNode();
-            String nodeType = key.get(0).asText();
-            String nodeName = key.get(1).asText();
-            int docType = key.get(2).asInt();
-
-            if (docType == 0) {
-              JsonNode otherNameList = key.get(3);
-              log.info("Found node entry with node type:"+nodeType+", node name: "+nodeName+", other node names: "+otherNameList.asText());
-              // Add new node synonyms to the list to check
-              for (JsonNode otherNameEntry : otherNameList) {
-                nodeNamesToCheck.add(otherNameEntry.asText());
-              }
-            } else if (docType == 1) {
-              String edgeType = key.get(3).asText();
-              JsonNode otherNameList = key.get(4);
-              log.info("Found edge entry with node type:"+nodeType+", node name: "+nodeName
-                  +", edge type: "+edgeType+", edge names: "+otherNameList.asText());
-              EntityKeys fromEdge = new EntityKeys();
-              fromEdge.setType(edgeType);
-              for (JsonNode edgeNameEntry : otherNameList) {
-                fromEdge.addName(edgeNameEntry.asText());
-              }
-              seenEdges.cacheElementsOf(fromEdge);
-            } else {
-              throw new GraphModelException("Unsupported document type found in view: "+docType+" on row: "+row);
-            }
-
-            // Read each name in each row
-            for (JsonNode nameNode : row.getValueAsNode()) {
-              String nextName = nameNode.asText();
-              if (!queriedFor.contains(nextName)) {
-                findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
-              }
-            }
-          }
-        }
-      }
+      FromEdgeStreamingIterator<C, F, T> edgeItrable = new FromEdgeStreamingIterator<>(db, this, fromFullNodeKeyset);
+      return edgeItrable;
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform query", e);
     }

@@ -103,11 +103,11 @@ public interface EdgeDAO {
   /**
    * Given a node , returns an Iterable over all the outgoing edges of that node.
    *
-   * @param from the node whose outgoing edges are to be iterated
+   * @param fromFullNodeKeyset the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> from)
+  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset)
       throws GraphModelException;
 
   /**
