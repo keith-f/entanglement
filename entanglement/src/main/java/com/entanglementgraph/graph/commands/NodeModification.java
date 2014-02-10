@@ -40,8 +40,6 @@ public class NodeModification<C extends Content>
 
   private MergePolicy mergePol;
 
-//  private Node node;
-//  private NewNode2 node;
   private Node<C> node;
   
   public NodeModification()

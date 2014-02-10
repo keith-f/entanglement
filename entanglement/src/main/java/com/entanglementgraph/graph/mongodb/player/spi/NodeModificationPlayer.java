@@ -20,7 +20,9 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 
 
 import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.mongodb.jiti.NodeMerger;
+import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.couchdb.NodeMerger;
 import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.mongodb.*;
 
@@ -29,7 +31,7 @@ import java.util.logging.Logger;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.graph.commands.NodeModification;
-import com.entanglementgraph.graph.RevisionItem;
+import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 /**
  * Creates a node without performing any checks regarding whether it already
@@ -52,22 +54,22 @@ public class NodeModificationPlayer
   }
 
   @Override
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException
   {
     try {
-      NodeModification command = (NodeModification) item.getOp();
-      BasicDBObject reqSerializedNode = command.getNode();
+      NodeModification command = (NodeModification) op;
+      Node node = command.getNode();
 
-      reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedNode);
+      reqKeyset = node.getKeys();
 
       //The reference field should contain at least one identification key
       validateKeyset(reqKeyset);
 
-      createOrModify(command, reqSerializedNode, reqKeyset);
+      createOrModify(command);
 
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to play command: "+item.toString(), e);
+      throw new LogPlayerException("Failed to play command: "+op.toString(), e);
     }
   }
 
@@ -87,23 +89,23 @@ public class NodeModificationPlayer
     }
   }
 
-  private void createOrModify(NodeModification command, BasicDBObject reqSerializedNode, EntityKeys keyset)
+  private void createOrModify(NodeModification command)
           throws LogPlayerException
   {
     try {
       // Does the entity exist by any key specified in the reference?
-      boolean exists = nodeDao.existsByKey(keyset);
+      boolean exists = nodeDao.existsByKey(command.getNode().getKeys());
 
       // No - create a new document
       if (!exists) {
         // Create a new node and then exit
 //        logger.info("NodeModification refers to a new node. Query keyset was: "+keyset);
-        createNewNode(command, reqSerializedNode);
+        createNewNode(command);
       }
       // Yes  - update existing document
       else {
 //        logger.info("NodeModification matched an existing node. Query keyset was: "+keyset+". Entire document: "+reqSerializedNode);
-        updateExistingNode(command, reqSerializedNode);
+        updateExistingNode(command);
       }
     }
     catch(Exception e) {
@@ -114,22 +116,22 @@ public class NodeModificationPlayer
   /**
    * Called when a node is found to not exist already - we need to create it.
    */
-  private void createNewNode(NodeModification command, BasicDBObject reqSerializedNode )
-      throws GraphModelException, LogPlayerException
-  {
-    nodeDao.store(reqSerializedNode);
+  private void createNewNode(NodeModification command)
+      throws GraphModelException, LogPlayerException, DbObjectMarshallerException {
+    nodeDao.store(marshaller.serialize(command.getNode()));
   }
 
-  private void updateExistingNode(NodeModification command, BasicDBObject reqSerializedNode)
+  private void updateExistingNode(NodeModification command)
       throws LogPlayerException {
     try {
       // Edit existing node - need to perform a merge based on
-      BasicDBObject existing = nodeDao.getByKey(reqKeyset);
+      Node existing = nodeDao.getByKey(reqKeyset);
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
-      NodeMerger merger = new NodeMerger(marshaller);
-      BasicDBObject updated = merger.merge(command.getMergePol(), existing, reqSerializedNode);
-      nodeDao.update(updated);
+      NodeMerger merger = new NodeMerger();
+      Node updated = merger.merge(command.getMergePol(), existing, command.getNode());
+
+      nodeDao.update(marshaller.serialize(updated));
 
     } catch (Exception e) {
       throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);

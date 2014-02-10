@@ -18,13 +18,19 @@
 
 package com.entanglementgraph.graph.mongodb.player;
 
+import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.mongodb.EdgeDAOSeparateDocImpl;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnection;
+import com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl;
+import com.entanglementgraph.graph.mongodb.player.spi.EdgeModificationPlayer;
 import com.entanglementgraph.graph.mongodb.player.spi.LogItemPlayerProvider;
+import com.entanglementgraph.graph.mongodb.player.spi.NodeModificationPlayer;
 import com.entanglementgraph.util.GraphConnection;
 
 import java.util.logging.Logger;
 import com.entanglementgraph.graph.mongodb.player.spi.LogItemPlayer;
 import com.entanglementgraph.graph.RevisionLogException;
-import com.entanglementgraph.graph.RevisionItem;
 import com.entanglementgraph.graph.RevisionItemContainer;
 
 /**
@@ -38,10 +44,10 @@ public class LogPlayerMongoDbImpl
       Logger.getLogger(LogPlayerMongoDbImpl.class.getName());
 
   private final GraphConnection srcGraphConn;
-  private final GraphConnection tgtGraphConn;
+  private final MongoGraphConnection tgtGraphConn;
 
 
-  public LogPlayerMongoDbImpl(GraphConnection srcGraphConn, GraphConnection tgtGraphConn)
+  public LogPlayerMongoDbImpl(GraphConnection srcGraphConn, MongoGraphConnection tgtGraphConn)
       throws RevisionLogException
   {
     this.srcGraphConn = srcGraphConn;
@@ -53,8 +59,10 @@ public class LogPlayerMongoDbImpl
       throws LogPlayerException
   {
     try {
-      tgtGraphConn.getNodeDao().getCollection().drop();
-      tgtGraphConn.getEdgeDao().getCollection().drop();
+      NodeDAONodePerDocImpl nodeDaoMongo = (NodeDAONodePerDocImpl) tgtGraphConn.getNodeDao();
+      EdgeDAOSeparateDocImpl edgeDaoMongo = (EdgeDAOSeparateDocImpl) tgtGraphConn.getEdgeDao();
+      nodeDaoMongo.getCollection().drop();
+      edgeDaoMongo.getCollection().drop();
     }
     catch(Exception e) {
       throw new LogPlayerException(
@@ -69,18 +77,31 @@ public class LogPlayerMongoDbImpl
     try {
       Iterable<RevisionItemContainer> containers = 
               srcGraphConn.getRevisionLog().iterateCommittedRevisionsForGraph(
-                  srcGraphConn.getGraphName(), srcGraphConn.getGraphBranch());
+                  srcGraphConn.getGraphName());
 
       LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
 
       for (RevisionItemContainer container : containers)
       {
-        for (RevisionItem item : container.getItems()) {
-          //        logger.info("Going to play revision: "+item);
-
-          LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
+        for (NodeModification item : container.getNodeUpdates()) {
+          NodeModificationPlayer itemPlayer = new NodeModificationPlayer();
+          itemPlayer.setGraphConnection(tgtGraphConn);
           itemPlayer.playItem(item);
         }
+
+        for (EdgeModification item : container.getEdgeUpdates()) {
+          EdgeModificationPlayer itemPlayer = new EdgeModificationPlayer();
+          itemPlayer.setGraphConnection(tgtGraphConn);
+          itemPlayer.playItem(item);
+        }
+
+        // Old impl
+//        for (RevisionItem item : container.getItems()) {
+//          //        logger.info("Going to play revision: "+item);
+//
+//          LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
+//          itemPlayer.playItem(item);
+//        }
       }
 
     }
@@ -103,8 +124,15 @@ public class LogPlayerMongoDbImpl
       LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
       for (RevisionItemContainer container : containers)
       {
-        for (RevisionItem item : container.getItems()) {
-          LogItemPlayer itemPlayer = playerProvider.getPlayerFor(item.getType());
+        for (NodeModification item : container.getNodeUpdates()) {
+          NodeModificationPlayer itemPlayer = new NodeModificationPlayer();
+          itemPlayer.setGraphConnection(tgtGraphConn);
+          itemPlayer.playItem(item);
+        }
+
+        for (EdgeModification item : container.getEdgeUpdates()) {
+          EdgeModificationPlayer itemPlayer = new EdgeModificationPlayer();
+          itemPlayer.setGraphConnection(tgtGraphConn);
           itemPlayer.playItem(item);
         }
       }

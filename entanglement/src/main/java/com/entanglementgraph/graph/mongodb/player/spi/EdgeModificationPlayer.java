@@ -18,13 +18,13 @@
 
 package com.entanglementgraph.graph.mongodb.player.spi;
 
+import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.mongodb.jiti.EdgeMerger;
+import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.couchdb.EdgeMerger;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.graph.commands.EdgeModification;
-import com.entanglementgraph.graph.RevisionItem;
-import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.mongodb.BasicDBObject;
 
 import java.util.logging.Logger;
@@ -42,14 +42,8 @@ public class EdgeModificationPlayer
   /*
    * These are set for every time <code>playItem</code> is called.
    */
-  // The currently playing revision item
-  private RevisionItem item;
   // The command wrapped by the RevisionItem
   private EdgeModification command;
-  // A MongoDB document embedded within the command that represents the graph entity being updated.
-  private BasicDBObject reqSerializedEdge;
-  // The deserialized key field from the reqSerializedEdge. This identifies the object to be created/updated.
-  private EntityKeys reqKeyset;
   
   @Override
   public String getSupportedLogItemType()
@@ -58,23 +52,19 @@ public class EdgeModificationPlayer
   }
 
   @Override
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException
   {
     try {
-      this.item = item;
-      command = (EdgeModification) item.getOp();
-      reqSerializedEdge = command.getEdge();
-
-      reqKeyset = MongoUtils.parseKeyset(marshaller, reqSerializedEdge);
+      command = (EdgeModification) op;
 
       //The reference field should contain at least one identification key
-      validateKeyset(reqKeyset);
+      validateKeyset(command.getEdge().getKeys());
 
-      createOrModify(reqKeyset);
+      createOrModify(command);
 
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to play command: "+item.toString(), e);
+      throw new LogPlayerException("Failed to play command: "+op.toString(), e);
     }
   }
 
@@ -94,22 +84,22 @@ public class EdgeModificationPlayer
   }
 
 
-  private void createOrModify(EntityKeys keyset)
+  private void createOrModify(EdgeModification command)
       throws LogPlayerException
   {
 //    logger.info("Attempting playback of entity: "+keyset);
     try {
       // Does the entity exist by any key specified in the reference?
-      boolean exists = edgeDao.existsByKey(keyset);
+      boolean exists = edgeDao.existsByKey(command.getEdge().getKeys());
 
       // No - create a new document
       if (!exists) {
         // Create a new node and then exit
-        createNewEdge();
+        createNewEdge(command);
       }
       // Yes  - update existing document
       else {
-        updateExistingEdge(command, reqSerializedEdge);
+        updateExistingEdge(command);
       }
     }
     catch(Exception e) {
@@ -120,28 +110,28 @@ public class EdgeModificationPlayer
   /**
    * Called when an edge is found to not exist already - we need to create it.
    */
-  private void createNewEdge() throws GraphModelException, LogPlayerException {
+  private void createNewEdge(EdgeModification command) throws GraphModelException, LogPlayerException {
     try {
-      edgeDao.store(reqSerializedEdge);
+      edgeDao.store(marshaller.serialize(command.getEdge()));
     } catch(Exception e) {
       throw new LogPlayerException("Failed to create an edge. Command was: "+command.toString(), e);
     }
   }
 
 
-  private void updateExistingEdge(EdgeModification command, BasicDBObject reqSerializedNode)
+  private void updateExistingEdge(EdgeModification command)
       throws LogPlayerException {
     try {
       // Edit existing node - need to perform a merge based on
-      BasicDBObject existing = edgeDao.getByKey(reqKeyset);
+      Edge existing = edgeDao.getByKey(command.getEdge().getKeys());
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
-      EdgeMerger merger = new EdgeMerger(marshaller);
-      BasicDBObject updated = merger.merge(command.getMergePol(), existing, reqSerializedNode);
-      edgeDao.update(updated);
+      EdgeMerger merger = new EdgeMerger();
+      Edge updated = merger.merge(command.getMergePol(), existing, command.getEdge());
+      edgeDao.update(marshaller.serialize(updated));
 
     } catch (Exception e) {
-      throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);
+      throw new LogPlayerException("Failed to perform update on node with keyset: "+command.getEdge().getKeys(), e);
     }
   }
 

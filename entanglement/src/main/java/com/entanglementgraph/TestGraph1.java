@@ -21,9 +21,9 @@ package com.entanglementgraph;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -91,7 +91,7 @@ public class TestGraph1
 
 
 
-    GraphConnectionFactory connFact = new GraphConnectionFactory(hostname, databaseName);
+    MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(hostname, databaseName);
     GraphConnection chromConn = connFact.connect("chromosomes", "trunk");
     GraphConnection genesConn = connFact.connect("genes", "trunk");
 

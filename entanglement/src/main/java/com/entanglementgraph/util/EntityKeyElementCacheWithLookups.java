@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.EntityKeys;
 
 /**
@@ -50,7 +51,8 @@ import com.entanglementgraph.graph.EntityKeys;
  *
  * @author Keith Flanagan
  */
-public interface EntityKeyElementCacheWithLookups<T, U> {
+public interface EntityKeyElementCacheWithLookups<T extends Content, U> {
   public void cacheElementsAndAssociateWithObject(EntityKeys<T> key, U userObject);
+  public boolean seenElementOf(EntityKeys<T> key);
   public U getUserObjectFor(EntityKeys<T> key);
 }

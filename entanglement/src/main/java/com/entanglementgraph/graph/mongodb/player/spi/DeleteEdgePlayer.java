@@ -25,6 +25,7 @@ import com.entanglementgraph.graph.RevisionItem;
 /**
  *
  * @author Keith Flanagan
+ * @deprecated
  */
 public class DeleteEdgePlayer
   extends AbstractLogItemPlayer

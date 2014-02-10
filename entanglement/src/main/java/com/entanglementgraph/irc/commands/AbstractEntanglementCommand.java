@@ -21,7 +21,7 @@ import com.entanglementgraph.irc.EntanglementIRCBotConfigNames;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.entanglementgraph.graph.mongodb.TmpGraphConnectionFactory;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.uibot.commands.AbstractCommand;

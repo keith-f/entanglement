@@ -23,6 +23,7 @@ import com.entanglementgraph.graph.EntityKeys;
 /**
  *
  * @author Keith Flanagan
+ * @deprecated Use a NodeModification instead
  */
 public class DeleteNode
     extends GraphOperation

@@ -26,7 +26,7 @@ import com.mongodb.BasicDBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
-import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
+import static com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl.FIELD_KEYS;
 
 /**
  * A convenience class for merging two BasicDBObject instances that represent graph nodes. This functionality is

@@ -17,6 +17,8 @@
 
 package com.entanglementgraph.restlet;
 
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
@@ -46,8 +48,11 @@ public class EdgeTypeNameRestlet extends Restlet {
       String type = (String) request.getAttributes().get("type");
       String name = (String) request.getAttributes().get("name");
 
-      BasicDBObject doc = conn.getEdgeDao().getByName(type, name);
-      String message = conn.getMarshaller().serializeToString(doc);
+      EntityKeys queryKeys = new EntityKeys();
+      queryKeys.setType(type);
+      queryKeys.addUid(name);
+      Edge edge = conn.getEdgeDao().getByKey(queryKeys);
+      String message = conn.getMarshaller().serializeToString(edge);
 
       response.setEntity(message, MediaType.TEXT_PLAIN);
     } catch (Exception e) {

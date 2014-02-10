@@ -46,9 +46,8 @@ import java.util.logging.Logger;
 public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.NodeEdgeNodeTuple> {
   private static final Logger logger = Logger.getLogger(EdgeIteratorToNENTupleIterator.class.getSimpleName());
 
-  private final DbObjectMarshaller marshaller;
   private final GraphConnection conn;
-  private final EntityKeys<? extends Node> subjectNodePosition;
+//  private final BasicDBObject subjectNodePosition;
   private final BasicDBObject subjectNode;
   private final boolean edgesAreOutgoing;
   private final boolean fillNodeDocsOfHangingEdges; //If true, dummy node objects will be created for hanging edges
@@ -70,9 +69,8 @@ public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.Node
                                         boolean edgesAreOutgoing, Callable<DBCursor> queryExecutor) {
     this.conn = conn;
     this.fillNodeDocsOfHangingEdges = fillNodeDocsOfHangingEdges;
-    this.marshaller = conn.getMarshaller();
 
-    this.subjectNodePosition = subjectNodePosition;
+//    this.subjectNodePosition = subjectNodePosition;
     this.edgesAreOutgoing = edgesAreOutgoing;
     this.queryExecutor = queryExecutor;
     this.subjectNode = subjectNode;
@@ -96,35 +94,37 @@ public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.Node
 
       @Override
       public GraphCursor.NodeEdgeNodeTuple next() {
-        BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
-        try {
-          EntityKeys<? extends Node> queryKeys = edgesAreOutgoing
-              ? marshaller.deserialize(edgeObj, Edge.class).getTo()
-              : marshaller.deserialize(edgeObj, Edge.class).getFrom();
-
-//          EntityKeys<? extends Node> destinationKeys = marshaller.deserialize(edgeObj, Edge.class).getTo();
-          BasicDBObject queryNode = conn.getNodeDao().getByKey(queryKeys);
-          if (queryNode == null) {
-            //This is probably a 'hanging' edge - we have the node reference, but no node exists.
-            logger.info("Potential hanging edge found: "+queryKeys);
-            if (fillNodeDocsOfHangingEdges) {
-//              BasicDBObject filler = new BasicDBObject();
-//              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
-//              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
-//              logger.info("Created 'filler' document for missing node: "+filler);
-//              queryNode = filler;
-              queryNode = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, queryKeys);
-            }
-          }
-
-
-          GraphCursor.NodeEdgeNodeTuple nodeEdgeNode = edgesAreOutgoing
-              ? new GraphCursor.NodeEdgeNodeTuple(subjectNode, edgeObj, queryNode)
-              : new GraphCursor.NodeEdgeNodeTuple(queryNode, edgeObj, subjectNode);
-          return nodeEdgeNode;
-        } catch (Exception e) {
-          throw new RuntimeException("Failed to iterate destination nodes for: "+ subjectNode, e);
-        }
+        return null;
+//        BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
+//        try {
+//          EntityKeys<? extends Node> queryKeys = edgesAreOutgoing
+//              ? marshaller.deserialize(edgeObj, Edge.class).getTo()
+//              : marshaller.deserialize(edgeObj, Edge.class).getFrom();
+//
+////          EntityKeys<? extends Node> destinationKeys = marshaller.deserialize(edgeObj, Edge.class).getTo();
+//          Node queryNode = conn.getNodeDao().getByKey(queryKeys);
+//          if (queryNode == null) {
+//            //This is probably a 'hanging' edge - we have the node reference, but no node exists.
+//            logger.info("Potential hanging edge found: "+queryKeys);
+//            if (fillNodeDocsOfHangingEdges) {
+////              BasicDBObject filler = new BasicDBObject();
+////              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
+////              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
+////              logger.info("Created 'filler' document for missing node: "+filler);
+////              queryNode = filler;
+//              queryNode = new Node(queryKeys);
+//              queryNode.setVirtual(true);
+//            }
+//          }
+//
+//
+//          GraphCursor.NodeEdgeNodeTuple nodeEdgeNode = edgesAreOutgoing
+//              ? new GraphCursor.NodeEdgeNodeTuple(subjectNode, edgeObj, queryNode)
+//              : new GraphCursor.NodeEdgeNodeTuple(queryNode, edgeObj, subjectNode);
+//          return nodeEdgeNode;
+//        } catch (Exception e) {
+//          throw new RuntimeException("Failed to iterate destination nodes for: "+ subjectNode, e);
+//        }
 
       }
 

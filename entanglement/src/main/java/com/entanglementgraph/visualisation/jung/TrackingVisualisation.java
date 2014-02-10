@@ -16,7 +16,8 @@
  */
 package com.entanglementgraph.visualisation.jung;
 
-import com.entanglementgraph.graph.GraphEntityDAO;
+import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.visualisation.jung.renderers.CustomVertexRenderer;
 import com.mongodb.DBObject;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
@@ -64,8 +65,8 @@ public class TrackingVisualisation {
   private final CustomVertexRenderer customVertexRenderer;
 
 
-  private Layout<DBObject, DBObject> layout;
-  private VisualizationViewer<DBObject, DBObject> jungViewer;
+  private Layout<Node, Edge> layout;
+  private VisualizationViewer<Node, Edge> jungViewer;
 
   private int layoutDimensionX;
   private int layoutDimensionY;
@@ -88,24 +89,24 @@ public class TrackingVisualisation {
 
   }
 
-  public void update(Graph<DBObject, DBObject> newJungGraph) {
+  public void update(Graph<Node, Edge> newJungGraph) {
 
     if (jungViewer == null) {
       createNewVisualizationViewer(newJungGraph);
     } else {
-      Graph<DBObject, DBObject> existingGraph = layout.getGraph();
+      Graph<Node, Edge> existingGraph = layout.getGraph();
       updateExistingVisualization(existingGraph, newJungGraph);
       relayout(existingGraph);
     }
   }
 
-  private void relayout(Graph<DBObject, DBObject> g) {
+  private void relayout(Graph<Node, Edge> g) {
     layout.initialize();
     Relaxer relaxer = new VisRunner((IterativeContext) layout);
     relaxer.stop();
     relaxer.prerelax();
-    StaticLayout<DBObject, DBObject> staticLayout = new StaticLayout<>(g, layout);
-    LayoutTransition<DBObject, DBObject> lt =
+    StaticLayout<Node, Edge> staticLayout = new StaticLayout<>(g, layout);
+    LayoutTransition<Node, Edge> lt =
         new LayoutTransition<>(jungViewer, jungViewer.getGraphLayout(), staticLayout);
     if (animator != null) {
       animator.stop();
@@ -115,7 +116,7 @@ public class TrackingVisualisation {
     jungViewer.repaint();
   }
 
-  private void createNewVisualizationViewer(Graph<DBObject, DBObject> jungGraph) {
+  private void createNewVisualizationViewer(Graph<Node, Edge> jungGraph) {
 
     layout = new FRLayout<>(jungGraph);
     layout.setSize(new Dimension(layoutDimensionX, layoutDimensionY));
@@ -129,10 +130,10 @@ public class TrackingVisualisation {
     jungViewer.getRenderContext().setVertexLabelRenderer(new DefaultVertexLabelRenderer(Color.cyan));
     jungViewer.getRenderContext().setEdgeLabelRenderer(new DefaultEdgeLabelRenderer(Color.cyan));
 //    jungViewer.getRenderContext().setEdgeLabelTransformer(customVertexRenderer.getEdgeLabelTransformer());
-    jungViewer.getRenderContext().setEdgeLabelTransformer(new Transformer<DBObject, String>() {
+    jungViewer.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
       @Override
-      public String transform(DBObject dbObject) {
-        return (String) dbObject.get(GraphEntityDAO.FIELD_KEYS_TYPE);
+      public String transform(Edge edge) {
+        return edge.getKeys().getType();
       }
     });
 
@@ -148,7 +149,7 @@ public class TrackingVisualisation {
     jungViewer.setBackground(Color.white);
   }
 
-  private void updateExistingVisualization(Graph<DBObject, DBObject> existingGraph, Graph<DBObject, DBObject> newGraph) {
+  private void updateExistingVisualization(Graph<Node, Edge> existingGraph, Graph<Node, Edge> newGraph) {
     switch (updateType) {
       case APPEND_ON_CURSOR_MOVE:
         mergeGraphs(existingGraph, newGraph);
@@ -159,20 +160,20 @@ public class TrackingVisualisation {
     }
   }
 
-  private void mergeGraphs(Graph<DBObject, DBObject> existingGraph, Graph<DBObject, DBObject> newGraph) {
-    for (DBObject vertex : newGraph.getVertices()) {
+  private void mergeGraphs(Graph<Node, Edge> existingGraph, Graph<Node, Edge> newGraph) {
+    for (Node vertex : newGraph.getVertices()) {
       //FIXME do this properly. For now, just add the objects and see what happens...
       existingGraph.addVertex(vertex);
     }
 
-    for (DBObject edge : newGraph.getEdges()) {
+    for (Edge edge : newGraph.getEdges()) {
       //FIXME do this properly. For now, just add the objects and see what happens...
-      Pair<DBObject> pair = newGraph.getEndpoints(edge);
+      Pair<Node> pair = newGraph.getEndpoints(edge);
       existingGraph.addEdge(edge, pair.getFirst(), pair.getSecond());
     }
   }
 
-  public VisualizationViewer<DBObject, DBObject> getJungViewer() {
+  public VisualizationViewer<Node, Edge> getJungViewer() {
     return jungViewer;
   }
 

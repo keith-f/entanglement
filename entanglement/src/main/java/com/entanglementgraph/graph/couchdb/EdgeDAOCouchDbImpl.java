@@ -39,7 +39,8 @@ import java.util.*;
     @View(name = "all_edges_by_uid", map = "classpath:nodesByUid.js"),
     @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js", reduce = "classpath:nodesAndEdgesReduce.js")
 })
-public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implements EdgeDAO {
+public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends Content>
+    extends CouchDbRepositorySupport<Edge> implements EdgeDAO<C, F, T> {
   public static final String DESIGN_DOC_ID = "_design/"+Edge.class.getSimpleName();
 
 
@@ -60,7 +61,7 @@ public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implement
   }
 
 
-  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial) throws GraphModelException {
+  public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
     EntityKeys full = new EntityKeys();
     full.setType(partial.getType());
     Set<String> knownUids = full.getUids();
@@ -81,7 +82,7 @@ public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implement
   }
 
   @Override
-  public <C extends Content, F extends Content, T extends Content> Edge<C, F, T> getByKey(EntityKeys<C> keyset)
+  public Edge<C, F, T> getByKey(EntityKeys<C> keyset)
       throws GraphModelException {
 
     List<EdgeModificationView> updates = new ArrayList<>();
@@ -103,22 +104,27 @@ public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implement
   }
 
   @Override
-  public <C extends Content> boolean existsByKey(EntityKeys<C> keyset) throws GraphModelException {
+  public boolean existsByKey(EntityKeys<C> keyset) throws GraphModelException {
     return getByKey(keyset) != null;
   }
 
   @Override
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateAll() throws GraphModelException {
     return null;
   }
 
   @Override
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(String edgeType, EntityKeys<F> from, EntityKeys<T> to) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
     return null;
   }
 
   @Override
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(String edgeType, EntityKeys<F> from, EntityKeys<T> to) throws GraphModelException {
+    return null;
+  }
+
+  @Override
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset) throws GraphModelException {
     try {
       FromEdgeStreamingIterator<C, F, T> edgeItrable = new FromEdgeStreamingIterator<>(db, this, fromFullNodeKeyset);
       return edgeItrable;
@@ -153,22 +159,22 @@ public class EdgeDAOCouchDbImpl extends CouchDbRepositorySupport<Edge> implement
   }
 
   @Override
-  public Iterable<JsonNode> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType) throws GraphModelException {
     return null;
   }
 
   @Override
-  public Iterable<JsonNode> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType) throws GraphModelException {
     return null;
   }
 
   @Override
-  public Iterable<JsonNode> iterateEdgesToNode(EntityKeys to) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(EntityKeys to) throws GraphModelException {
     return null;
   }
 
   @Override
-  public Iterable<JsonNode> iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
     return null;
   }
 

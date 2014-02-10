@@ -19,9 +19,9 @@ package com.entanglementgraph.visualisation.gephi;
 
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.RevisionLogException;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.awt.Color;
@@ -147,7 +147,7 @@ public class MongoGraphToGephi {
       System.exit(1);
     }
 
-    GraphConnectionFactory connFact = new GraphConnectionFactory(
+    MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(
         classLoader, mongoHost, mongoDatabaseName);
     GraphConnection conn = connFact.connect(graphName, graphBranch);
 

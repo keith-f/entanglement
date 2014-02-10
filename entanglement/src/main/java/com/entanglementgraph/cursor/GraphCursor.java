@@ -17,8 +17,6 @@
 
 package com.entanglementgraph.cursor;
 
-import static com.entanglementgraph.graph.EdgeDAO.*;
-
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
@@ -134,7 +132,7 @@ public class GraphCursor implements Serializable {
   /**
    * The coordinate of the node that we ended up at.
    */
-  private final EntityKeys<? extends Node> position;
+  private final Node position;
 
   private final DestinationType destinationType;
 
@@ -142,7 +140,7 @@ public class GraphCursor implements Serializable {
    * The keyset of the Edge that the cursor travelled along in order to reach the <code>destination</code>
    * (assuming that the cursor travelled via an edge, and didn't 'jump' to its destination).
    */
-  private final EntityKeys<? extends Edge> arrivedVia;
+  private final Edge arrivedVia;
 
   /**
    * Any parameters that were specified at the time of the move. This might be a node or edge type name, or a
@@ -152,7 +150,7 @@ public class GraphCursor implements Serializable {
 
 
 
-  public GraphCursor(String cursorName, EntityKeys<? extends Node> startNode) {
+  public GraphCursor(String cursorName, Node startNode) {
     this.name = cursorName;
     this.position = startNode;
     this.movementType = MovementTypes.START_POSITION;
@@ -169,7 +167,7 @@ public class GraphCursor implements Serializable {
 
 
   protected GraphCursor(String cursorName, MovementTypes movementType,
-                        GraphCursor previousLocation, EntityKeys<? extends Edge> arrivedVia, EntityKeys<? extends Node> newPosition,
+                        GraphCursor previousLocation, Edge arrivedVia, Node newPosition,
                         Map<String, Object> parameters) {
     this.name = cursorName;
     this.position = newPosition;
@@ -219,7 +217,7 @@ public class GraphCursor implements Serializable {
    * @throws GraphCursorException
    */
   public GraphCursor jump(CursorContext c,
-                          EntityKeys<? extends Node> destinationNode) throws GraphCursorException {
+                          Node destinationNode) throws GraphCursorException {
     GraphCursor cursor = new GraphCursor(name, MovementTypes.JUMP, this, null, destinationNode, null);
     recordHistoryAndNotify(c.getHz(), cursor);
     return cursor;
@@ -238,128 +236,128 @@ public class GraphCursor implements Serializable {
    * @throws GraphCursorException if the specified node was not directly connected to the current location.
    */
   public GraphCursor stepToNode(CursorContext c,
-                                EntityKeys<? extends Node> specifiedDestination)
+                                Node specifiedDestination)
       throws GraphCursorException {
-    DBObject edgeObj;
-    Edge edge;
-    EntityKeys<Node> actualDestination;
-    GraphConnection conn = c.getConn();
-    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesBetweenNodes(position, specifiedDestination)) {
-      if (!dbCursor.hasNext()) {
-        // There are no edges between the cursor and the specified destination.
-        throw new GraphCursorException("The following nodes are not directly related: "+ position +" and "+specifiedDestination);
-      }
-
-      // If there happen to be multiple destinations, we don't care here - just pick the first one.
-      edgeObj = dbCursor.next();
-      edge = conn.getMarshaller().deserialize(edgeObj, Edge.class);
-
-      // The iterator may return either outgoing or incoming edges. Decide which node to use here.
-      boolean fromContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getFrom(), specifiedDestination, true);
-      boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, true);
-
-      if (fromContainsDestinationSpec && toContainsDestinationSpec) {
-        //We couldn't tell the difference between from/to
-        logger.info("For information - 'from' and 'to' refer to the same node. " +
-            "This is probably a circular reference and nothing to worry about!. Edge was: "+edge.toString());
-      }
-      actualDestination = fromContainsDestinationSpec ? edge.getFrom() : edge.getTo();
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to iterate edges between nodes: "+ position +" and "+specifiedDestination, e);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to deserialise an object", e);
-    }
-
-    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
-    humanReadableProvenanceParams.put("specifiedDestination", specifiedDestination);
-
-    GraphCursor cursor = new GraphCursor(
-        name, MovementTypes.STEP_TO_NODE, this, edge.getKeys(), actualDestination, humanReadableProvenanceParams);
-    recordHistoryAndNotify(c.getHz(), cursor);
-    return cursor;
+    return null;
+//    DBObject edgeObj;
+//    Edge edge;
+//    Node actualDestination;
+//    GraphConnection conn = c.getConn();
+//    try (Iterable<Edge> edgeItr = conn.getEdgeDao().iterateEdgesBetweenNodes(position.getKeys(), specifiedDestination.getKeys())) {
+//      if (!edgeItr.hasNext()) {
+//        // There are no edges between the cursor and the specified destination.
+//        throw new GraphCursorException("The following nodes are not directly related: "+ position +" and "+specifiedDestination);
+//      }
+//
+//      // If there happen to be multiple destinations, we don't care here - just pick the first one.
+//      edgeObj = dbCursor.next();
+//      edge = conn.getMarshaller().deserialize(edgeObj, Edge.class);
+//
+//      // The iterator may return either outgoing or incoming edges. Decide which node to use here.
+//      boolean fromContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getFrom(), specifiedDestination, true);
+//      boolean toContainsDestinationSpec = EntityKeys.doKeysetsReferToSameEntity(edge.getTo(), specifiedDestination, true);
+//
+//      if (fromContainsDestinationSpec && toContainsDestinationSpec) {
+//        //We couldn't tell the difference between from/to
+//        logger.info("For information - 'from' and 'to' refer to the same node. " +
+//            "This is probably a circular reference and nothing to worry about!. Edge was: "+edge.toString());
+//      }
+//      actualDestination = fromContainsDestinationSpec ? edge.getFrom() : edge.getTo();
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to iterate edges between nodes: "+ position +" and "+specifiedDestination, e);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to deserialise an object", e);
+//    }
+//
+//    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+//    humanReadableProvenanceParams.put("specifiedDestination", specifiedDestination);
+//
+//    GraphCursor cursor = new GraphCursor(
+//        name, MovementTypes.STEP_TO_NODE, this, edge.getKeys(), actualDestination, humanReadableProvenanceParams);
+//    recordHistoryAndNotify(c.getHz(), cursor);
+//    return cursor;
   }
 
   public GraphCursor stepToFirstNodeOfType(CursorContext c, String remoteNodeType)
       throws GraphCursorException {
-    //DBObject chosenEdgeDoc = null;
-    Edge chosenEdge = null;
-    EntityKeys<Node> destination = null;
-    GraphConnection conn = c.getConn();
-    // Choose first matching edge - ends at a node of a specified type.
-    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)) {
-      for (DBObject edgeDoc : dbCursor) {
-        //chosenEdgeDoc = edgeDoc;
-        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
-        destination = chosenEdge.getTo();
-        break;
-      }
-    } catch (Exception e) {
-      throw new GraphCursorException("Failed to query database", e);
-    }
-    // If we didn't find a suitable outgoing edge, check for an incoming edge
-    if (chosenEdge == null) {
-      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType)) {
-        for (DBObject edgeDoc : dbCursor) {
-          //chosenEdgeDoc = edgeDoc;
-          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
-          destination = chosenEdge.getFrom();
-          break;
-        }
-      } catch (Exception e) {
-        throw new GraphCursorException("Failed to query database", e);
-      }
-    }
-    if (chosenEdge == null) {
-      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+remoteNodeType);
-    }
-
-    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
-    humanReadableProvenanceParams.put("destinationType", remoteNodeType);
-
-    GraphCursor cursor = new GraphCursor(
-        name, MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
-    recordHistoryAndNotify(c.getHz(), cursor);
-    return cursor;
+    return null;
+//    Edge chosenEdge = null;
+//    EntityKeys<Node> destination = null;
+//    GraphConnection conn = c.getConn();
+//    // Choose first matching edge - ends at a node of a specified type.
+//    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)) {
+//      for (DBObject edgeDoc : dbCursor) {
+//        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+//        destination = chosenEdge.getTo();
+//        break;
+//      }
+//    } catch (Exception e) {
+//      throw new GraphCursorException("Failed to query database", e);
+//    }
+//    // If we didn't find a suitable outgoing edge, check for an incoming edge
+//    if (chosenEdge == null) {
+//      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType)) {
+//        for (DBObject edgeDoc : dbCursor) {
+//          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+//          destination = chosenEdge.getFrom();
+//          break;
+//        }
+//      } catch (Exception e) {
+//        throw new GraphCursorException("Failed to query database", e);
+//      }
+//    }
+//    if (chosenEdge == null) {
+//      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+remoteNodeType);
+//    }
+//
+//    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+//    humanReadableProvenanceParams.put("destinationType", remoteNodeType);
+//
+//    GraphCursor cursor = new GraphCursor(
+//        name, MovementTypes.STEP_TO_FIRST_NODE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
+//    recordHistoryAndNotify(c.getHz(), cursor);
+//    return cursor;
   }
 
   public GraphCursor stepToFirstEdgeOfType(CursorContext c, String edgeType)
       throws GraphCursorException {
-    Edge chosenEdge = null;
-    EntityKeys<Node> destination = null;
-    GraphConnection conn = c.getConn();
-    // Choose first matching outgoing edge.
-    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNode(edgeType, position)) {
-      for (DBObject edgeDoc : dbCursor) {
-        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
-        destination = chosenEdge.getTo();
-        break;
-      }
-    } catch (Exception e) {
-      throw new GraphCursorException("Failed to query database", e);
-    }
-    // If we didn't find a suitable outgoing edge, check for an incoming edge
-    if (chosenEdge == null) {
-      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNode(edgeType, position)) {
-        for (DBObject edgeDoc : dbCursor) {
-          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
-          destination = chosenEdge.getFrom();
-          break;
-        }
-      } catch (Exception e) {
-        throw new GraphCursorException("Failed to query database", e);
-      }
-    }
-    if (chosenEdge == null) {
-      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+destinationType);
-    }
-
-    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
-    humanReadableProvenanceParams.put("edgeType", edgeType);
-
-    GraphCursor cursor = new GraphCursor(
-        name, MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
-    recordHistoryAndNotify(c.getHz(), cursor);
-    return cursor;
+    return null;
+//    Edge chosenEdge = null;
+//    EntityKeys<Node> destination = null;
+//    GraphConnection conn = c.getConn();
+//    // Choose first matching outgoing edge.
+//    try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesFromNode(edgeType, position)) {
+//      for (DBObject edgeDoc : dbCursor) {
+//        chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+//        destination = chosenEdge.getTo();
+//        break;
+//      }
+//    } catch (Exception e) {
+//      throw new GraphCursorException("Failed to query database", e);
+//    }
+//    // If we didn't find a suitable outgoing edge, check for an incoming edge
+//    if (chosenEdge == null) {
+//      try (DBCursor dbCursor = conn.getEdgeDao().iterateEdgesToNode(edgeType, position)) {
+//        for (DBObject edgeDoc : dbCursor) {
+//          chosenEdge = conn.getMarshaller().deserialize(edgeDoc, Edge.class);
+//          destination = chosenEdge.getFrom();
+//          break;
+//        }
+//      } catch (Exception e) {
+//        throw new GraphCursorException("Failed to query database", e);
+//      }
+//    }
+//    if (chosenEdge == null) {
+//      throw new GraphCursorException("Node: "+position+" is not connected to a node of type: "+destinationType);
+//    }
+//
+//    Map<String, Object> humanReadableProvenanceParams = new HashMap<>();
+//    humanReadableProvenanceParams.put("edgeType", edgeType);
+//
+//    GraphCursor cursor = new GraphCursor(
+//        name, MovementTypes.STEP_VIA_FIRST_EDGE_OF_TYPE, this, chosenEdge.getKeys(), destination, humanReadableProvenanceParams);
+//    recordHistoryAndNotify(c.getHz(), cursor);
+//    return cursor;
   }
 
   /*
@@ -371,11 +369,12 @@ public class GraphCursor implements Serializable {
   }
 
   public boolean exists(GraphConnection conn) throws GraphCursorException {
-    try {
-      return conn.getNodeDao().existsByKey(position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query database", e);
-    }
+    return false;
+//    try {
+//      return conn.getNodeDao().existsByKey(position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query database", e);
+//    }
   }
 
   /**
@@ -386,22 +385,22 @@ public class GraphCursor implements Serializable {
    * @throws GraphCursorException
    */
   public BasicDBObject resolve(GraphConnection conn)  throws GraphCursorException {
-    BasicDBObject nodeDoc;
-    try {
-      nodeDoc = conn.getNodeDao().getByKey(position);
-      if (nodeDoc == null) {
-        nodeDoc = VirtualNodeFactory.createVirtualNodeForLocation(conn.getMarshaller(), position);
-      }
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query database", e);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to create virtual node", e);
-    }
-    if (nodeDoc == null) {
-      throw new GraphCursorException("The current position could not be resolved (no database object exists) for: "+position);
-    }
-    return nodeDoc;
-
+    return null;
+//    BasicDBObject nodeDoc;
+//    try {
+//      nodeDoc = conn.getNodeDao().getByKey(position);
+//      if (nodeDoc == null) {
+//        nodeDoc = VirtualNodeFactory.createVirtualNodeForLocation(conn.getMarshaller(), position);
+//      }
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query database", e);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to create virtual node", e);
+//    }
+//    if (nodeDoc == null) {
+//      throw new GraphCursorException("The current position could not be resolved (no database object exists) for: "+position);
+//    }
+//    return nodeDoc;
   }
 
   public <T> T resolveAndDeserialise(GraphConnection conn, Class<T> javaBeanType)  throws GraphCursorException {
@@ -418,60 +417,66 @@ public class GraphCursor implements Serializable {
    * Generic edge queries
    */
   public DBCursor iterateIncomingEdges(GraphConnection conn) throws GraphCursorException {
-    try {
-      return conn.getEdgeDao().iterateEdgesToNode(position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return null;
+//    try {
+//      return conn.getEdgeDao().iterateEdgesToNode(position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
   public long countIncomingEdges(GraphConnection conn) throws GraphCursorException {
-    try {
-      return conn.getEdgeDao().countEdgesToNode(position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return -1;
+//    try {
+//      return conn.getEdgeDao().countEdgesToNode(position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
   public DBCursor iterateOutgoingEdges(GraphConnection conn) throws GraphCursorException {
-    try {
-      return conn.getEdgeDao().iterateEdgesFromNode(position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return null;
+//    try {
+//      return conn.getEdgeDao().iterateEdgesFromNode(position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
   public long countOutgoingEdges(GraphConnection conn) throws GraphCursorException {
-    try {
-      return conn.getEdgeDao().countEdgesFromNode(position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return -1;
+//    try {
+//      return conn.getEdgeDao().countEdgesFromNode(position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
 
   /*
    * Edge by type queries
    */
   public DBCursor iterateOutgoingEdgesOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
-    try {
-      return conn.getEdgeDao().iterateEdgesFromNode(edgeType, position);
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return null;
+//    try {
+//      return conn.getEdgeDao().iterateEdgesFromNode(edgeType, position);
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
 
 
   public Iterable<EntityKeys<? extends Node>> iterateOutgoingNodeRefs(GraphConnection conn) throws GraphCursorException {
-    try {
-      DbObjectMarshaller m = conn.getMarshaller();
-      DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(position);
-//      return new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class);
-      /*
-       * MakeIterable is required here because KeyExtractingIterable can only provide Iterable<EntityKeys>,
-       * and not Iterable<EntityKeys<? extends Node>>. Thank Java generics for that.
-       */
-      return MakeIterable.byCastingElements(
-          new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class));
-    } catch (GraphModelException e) {
-      throw new GraphCursorException("Failed to query graph.", e);
-    }
+    return null;
+//    try {
+//      DbObjectMarshaller m = conn.getMarshaller();
+//      DBCursor edgeResults = conn.getEdgeDao().iterateEdgesFromNode(position);
+////      return new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class);
+//      /*
+//       * MakeIterable is required here because KeyExtractingIterable can only provide Iterable<EntityKeys>,
+//       * and not Iterable<EntityKeys<? extends Node>>. Thank Java generics for that.
+//       */
+//      return MakeIterable.byCastingElements(
+//          new KeyExtractingIterable<>(edgeResults, m, FIELD_TO_KEYS, EntityKeys.class));
+//    } catch (GraphModelException e) {
+//      throw new GraphCursorException("Failed to query graph.", e);
+//    }
   }
 
   /*
@@ -494,25 +499,27 @@ public class GraphCursor implements Serializable {
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveEdgeDestPairs(
       final GraphConnection conn, final boolean outgoingEdges)
       throws GraphCursorException {
-    final BasicDBObject subjectNode = resolve(conn);
-    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
-      @Override
-      public DBCursor call() throws Exception {
-        return outgoingEdges
-            ? conn.getEdgeDao().iterateEdgesFromNode(position)
-            : conn.getEdgeDao().iterateEdgesToNode(position);
-      }
-    });
+    return null;
+//    final BasicDBObject subjectNode = resolve(conn);
+//    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+//      @Override
+//      public DBCursor call() throws Exception {
+//        return outgoingEdges
+//            ? conn.getEdgeDao().iterateEdgesFromNode(position)
+//            : conn.getEdgeDao().iterateEdgesToNode(position);
+//      }
+//    });
   }
 
   public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPair(
       final GraphConnection conn, final boolean outgoingEdges)
       throws GraphCursorException {
-    Iterator<NodeEdgeNodeTuple> itr = iterateAndResolveEdgeDestPairs(conn, outgoingEdges).iterator();
-    if (itr.hasNext()) {
-      return itr.next();
-    }
     return null;
+//    Iterator<NodeEdgeNodeTuple> itr = iterateAndResolveEdgeDestPairs(conn, outgoingEdges).iterator();
+//    if (itr.hasNext()) {
+//      return itr.next();
+//    }
+//    return null;
   }
 
   /**
@@ -533,15 +540,16 @@ public class GraphCursor implements Serializable {
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveEdgeDestPairsToRemoteNodeOfType(
       final GraphConnection conn, final boolean outgoingEdges, final String remoteNodeType)
       throws GraphCursorException {
-    final BasicDBObject subjectNode = resolve(conn);
-    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
-      @Override
-      public DBCursor call() throws Exception {
-        return outgoingEdges
-            ? conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)
-            : conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType);
-      }
-    });
+    return null;
+//    final BasicDBObject subjectNode = resolve(conn);
+//    return new EdgeIteratorToNENTupleIterator(conn, true, position, subjectNode, outgoingEdges, new Callable<DBCursor>() {
+//      @Override
+//      public DBCursor call() throws Exception {
+//        return outgoingEdges
+//            ? conn.getEdgeDao().iterateEdgesFromNodeToNodeOfType(position, remoteNodeType)
+//            : conn.getEdgeDao().iterateEdgesToNodeFromNodeOfType(position, remoteNodeType);
+//      }
+//    });
   }
 
   public NodeEdgeNodeTuple iterateAndResolveOneEdgeDestPairToRemoteNodeOfType(
@@ -569,49 +577,50 @@ public class GraphCursor implements Serializable {
    */
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveOutgoingEdgeDestPairsOld(final GraphConnection conn)
       throws GraphCursorException {
-    final DbObjectMarshaller m = conn.getMarshaller();
-    final BasicDBObject sourceNode = resolve(conn);
-    return new Iterable<NodeEdgeNodeTuple>() {
-      @Override
-      public Iterator<NodeEdgeNodeTuple> iterator() {
-        final DBCursor edgeItr;
-        try {
-          edgeItr = conn.getEdgeDao().iterateEdgesFromNode(position);
-        } catch (GraphModelException e) {
-          throw new RuntimeException("Failed to query database", e);
-        }
-        return new Iterator<NodeEdgeNodeTuple>() {
-
-          @Override
-          public boolean hasNext() {
-            return edgeItr.hasNext();
-          }
-
-          @Override
-          public NodeEdgeNodeTuple next() {
-            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
-            try {
-              EntityKeys<? extends Node> destinationKeys = m.deserialize(edgeObj, Edge.class).getTo();
-              BasicDBObject destinationNode = conn.getNodeDao().getByKey(destinationKeys);
-              if (destinationNode == null) {
-                //This is probably a 'hanging' edge - we have the node reference, but no node exists.
-                logger.info("Potential hanging edge found: "+destinationKeys);
-              }
-              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
-              return nodeEdgeNode;
-            } catch (Exception e) {
-              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
-            }
-
-          }
-
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
-          }
-        };
-      }
-    };
+    return null;
+//    final DbObjectMarshaller m = conn.getMarshaller();
+//    final BasicDBObject sourceNode = resolve(conn);
+//    return new Iterable<NodeEdgeNodeTuple>() {
+//      @Override
+//      public Iterator<NodeEdgeNodeTuple> iterator() {
+//        final DBCursor edgeItr;
+//        try {
+//          edgeItr = conn.getEdgeDao().iterateEdgesFromNode(position);
+//        } catch (GraphModelException e) {
+//          throw new RuntimeException("Failed to query database", e);
+//        }
+//        return new Iterator<NodeEdgeNodeTuple>() {
+//
+//          @Override
+//          public boolean hasNext() {
+//            return edgeItr.hasNext();
+//          }
+//
+//          @Override
+//          public NodeEdgeNodeTuple next() {
+//            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
+//            try {
+//              EntityKeys<? extends Node> destinationKeys = m.deserialize(edgeObj, Edge.class).getTo();
+//              BasicDBObject destinationNode = conn.getNodeDao().getByKey(destinationKeys);
+//              if (destinationNode == null) {
+//                //This is probably a 'hanging' edge - we have the node reference, but no node exists.
+//                logger.info("Potential hanging edge found: "+destinationKeys);
+//              }
+//              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
+//              return nodeEdgeNode;
+//            } catch (Exception e) {
+//              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
+//            }
+//
+//          }
+//
+//          @Override
+//          public void remove() {
+//            throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
+//          }
+//        };
+//      }
+//    };
   }
 
   /**
@@ -628,49 +637,50 @@ public class GraphCursor implements Serializable {
    */
   public Iterable<NodeEdgeNodeTuple> iterateAndResolveIncomingEdgeDestPairsOld(final GraphConnection conn)
       throws GraphCursorException {
-    final DbObjectMarshaller m = conn.getMarshaller();
-    final BasicDBObject destinationNode = resolve(conn);
-    return new Iterable<NodeEdgeNodeTuple>() {
-      @Override
-      public Iterator<NodeEdgeNodeTuple> iterator() {
-        final DBCursor edgeItr;
-        try {
-          edgeItr = conn.getEdgeDao().iterateEdgesToNode(position);
-        } catch (GraphModelException e) {
-          throw new RuntimeException("Failed to query database", e);
-        }
-        return new Iterator<NodeEdgeNodeTuple>() {
-
-          @Override
-          public boolean hasNext() {
-            return edgeItr.hasNext();
-          }
-
-          @Override
-          public NodeEdgeNodeTuple next() {
-            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
-            try {
-              EntityKeys<? extends Node> fromKeys = m.deserialize(edgeObj, Edge.class).getFrom();
-              BasicDBObject sourceNode = conn.getNodeDao().getByKey(fromKeys);
-              if (sourceNode == null) {
-                //This is probably a 'hanging' edge - we have the node reference, but no node exists.
-                logger.info("Potential hanging edge found: "+fromKeys);
-              }
-              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
-              return nodeEdgeNode;
-            } catch (Exception e) {
-              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
-            }
-
-          }
-
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
-          }
-        };
-      }
-    };
+    return null;
+//    final DbObjectMarshaller m = conn.getMarshaller();
+//    final BasicDBObject destinationNode = resolve(conn);
+//    return new Iterable<NodeEdgeNodeTuple>() {
+//      @Override
+//      public Iterator<NodeEdgeNodeTuple> iterator() {
+//        final DBCursor edgeItr;
+//        try {
+//          edgeItr = conn.getEdgeDao().iterateEdgesToNode(position);
+//        } catch (GraphModelException e) {
+//          throw new RuntimeException("Failed to query database", e);
+//        }
+//        return new Iterator<NodeEdgeNodeTuple>() {
+//
+//          @Override
+//          public boolean hasNext() {
+//            return edgeItr.hasNext();
+//          }
+//
+//          @Override
+//          public NodeEdgeNodeTuple next() {
+//            BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
+//            try {
+//              EntityKeys<? extends Node> fromKeys = m.deserialize(edgeObj, Edge.class).getFrom();
+//              BasicDBObject sourceNode = conn.getNodeDao().getByKey(fromKeys);
+//              if (sourceNode == null) {
+//                //This is probably a 'hanging' edge - we have the node reference, but no node exists.
+//                logger.info("Potential hanging edge found: "+fromKeys);
+//              }
+//              NodeEdgeNodeTuple nodeEdgeNode = new NodeEdgeNodeTuple(sourceNode, edgeObj, destinationNode);
+//              return nodeEdgeNode;
+//            } catch (Exception e) {
+//              throw new RuntimeException("Failed to iterate destination nodes for: "+ position, e);
+//            }
+//
+//          }
+//
+//          @Override
+//          public void remove() {
+//            throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
+//          }
+//        };
+//      }
+//    };
   }
 
   /**
@@ -682,7 +692,8 @@ public class GraphCursor implements Serializable {
    * @return the EntityKeys object originally specified in the constructor for this GraphCursor.
    */
   public EntityKeys<? extends Node> getPosition() {
-    return position;
+    return null;
+//    return position;
   }
 
   /**
@@ -711,7 +722,8 @@ public class GraphCursor implements Serializable {
   }
 
   public EntityKeys<? extends Edge> getArrivedVia() {
-    return arrivedVia;
+    return null;
+//    return arrivedVia;
   }
 
   public Map<String, Object> getParameters() {

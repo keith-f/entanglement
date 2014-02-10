@@ -58,13 +58,14 @@ public class StopAtNodeTypeRule extends AbstractRule {
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
                              EntityKeys<? extends Node> remoteNodeId,
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
-
-    if (includeNodeInDestination) {
-      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
-      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
-    }
-
-    return action;
+    return null; //TODO reimplement
+//    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+//
+//    if (includeNodeInDestination) {
+//      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+//      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
+//    }
+//
+//    return action;
   }
 }

@@ -68,7 +68,9 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
   public void run() {
     try {
       //Initialise a temporary graph cursor.
-      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), startPosition);
+      //TODO reimplement this
+//      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), startPosition);
+      GraphCursor tmpCursor = null;
       runtime.getCursorRegistry().addCursor(tmpCursor);
 
       //Configure walker

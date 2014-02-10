@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.graph.mongodb;
 
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.util.UidGenerator;
 
@@ -36,13 +37,13 @@ public class TmpGraphConnectionFactory {
 
   public GraphConnection createTemporaryGraph(String tempClusterName)
       throws GraphConnectionFactoryException {
-    return createTemporaryGraph(tempClusterName, GraphConnectionFactory.DEFAULT_TMP_DB_NAME);
+    return createTemporaryGraph(tempClusterName, MongoGraphConnectionFactory.DEFAULT_TMP_DB_NAME);
   }
 
   public GraphConnection createTemporaryGraph(String tempClusterName, String tempDbName)
       throws GraphConnectionFactoryException {
-    GraphConnectionFactory factory = new GraphConnectionFactory(tempClusterName, tempDbName);
-    GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid(), "trunk");
+    MongoGraphConnectionFactory factory = new MongoGraphConnectionFactory(tempClusterName, tempDbName);
+    GraphConnection conn = factory.connect("tmp_"+ UidGenerator.generateUid());
 
     logger.info("Created temporary graph: "+conn.getGraphName());
     return conn;
@@ -58,9 +59,12 @@ public class TmpGraphConnectionFactory {
         throw new GraphConnectionFactoryException("Will not dispose of graph: "+tmpConnection.getGraphName()
             + " since (based on its name), it does not appear to be a temporary connection. This is a failsafe feature.");
       }
-      tmpConnection.getRevisionLog().getRevLogCol().drop();
-      tmpConnection.getNodeDao().getCollection().drop();
-      tmpConnection.getEdgeDao().getCollection().drop();
+      RevisionLogDirectToMongoDbImpl revLog = (RevisionLogDirectToMongoDbImpl) tmpConnection.getRevisionLog();
+      revLog.getRevLogCol().drop();
+      NodeDAONodePerDocImpl nodeDao = (NodeDAONodePerDocImpl) tmpConnection.getNodeDao();
+      nodeDao.getCollection().drop();
+      EdgeDAOSeparateDocImpl edgeDao = (EdgeDAOSeparateDocImpl) tmpConnection.getEdgeDao();
+      edgeDao.getCollection().drop();
     } catch (Exception e) {
       throw new GraphConnectionFactoryException(
           "Failed to dispose of one or more temporary graph collections: "+e.getMessage());

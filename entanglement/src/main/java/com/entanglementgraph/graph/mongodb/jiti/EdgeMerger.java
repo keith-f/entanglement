@@ -27,7 +27,8 @@ import com.mongodb.BasicDBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
-import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
+import static com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl.FIELD_KEYS;
+import static com.entanglementgraph.graph.mongodb.EdgeDAOSeparateDocImpl.*;
 
 /**
  * A convenience class for merging two BasicDBObject instances that represent graph edges. This functionality is
@@ -107,16 +108,16 @@ public class EdgeMerger {
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
+      updated.put(FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
+      updated.put(FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
       return updated;
     }
@@ -152,16 +153,16 @@ public class EdgeMerger {
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
+      updated.put(FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
+      updated.put(FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
       return updated;
     }
@@ -196,16 +197,16 @@ public class EdgeMerger {
       updated.put(FIELD_KEYS, marshaller.serialize(mergedKeys));
 
       // Also allow new keys to be added for the from/to node fields
-      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_FROM_KEYS);
-      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_FROM_KEYS);
+      EntityKeys fromExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_FROM_KEYS);
+      EntityKeys fromReqKeyset = parseKeyset(marshaller, newEdge, FIELD_FROM_KEYS);
       EntityKeys fromMergedKeys = _mergeKeys(fromExistingKeyset, fromReqKeyset);
-      updated.put(EdgeDAO.FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
+      updated.put(FIELD_FROM_KEYS, marshaller.serialize(fromMergedKeys));
 
       // Repeat for the 'to' node:
-      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, EdgeDAO.FIELD_TO_KEYS);
-      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, EdgeDAO.FIELD_TO_KEYS);
+      EntityKeys toExistingKeyset = parseKeyset(marshaller, existingEdge, FIELD_TO_KEYS);
+      EntityKeys toReqKeyset = parseKeyset(marshaller, newEdge, FIELD_TO_KEYS);
       EntityKeys toMergedKeys = _mergeKeys(toExistingKeyset, toReqKeyset);
-      updated.put(EdgeDAO.FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
+      updated.put(FIELD_TO_KEYS, marshaller.serialize(toMergedKeys));
 
       return updated;
     }

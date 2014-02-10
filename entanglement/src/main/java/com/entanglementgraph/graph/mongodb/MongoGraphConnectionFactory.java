@@ -17,12 +17,10 @@
 
 package com.entanglementgraph.graph.mongodb;
 
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.graph.NodeDAO;
+import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.mongodb.player.GraphCheckoutNamingScheme;
 import com.entanglementgraph.graph.mongodb.player.LogPlayer;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerMongoDbImpl;
-import com.entanglementgraph.graph.RevisionLog;
 import com.entanglementgraph.graph.mongodb.experimental.GraphOpPostCommitPlayer;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.*;
@@ -34,8 +32,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * This factory class creates <code>GraphConnection</code> objects for accessing your graphs. There are two
- * aspects to consider:
+ * This factory class creates <code>GraphConnection</code> objects for accessing your graphs from a MongoDB datasource.
+ * There are two aspects to consider:
  * <ul>
  *   <li>The <code>GraphConnection</code> contains a reference to a database connection, plus the necessary utilities
  *   that are associated with object stored in that database (such as ClassLoaders for object marshalling, etc). Each
@@ -56,8 +54,8 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class GraphConnectionFactory {
-  private static final Logger logger = Logger.getLogger(GraphConnectionFactory.class.getName());
+public class MongoGraphConnectionFactory implements GraphConnectionFactory{
+  private static final Logger logger = Logger.getLogger(MongoGraphConnectionFactory.class.getName());
   public static final String DEFAULT_TMP_DB_NAME = "temp";
 
   private static final Map<String, MongoClient> mongoPools = new HashMap<>();
@@ -103,11 +101,11 @@ public class GraphConnectionFactory {
 
   private DbObjectMarshaller marshaller;
 
-  public GraphConnectionFactory(String clusterName, String databaseName) {
-    this(GraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
+  public MongoGraphConnectionFactory(String clusterName, String databaseName) {
+    this(MongoGraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
   }
 
-  public GraphConnectionFactory(ClassLoader classLoader, String poolName, String databaseName) {
+  public MongoGraphConnectionFactory(ClassLoader classLoader, String poolName, String databaseName) {
     this.classLoader = classLoader;
     this.marshaller = ObjectMarshallerFactory.create(classLoader);
     this.connectionPool = getNamedPool(poolName);
@@ -115,14 +113,14 @@ public class GraphConnectionFactory {
     this.databaseName = databaseName;
   }
 
-  public GraphConnection connect(String graphName, String graphBranch) throws GraphConnectionFactoryException {
+  public GraphConnection connect(String graphName) throws GraphConnectionFactoryException {
     try {
       if (connectionPool == null) {
         throw new GraphConnectionFactoryException("Connection pool: "+poolName+" could not be found.");
       }
-      logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName + "/" + graphBranch);
+      logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName);
 
-      GraphConnection connection = new GraphConnection();
+      MongoGraphConnection connection = new MongoGraphConnection();
       connection.setPoolName(poolName);
       connection.setDatabaseName(databaseName);
 
@@ -135,11 +133,10 @@ public class GraphConnectionFactory {
       connection.setClassLoader(classLoader);
       connection.setPool(connectionPool);
       connection.setDb(db);
-      connection.setGraphBranch(graphBranch);
       connection.setGraphName(graphName);
       connection.setMarshaller(marshaller);
 
-      GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
+      GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName);
       DBCollection revCol = db.getCollection(collectionNamer.getRevCollectionName());
       DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
       DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());

@@ -17,8 +17,7 @@
 
 package com.entanglementgraph.util;
 
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+import com.entanglementgraph.graph.Content;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
@@ -32,10 +31,7 @@ import com.entanglementgraph.graph.RevisionLog;
  * To change this template use File | Settings | File Templates.
  */
 public class  GraphConnection {
-  private MongoClient pool;
-  private DB db;
 
-  private String poolName;
   private String databaseName;
 
   private String graphName;
@@ -43,28 +39,12 @@ public class  GraphConnection {
 
   private ClassLoader classLoader;
   private RevisionLog revisionLog;
-  private NodeDAO nodeDao;
-  private EdgeDAO edgeDao;
+  private NodeDAO<? extends Content> nodeDao;
+  private EdgeDAO<? extends Content, ? extends Content, ? extends Content> edgeDao;
 
   private DbObjectMarshaller marshaller;
 
   public GraphConnection() {
-  }
-
-  public MongoClient getPool() {
-    return pool;
-  }
-
-  public void setPool(MongoClient pool) {
-    this.pool = pool;
-  }
-
-  public DB getDb() {
-    return db;
-  }
-
-  public void setDb(DB db) {
-    this.db = db;
   }
 
   public String getGraphName() {
@@ -99,19 +79,19 @@ public class  GraphConnection {
     this.revisionLog = revisionLog;
   }
 
-  public NodeDAO getNodeDao() {
+  public NodeDAO<? extends Content> getNodeDao() {
     return nodeDao;
   }
 
-  public void setNodeDao(NodeDAO nodeDao) {
+  public void setNodeDao(NodeDAO<? extends Content> nodeDao) {
     this.nodeDao = nodeDao;
   }
 
-  public EdgeDAO getEdgeDao() {
+  public EdgeDAO<? extends Content, ? extends Content, ? extends Content> getEdgeDao() {
     return edgeDao;
   }
 
-  public void setEdgeDao(EdgeDAO edgeDao) {
+  public void setEdgeDao(EdgeDAO<? extends Content, ? extends Content, ? extends Content> edgeDao) {
     this.edgeDao = edgeDao;
   }
 
@@ -121,14 +101,6 @@ public class  GraphConnection {
 
   public void setMarshaller(DbObjectMarshaller marshaller) {
     this.marshaller = marshaller;
-  }
-
-  public String getPoolName() {
-    return poolName;
-  }
-
-  public void setPoolName(String poolName) {
-    this.poolName = poolName;
   }
 
   public String getDatabaseName() {

@@ -23,8 +23,7 @@ import java.util.List;
 /**
  * @author Keith Flanagan
  */
-public interface NodeDAO {
-  public static final String FIELD_KEYS = "keys";
+public interface NodeDAO<C extends Content> {
 
   /**
    * Given a partial keyset (a keyset suspected of containing less then the complete number of UIDs or names for a
@@ -32,18 +31,18 @@ public interface NodeDAO {
    * @param partial
    * @return
    */
-  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial)
+  public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial)
       throws GraphModelException;
 
-  public <C extends Content> Node<C> getByKey(EntityKeys<C> keyset)
+  public Node<C> getByKey(EntityKeys<C> keyset)
       throws GraphModelException;
 
-  public <C extends Content> boolean existsByKey(EntityKeys<C> keyset)
+  public boolean existsByKey(EntityKeys<C> keyset)
       throws GraphModelException;
 
   //TODO implement these later
-//  public Iterable<Node<? extends Content>> iterateAll()
-//      throws GraphModelException;
+  public Iterable<Node<C>> iterateAll()
+      throws GraphModelException;
 //  public long countAll()
 //      throws GraphModelException;
 //

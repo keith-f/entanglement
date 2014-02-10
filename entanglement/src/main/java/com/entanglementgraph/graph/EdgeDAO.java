@@ -25,18 +25,7 @@ import java.util.Map;
 /**
  * @author Keith Flanagan
  */
-public interface EdgeDAO {
-
-
-//  public static final String FIELD_FROM_KEYS = "from";
-//  public static final String FIELD_FROM_KEYS_TYPE = FIELD_FROM_KEYS + ".type";
-//  public static final String FIELD_FROM_KEYS_UIDS = FIELD_FROM_KEYS + ".uids";
-//  public static final String FIELD_FROM_KEYS_NAMES = FIELD_FROM_KEYS + ".names";
-//
-//  public static final String FIELD_TO_KEYS = "to";
-//  public static final String FIELD_TO_KEYS_TYPE = FIELD_TO_KEYS + ".type";
-//  public static final String FIELD_TO_KEYS_UIDS = FIELD_TO_KEYS + ".uids";
-//  public static final String FIELD_TO_KEYS_NAMES = FIELD_TO_KEYS + ".names";
+public interface EdgeDAO<C extends Content, F extends Content, T extends Content> {
 
   /**
    * Given a partial keyset (a keyset suspected of containing less then the complete number of UIDs or names for a
@@ -44,18 +33,18 @@ public interface EdgeDAO {
    * @param partial
    * @return
    */
-  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial)
+  public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial)
       throws GraphModelException;
 
-  public <C extends Content, F extends Content, T extends Content> Edge<C, F, T> getByKey(EntityKeys<C> keyset)
+  public Edge<C, F, T> getByKey(EntityKeys<C> keyset)
       throws GraphModelException;
 
-  public <C extends Content> boolean existsByKey(EntityKeys<C> keyset)
+  public boolean existsByKey(EntityKeys<C> keyset)
       throws GraphModelException;
 
   //TODO implement these later
-//  public Iterable<Node<? extends Content>> iterateAll()
-//      throws GraphModelException;
+  public Iterable<Edge<C, F, T>> iterateAll()
+      throws GraphModelException;
 //  public long countAll()
 //      throws GraphModelException;
 //
@@ -80,7 +69,7 @@ public interface EdgeDAO {
    * @return an iterable list of edge instances.
    * @throws GraphModelException
    */
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(
+  public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(
       EntityKeys<F> fromNode, EntityKeys<T> to)
       throws GraphModelException;
 
@@ -96,7 +85,7 @@ public interface EdgeDAO {
    *         link the two specified nodes.
    * @throws GraphModelException
    */
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(
+  public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(
       String edgeType, EntityKeys<F> from, EntityKeys<T> to)
       throws GraphModelException;
 
@@ -107,18 +96,18 @@ public interface EdgeDAO {
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public <C extends Content, F extends Content, T extends Content> Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset)
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset)
       throws GraphModelException;
 
   /**
    * Given a node, returns an Iterable over all the outgoing edges of that node, of the specified <code>edgeType</code>.
    *
    * @param edgeType the edge type to return.
-   * @param from     the node whose outgoing edges are to be iterated
+   * @param fromFullNodeKeyset the node whose outgoing edges are to be iterated
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public Iterable<JsonNode> iterateEdgesFromNode(String edgeType, EntityKeys from)
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNode(String edgeType, EntityKeys<F> fromFullNodeKeyset)
       throws GraphModelException;
 
 //  public Iterable<JsonNode> iterateEdgesFromNode(String edgeType, EntityKeys<? extends Node> from,
@@ -132,7 +121,7 @@ public interface EdgeDAO {
    * @return
    * @throws GraphModelException
    */
-  public Iterable<JsonNode> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType)
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType)
       throws GraphModelException;
 
   /**
@@ -142,7 +131,7 @@ public interface EdgeDAO {
    * @return
    * @throws GraphModelException
    */
-  public Iterable<JsonNode> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType)
+  public Iterable<Edge<C, F, T>> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType)
       throws GraphModelException;
 
   /**
@@ -152,7 +141,7 @@ public interface EdgeDAO {
    * @return an Iterable of edges.
    * @throws GraphModelException
    */
-  public Iterable<JsonNode> iterateEdgesToNode(EntityKeys to)
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(EntityKeys to)
       throws GraphModelException;
 
   /**
@@ -162,7 +151,7 @@ public interface EdgeDAO {
    * @return
    * @throws GraphModelException
    */
-  public Iterable<JsonNode> iterateEdgesToNode(String edgeType, EntityKeys to)
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
 //  public Iterable<JsonNode> iterateEdgesToNode(String edgeType, EntityKeys<? extends Node> to,

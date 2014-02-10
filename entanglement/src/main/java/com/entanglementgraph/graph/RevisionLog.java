@@ -18,9 +18,9 @@
 
 package com.entanglementgraph.graph;
 
-import java.util.List;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.mongodb.DBCollection;
+
+import java.util.List;
 
 /**
  * This interface defines the operations that can be performed on a revision
@@ -47,11 +47,10 @@ public interface RevisionLog
    * Submits a single revision to the revision history.
    * 
    * @param graphId the ID of of the graph to submit the revision to.
-   * @param graphBranchId the branch of the graph to submit the revision to.
-   * @param txnId a unique ID of the transaction for which this revision is
+   * @param patchUid a unique ID of the transaction for which this revision is
    * associated with. You can call this method multiple times for
    * the same transaction.
-   * @param txnSubmitId a monotonically increasing integer associated with transaction
+   * @param patchIdx a monotonically increasing integer associated with transaction
    * <code>txnId</code> that can be used to determine the playback order of this
    * revision when multiple revisions are submitted with the same transaction ID.
    * The <code>txnSubmitId</code> is client-generated In most cases, this should be 
@@ -59,54 +58,51 @@ public interface RevisionLog
    * This approach reduces database load substantially when inserting many 
    * thousands of revisions.
    * @param op the operation to be performed on the graph
-   * @throws RevisionLogException 
+   * @throws RevisionLogException
    */
-  public void submitRevision(String graphId, String graphBranchId,
-          String txnId, int txnSubmitId, GraphOperation op)
+  public void submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
           throws RevisionLogException;
-  
+
   /**
    * Submits multiple revisions to the revision history as a batch. Submitting
    * several revisions at the same time is vastly more efficient than calling
-   * <code>submitRevision</code> when your graph is likely to require large 
+   * <code>submitRevision</code> when your graph is likely to require large
    * numbers of modifications.
-   * 
+   *
    * All operations submitted as part of a call to this method should be
    * associated with the same transaction to the same graph/branch.
-   * 
+   *
    * If <code>ops</code> is empty, then this method has no effect.
-   * 
+   *
    * @param graphId the ID of of the graph to submit the revision to.
-   * @param graphBranchId the branch of the graph to submit the revision to.
-   * @param txnId a unique ID of the transaction for which this revision is
+   * @param patchUid a unique ID of the transaction for which this revision is
    * associated with. You can call this method multiple times for
    * the same transaction.
-   * @param txnSubmitId a monotonically increasing integer associated with transaction
+   * @param patchIdx a monotonically increasing integer associated with transaction
    * <code>txnId</code> that can be used to determine the playback order of this
    * revision when multiple revisions are submitted with the same transaction ID.
-   * The <code>txnSubmitId</code> is client-generated In most cases, this should be 
+   * The <code>txnSubmitId</code> is client-generated In most cases, this should be
    * trivial since most applications will have one transaction per thread.
-   * This approach reduces database load substantially when inserting many 
+   * This approach reduces database load substantially when inserting many
    * thousands of revisions.
    * @param ops a list of operations to submit,
-   * @throws RevisionLogException 
+   * @throws RevisionLogException
    */
-  public void submitRevisions(String graphId, String graphBranchId, 
-          String txnId, int txnSubmitId, List<GraphOperation> ops)
-          throws RevisionLogException;  
+  public String submitRevisions(String graphId, String patchUid, int patchIdx, List<GraphOperation> ops)
+          throws RevisionLogException;
   
 //  public Iterable<RevisionItem> iterateUncommittedRevisions();
   
   /**
    * Returns an iterator for revision containers for a transaction that is
    * uncommitted. Returned items are ordered by their <code>txnSubmitId</code>.
-   * @param transactionUid
+   * @param patchUid
    * @return 
    */
-  public Iterable<RevisionItemContainer> iterateUncommittedRevisions(String transactionUid);
+  public Iterable<RevisionItemContainer> iterateUncommittedRevisions(String patchUid);
   
   
-  public Iterable<RevisionItemContainer> iterateRevisionsForTransaction(String transactionUid);
+  public Iterable<RevisionItemContainer> iterateRevisionsForTransaction(String patchUid);
   
   
 //  public Iterable<RevisionItem> iterateCommittedRevisions();
@@ -119,12 +115,8 @@ public interface RevisionLog
    * of the revision container.
    * 
    * @param graphId
-   * @param branchId
    * @return 
    */
-  public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(String graphId, String branchId);
-  
-//  public Iterable<RevisionItem> iterateCommittedRevisionsForGraph(String graphId, String branchId, long fromRevId);
+  public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(String graphId);
 
-  public DBCollection getRevLogCol();
 }

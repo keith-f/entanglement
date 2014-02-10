@@ -18,10 +18,10 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursorRegistry;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -110,7 +110,7 @@ public class EntanglementRuntime {
     if (details == null) {
       throw new UserException("Unknown connection name: "+connName);
     }
-    GraphConnectionFactory gcf = new GraphConnectionFactory(classLoader, details.getPoolName(), details.getDatabase());
+    MongoGraphConnectionFactory gcf = new MongoGraphConnectionFactory(classLoader, details.getPoolName(), details.getDatabase());
     try {
       return gcf.connect(details.getGraphName(), details.getGraphBranch());
     } catch (GraphConnectionFactoryException e) {

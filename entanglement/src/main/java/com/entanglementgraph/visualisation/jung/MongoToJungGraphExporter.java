@@ -18,17 +18,13 @@
  */
 package com.entanglementgraph.visualisation.jung;
 
+import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.cursor.VirtualNodeFactory;
-import com.entanglementgraph.graph.EdgeDAO;
-import com.entanglementgraph.graph.GraphEntityDAO;
-import com.entanglementgraph.graph.GraphModelException;
-import com.entanglementgraph.graph.NodeDAO;
-import com.entanglementgraph.graph.Edge;
-import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.util.EntityKeyElementCacheWithLookups;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.graph.mongodb.MongoUtils;
+import com.entanglementgraph.util.InMemoryEntityKeyElementCacheWithLookups;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -62,25 +58,23 @@ public class MongoToJungGraphExporter {
   private static final DbObjectMarshaller marshaller =
       ObjectMarshallerFactory.create(MongoToJungGraphExporter.class.getClassLoader());
 
-  private Graph<DBObject, DBObject> graph;
+  private Graph<Node, Edge> graph;
 
-  // Keys to DBObject cache - keep track of these so that we can add edges to nodes we've already added.
-  // Map of UID -> DBObject node objects
-  private final Map<String, DBObject> uidToNode;
-  // Map of type -> name -> DBObject node objects
-  private final Map<String, Map<String, DBObject>> typeToNameToNode;
+//  // Keys to DBObject cache - keep track of these so that we can add edges to nodes we've already added.
+//  // Map of UID -> DBObject node objects
+//  private final Map<String, DBObject> uidToNode;
+//  // Map of type -> name -> DBObject node objects
+//  private final Map<String, Map<String, DBObject>> typeToNameToNode;
+
+  private EntityKeyElementCacheWithLookups<Content, Node<? extends Content>> seenNodes = new InMemoryEntityKeyElementCacheWithLookups();
 
 
   public MongoToJungGraphExporter() {
-    uidToNode = new HashMap<>();
-    typeToNameToNode = new HashMap<>();
     clearGraph();
 
   }
 
-  public MongoToJungGraphExporter(Graph<DBObject, DBObject> existing) {
-    uidToNode = new HashMap<>();
-    typeToNameToNode = new HashMap<>();
+  public MongoToJungGraphExporter(Graph<Node, Edge> existing) {
     this.graph = existing;
 
   }
@@ -89,8 +83,7 @@ public class MongoToJungGraphExporter {
     graph = new DirectedSparseGraph<>();
 
     // Clear caches of 'seen' nodes.
-    uidToNode.clear();
-    typeToNameToNode.clear();
+    seenNodes = new InMemoryEntityKeyElementCacheWithLookups();
   }
 
 
@@ -131,10 +124,10 @@ public class MongoToJungGraphExporter {
   public void writeToSvgFile(File outputFile) throws IOException {
     logger.info("Writing to file: " + outputFile.getAbsolutePath());
 
-    Layout<DBObject, DBObject> layout = new FRLayout<>(graph);
+    Layout<Node, Edge> layout = new FRLayout<>(graph);
     layout.setSize(new Dimension(800, 800));
 //    Layout<Integer, Number> layout = new FRLayout2<Integer,Number>(graph);
-    VisualizationViewer<DBObject, DBObject> vv =  new VisualizationViewer<>(layout);
+    VisualizationViewer<Node, Edge> vv =  new VisualizationViewer<>(layout);
 
     Properties p = new Properties();
     p.setProperty("PageSize","A5");
@@ -146,59 +139,6 @@ public class MongoToJungGraphExporter {
     logger.info("Written: " + outputFile.getAbsolutePath());
   }
 
-
-  /**
-   * @param keyset     the keyset to use when caching
-   * @param nodeObj the node to cache
-   */
-  private void cacheDBObject(EntityKeys<?> keyset, DBObject nodeObj) {
-    for (String uid : keyset.getUids()) {
-      uidToNode.put(uid, nodeObj);
-    }
-
-    Map<String, DBObject> nameToDBObject = typeToNameToNode.get(keyset.getType());
-    if (nameToDBObject == null) {
-      nameToDBObject = new HashMap<>();
-      typeToNameToNode.put(keyset.getType(), nameToDBObject);
-    }
-    for (String name : keyset.getNames()) {
-      nameToDBObject.put(name, nodeObj);
-    }
-  }
-
-  /**
-   * Lookup a cached node based on a keyset. This is useful when adding edges to a graph.
-   *
-   * @param keyset the keyset associated with the Jung graph node of interest
-   * @return the DBObject document associated with the EntityKey, or null if not found.
-   */
-  private DBObject getDBObjectNodeFromCache(EntityKeys<?> keyset) {
-
-    for (String uid : keyset.getUids()) {
-      DBObject nodeObj = uidToNode.get(uid);
-      if (nodeObj != null) {
-        return nodeObj;
-      }
-    }
-
-    Map<String, DBObject> nameToDBObject = typeToNameToNode.get(keyset.getType());
-    if (nameToDBObject == null) {
-      //No nodes of this type at all, so don't even need to check the name
-      return null;
-    }
-    for (String name : keyset.getNames()) {
-      DBObject nodeObj = nameToDBObject.get(name);
-      if (nodeObj != null) {
-        return nodeObj;
-      }
-    }
-
-    return null;
-  }
-
-  private boolean nodeExistsInCache(EntityKeys<?> keyset) {
-    return getDBObjectNodeFromCache(keyset) != null;
-  }
 
   /**
    * Build a subgraph (as a Gephi object) associated with the node which has a Uid matching that
@@ -217,7 +157,7 @@ public class MongoToJungGraphExporter {
       throws GraphModelException, DbObjectMarshallerException {
 
     // Start with the core node
-    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    Node coreNode = graphConn.getNodeDao().getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
@@ -230,11 +170,9 @@ public class MongoToJungGraphExporter {
     Set<String> investigatedEdges = new HashSet<>();
 
     // Export subgraph into the current Jung graph model
-    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopNodeTypes, stopEdgeTypes);
+    addChildNodes(graphConn, investigatedEdges, coreNode.getKeys(), stopNodeTypes, stopEdgeTypes);
 
     return true;
-
   }
 
   /**
@@ -258,7 +196,7 @@ public class MongoToJungGraphExporter {
       throws GraphModelException, DbObjectMarshallerException {
 
     // Start with the core node
-    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    Node coreNode = graphConn.getNodeDao().getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
@@ -271,8 +209,7 @@ public class MongoToJungGraphExporter {
     Set<String> investigatedEdges = new HashSet<>();
 
     // Export subgraph into the current Jung graph model
-    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodesAtDepth(graphConn, investigatedEdges, coreAriesNode.getKeys(), 0, traversalDepth,
+    addChildNodesAtDepth(graphConn, investigatedEdges, coreNode.getKeys(), 0, traversalDepth,
         stopNodeTypes, stopEdgeTypes);
 
     return true;
@@ -287,39 +224,40 @@ public class MongoToJungGraphExporter {
    * @return true if <code>nodeObj</code> was added, otherwise false.
    * @throws com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException
    */
-  private boolean addNode(DBObject nodeObj) throws DbObjectMarshallerException {
-    EntityKeys<Node> keyset = MongoUtils.parseKeyset(marshaller, nodeObj, NodeDAO.FIELD_KEYS);
-    Object existingNode = getDBObjectNodeFromCache(keyset);
+  private boolean addNode(Node nodeObj) throws DbObjectMarshallerException {
+    EntityKeys keyset = nodeObj.getKeys();
+    Node existingNode = seenNodes.getUserObjectFor(keyset);
     if (existingNode != null) {
       return false;
     }
 
     graph.addVertex(nodeObj);
-    cacheDBObject(keyset, nodeObj);
+    seenNodes.cacheElementsAndAssociateWithObject(keyset, nodeObj);
     return true;
   }
 
 
-  private void addEdge(DBObject edgeObj) throws DbObjectMarshallerException {
-    if (edgeObj == null) {
+  private void addEdge(Edge edge) throws DbObjectMarshallerException {
+    if (edge == null) {
       throw new DbObjectMarshallerException("The specified edge DBObject was null!");
     }
-    Edge edge = marshaller.deserialize(edgeObj, Edge.class);
-    DBObject fromNodeObj = getDBObjectNodeFromCache(edge.getFrom());
-    DBObject toNodeObj = getDBObjectNodeFromCache(edge.getTo());
+    Node fromNode = seenNodes.getUserObjectFor(edge.getFrom());
+    Node toNode = seenNodes.getUserObjectFor(edge.getTo());
 
     // Deal with hanging edges. We haven't come across these yet, because previously we only iterated of the set of existing nodes.
-    if (fromNodeObj == null) {
-//      throw new DbObjectMarshallerException("The resolved 'from' DBObject was NULL for edge: "+edge.toString());
-      fromNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getFrom());
-      cacheDBObject(edge.getFrom(), fromNodeObj);
+    if (fromNode == null) {
+//      fromNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getFrom());
+      fromNode = new Node(edge.getFrom());
+      fromNode.setVirtual(true);
+      seenNodes.cacheElementsAndAssociateWithObject(edge.getFrom(), fromNode);
     }
-    if (toNodeObj == null) {
-//      throw new DbObjectMarshallerException("The resolved 'to' DBObject was NULL for edge: "+edge.toString());
-      toNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getTo());
-      cacheDBObject(edge.getTo(), toNodeObj);
+    if (toNode == null) {
+//      toNodeObj = VirtualNodeFactory.createVirtualNodeForLocation(marshaller, edge.getTo());
+      toNode = new Node(edge.getTo());
+      toNode.setVirtual(true);
+      seenNodes.cacheElementsAndAssociateWithObject(edge.getTo(), toNode);
     }
-    graph.addEdge(edgeObj, fromNodeObj, toNodeObj, EdgeType.DIRECTED);
+    graph.addEdge(edge, fromNode, toNode, EdgeType.DIRECTED);
   }
 
 
@@ -336,11 +274,11 @@ public class MongoToJungGraphExporter {
   public void addEntireGraph(GraphConnection graphConn)
       throws GraphModelException, DbObjectMarshallerException {
 
-    for (DBObject node : graphConn.getNodeDao().iterateAll()) {
+    for (Node node : graphConn.getNodeDao().iterateAll()) {
       addNode(node);
     }
 
-    for (DBObject edgeObj : graphConn.getEdgeDao().iterateAll()) {
+    for (Edge edgeObj : graphConn.getEdgeDao().iterateAll()) {
       addEdge(edgeObj);
     }
   }
@@ -422,13 +360,13 @@ public class MongoToJungGraphExporter {
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdges(GraphConnection graphConn, Set<String> investigatedEdges,
-                            Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, Set<String> stopNodeTypes,
+                            Iterable<Edge> edgeIterator, boolean iterateOverOutgoing, Set<String> stopNodeTypes,
                             Set<String> stopEdgeTypes)
       throws DbObjectMarshallerException, GraphModelException {
 
-    for (DBObject edgeObj : edgeIterator) {
+    for (Edge currentEdge : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
-      Edge currentEdge = marshaller.deserialize(edgeObj, Edge.class);
+//      Edge currentEdge = marshaller.deserialize(edgeObj, Edge.class);
       logger.log(Level.FINE, "Found {0} edge with uid {1}",
           new String[]{currentEdge.getKeys().getType(), currentEdge.getKeys().toString()});
       // ignore any edges whose type matches those found within the edge stop types.
@@ -454,12 +392,13 @@ public class MongoToJungGraphExporter {
       logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
-      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+      Node currentNode = graphConn.getNodeDao().getByKey(opposingNodeKeys);
 
       //Add a new Jung node or retrieve reference to existing node (if we've seen this node before)
-      if (currentNodeObject != null) {
-        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
-        if (nodeExistsInCache(currentNodeKeyset)) {
+      if (currentNode != null) {
+        //EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
+        EntityKeys currentNodeKeyset = currentNode.getKeys();
+        if (seenNodes.seenElementOf(currentNodeKeyset)) {
           // this node may have been added previously. If it has been, then we know that we may actually be in
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
           // don't add the current edge, and move on to the next one without investigating further children.
@@ -472,10 +411,9 @@ public class MongoToJungGraphExporter {
 
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        addEdge(edgeObj);
+        addEdge(currentEdge);
         logger.log(Level.FINE, "Added edge to Jung: {0}", currentEdge.getKeys().toString());
 
-        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(),
             currentNode.getKeys().toString()});
         /*
@@ -515,16 +453,16 @@ public class MongoToJungGraphExporter {
    *          if there is a problem deserializing an entanglement database object
    */
   private void iterateEdgesAtDepth(GraphConnection graphConn, Set<String> investigatedEdges,
-                                   Iterable<DBObject> edgeIterator, boolean iterateOverOutgoing, int currentDepth,
+                                   Iterable<Edge> edgeIterator, boolean iterateOverOutgoing, int currentDepth,
                                    int traversalDepth, ArrayList<Set<String>> stopNodeTypes,
                                    ArrayList<Set<String>> stopEdgeTypes)
       throws DbObjectMarshallerException, GraphModelException {
 
     logger.fine("At traversal depth " + currentDepth + 1 + "/" + traversalDepth);
 
-    for (DBObject edgeObj : edgeIterator) {
+    for (Edge currentEdge : edgeIterator) {
       // deserialize the DBObject to get all Edge properties.
-      Edge currentEdge = marshaller.deserialize(edgeObj, Edge.class);
+//      Edge currentEdge = marshaller.deserialize(edgeObj, Edge.class);
       logger.log(Level.FINE, "Found {0} edge with uid {1}",
           new String[]{currentEdge.getKeys().getType(), currentEdge.getKeys().toString()});
       // ignore any edges whose type matches those found within the edge stop types.
@@ -551,12 +489,14 @@ public class MongoToJungGraphExporter {
       logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
-      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+//      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+      Node currentNode = graphConn.getNodeDao().getByKey(opposingNodeKeys);
 
       //Add a new Jung node or retrieve reference to existing node (if we've seen this node before)
-      if (currentNodeObject != null) {
-        EntityKeys<?> currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
-        if (nodeExistsInCache(currentNodeKeyset)) {
+      if (currentNode != null) {
+//        EntityKeys currentNodeKeyset = MongoUtils.parseKeyset(marshaller, currentNodeObject, GraphEntityDAO.FIELD_KEYS);
+        EntityKeys currentNodeKeyset = currentNode.getKeys();
+        if (seenNodes.seenElementOf(currentNodeKeyset)) {
           // this node may have been added previously. If it has been, then we know that we may actually be in
           // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
           // don't add the current edge, and move on to the next one without investigating further children.
@@ -565,17 +505,17 @@ public class MongoToJungGraphExporter {
               currentNodeKeyset.toString());
           continue;
         }
-        boolean added = addNode(currentNodeObject);
+        boolean added = addNode(currentNode);
         logger.log(Level.FINE, "Added node to Jung: {0}: {1}", new Object[]{currentNodeKeyset.toString(), added});
 //        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
 
 
         // add the current edge's information. This cannot be added until nodes at both ends have been added.
-        addEdge(edgeObj);
+        addEdge(currentEdge);
         logger.log(Level.FINE, "Added edge to Jung: {0}", currentEdge.getKeys().toString());
 
 
-        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
+//        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{currentEdge.getKeys().toString(),
             currentNode.getKeys().toString()});
         /*
@@ -605,7 +545,7 @@ public class MongoToJungGraphExporter {
 
   }
 
-  public Graph<DBObject, DBObject> getGraph() {
+  public Graph<Node, Edge> getGraph() {
     return graph;
   }
 }

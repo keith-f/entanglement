@@ -17,6 +17,8 @@
 
 package com.entanglementgraph.restlet;
 
+import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.BasicDBObject;
@@ -57,8 +59,10 @@ public class NodeUidRestlet extends Restlet {
 //          + request.getResourceRef().getRemainingPart();
 
 
-      BasicDBObject doc = conn.getNodeDao().getByUid(nodeUid);
-      String message = conn.getMarshaller().serializeToString(doc);
+      EntityKeys queryKeys = new EntityKeys();
+      queryKeys.addUid(nodeUid);
+      Node node = conn.getNodeDao().getByKey(queryKeys);
+      String message = conn.getMarshaller().serializeToString(node);
 
       response.setEntity(message, MediaType.TEXT_PLAIN);
     } catch (Exception e) {

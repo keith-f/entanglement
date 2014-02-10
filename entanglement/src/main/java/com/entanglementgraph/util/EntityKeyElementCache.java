@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.EntityKeys;
 
 /**
@@ -46,7 +47,7 @@ import com.entanglementgraph.graph.EntityKeys;
  *
  * @author Keith Flanagan
  */
-public interface EntityKeyElementCache<T> {
+public interface EntityKeyElementCache<T extends Content> {
   public void cacheElementsOf(EntityKeys<T> key);
   public boolean seenElementOf(EntityKeys<T> key);
 }

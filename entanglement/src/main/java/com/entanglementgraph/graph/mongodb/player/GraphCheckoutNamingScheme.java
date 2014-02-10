@@ -25,19 +25,17 @@ package com.entanglementgraph.graph.mongodb.player;
 public class GraphCheckoutNamingScheme
 {
   private final String graphName;
-  private final String graphBranchName;
   private final String revCollectionName;
   private final String nodeCollectionName;
   private final String edgeCollectionName;
   
-  public GraphCheckoutNamingScheme(String graphName, String graphBranchName)
+  public GraphCheckoutNamingScheme(String graphName)
   {
     this.graphName = graphName;
-    this.graphBranchName = graphBranchName;
 
     this.revCollectionName = graphName +"_revisions";
-    this.nodeCollectionName = graphName +"_" + graphBranchName+"_nodes";
-    this.edgeCollectionName = graphName +"_" + graphBranchName+"_edges";
+    this.nodeCollectionName = graphName +"_nodes";
+    this.edgeCollectionName = graphName +"_edges";
   }
 
   public String getNodeCollectionName() {
@@ -46,11 +44,6 @@ public class GraphCheckoutNamingScheme
 
   public String getEdgeCollectionName() {
     return edgeCollectionName;
-  }
-
-  public String getGraphBranchName()
-  {
-    return graphBranchName;
   }
 
   public String getGraphName()

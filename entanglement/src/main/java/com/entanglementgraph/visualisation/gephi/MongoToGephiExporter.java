@@ -222,7 +222,7 @@ public class MongoToGephiExporter {
     //directedGraph.clear();
 
     // Start with the core node
-    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    Node coreNode = graphConn.getNodeDao().getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
@@ -235,8 +235,8 @@ public class MongoToGephiExporter {
     Set<String> investigatedEdges = new HashSet<>();
 
     // Export subgraph into gephi directed graph
-    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodes(graphConn, investigatedEdges, coreAriesNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
+//    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
+    addChildNodes(graphConn, investigatedEdges, coreNode.getKeys(), stopNodeTypes, stopEdgeTypes, attributeModel);
 
     // Print out a summary of the full graph
     logger.log(Level.INFO, "Complete Nodes: {0} Complete Edges: {1}",
@@ -277,7 +277,7 @@ public class MongoToGephiExporter {
     AttributeModel attributeModel = ac.getModel(workspace);
 
     // Start with the core node
-    BasicDBObject coreNode = graphConn.getNodeDao().getByKey(entityKey);
+    Node coreNode = graphConn.getNodeDao().getByKey(entityKey);
     if (coreNode == null) {
       logger.log(Level.WARNING, "No node with EntityKey {0} found in database.", entityKey);
       return false;
@@ -290,8 +290,8 @@ public class MongoToGephiExporter {
     Set<String> investigatedEdges = new HashSet<>();
 
     // Export subgraph into gephi directed graph
-    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
-    addChildNodesAtDepth(graphConn, investigatedEdges, coreAriesNode.getKeys(), 0, traversalDepth,
+//    Node coreAriesNode = marshaller.deserialize(coreNode, Node.class);
+    addChildNodesAtDepth(graphConn, investigatedEdges, coreNode.getKeys(), 0, traversalDepth,
         stopNodeTypes, stopEdgeTypes, attributeModel);
 
     // Print out a summary of the full graph
@@ -316,14 +316,14 @@ public class MongoToGephiExporter {
     AttributeModel attributeModel = ac.getModel(workspace);
 
     // Create Gephi nodes
-    for (DBObject node : graphConn.getNodeDao().iterateAll()) {
+    for (Node node : graphConn.getNodeDao().iterateAll()) {
       directedGraph.addNode(parseEntanglementNode(node, attributeModel));
     }
 
     // Create Gephi edges; currently with a standard weight of 1
     // and no set color
-    Iterable<Edge> edgeItr = new DeserialisingIterable<>(graphConn.getEdgeDao().iterateAll(), marshaller, Edge.class);
-    for (Edge edge : edgeItr) {
+//    Iterable<Edge> edgeItr = new DeserialisingIterable<>(graphConn.getEdgeDao().iterateAll(), marshaller, Edge.class);
+    for (Edge edge : graphConn.getEdgeDao().iterateAll()) {
       org.gephi.graph.api.Edge gephiEdge = parseEntanglementEdge(graphConn, edge);
       if (gephiEdge != null) {
         directedGraph.addEdge(gephiEdge);
@@ -343,74 +343,74 @@ public class MongoToGephiExporter {
    * @param attributeModel the Gephi AttributeModel to use when adding new column types to Gephi
    * @return the populated Gephi node
    */
-  public org.gephi.graph.api.Node parseEntanglementNode(DBObject nodeObject,
+  public org.gephi.graph.api.Node parseEntanglementNode(Node nodeObject,
                                                         AttributeModel attributeModel) {
     // create the gephi node object after creating a unique identifier using available key attributes.
-    org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject));
+    org.gephi.graph.api.Node gephiNode = graphModel.factory().newNode(keysetToId(nodeObject.getKeys()));
     logger.log(Level.FINE, "Parsing Entanglement node with a constructed Gephi node id of {0}",
         gephiNode.getNodeData().getId());
 
     // assign values from the names attribute to the gephi node in the appropriate location.
-    String type = "";
-    for (String nodeAttrName : nodeObject.keySet()) {
-      // Parse the nested values within keys
-      switch (nodeAttrName) {
-        case NodeDAO.FIELD_KEYS:
-          // the value for the node attributes is never written as "keys.names", for example. It is just written
-          // as "keys" and then you have to drill down further. Here, the result of a get() call is a DBObject
-          // rather than a BasicDBObject, which is what you'd get if there weren't nested attributes (e.g. with _id)
-          // we are not storing the UIDs in Gephi right now.
-          DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
-          for (String keysAttrName : nestedObj.keySet()) {
-            if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
-              if (nestedObj.get(keysAttrName) instanceof BasicDBList) {
-                BasicDBList list = (BasicDBList) nestedObj.get(keysAttrName);
-                logger.log(Level.FINE, "Nested value for attribute {0} is {1}",
-                    new String[]{keysAttrName, list.toString()});
-                if (list.size() == 1) {
-                  gephiNode.getNodeData().setLabel((String) list.iterator().next());
-                } else {
-                  gephiNode.getNodeData().setLabel(list.toString());
-                }
-              } else {
-                logger.log(Level.WARNING,
-                    "Nested value for attribute {0} is not a BasicDBList as expected. Not parsing.", keysAttrName);
-              }
-            } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
-              // save the type of the node while we're at it
-              type = nestedObj.get(keysAttrName).toString();
-              logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, type});
-              AttributeColumn typeColumn;
-              // If not already present, save the node type in the list of attributes for that gephi node.
-              if ((typeColumn = attributeModel.getNodeTable().getColumn(keysAttrName)) == null) {
-                typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
-              }
-              gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
-            }
-          }
-          break;
-        case "_id":
-          break; // we have already parsed the id value.
-        default:
-          // Now parse all node attributes which are not FIELD_KEYS, specifically those which are not nested.
-          Object attributeValueObj = nodeObject.get(nodeAttrName);
-          String attributeValue = attributeValueObj.toString();
-          // Just convert to String in preparation for loading into the Gephi node.
-          logger.log(Level.FINE, "Converting attribute value object to string: {0}", attributeValue);
-          if (attributeValue.isEmpty()) {
-            logger.log(Level.FINE, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
-            continue;
-          }
-          logger.log(Level.FINE, "Value for attribute {0} is {1}", new String[]{nodeAttrName, attributeValue});
-          AttributeColumn attrColumn;
-          if ((attrColumn = attributeModel.getNodeTable().getColumn(nodeAttrName)) == null) {
-            attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
-          }
-          // Now set the attribute's value on this gephi node
-          gephiNode.getNodeData().getAttributes().setValue(attrColumn.getIndex(), attributeValue);
-          break;
-      }
-    }
+    String type = nodeObject.getKeys().getType();
+//    for (String nodeAttrName : nodeObject.keySet()) {
+//      // Parse the nested values within keys
+//      switch (nodeAttrName) {
+//        case NodeDAO.FIELD_KEYS:
+//          // the value for the node attributes is never written as "keys.names", for example. It is just written
+//          // as "keys" and then you have to drill down further. Here, the result of a get() call is a DBObject
+//          // rather than a BasicDBObject, which is what you'd get if there weren't nested attributes (e.g. with _id)
+//          // we are not storing the UIDs in Gephi right now.
+//          DBObject nestedObj = (DBObject) nodeObject.get(nodeAttrName);
+//          for (String keysAttrName : nestedObj.keySet()) {
+//            if (keysAttrName.equals("names")) { // can't use NodeDAO.FIELD_KEYS_NAME as that includes the string "keys."
+//              if (nestedObj.get(keysAttrName) instanceof BasicDBList) {
+//                BasicDBList list = (BasicDBList) nestedObj.get(keysAttrName);
+//                logger.log(Level.FINE, "Nested value for attribute {0} is {1}",
+//                    new String[]{keysAttrName, list.toString()});
+//                if (list.size() == 1) {
+//                  gephiNode.getNodeData().setLabel((String) list.iterator().next());
+//                } else {
+//                  gephiNode.getNodeData().setLabel(list.toString());
+//                }
+//              } else {
+//                logger.log(Level.WARNING,
+//                    "Nested value for attribute {0} is not a BasicDBList as expected. Not parsing.", keysAttrName);
+//              }
+//            } else if (keysAttrName.equals("type")) { // can't use NodeDAO.FIELD_KEYS_TYPE as that includes the string "keys."
+//              // save the type of the node while we're at it
+//              type = nestedObj.get(keysAttrName).toString();
+//              logger.log(Level.FINE, "Nested value for attribute {0} is {1}", new String[]{keysAttrName, type});
+//              AttributeColumn typeColumn;
+//              // If not already present, save the node type in the list of attributes for that gephi node.
+//              if ((typeColumn = attributeModel.getNodeTable().getColumn(keysAttrName)) == null) {
+//                typeColumn = attributeModel.getNodeTable().addColumn(keysAttrName, AttributeType.STRING);
+//              }
+//              gephiNode.getNodeData().getAttributes().setValue(typeColumn.getIndex(), type);
+//            }
+//          }
+//          break;
+//        case "_id":
+//          break; // we have already parsed the id value.
+//        default:
+//          // Now parse all node attributes which are not FIELD_KEYS, specifically those which are not nested.
+//          Object attributeValueObj = nodeObject.get(nodeAttrName);
+//          String attributeValue = attributeValueObj.toString();
+//          // Just convert to String in preparation for loading into the Gephi node.
+//          logger.log(Level.FINE, "Converting attribute value object to string: {0}", attributeValue);
+//          if (attributeValue.isEmpty()) {
+//            logger.log(Level.FINE, "Skipping node attribute {0} whose value cannot be resolved to a string", nodeAttrName);
+//            continue;
+//          }
+//          logger.log(Level.FINE, "Value for attribute {0} is {1}", new String[]{nodeAttrName, attributeValue});
+//          AttributeColumn attrColumn;
+//          if ((attrColumn = attributeModel.getNodeTable().getColumn(nodeAttrName)) == null) {
+//            attrColumn = attributeModel.getNodeTable().addColumn(nodeAttrName, AttributeType.STRING);
+//          }
+//          // Now set the attribute's value on this gephi node
+//          gephiNode.getNodeData().getAttributes().setValue(attrColumn.getIndex(), attributeValue);
+//          break;
+//      }
+//    }
 
     // Now that all parsing is complete, if you couldn't find a name, fill with the id instead
     if (gephiNode.getNodeData().getLabel() == null) {
@@ -449,17 +449,17 @@ public class MongoToGephiExporter {
       GraphModelException {
 
     NodeDAO nodeDao = graphConn.getNodeDao();
-    BasicDBObject fromObj = nodeDao.getByKey(edge.getFrom());
-    BasicDBObject toObj = nodeDao.getByKey(edge.getTo());
+    Node fromNode = nodeDao.getByKey(edge.getFrom());
+    Node toNode = nodeDao.getByKey(edge.getTo());
 
     // Entanglement edges are allowed to be hanging. If this happens, do not export the edge to Gephi
-    if (fromObj == null || toObj == null) {
+    if (fromNode == null || toNode == null) {
       logger.log(Level.FINE, "Edge {0} is hanging and will not be propagated to Gephi.", keysetToId(edge.getKeys()));
       return null;
     }
 
-    String fromId = keysetToId(fromObj);
-    String toId = keysetToId(toObj);
+    String fromId = keysetToId(fromNode.getKeys());
+    String toId = keysetToId(toNode.getKeys());
     org.gephi.graph.api.Edge gephiEdge = graphModel.factory().newEdge(directedGraph.getNode(fromId), directedGraph.
         getNode(toId), 1f, true);
     gephiEdge.getEdgeData().setLabel(edge.getKeys().getType());
@@ -574,9 +574,9 @@ public class MongoToGephiExporter {
       logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
-      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
-      if (currentNodeObject != null) {
-        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
+      Node currentNode = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+      if (currentNode != null) {
+        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNode, attributeModel);
 
         // this node may have been added previously. If it has been, then we know that we may actually be in
         // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
@@ -597,7 +597,6 @@ public class MongoToGephiExporter {
           logger.log(Level.FINE, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
         }
 
-        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{keysetToId(currentEdge.getKeys()),
             keysetToId(currentNode.getKeys())});
         /*
@@ -671,9 +670,9 @@ public class MongoToGephiExporter {
       logger.log(Level.FINE, "Found opposing node on edge with type {0}", opposingNodeKeys.getType());
 
       // add the node that the current edge is pointing to, if it hasn't already been added.
-      DBObject currentNodeObject = graphConn.getNodeDao().getByKey(opposingNodeKeys);
-      if (currentNodeObject != null) {
-        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNodeObject, attributeModel);
+      Node currentNode = graphConn.getNodeDao().getByKey(opposingNodeKeys);
+      if (currentNode != null) {
+        org.gephi.graph.api.Node gNode = parseEntanglementNode(currentNode, attributeModel);
 
         // this node may have been added previously. If it has been, then we know that we may actually be in
         // the middle of investigating it, some recursion levels upwards. Therefore if we hit a known node,
@@ -694,7 +693,6 @@ public class MongoToGephiExporter {
           logger.log(Level.FINE, "Added edge to Gephi: {0}", gephiEdge.getEdgeData().getId());
         }
 
-        Node currentNode = marshaller.deserialize(currentNodeObject, Node.class);
         logger.log(Level.FINE, "Edge {0} links to node {1}", new String[]{keysetToId(currentEdge.getKeys()),
             keysetToId(currentNode.getKeys())});
         /*

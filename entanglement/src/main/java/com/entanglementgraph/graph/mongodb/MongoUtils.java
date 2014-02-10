@@ -17,7 +17,7 @@
 
 package com.entanglementgraph.graph.mongodb;
 
-import static com.entanglementgraph.graph.GraphEntityDAO.FIELD_KEYS;
+import static com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl.FIELD_KEYS;
 import com.entanglementgraph.graph.EntityKeys;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBCollection;

@@ -15,28 +15,13 @@
  * 
  */
 
-package com.entanglementgraph.graph.mongodb;
+package com.entanglementgraph.graph;
+
+import com.entanglementgraph.util.GraphConnection;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 24/02/2013
- * Time: 13:12
- * To change this template use File | Settings | File Templates.
+ * @author Keith Flanagan
  */
-public class GraphConnectionFactoryException extends Exception {
-  public GraphConnectionFactoryException() {
-  }
-
-  public GraphConnectionFactoryException(String message) {
-    super(message);
-  }
-
-  public GraphConnectionFactoryException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  public GraphConnectionFactoryException(Throwable cause) {
-    super(cause);
-  }
+public interface GraphConnectionFactory {
+  public GraphConnection connect(String graphName) throws GraphConnectionFactoryException;
 }

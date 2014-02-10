@@ -17,8 +17,8 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
+import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.scalesinformatics.uibot.Param;
@@ -79,7 +79,7 @@ public class ConnectMongoDbClusterCommand extends AbstractEntanglementCommand {
         servers.add(server);
       }
 
-      MongoClient pool = GraphConnectionFactory.registerNamedPool(
+      MongoClient pool = MongoGraphConnectionFactory.registerNamedPool(
           poolName, servers.toArray(new ServerAddress[servers.size()]));
 
       logger.println("Connection pool '%s' is now available, containing %d servers and %d databases.",

@@ -19,8 +19,8 @@
 package com.entanglementgraph.graph.mongodb.player.spi;
 
 
+import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactory;
 
 import java.util.logging.Logger;
 
@@ -67,7 +67,7 @@ public class BranchImportPlayer
        * To do this, we assume that the SOURCE graph is in the same MongoDB cluster and database as the TARGET graph.
        * We may wish to change this in future.
        */
-      GraphConnectionFactory connFact = new GraphConnectionFactory(
+      MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(
           graphConnection.getClassLoader(),
           graphConnection.getPoolName(), graphConnection.getDb().getName());
 

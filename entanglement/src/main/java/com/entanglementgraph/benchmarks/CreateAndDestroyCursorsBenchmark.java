@@ -49,8 +49,9 @@ public class CreateAndDestroyCursorsBenchmark extends AbstractBenchmark {
     long start = System.currentTimeMillis();
     for (int i=0; i<iterations; i++) {
       //Create temporary graph cursor
-      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(),
-          new EntityKeys<Node>(UidGenerator.generateUid()));
+      Node startNode = new Node();
+      startNode.getKeys().addUid(UidGenerator.generateUid());
+      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), startNode);
       runtime.getCursorRegistry().addCursor(tmpCursor);
       //Remove temporary graph cursor
       runtime.getCursorRegistry().removeCursor(tmpCursor);

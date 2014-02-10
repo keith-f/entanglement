@@ -27,7 +27,7 @@ import com.entanglementgraph.iteration.walkers.DepthBasedSubgraphCreator;
 import com.entanglementgraph.specialistnodes.CategoryChartNode;
 import com.entanglementgraph.specialistnodes.XYChartNode;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.mongodb.GraphConnectionFactoryException;
+import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.entanglementgraph.graph.mongodb.MongoUtils;
 import com.entanglementgraph.visualisation.jung.JungGraphFrame;
 import com.entanglementgraph.visualisation.jung.MongoToJungGraphExporter;

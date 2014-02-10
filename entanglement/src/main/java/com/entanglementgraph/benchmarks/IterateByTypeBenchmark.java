@@ -41,16 +41,17 @@ public class IterateByTypeBenchmark extends AbstractBenchmark {
 
   @Override
   protected void runBenchmark() throws Exception {
-    long start = System.currentTimeMillis();
-    for (DBObject doc : graphConn.getNodeDao().iterateByType(nodeType)) {
-
-      final EntityKeys<? extends Node> pos = MongoUtils.parseKeyset(graphConn.getMarshaller(), doc);
-      long stop = System.currentTimeMillis();
-      if (pos != null) {
-        recordIterationComplete("default", stop-start);
-        start = System.currentTimeMillis();
-      }
-    }
+    //TODO reimplement...
+//    long start = System.currentTimeMillis();
+//    for (DBObject doc : graphConn.getNodeDao().iterateByType(nodeType)) {
+//
+//      final EntityKeys<? extends Node> pos = MongoUtils.parseKeyset(graphConn.getMarshaller(), doc);
+//      long stop = System.currentTimeMillis();
+//      if (pos != null) {
+//        recordIterationComplete("default", stop-start);
+//        start = System.currentTimeMillis();
+//      }
+//    }
   }
 
 

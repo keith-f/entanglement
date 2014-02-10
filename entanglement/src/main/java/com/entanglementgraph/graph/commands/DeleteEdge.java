@@ -22,6 +22,7 @@ import com.entanglementgraph.graph.EntityKeys;
 /**
  *
  * @author Keith Flanagan
+ * @deprecated Use a EdgeModification instead
  */
 public class DeleteEdge
     extends GraphOperation

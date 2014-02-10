@@ -24,7 +24,7 @@ import com.mongodb.DBObject;
 
 import java.util.logging.Logger;
 
-import static com.entanglementgraph.graph.EdgeDAO.*;
+import static com.entanglementgraph.graph.mongodb.EdgeDAOSeparateDocImpl.*;
 import static com.entanglementgraph.graph.mongodb.MongoUtils.list;
 
 /**

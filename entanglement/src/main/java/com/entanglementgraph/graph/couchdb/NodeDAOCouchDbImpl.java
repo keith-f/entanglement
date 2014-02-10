@@ -38,7 +38,7 @@ import java.util.*;
     @View(name = "all_nodes_by_name", map = "classpath:nodesByName.js"),
     @View(name = "all_nodes_by_uid", map = "classpath:nodesByUid.js")
 })
-public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implements NodeDAO {
+public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupport<Node> implements NodeDAO<C> {
 
   private static class NodeModificationViewByTimestampComparator implements Comparator<NodeModificationView> {
     @Override
@@ -55,7 +55,7 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
   }
 
 
-  public <T> EntityKeys<T> populateFullKeyset(EntityKeys<T> partial) throws GraphModelException {
+  public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
     EntityKeys full = new EntityKeys();
     full.setType(partial.getType());
     Set<String> knownUids = full.getUids();
@@ -76,7 +76,7 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
   }
 
   @Override
-  public <C extends Content> Node<C> getByKey(EntityKeys<C> keyset) throws GraphModelException {
+  public Node<C> getByKey(EntityKeys<C> keyset) throws GraphModelException {
 
     List<NodeModificationView> updates = new ArrayList<>();
     for (String uid : keyset.getUids()) {
@@ -102,8 +102,13 @@ public class NodeDAOCouchDbImpl extends CouchDbRepositorySupport<Node> implement
   }
 
   @Override
-  public <C extends Content> boolean existsByKey(EntityKeys<C> keyset) throws GraphModelException {
+  public boolean existsByKey(EntityKeys<C> keyset) throws GraphModelException {
     return !getByKey(keyset).isVirtual();
+  }
+
+  @Override
+  public Iterable<Node<C>> iterateAll() throws GraphModelException {
+    return null;
   }
 
 //  @Override

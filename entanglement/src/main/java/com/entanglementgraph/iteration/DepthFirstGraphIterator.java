@@ -171,8 +171,9 @@ public class DepthFirstGraphIterator {
     try {
       // Add the start node
       if (addStartNode) {
-        BasicDBObject startObj = start.resolve(sourceGraph);
-        graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
+        //TODO reimplement
+//        BasicDBObject startObj = start.resolve(sourceGraph);
+//        graphUpdates.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, startObj));
       }
 
       // Iterate child nodes recursively
@@ -240,8 +241,10 @@ public class DepthFirstGraphIterator {
       BasicDBObject remoteNodeDoc = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
 
       Edge edge = sourceGraph.getMarshaller().deserialize(edgeDoc, Edge.class);
-      EntityKeys<Node> localNodeId = outgoingEdges ? edge.getFrom() : edge.getTo();
-      EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
+      //TODO reimplement this
+//      EntityKeys<Node> localNodeId = outgoingEdges ? edge.getFrom() : edge.getTo();
+//      EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
+      EntityKeys remoteNodeId = null;
 
       // FIXME for now, we're just caching 'seen' edges in memory. We need to store these in a temporary mongo collection for large graphs
 //      logger.info("Seen edge? "+seenEdge(edge.getKeys())+" (current depth: "+currentDepth+"): "+edge
@@ -259,11 +262,12 @@ public class DepthFirstGraphIterator {
       switch (nextIterationDecision) {
         case CONTINUE_AS_NORMAL:
           // Step the cursor from 'here' to the next level down
-          GraphCursor here = getCurrentCursorPosition(cursorName);
-          GraphCursor child = here.stepToNode(cursorContext, remoteNodeId); // Child ref not currently needed
-          addChildNodes(cursorName, currentDepth+1);
-          // After we've done with this child, jump back to its parent (i.e., 'here')
-          getCurrentCursorPosition(cursorName).jump(cursorContext, here.getPosition());
+          //TODO reimplement this
+//          GraphCursor here = getCurrentCursorPosition(cursorName);
+//          GraphCursor child = here.stepToNode(cursorContext, remoteNodeId); // Child ref not currently needed
+//          addChildNodes(cursorName, currentDepth+1);
+//          // After we've done with this child, jump back to its parent (i.e., 'here')
+//          getCurrentCursorPosition(cursorName).jump(cursorContext, here.getPosition());
           break;
         case TERMINATE_BRANCH:
           // Simply do nothing here. We'll skip over the children of the remote node

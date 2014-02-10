@@ -16,10 +16,12 @@
  */
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.EntityKeys;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An implementation of <code>EntityKeyElementCache</code> that stores elements in RAM.
@@ -29,7 +31,7 @@ import java.util.Map;
  *
  * @author Keith Flanagan
  */
-public class InMemoryEntityKeyElementCacheWithLookups<T, U> implements EntityKeyElementCacheWithLookups<T, U> {
+public class InMemoryEntityKeyElementCacheWithLookups<T extends Content, U> implements EntityKeyElementCacheWithLookups<T, U> {
   private final Map<String, U> seenUids;               // A map of UID to user object
   private final Map<String, Map<String, U>> seenNames; // A map of type -> name -> user object
 
@@ -56,6 +58,26 @@ public class InMemoryEntityKeyElementCacheWithLookups<T, U> implements EntityKey
     for (String name : key.getNames()) {
       nameToUserObject.put(name, userObject);
     }
+  }
+
+  @Override
+  public boolean seenElementOf(EntityKeys<T> key) {
+    for (String uid : key.getUids()) {
+      if (seenUids.containsKey(uid)) {
+        return true;
+      }
+    }
+
+    Map<String, U> names = seenNames.get(key.getType());
+    if (names == null) {
+      return false;
+    }
+    for (String name : key.getNames()) {
+      if (names.containsKey(name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

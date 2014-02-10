@@ -16,9 +16,9 @@
  */
 package com.entanglementgraph.cursor;
 
-import com.entanglementgraph.graph.GraphEntityDAO;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl;
 import com.mongodb.BasicDBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -42,8 +42,8 @@ public class VirtualNodeFactory {
   public static BasicDBObject createVirtualNodeForLocation(
       DbObjectMarshaller marshaller, EntityKeys<? extends Node> location) throws DbObjectMarshallerException {
     BasicDBObject virtNode = new BasicDBObject();
-    virtNode.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(location));
-    virtNode.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
+    virtNode.put(NodeDAONodePerDocImpl.FIELD_KEYS, marshaller.serialize(location));
+    virtNode.put(NodeDAONodePerDocImpl.FIELD_VIRTUAL, true); // Flag this 'node' as fake
     logger.info("Created 'virtual' document for missing node: "+virtNode);
     return virtNode;
   }

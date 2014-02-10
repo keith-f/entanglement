@@ -45,20 +45,21 @@ public class StartNodeTypeFilterRule extends AbstractRule {
 
   @Override
   public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition) throws RuleException {
-    rootNodeWasValidStartType = currentPosition.getType().equals(startTypeName);
-    List<GraphOperation> ops = super.iterationStarted(cursorName, currentPosition);
-    if (!rootNodeWasValidStartType) {
-      return ops;
-    }
-
-    try {
-      BasicDBObject currentNode = sourceGraph.getNodeDao().getByKey(currentPosition);
-      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, currentNode));
-    } catch (Exception e) {
-      throw new RuleException("Failed to retrieve start node content", e);
-    }
-
-    return ops;
+    return null; //TODO reimplement
+//    rootNodeWasValidStartType = currentPosition.getType().equals(startTypeName);
+//    List<GraphOperation> ops = super.iterationStarted(cursorName, currentPosition);
+//    if (!rootNodeWasValidStartType) {
+//      return ops;
+//    }
+//
+//    try {
+//      BasicDBObject currentNode = sourceGraph.getNodeDao().getByKey(currentPosition);
+//      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, currentNode));
+//    } catch (Exception e) {
+//      throw new RuleException("Failed to retrieve start node content", e);
+//    }
+//
+//    return ops;
   }
 
   @Override

@@ -19,6 +19,7 @@
 package com.entanglementgraph.graph.mongodb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.*;
 import com.entanglementgraph.util.GraphConnection;
 import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -30,11 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import com.entanglementgraph.graph.commands.GraphOperation;
-import com.entanglementgraph.graph.commands.TransactionBegin;
-import com.entanglementgraph.graph.commands.TransactionCommit;
-import com.entanglementgraph.graph.commands.TransactionRollback;
 
 /**
  *
@@ -76,9 +72,6 @@ public class RevisionLogDirectToMongoDbImpl
 
   private final GraphConnection graphConn;
 
-//  private final HazelcastInstance hz;
-  private final MongoClient m;
-  private final DB db;
   
   private final DBCollection revLogCol;
 
@@ -90,8 +83,6 @@ public class RevisionLogDirectToMongoDbImpl
     this.listeners = new HashSet<>();
 
     this.graphConn = graphConn;
-    this.m = graphConn.getPool();
-    this.db = graphConn.getDb();
 
     marshaller = ObjectMarshallerFactory.create(graphConn.getClassLoader());
 
@@ -128,37 +119,32 @@ public class RevisionLogDirectToMongoDbImpl
   }
   
   @Override
-  public void submitRevision(String graphId, String graphBranchId, 
-      String txnId, int txnSubmitId, GraphOperation op)
+  public void submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
       throws RevisionLogException
   {
     RevisionItemContainer container = new RevisionItemContainer();
-    RevisionItem item = new RevisionItem();
     try
     {
-      container.setUniqueId(UidGenerator.generateUid());
-      container.setGraphUniqueId(graphId);
-      container.setGraphBranchId(graphBranchId);
-      
-      container.setTransactionUid(txnId);
-      container.setTxnSubmitId(txnSubmitId);
-      
-      container.setTimestamp(new Date(System.currentTimeMillis()));
-      
-      item.setOp(op);
-      item.setType(op.getClass().getSimpleName());
-      
-      container.getItems().add(item);
-      
-//      DBObject dbObject = (DBObject) JSON.parse(serializer.serializeToString(container));
-      DBObject dbObject = marshaller.serialize(container);
-      revLogCol.insert(dbObject);
-      
+      container.setId(UidGenerator.generateUid());
+      container.setGraphUid(graphId);
+      container.setPatchUid(patchUid);
+      container.setPatchIdx(patchIdx);
+
+      long now = System.currentTimeMillis();
+      container.setTimestamp(now);
+      container.setTimestampAsText(new Date(now).toString());
+
       if (op instanceof TransactionCommit) {
         commit((TransactionCommit) op);
       } else if (op instanceof TransactionRollback) {
         rollback((TransactionRollback) op);
-     }
+      } else  if (op instanceof NodeModification) {
+        container.addOperation((NodeModification) op);
+      } else if (op instanceof EdgeModification) {
+        container.addOperation((EdgeModification) op);
+      } else {
+        throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
+      }
     }
     catch(Exception e)
     {
@@ -167,27 +153,27 @@ public class RevisionLogDirectToMongoDbImpl
   }
   
   @Override
-  public void submitRevisions(String graphId, String graphBranchId,
-      String txnId, int txnSubmitId, List<GraphOperation> ops)
+  public String submitRevisions(String graphId, String patchUid, int patchIdx, List<GraphOperation> ops)
       throws RevisionLogException
   {
     if (ops.isEmpty()) {
-      return;
+      return null;
     }
     try
     {
 //      List<DBObject> dbObjects = new LinkedList<>();
-      
+
       RevisionItemContainer container = new RevisionItemContainer();
-      container.setUniqueId(UidGenerator.generateUid());
-      container.setGraphBranchId(graphBranchId);
-      container.setGraphUniqueId(graphId);
-      container.setTransactionUid(txnId);
-      container.setTxnSubmitId(txnSubmitId);
+      container.setId(UidGenerator.generateUid());
+      container.setGraphUid(graphId);
+      container.setPatchUid(patchUid);
+      container.setPatchIdx(patchIdx);
 
 //      container.setRevisionId(nodeCounter.next());
-      container.setTimestamp(new Date(System.currentTimeMillis()));
-      
+      long now = System.currentTimeMillis();
+      container.setTimestamp(now);
+      container.setTimestampAsText(new Date(now).toString());
+
       for (GraphOperation op : ops) {
         if (op instanceof TransactionBegin ||
             op instanceof TransactionCommit ||
@@ -195,16 +181,19 @@ public class RevisionLogDirectToMongoDbImpl
           throw new RevisionLogException("Transaction operations must be "
               + "submitted on their own instead of as a collection.");
         }
-        
-        RevisionItem item = new RevisionItem();
-        item.setOp(op);
-        item.setType(op.getClass().getSimpleName());
-        container.getItems().add(item);
+
+        if (op instanceof NodeModification) {
+          container.addOperation((NodeModification) op);
+        } else if (op instanceof EdgeModification) {
+          container.addOperation((EdgeModification) op);
+        } else {
+          throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
+        }
       }
 
       DBObject dbObject = marshaller.serialize(container);
       revLogCol.insert(dbObject);
-
+      return container.getId();
     }
     catch(Exception e)
     {
@@ -276,12 +265,10 @@ public class RevisionLogDirectToMongoDbImpl
 
 
   @Override
-  public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(
-      String graphId, String branchId)
+  public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(String graphId)
   {
     DBObject query = new BasicDBObject();
     query.put(FIELD_GRPH_UID, graphId);
-    query.put(FIELD_GRPH_BRANCH, branchId);
     query.put(FIELD_COMMITTED, true);
 
     final DBCursor cursor = revLogCol.find(query).sort(SORT_BY_DATE_COMMITTED).sort(SORT_BY_TXN_SUBMIT_ID);

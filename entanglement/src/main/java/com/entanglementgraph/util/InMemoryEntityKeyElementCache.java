@@ -16,6 +16,7 @@
  */
 package com.entanglementgraph.util;
 
+import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.EntityKeys;
 
 import java.util.HashMap;
@@ -31,7 +32,7 @@ import java.util.Set;
  *
  * @author Keith Flanagan
  */
-public class InMemoryEntityKeyElementCache<T> implements EntityKeyElementCache<T> {
+public class InMemoryEntityKeyElementCache<T extends Content> implements EntityKeyElementCache<T> {
   private final Set<String> seenUids;
   private final Map<String, Set<String>> seenNames;
 

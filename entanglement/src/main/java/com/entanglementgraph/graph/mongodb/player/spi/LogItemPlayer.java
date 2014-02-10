@@ -18,9 +18,9 @@
 
 package com.entanglementgraph.graph.mongodb.player.spi;
 
+import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnection;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
-import com.entanglementgraph.graph.RevisionItem;
-import com.entanglementgraph.util.GraphConnection;
 
 /**
  *
@@ -28,13 +28,11 @@ import com.entanglementgraph.util.GraphConnection;
  */
 public interface LogItemPlayer
 {
-  public void setGraphConnection(GraphConnection graphConn);
+  public void setGraphConnection(MongoGraphConnection graphConn);
   
   public String getSupportedLogItemType();
   
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException;
 
-//  public void playBatch(List<RevisionItem> items)
-//      throws LogPlayerException;
 }

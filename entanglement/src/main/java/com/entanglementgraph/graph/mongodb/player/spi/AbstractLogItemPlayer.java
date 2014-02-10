@@ -19,6 +19,9 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
+import com.entanglementgraph.graph.mongodb.EdgeDAOSeparateDocImpl;
+import com.entanglementgraph.graph.mongodb.MongoGraphConnection;
+import com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.util.GraphConnection;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -31,16 +34,16 @@ abstract public class AbstractLogItemPlayer
     implements LogItemPlayer
 {
   protected GraphConnection graphConnection;
-  protected NodeDAO nodeDao;
-  protected EdgeDAO edgeDao;
+  protected NodeDAONodePerDocImpl nodeDao;
+  protected EdgeDAOSeparateDocImpl edgeDao;
   protected DbObjectMarshaller marshaller;
   
   @Override
-  public void setGraphConnection(GraphConnection graphConnection)
+  public void setGraphConnection(MongoGraphConnection graphConnection)
   {
     this.graphConnection = graphConnection;
-    nodeDao = graphConnection.getNodeDao();
-    edgeDao = graphConnection.getEdgeDao();
+    nodeDao = (NodeDAONodePerDocImpl) graphConnection.getNodeDao();
+    edgeDao = (EdgeDAOSeparateDocImpl) graphConnection.getEdgeDao();
     marshaller = graphConnection.getMarshaller();
   }
 
