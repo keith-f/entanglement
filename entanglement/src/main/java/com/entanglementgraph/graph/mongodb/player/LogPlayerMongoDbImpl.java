@@ -24,7 +24,6 @@ import com.entanglementgraph.graph.mongodb.EdgeDAOSeparateDocImpl;
 import com.entanglementgraph.graph.mongodb.MongoGraphConnection;
 import com.entanglementgraph.graph.mongodb.NodeDAONodePerDocImpl;
 import com.entanglementgraph.graph.mongodb.player.spi.EdgeModificationPlayer;
-import com.entanglementgraph.graph.mongodb.player.spi.LogItemPlayerProvider;
 import com.entanglementgraph.graph.mongodb.player.spi.NodeModificationPlayer;
 import com.entanglementgraph.util.GraphConnection;
 
@@ -66,7 +65,7 @@ public class LogPlayerMongoDbImpl
     }
     catch(Exception e) {
       throw new LogPlayerException(
-          "Failed to delete working copy for graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
+          "Failed to delete working copy for graph: "+tgtGraphConn.getGraphName(), e);
     }
   }
 
@@ -78,8 +77,6 @@ public class LogPlayerMongoDbImpl
       Iterable<RevisionItemContainer> containers = 
               srcGraphConn.getRevisionLog().iterateCommittedRevisionsForGraph(
                   srcGraphConn.getGraphName());
-
-      LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
 
       for (RevisionItemContainer container : containers)
       {
@@ -107,8 +104,8 @@ public class LogPlayerMongoDbImpl
     }
     catch(Exception e) {
       throw new LogPlayerException(
-          "Failed to replay log from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
-          + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
+          "Failed to replay log from graph: "+srcGraphConn.getGraphName()
+          + " to graph: "+tgtGraphConn.getGraphName(), e);
     }
   }
   
@@ -121,7 +118,6 @@ public class LogPlayerMongoDbImpl
 
       Iterable<RevisionItemContainer> containers = 
               srcGraphConn.getRevisionLog().iterateRevisionsForTransaction(transactionUid);
-      LogItemPlayerProvider playerProvider = new LogItemPlayerProvider(tgtGraphConn);
       for (RevisionItemContainer container : containers)
       {
         for (NodeModification item : container.getNodeUpdates()) {
@@ -140,14 +136,14 @@ public class LogPlayerMongoDbImpl
     catch(Exception e) {
       throw new LogPlayerException(
           "Failed to replay transaction: "+transactionUid
-              +" from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
-              + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
+              +" from graph: "+srcGraphConn.getGraphName()
+              + " to graph: "+tgtGraphConn.getGraphName(), e);
     }
     catch(Throwable e) {
       throw new LogPlayerException(
           "Failed to replay transaction: "+transactionUid
-              +" from graph: "+srcGraphConn.getGraphName()+"/"+srcGraphConn.getGraphBranch()
-              + " to graph: "+tgtGraphConn.getGraphName()+"/"+tgtGraphConn.getGraphBranch(), e);
+              +" from graph: "+srcGraphConn.getGraphName()
+              + " to graph: "+tgtGraphConn.getGraphName(), e);
     }
   }
 //  @Override

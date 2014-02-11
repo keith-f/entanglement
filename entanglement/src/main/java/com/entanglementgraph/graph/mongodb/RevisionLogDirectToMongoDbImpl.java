@@ -77,7 +77,7 @@ public class RevisionLogDirectToMongoDbImpl
 
   private final DbObjectMarshaller marshaller;
 
-  public RevisionLogDirectToMongoDbImpl(GraphConnection graphConn, DBCollection revLogCol)
+  public RevisionLogDirectToMongoDbImpl(MongoGraphConnection graphConn, DBCollection revLogCol)
       throws RevisionLogException
   {
     this.listeners = new HashSet<>();

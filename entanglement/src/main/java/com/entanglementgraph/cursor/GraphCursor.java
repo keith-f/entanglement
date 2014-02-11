@@ -404,12 +404,13 @@ public class GraphCursor implements Serializable {
   }
 
   public <T> T resolveAndDeserialise(GraphConnection conn, Class<T> javaBeanType)  throws GraphCursorException {
-    DBObject rawNodeDoc = resolve(conn);
-    try {
-      return conn.getMarshaller().deserialize(rawNodeDoc, javaBeanType);
-    } catch (DbObjectMarshallerException e) {
-      throw new GraphCursorException("Failed to deserialise to type: "+javaBeanType+". Document was: "+rawNodeDoc);
-    }
+    return null;
+//    DBObject rawNodeDoc = resolve(conn);
+//    try {
+//      return conn.getMarshaller().deserialize(rawNodeDoc, javaBeanType);
+//    } catch (DbObjectMarshallerException e) {
+//      throw new GraphCursorException("Failed to deserialise to type: "+javaBeanType+". Document was: "+rawNodeDoc);
+//    }
   }
 
 
