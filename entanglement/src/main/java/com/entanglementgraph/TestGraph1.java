@@ -18,22 +18,18 @@
 
 package com.entanglementgraph;
 
-import com.entanglementgraph.graph.Edge;
-import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.Node;
-import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
+import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.MergePolicy;
+import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
-import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.entanglementgraph.util.TxnUtils;
-import com.mongodb.*;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.util.UidGenerator;
 import java.net.UnknownHostException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import com.entanglementgraph.graph.RevisionLogException;
+import java.util.*;
 
 /**
  *
@@ -41,9 +37,17 @@ import com.entanglementgraph.graph.RevisionLogException;
  */
 public class TestGraph1
 {
-  private static class Chromosome extends Node {
+  private static class Chromosome implements Content {
     private int length;
     private String description;
+
+    @Override
+    public String toString() {
+      return "Chromosome{" +
+          "length=" + length +
+          ", description='" + description + '\'' +
+          '}';
+    }
 
     public int getLength() {
       return length;
@@ -62,8 +66,15 @@ public class TestGraph1
     }
   }
 
-  private static class Gene extends Node {
+  private static class Gene implements Content {
     private String description;
+
+    @Override
+    public String toString() {
+      return "Gene{" +
+          "description='" + description + '\'' +
+          '}';
+    }
 
     public String getDescription() {
       return description;
@@ -74,66 +85,66 @@ public class TestGraph1
     }
   }
 
-  private static class ExistsWithin extends Edge<ExistsWithin, Gene, Chromosome> {
+  private static class ExistsWithin implements Content {
 
   }
 
   public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException {
-    if (args.length != 1) {
-      System.out.println("USAGE:\n"
-          + "  * database name\n"
-      );
-      System.exit(1);
-    }
 
-    String hostname = "localhost";
-    String databaseName = args[0];
+    String clusterName = "local";
+    String databaseName = "TestGraph1";
+    CouchGraphConnectionFactory.registerNamedCluster(clusterName, "http://localhost:5984");
 
 
+    Map<Class, String> mappings = new HashMap<>();
+    mappings.put(Chromosome.class, "Chromosome");
+    mappings.put(Gene.class, "Gene");
+    mappings.put(ExistsWithin.class, "ExistsWithin");
 
-    MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(hostname, databaseName);
-    GraphConnection chromConn = connFact.connect("chromosomes", "trunk");
-    GraphConnection genesConn = connFact.connect("genes", "trunk");
+    CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(clusterName, databaseName, mappings);
+    GraphConnection graphConn1 = connFact.connect("graph1");
+//    GraphConnection genesConn = connFact.connect("genes");
 
-    // Populate chromosomes graph
-    String txnId = TxnUtils.beginNewTransaction(chromConn);
+    // Populate chromosomes
+    String txnId = TxnUtils.beginNewTransaction(graphConn1);
     List<GraphOperation> ops = new LinkedList<>();
+    List<String> chromosomeNames = new ArrayList<>();
     for (int i=0; i<3; i++) {
-      Chromosome chromosome = new Chromosome();
-      chromosome.getKeys().setType(Chromosome.class.getName());
-      chromosome.getKeys().addName("c" + i);
-      chromosome.getKeys().addUid(UidGenerator.generateUid());
-      chromosome.setDescription("This is chromosome " + i);
-      ops.add(NodeModification.create(chromConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromosome));
+      Chromosome chromData = new Chromosome();
+      chromData.setDescription("This is chromosome " + i);
+      chromData.setLength((int) Math.random()*100000);
+      Node chromNode = new Node(new EntityKeys("Chromosome", "c" + i), chromData);
+
+      ops.add(new NodeModification<>(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
+      chromosomeNames.addAll(chromNode.getKeys().getNames());
     }
-    chromConn.getRevisionLog().submitRevisions(chromConn.getGraphName(), chromConn.getGraphBranch(), txnId, 1, ops);
-    TxnUtils.commitTransaction(chromConn, txnId);
+    TxnUtils.submitTxnPart(graphConn1, txnId, 1, ops);
+    TxnUtils.commitTransaction(graphConn1, txnId);
 
 
-    // Populate genes graph
-    txnId = TxnUtils.beginNewTransaction(genesConn);
+    // Populate genes
     ops = new LinkedList<>();
     for (int i=0; i<3; i++) {
-      Gene gene = new Gene();
-      gene.getKeys().setType(Gene.class.getName());
-      gene.getKeys().addName("g" + i);
-      gene.getKeys().addUid(UidGenerator.generateUid());
-      gene.setDescription("This is gene " + i);
-      ops.add(NodeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, gene));
+      Gene geneData = new Gene();
+      geneData.setDescription("This is gene " + i);
+
+      Node geneNode = new Node(new EntityKeys("Gene", "g" + i), geneData);
+      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneNode));
 
       // Create a hanging edge between this gene and a chromosome.
       // Note that the chromosome doesn't exist in the GENES graph.
-      ExistsWithin geneToChrom = new ExistsWithin();
+
+      Edge geneToChrom = new Edge();
       geneToChrom.getKeys().setType(ExistsWithin.class.getName());
       geneToChrom.getKeys().addUid(UidGenerator.generateUid());
 
-      geneToChrom.setFrom(gene.getKeys()); //Set the 'from' node
+      geneToChrom.setFrom(geneNode.getKeys()); //Set the 'from' node
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
-      geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), "c1"));
-      ops.add(EdgeModification.create(genesConn, MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
+      Collections.shuffle(chromosomeNames);
+      geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), chromosomeNames.iterator().next()));
+      ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
     }
-    genesConn.getRevisionLog().submitRevisions(genesConn.getGraphName(), genesConn.getGraphBranch(), txnId, 1, ops);
-    TxnUtils.commitTransaction(genesConn, txnId);
+    TxnUtils.submitAsTxn(graphConn1, ops);
 
 
     /*
@@ -143,46 +154,16 @@ public class TestGraph1
      *
      * Next, try importing these graphs into a third 'integrated' graph:
      */
-    GraphConnection mergedConn = connFact.connect("merged", "trunk");
-
-    txnId = TxnUtils.beginNewTransaction(mergedConn);
-    ops = new LinkedList<>();
-    ops.add(new BranchImport("chromosomes", "trunk"));
-    ops.add(new BranchImport("genes", "trunk"));
-    mergedConn.getRevisionLog().submitRevisions(mergedConn.getGraphName(), mergedConn.getGraphBranch(), txnId, 1, ops);
-    TxnUtils.commitTransaction(mergedConn, txnId);
+//    GraphConnection mergedConn = connFact.connect("merged", "trunk");
+//
+//    txnId = TxnUtils.beginNewTransaction(mergedConn);
+//    ops = new LinkedList<>();
+//    ops.add(new BranchImport("chromosomes", "trunk"));
+//    ops.add(new BranchImport("genes", "trunk"));
+//    mergedConn.getRevisionLog().submitRevisions(mergedConn.getGraphName(), mergedConn.getGraphBranch(), txnId, 1, ops);
+//    TxnUtils.commitTransaction(mergedConn, txnId);
 
     System.out.println("\n\nDone.");
   }
-  
-  private static void listCollections(DB db)
-  {
-    Set<String> colls = db.getCollectionNames();
 
-    for (String s : colls) {
-        System.out.println(s);
-    }
-  }
-  
-  private static void findOne(DBCollection collection)
-  {
-    DBObject myDoc = collection.findOne();
-    System.out.println(myDoc);
-  }
-  
-  private static void cursorIterateAllDocs(DBCollection collection)
-  {
-    DBCursor cursor = collection.find();
-    try
-    {
-      while (cursor.hasNext())
-      {
-        System.out.println(cursor.next());
-      }
-    }
-    finally
-    {
-      cursor.close();
-    }
-  }
 }

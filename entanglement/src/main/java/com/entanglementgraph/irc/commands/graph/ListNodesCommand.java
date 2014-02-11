@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
@@ -64,13 +65,15 @@ public class ListNodesCommand extends AbstractEntanglementGraphCommand {
     int count = 0;
     try {
       if (type == null) {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeys(offset, limit)) {
+        for (Node node : graphConn.getNodeDao().iterateAll()) {
           count++;
+          EntityKeys keys = node.getKeys();
           bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
         }
       } else {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeysByType(type, offset, limit)) {
+        for (Node node : graphConn.getNodeDao().iterateAll()) {
           count++;
+          EntityKeys keys = node.getKeys();
           bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
         }
       }

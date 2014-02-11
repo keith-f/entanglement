@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
+import com.entanglementgraph.graph.mongodb.MongoGraphConnection;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.graph.mongodb.player.LogPlayer;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerMongoDbImpl;
@@ -45,15 +46,18 @@ public class PlaybackCommittedLogItemsCommand extends AbstractEntanglementGraphC
   protected void processLine() throws UserException, BotCommandException {
 
     try {
-      bot.infoln("Starting to replay committed revisions in: %s/%s",
-          graphConn.getGraphName(), graphConn.getGraphBranch());
-      LogPlayer logPlayer = new LogPlayerMongoDbImpl(graphConn, graphConn);
+      if (!(graphConn instanceof MongoGraphConnection)) {
+        logger.println("This command is only relevant to MongoDB");
+        return;
+      }
+
+      bot.infoln("Starting to replay committed revisions in: %s", graphConn.getGraphName());
+      MongoGraphConnection mongoConn = (MongoGraphConnection) graphConn;
+      LogPlayer logPlayer = new LogPlayerMongoDbImpl(mongoConn, mongoConn);
       logPlayer.replayAllRevisions();
 
-      logger.println("%s%s/%s:%s Replay of revisions complete complete",
-          Colors.CYAN,
-          graphConn.getGraphName(), graphConn.getGraphBranch(),
-          Colors.NORMAL);
+      logger.println("%s%s:%s Replay of revisions complete complete",
+          Colors.CYAN, graphConn.getGraphName(), Colors.NORMAL);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

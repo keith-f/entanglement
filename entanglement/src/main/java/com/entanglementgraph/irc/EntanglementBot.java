@@ -22,9 +22,6 @@ import com.entanglementgraph.irc.commands.benchmarks.RunBenchmarksCommand;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
-import com.entanglementgraph.irc.commands.iteration.GuiNearestNeighboursCommand;
-import com.entanglementgraph.irc.commands.iteration.ListKnownGraphWalkersCommand;
-import com.entanglementgraph.irc.commands.iteration.RunCursorBasedGraphWalkerCommand;
 import com.entanglementgraph.irc.commands.restlet.StartRestletCommand;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.ScalesHazelcastInstanceFactory;
@@ -146,9 +143,9 @@ public class EntanglementBot extends GenericIrcBot {
 //    addCommand("gui-cursor-display-nearest-neighbours", CreateSwingCursorNearestNeighboursCommand.class);
 //    addCommand("gui-display-entire-graph", CreateSwingGuiEntireGraphCommand.class);
 
-    addCommand("/entanglement/visualise/nearest-neighbours", GuiNearestNeighboursCommand.class);
-    addCommand("/entanglement/analyse/run-graph-walker", RunCursorBasedGraphWalkerCommand.class);
-    addCommand("/entanglement/analyse/list-walkers", ListKnownGraphWalkersCommand.class);
+//    addCommand("/entanglement/visualise/nearest-neighbours", GuiNearestNeighboursCommand.class);
+//    addCommand("/entanglement/analyse/run-graph-walker", RunCursorBasedGraphWalkerCommand.class);
+//    addCommand("/entanglement/analyse/list-walkers", ListKnownGraphWalkersCommand.class);
 
     addCommand("/entanglement/benchmarks/run-benchmarks", RunBenchmarksCommand.class);
   }

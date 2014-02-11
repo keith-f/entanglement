@@ -17,6 +17,7 @@
 
 package com.entanglementgraph.irc.commands.graph;
 
+import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.mongodb.BasicDBObject;
@@ -64,20 +65,14 @@ public class ShowEdgeCommand extends AbstractEntanglementGraphCommand {
       // Create a keyset in order to query the database
       EntityKeys keyset = new EntityKeys(type, entityName);
       // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
-      BasicDBObject edge = graphConn.getEdgeDao().getByKey(keyset);
+      Edge edge = graphConn.getEdgeDao().getByKey(keyset);
 
       if (edge == null) {
         logger.println("A graph entity of type %s with name %s could not be found!", type, entityName);
       } else {
         logger.println("Found the following entity with properties:");
         logger.println("[");
-        Map edgeAsMap = edge.toMap();
-        for (Object key : edgeAsMap.keySet()) {
-          Object val = edgeAsMap.get(key);
-          String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
-          String valStr = val.toString();
-          logger.println("  %s => %s", keyStr, valStr);
-        }
+        logger.println(String.format("%s%s%s%s", Colors.BOLD, Colors.RED, edge.toString(), Colors.NORMAL));
         logger.println("]");
       }
     } catch (Exception e) {

@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.mongodb.BasicDBObject;
 import com.scalesinformatics.uibot.Param;
@@ -64,20 +65,14 @@ public class ShowNodeCommand extends AbstractEntanglementGraphCommand {
       // Create a keyset in order to query the database
       EntityKeys keyset = new EntityKeys(type, entityName);
       // This method returns a raw MongoDB object. For real-world applications, you would often parse this into a Java bean
-      BasicDBObject node = graphConn.getNodeDao().getByKey(keyset);
+      Node node = graphConn.getNodeDao().getByKey(keyset);
 
       if (node == null) {
         logger.println("A graph entity of type %s with name %s could not be found!", type, entityName);
       } else {
         logger.println("Found the following entity with properties:");
         logger.println("[");
-        Map nodeAsMap = node.toMap();
-        for (Object key : nodeAsMap.keySet()) {
-          Object val = nodeAsMap.get(key);
-          String keyStr = String.format("%s%s%s%s", Colors.BOLD, Colors.RED, key.toString(), Colors.NORMAL);
-          String valStr = val.toString();
-          logger.println("  %s => %s", keyStr, valStr);
-        }
+        logger.println(String.format("%s%s%s%s", Colors.BOLD, Colors.RED, node.toString(), Colors.NORMAL));
         logger.println("]");
       }
     } catch (Exception e) {

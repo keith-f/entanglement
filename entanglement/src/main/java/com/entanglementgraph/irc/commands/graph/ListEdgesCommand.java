@@ -64,10 +64,8 @@ public class ListEdgesCommand extends AbstractEntanglementGraphCommand {
     int count = 0;
     try {
       if (type == null) {
-        for (EntityKeys keys : graphConn.getEdgeDao().iterateKeys(offset, limit)) {
+        for (Edge edge : graphConn.getEdgeDao().iterateAll()) {
           count++;
-          BasicDBObject edgeObj = graphConn.getEdgeDao().getByKey(keys);
-          Edge edge = graphConn.getMarshaller().deserialize(edgeObj, Edge.class);
 
           String fromStr = edge.getFrom().getType()+"/"+edge.getFrom().getNames();
           String toStr = edge.getTo().getType()+"/"+edge.getTo().getNames();
@@ -75,10 +73,8 @@ public class ListEdgesCommand extends AbstractEntanglementGraphCommand {
           bot.debugln(channel, "  * "+fromStr+"   ------ "+edge.getKeys().getType() + " ----->> " + toStr);
         }
       } else {
-        for (EntityKeys keys : graphConn.getNodeDao().iterateKeysByType(type, offset, limit)) {
+        for (Edge edge : graphConn.getEdgeDao().iterateAll()) {
           count++;
-          BasicDBObject edgeObj = graphConn.getEdgeDao().getByKey(keys);
-          Edge edge = graphConn.getMarshaller().deserialize(edgeObj, Edge.class);
 
           String fromStr = edge.getFrom().getType()+"/"+edge.getFrom().getNames();
           String toStr = edge.getTo().getType()+"/"+edge.getTo().getNames();

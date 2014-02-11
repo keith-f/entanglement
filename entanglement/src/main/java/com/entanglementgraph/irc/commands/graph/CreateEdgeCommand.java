@@ -23,6 +23,7 @@ import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
 import com.entanglementgraph.graph.commands.EdgeModification;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.commands.MergePolicy;
+import com.entanglementgraph.specialistnodes.MapContent;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.mongodb.BasicDBObject;
@@ -89,18 +90,17 @@ public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
       edge.getKeys().addName(entityName);
       //TODO from/to
 
-      // Serialise the basic Node object ot a MongoDB object.
-      BasicDBObject edgeObj = entRuntime.getMarshaller().serialize(edge);
       // Add further custom properties
+      MapContent content = new MapContent();
+      edge.setContent(content);
       for (Map.Entry<String, String> attr : attributes.entrySet()) {
-        edgeObj.append(attr.getKey(), attr.getValue());
+        content.getMap().put(attr.getKey(), attr.getValue());
       }
 
-      EdgeModification edgeUpdateCommand = new EdgeModification();
-      edgeUpdateCommand.setEdge(edgeObj);
-      edgeUpdateCommand.setMergePol(MergePolicy.APPEND_NEW__LEAVE_EXISTING); //FIXME policy should be user-configurable
+      ; //FIXME policy should be user-configurable
+      EdgeModification edgeUpdateCommand = new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, edge);
+      TxnUtils.submitAsTxn(graphConn, edgeUpdateCommand);
 
-      writeOperation(graphConn, edgeUpdateCommand);
       logger.println("Edge created/updated: %s", entityName);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
@@ -122,28 +122,6 @@ public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
       }
     }
     return attributes;
-  }
-
-  private void writeOperation(GraphConnection conn, GraphOperation graphOp) throws EntanglementBotException {
-    List<GraphOperation> ops = new ArrayList<>(1);
-    ops.add(graphOp);
-    writeOperations(conn, ops);
-  }
-
-  private void writeOperations(GraphConnection conn, List<GraphOperation> ops) throws EntanglementBotException {
-    bot.debugln(channel, "Committing %d revisions to graph: %s/%s", ops.size(), conn.getGraphName(), conn.getGraphBranch());
-    String txnId = null;
-    try {
-      txnId = TxnUtils.beginNewTransaction(conn);
-      conn.getRevisionLog().submitRevisions(conn.getGraphName(), conn.getGraphBranch(), txnId, 1, ops);
-      ops.clear();
-      TxnUtils.commitTransaction(conn, txnId);
-    } catch (Exception e) {
-      TxnUtils.silentRollbackTransaction(conn, txnId);
-      throw new EntanglementBotException("Failed to perform graph operations on "
-          +conn.getGraphBranch()+"/"+conn.getGraphBranch()
-          +". Exception attached.", e);
-    }
   }
 
 }

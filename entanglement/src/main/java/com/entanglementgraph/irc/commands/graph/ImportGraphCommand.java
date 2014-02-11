@@ -67,7 +67,7 @@ public class ImportGraphCommand extends AbstractEntanglementCommand {
       if (destinationConn == null) throw new UserException(sender, "No graph connection exists with the name: "+destinationConnName);
 
 
-      BranchImport graphOp = new BranchImport(sourceConn.getGraphName(), sourceConn.getGraphBranch());
+      BranchImport graphOp = new BranchImport(sourceConn.getGraphName());
       TxnUtils.submitAsTxn(destinationConn, graphOp);
 
       logger.println("Import of %s to %s complete", sourceConnName, destinationConnName);

@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursorRegistry;
+import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
@@ -29,6 +30,10 @@ import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.BotLoggerFactory;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A per-channel Entanglement IRC bot-specific configuration object for storing configuration information such
@@ -54,6 +59,8 @@ public class EntanglementRuntime {
 
   private final GraphCursorRegistry cursorRegistry;
 
+  private final Map<Class, String> classJsonMappings;
+
 
   /**
    * Creates a new EntanglementRuntime object. This constructor is typically used for processes that may share some
@@ -66,7 +73,7 @@ public class EntanglementRuntime {
   public EntanglementRuntime(BotLogger botLogger,
                               ClassLoader classLoader, DbObjectMarshaller marshaller,
                               HazelcastInstance hzInstance) {
-//    this.state = state;
+    this.classJsonMappings = new HashMap<>();
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
     this.marshaller = marshaller;
@@ -90,12 +97,29 @@ public class EntanglementRuntime {
   }
 
   /**
+   * In order to correctly deserialise data classes (such as node and edge content types), the JSON serializer used by
+   * Entanglement encodes the Java class type of beans into the JSON serialization.
+   * This method allows you to specify such mappings
+   * @param clazz java bean type, such as a Node or Edge <code>Content</code> bean.
+   * @param jsonName a String name to associate with <code>clazz</code> serialised JSON. This may be an obvious name
+   *                 such as the Java classname, or a different name, for example, a short name to reduce the size of
+   *                 the JSON output.
+   */
+  public void addClassToJsonMapping(Class clazz, String jsonName) {
+    classJsonMappings.put(clazz, jsonName);
+  }
+
+  /**
    * Adds a named graph connection details object. This object is added directly to the <code>graphConnectionDetails</code>,
    * which in a distributed system is a Hazelcast distributed data structure.
    * @param connName
    * @param connDetails
    */
-  public void registerGraphConnectionDetails(String connName, GraphConnectionDetails connDetails) {
+  public void registerGraphConnectionDetails(String connName, GraphConnectionDetails connDetails) throws UserException {
+    if (connDetails.getDbType() == null) {
+      throw new UserException("No database type was selected. Supported types are: "
+          + Arrays.asList(GraphConnectionDetails.DbType.values()));
+    }
     graphConnectionDetails.put(connName, connDetails);
   }
 
@@ -110,11 +134,25 @@ public class EntanglementRuntime {
     if (details == null) {
       throw new UserException("Unknown connection name: "+connName);
     }
-    MongoGraphConnectionFactory gcf = new MongoGraphConnectionFactory(classLoader, details.getPoolName(), details.getDatabase());
-    try {
-      return gcf.connect(details.getGraphName(), details.getGraphBranch());
-    } catch (GraphConnectionFactoryException e) {
-      throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
+
+    if (details.getDbType() == GraphConnectionDetails.DbType.COUCH_DB) {
+      try {
+        CouchGraphConnectionFactory gcf = new CouchGraphConnectionFactory(
+            details.getClusterName(), details.getDatabase(), classJsonMappings);
+        return gcf.connect(details.getGraphName());
+      } catch (GraphConnectionFactoryException e) {
+        throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
+      }
+    } else if (details.getDbType() == GraphConnectionDetails.DbType.MONGO_DB) {
+      try {
+        MongoGraphConnectionFactory gcf = new MongoGraphConnectionFactory(
+            classLoader, details.getClusterName(), details.getDatabase());
+        return gcf.connect(details.getGraphName());
+      } catch (GraphConnectionFactoryException e) {
+        throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
+      }
+    } else {
+      throw new BotCommandException("Unsupported database type: "+details.getDbType());
     }
   }
 

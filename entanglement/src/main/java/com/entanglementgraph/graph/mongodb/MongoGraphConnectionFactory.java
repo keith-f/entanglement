@@ -58,23 +58,24 @@ public class MongoGraphConnectionFactory implements GraphConnectionFactory{
   private static final Logger logger = Logger.getLogger(MongoGraphConnectionFactory.class.getName());
   public static final String DEFAULT_TMP_DB_NAME = "temp";
 
-  private static final Map<String, MongoClient> mongoPools = new HashMap<>();
+  private static final Map<String, MongoClient> mongoClusters = new HashMap<>();
 
-  public static MongoClient registerNamedPool(String poolName, ServerAddress... replicaServers)
+  public static MongoClient registerNamedCluster(String clusterName, ServerAddress... replicaServers)
       throws GraphConnectionFactoryException {
-    synchronized (mongoPools) {
-      if (mongoPools.containsKey(poolName)) {
-        logger.info(String.format("A MongoDB cluster with the name: %s already exists. Closing existing pool, " +
-            "and reconfiguring with new server set: %s", poolName, Arrays.asList(replicaServers)));
-        MongoClient pool = mongoPools.get(poolName);
+    synchronized (mongoClusters) {
+      if (mongoClusters.containsKey(clusterName)) {
+        logger.info(String.format("A MongoDB cluster with the name: %s already exists. " +
+            "Closing existing cluster connection, " +
+            "and reconfiguring with new server set: %s", clusterName, Arrays.asList(replicaServers)));
+        MongoClient pool = mongoClusters.get(clusterName);
         pool.close();
       }
 
       try {
-        MongoClient pool = new MongoClient(Arrays.asList(replicaServers));
-        pool.setWriteConcern(WriteConcern.SAFE);
-        mongoPools.put(poolName, pool);
-        return pool;
+        MongoClient cluster = new MongoClient(Arrays.asList(replicaServers));
+        cluster.setWriteConcern(WriteConcern.SAFE);
+        mongoClusters.put(clusterName, cluster);
+        return cluster;
       }
       catch(Exception e) {
         throw new GraphConnectionFactoryException("Failed to create MongoDB connection", e);
@@ -82,21 +83,21 @@ public class MongoGraphConnectionFactory implements GraphConnectionFactory{
     }
   }
 
-  public static MongoClient getNamedPool(String poolName) {
-    synchronized (mongoPools) {
-      return mongoPools.get(poolName);
+  public static MongoClient getNamedCluster(String clusterName) {
+    synchronized (mongoClusters) {
+      return mongoClusters.get(clusterName);
     }
   }
 
-  public static boolean containsNamedPool(String poolName) {
-    synchronized (mongoPools) {
-      return mongoPools.containsKey(poolName);
+  public static boolean containsNamedCluster(String clusterName) {
+    synchronized (mongoClusters) {
+      return mongoClusters.containsKey(clusterName);
     }
   }
 
   private final ClassLoader classLoader;
   private final MongoClient connectionPool;
-  private final String poolName;
+  private final String clusterName;
   private final String databaseName;
 
   private DbObjectMarshaller marshaller;
@@ -105,23 +106,23 @@ public class MongoGraphConnectionFactory implements GraphConnectionFactory{
     this(MongoGraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
   }
 
-  public MongoGraphConnectionFactory(ClassLoader classLoader, String poolName, String databaseName) {
+  public MongoGraphConnectionFactory(ClassLoader classLoader, String clusterName, String databaseName) {
     this.classLoader = classLoader;
     this.marshaller = ObjectMarshallerFactory.create(classLoader);
-    this.connectionPool = getNamedPool(poolName);
-    this.poolName = poolName;
+    this.connectionPool = getNamedCluster(clusterName);
+    this.clusterName = clusterName;
     this.databaseName = databaseName;
   }
 
   public GraphConnection connect(String graphName) throws GraphConnectionFactoryException {
     try {
       if (connectionPool == null) {
-        throw new GraphConnectionFactoryException("Connection pool: "+poolName+" could not be found.");
+        throw new GraphConnectionFactoryException("Connection pool: "+ clusterName +" could not be found.");
       }
       logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName);
 
       MongoGraphConnection connection = new MongoGraphConnection();
-      connection.setPoolName(poolName);
+      connection.setClusterName(clusterName);
       connection.setDatabaseName(databaseName);
 
       // Underlying connection to MongoDB

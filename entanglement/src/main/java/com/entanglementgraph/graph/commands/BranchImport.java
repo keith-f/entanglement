@@ -45,7 +45,7 @@ public class BranchImport
   public BranchImport() {
   }
 
-  public BranchImport(String fromGraphUid, String fromBranchUid) {
+  public BranchImport(String fromGraphUid) {
     this.fromGraphUid = fromGraphUid;
   }
 

@@ -20,6 +20,7 @@ package com.entanglementgraph.graph.couchdb;
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.util.GraphConnection;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.scalesinformatics.util.UidGenerator;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
@@ -50,11 +51,10 @@ import java.util.logging.Logger;
  */
 public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   private static final Logger logger = Logger.getLogger(CouchGraphConnectionFactory.class.getName());
-  public static final String DEFAULT_TMP_DB_NAME = "temp";
 
   /**
    * A set of database cluster names --> access URLs (eg, http://localhost:5984).
-   * TODO currently, only a single URL is supported. We may want to support BigCouch with multiple URLs.
+   * TODO currently, only a single URL is supported. We may want to support BigCouch with multiple URLs later.
    * http://bigcouch.cloudant.com/use
    * According to this, we can use any URL of any machine in the cluster.
    */
@@ -87,11 +87,13 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   private final String clusterName;
   private final String clusterUrl;
   private final String databaseName;
+  private final Map<Class, String> classJsonMappings;
 
-  public CouchGraphConnectionFactory(String clusterName, String databaseName) {
+  public CouchGraphConnectionFactory(String clusterName, String databaseName, Map<Class, String> classJsonMappings) {
     this.clusterName = clusterName;
     this.clusterUrl = getNamedClusterUrl(clusterName);
     this.databaseName = databaseName;
+    this.classJsonMappings = classJsonMappings;
   }
 
   public GraphConnection connect(String graphName) throws GraphConnectionFactoryException {
@@ -123,6 +125,11 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       connection.setGraphName(graphName);
       connection.setDb(db);
       connection.setOm(om);
+
+      //objectMapper.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
+      for (Map.Entry<Class, String> mapping : classJsonMappings.entrySet()) {
+        om.registerSubtypes(new NamedType(mapping.getKey(), mapping.getValue()));
+      }
 
       RevisionLog revLog = new RevisionLogCouchDBImpl(db);
       NodeDAO nodeDao = new NodeDAOCouchDbImpl(db);

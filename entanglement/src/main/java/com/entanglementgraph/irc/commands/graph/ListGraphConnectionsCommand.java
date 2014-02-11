@@ -49,9 +49,9 @@ public class ListGraphConnectionsCommand extends AbstractEntanglementCommand {
       for (Map.Entry<String, GraphConnectionDetails> entry : entRuntime.getGraphConnectionDetails().entrySet()) {
         GraphConnectionDetails details = entry.getValue();
         logger.println("  %s => %s/%s; %s/%s", entry.getKey(),
-            details.getPoolName(),
+            details.getClusterName(),
             details.getDatabase(),
-            details.getGraphName(), details.getGraphBranch());
+            details.getGraphName());
       }
       logger.println("]");
     } catch (Exception e) {
