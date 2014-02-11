@@ -113,7 +113,8 @@ public class TxnUtils
    */
   public static void submitTxnPart(GraphConnection conn, String txnId, int partId, List<GraphOperation> ops) 
       throws RevisionLogException {
-    conn.getRevisionLog().submitRevisions(conn.getGraphName(), txnId, partId, ops);
+    String databaseObjectId = conn.getRevisionLog().submitRevisions(conn.getGraphName(), txnId, partId, ops);
+    logger.info("Submitted patch with database object ID: "+databaseObjectId);
   }
 
   public static String beginNewTransaction(GraphConnection conn)

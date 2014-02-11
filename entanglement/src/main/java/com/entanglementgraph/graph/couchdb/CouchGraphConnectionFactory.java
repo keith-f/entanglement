@@ -101,7 +101,7 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       throw new GraphConnectionFactoryException("Unknown CouchDB cluster name: "+clusterName);
     }
     try {
-      logger.info("Connecting to: " + clusterUrl+ ", graph: " + graphName);
+      logger.info("Connecting to: " + clusterUrl + ", database: "+ databaseName + ", graph: " + graphName);
 
       System.setProperty("org.ektorp.support.AutoUpdateViewOnChange", "true");
 
@@ -115,7 +115,7 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory();
       CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
 // if the second parameter is true, the database will be created if it doesn't exists
-      CouchDbConnector db = dbInstance.createConnector("my_first_database", true);
+      CouchDbConnector db = dbInstance.createConnector(databaseName, true);
       ObjectMapper om = omFactory.getLastCreatedObjectMapper();
 
       CouchGraphConnection connection = new CouchGraphConnection();
