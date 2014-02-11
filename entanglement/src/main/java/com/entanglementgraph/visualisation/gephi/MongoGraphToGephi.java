@@ -87,7 +87,6 @@ public class MongoGraphToGephi {
     String mongoHost = null;
     String mongoDatabaseName = null;
     String graphName = null;
-    String graphBranch = null;
     String outputFilename = null;
     // Optional file containing node type --> Color
     String colorPropsFile = null;
@@ -117,13 +116,6 @@ public class MongoGraphToGephi {
             "You must specify a graph name");
       }
 
-      if (line.hasOption("graph-branch")) {
-        graphBranch = line.getOptionValue("graph-branch", null);
-      } else {
-        throw new IllegalArgumentException(
-            "You must specify a graph branch name");
-      }
-
       if (line.hasOption("output-file")) {
         outputFilename = line.getOptionValue("output-file", null);
         if (!outputFilename.contains(".gexf") && outputFilename.
@@ -149,7 +141,7 @@ public class MongoGraphToGephi {
 
     MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(
         classLoader, mongoHost, mongoDatabaseName);
-    GraphConnection conn = connFact.connect(graphName, graphBranch);
+    GraphConnection conn = connFact.connect(graphName);
 
     Map<String, Color> entityToColor = ColorLoader.loadColorMappings(new File(colorPropsFile));
     MongoToGephiExporter exporter = new MongoToGephiExporter();

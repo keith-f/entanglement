@@ -51,12 +51,14 @@ public class AddByDefaultRule extends AbstractRule {
                              EntityKeys<? extends Node> remoteNodeId,
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
                              throws RuleException {
-    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-    action.setProcessFurtherRules(false);
-
-    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
-    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
-    return action;
+    //TODO reimplement
+    return null;
+//    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
+//    action.setProcessFurtherRules(false);
+//
+//    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+//    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
+//    return action;
   }
 
 }

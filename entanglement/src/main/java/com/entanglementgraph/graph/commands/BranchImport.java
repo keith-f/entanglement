@@ -41,14 +41,12 @@ public class BranchImport
 {
   
   private String fromGraphUid;
-  private String fromBranchUid;
   
   public BranchImport() {
   }
 
   public BranchImport(String fromGraphUid, String fromBranchUid) {
     this.fromGraphUid = fromGraphUid;
-    this.fromBranchUid = fromBranchUid;
   }
 
   public String getFromGraphUid() {
@@ -59,11 +57,4 @@ public class BranchImport
     this.fromGraphUid = fromGraphUid;
   }
 
-  public String getFromBranchUid() {
-    return fromBranchUid;
-  }
-
-  public void setFromBranchUid(String fromBranchUid) {
-    this.fromBranchUid = fromBranchUid;
-  }
 }

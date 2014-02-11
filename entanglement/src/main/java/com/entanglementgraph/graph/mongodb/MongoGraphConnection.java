@@ -34,10 +34,14 @@ import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
  * To change this template use File | Settings | File Templates.
  */
 public class MongoGraphConnection extends GraphConnection {
+
+
+  private ClassLoader classLoader;
+  private DbObjectMarshaller marshaller;
+
+
   private MongoClient pool;
   private DB db;
-
-  private String poolName;
 
   public MongoGraphConnection() {
   }
@@ -58,12 +62,19 @@ public class MongoGraphConnection extends GraphConnection {
     this.db = db;
   }
 
-  public String getPoolName() {
-    return poolName;
+  public ClassLoader getClassLoader() {
+    return classLoader;
   }
 
-  public void setPoolName(String poolName) {
-    this.poolName = poolName;
+  public void setClassLoader(ClassLoader classLoader) {
+    this.classLoader = classLoader;
   }
 
+  public DbObjectMarshaller getMarshaller() {
+    return marshaller;
+  }
+
+  public void setMarshaller(DbObjectMarshaller marshaller) {
+    this.marshaller = marshaller;
+  }
 }

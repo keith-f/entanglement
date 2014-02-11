@@ -19,12 +19,11 @@ package com.entanglementgraph.graph.mongodb;
 
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.gson.GsonDBObjectMarshaller;
+import com.scalesinformatics.mongodb.jackson.JacksonDBObjectMarshaller;
+
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import com.entanglementgraph.graph.mongodb.RevisionItemDeserializer;
-import com.entanglementgraph.graph.mongodb.RevisionItemSerializer;
-import com.entanglementgraph.graph.RevisionItem;
 
 /**
  *
@@ -32,28 +31,21 @@ import com.entanglementgraph.graph.RevisionItem;
  */
 public class ObjectMarshallerFactory
 {
-//  public static DbObjectMarshaller create()
-//  {
-//    ClassLoader defaultCl = ObjectMarshallerFactory.class.getClassLoader();
-//    return create(defaultCl);
-//  }
   
   public static DbObjectMarshaller create(ClassLoader classLoader)
   {
-//    DbObjectMarshaller marshaller = new JacksonDBObjectMarshaller();
-//    return marshaller;
-    
-//    GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller();
-//    return marshaller;
-    
-    Map<Type, Object> adapters = new HashMap<>();
-//    adapters.put(GraphOperation.class, new GraphOperationDeserializer(defaultCl));
-    adapters.put(RevisionItem.class, new RevisionItemSerializer());
-    adapters.put(RevisionItem.class, new RevisionItemDeserializer(classLoader));
-
-//    adapters.put(byte[].class, new ByteArraySerializer());
-//    adapters.put(RevisionItem.class, new RevisionItemDeserializer(defaultCl));
-    GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller(adapters);
+    DbObjectMarshaller marshaller = new JacksonDBObjectMarshaller();
     return marshaller;
+
+    
+//    Map<Type, Object> adapters = new HashMap<>();
+////    adapters.put(GraphOperation.class, new GraphOperationDeserializer(defaultCl));
+//    adapters.put(RevisionItem.class, new RevisionItemSerializer());
+//    adapters.put(RevisionItem.class, new RevisionItemDeserializer(classLoader));
+//
+////    adapters.put(byte[].class, new ByteArraySerializer());
+////    adapters.put(RevisionItem.class, new RevisionItemDeserializer(defaultCl));
+//    GsonDBObjectMarshaller marshaller = new GsonDBObjectMarshaller(adapters);
+//    return marshaller;
   }
 }

@@ -19,9 +19,9 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 
 import java.util.logging.Logger;
 
+import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.graph.commands.TransactionBegin;
-import com.entanglementgraph.graph.RevisionItem;
 
 /**
  *
@@ -41,10 +41,10 @@ public class TransactionBeginPlayer
   }
 
   @Override
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException
   {
-    TransactionBegin txn = (TransactionBegin) item.getOp();
+    TransactionBegin txn = (TransactionBegin) op;
     
     logger.info("Acknowledging START of transaction: "+txn.getUid()
             + "Nothing to do here yet.");

@@ -19,9 +19,9 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 
 import java.util.logging.Logger;
 
+import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.graph.commands.TransactionCommit;
-import com.entanglementgraph.graph.RevisionItem;
 
 /**
  *
@@ -40,10 +40,10 @@ public class TransactionCommitPlayer
   }
 
   @Override
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException
   {
-    TransactionCommit txn = (TransactionCommit) item.getOp();
+    TransactionCommit txn = (TransactionCommit) op;
     
     logger.info("Acknowledging COMMIT of transaction: "+txn.getUid() + "Nothing to do here yet.");
   }

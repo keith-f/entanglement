@@ -67,13 +67,12 @@ public class TxnUtils
     }
     try {
       txnId = TxnUtils.beginNewTransaction(conn);
-      conn.getRevisionLog().submitRevisions(conn.getGraphName(), conn.getGraphBranch(), txnId, 1, ops);
+      conn.getRevisionLog().submitRevisions(conn.getGraphName(), txnId, 1, ops);
       TxnUtils.commitTransaction(conn, txnId);
     } catch (Exception e) {
       TxnUtils.silentRollbackTransaction(conn, txnId);
       throw new RevisionLogException("Failed to perform graph operations on "
-          +conn.getGraphBranch()+"/"+conn.getGraphBranch()
-          +". Exception attached.", e);
+          +conn.getGraphName()+". Exception attached.", e);
     }
   }
 
@@ -114,16 +113,16 @@ public class TxnUtils
    */
   public static void submitTxnPart(GraphConnection conn, String txnId, int partId, List<GraphOperation> ops) 
       throws RevisionLogException {
-    conn.getRevisionLog().submitRevisions(conn.getGraphName(), conn.getGraphBranch(), txnId, partId, ops);
+    conn.getRevisionLog().submitRevisions(conn.getGraphName(), txnId, partId, ops);
   }
 
   public static String beginNewTransaction(GraphConnection conn)
       throws RevisionLogException
   {
-    return beginNewTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch());
+    return beginNewTransaction(conn.getRevisionLog(), conn.getGraphName());
   }
 
-  public static String beginNewTransaction(RevisionLog revLog, String graphId, String branchId)
+  public static String beginNewTransaction(RevisionLog revLog, String graphId)
       throws RevisionLogException
   {
     long start = System.currentTimeMillis();
@@ -131,7 +130,7 @@ public class TxnUtils
       
       String txnId = UidGenerator.generateUid();
       int txnSubmitId = -1;
-      revLog.submitRevision(graphId, branchId, txnId, txnSubmitId, new TransactionBegin(txnId));
+      revLog.submitRevision(graphId, txnId, txnSubmitId, new TransactionBegin(txnId));
       return txnId;
     }
     catch(Exception e) {
@@ -145,16 +144,16 @@ public class TxnUtils
   public static void commitTransaction(GraphConnection conn, String txnId)
       throws RevisionLogException
   {
-    commitTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
+    commitTransaction(conn.getRevisionLog(), conn.getGraphName(), txnId);
   }
   
-  public static void commitTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
+  public static void commitTransaction(RevisionLog revLog, String graphId, String txnId)
       throws RevisionLogException
   {
     long start = System.currentTimeMillis();
     try {
       int txnSubmitId = Integer.MAX_VALUE;
-      revLog.submitRevision(graphId, branchId, txnId, txnSubmitId, new TransactionCommit(txnId));
+      revLog.submitRevision(graphId, txnId, txnSubmitId, new TransactionCommit(txnId));
     }
     catch(Exception e) {
       throw new RevisionLogException("Failed to commit transaction: "+txnId, e);
@@ -167,10 +166,10 @@ public class TxnUtils
   public static void rollbackTransaction(GraphConnection conn, String txnId)
       throws RevisionLogException
   {
-    rollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
+    rollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), txnId);
   }
   
-  public static void rollbackTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
+  public static void rollbackTransaction(RevisionLog revLog, String graphId, String txnId)
       throws RevisionLogException
   {
     if (txnId == null) {
@@ -180,7 +179,7 @@ public class TxnUtils
     long start = System.currentTimeMillis();
     try {
       int txnSubmitId = Integer.MAX_VALUE;
-      revLog.submitRevision(graphId, branchId, txnId, txnSubmitId, new TransactionRollback(txnId));
+      revLog.submitRevision(graphId, txnId, txnSubmitId, new TransactionRollback(txnId));
     }
     catch(Exception e) {
       throw new RevisionLogException("Failed to rollback transaction: "+txnId, e);
@@ -207,14 +206,13 @@ public class TxnUtils
    * 
    * @param revLog
    * @param graphId
-   * @param branchId
    * @param txnId
    * @throws RevisionLogException 
    */
-  public static void silentRollbackTransaction(RevisionLog revLog, String graphId, String branchId, String txnId)
+  public static void silentRollbackTransaction(RevisionLog revLog, String graphId, String txnId)
   {
     try {
-      rollbackTransaction(revLog, graphId, branchId, txnId);
+      rollbackTransaction(revLog, graphId, txnId);
     }
     catch(Exception e) {
       logger.info("An exception occurred while attempting to roll back transaction: "+txnId
@@ -225,7 +223,7 @@ public class TxnUtils
 
   public static void silentRollbackTransaction(GraphConnection conn, String txnId)
   {
-    silentRollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), conn.getGraphBranch(), txnId);
+    silentRollbackTransaction(conn.getRevisionLog(), conn.getGraphName(), txnId);
   }
   
   private static void printDuration(long startMs, long endMs)

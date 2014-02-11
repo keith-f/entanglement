@@ -87,7 +87,7 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
       walker.execute();
       logger.infoln("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
           sourceGraph.getGraphName(), walker.getClass().getName(),
-          destinationGraph.getPoolName(), destinationGraph.getDatabaseName(), destinationGraph.getGraphName());
+          destinationGraph.getClusterName(), destinationGraph.getDatabaseName(), destinationGraph.getGraphName());
 
       //Remove temporary graph cursor
       runtime.getCursorRegistry().removeCursor(tmpCursor);

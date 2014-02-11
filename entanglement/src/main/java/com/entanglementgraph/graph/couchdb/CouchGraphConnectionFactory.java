@@ -18,42 +18,33 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
-import com.entanglementgraph.graph.mongodb.GraphDAOFactory;
-import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
-import com.entanglementgraph.graph.mongodb.RevisionLogDirectToMongoDbImpl;
-import com.entanglementgraph.graph.mongodb.experimental.GraphOpPostCommitPlayer;
-import com.entanglementgraph.graph.mongodb.player.GraphCheckoutNamingScheme;
-import com.entanglementgraph.graph.mongodb.player.LogPlayer;
-import com.entanglementgraph.graph.mongodb.player.LogPlayerMongoDbImpl;
 import com.entanglementgraph.util.GraphConnection;
-import com.mongodb.*;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scalesinformatics.util.UidGenerator;
+import org.ektorp.CouchDbConnector;
+import org.ektorp.CouchDbInstance;
+import org.ektorp.http.HttpClient;
+import org.ektorp.http.StdHttpClient;
+import org.ektorp.impl.StdCouchDbInstance;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * This factory class creates <code>GraphConnection</code> objects for accessing your graphs. There are two
- * aspects to consider:
+ * This factory class creates <code>GraphConnection</code> objects for accessing your graphs stored in CouchDB.
+ * There are two aspects to consider:
  * <ul>
  *   <li>The <code>GraphConnection</code> contains a reference to a database connection, plus the necessary utilities
  *   that are associated with object stored in that database (such as ClassLoaders for object marshalling, etc). Each
  *   <code>GraphConnection</code> should be used by a single thread.</li>
- *   <li>MongoDB clusters - these are the physical machines that store some or all of a graph. By default, a single
+ *   <li>CouchDB clusters - these are the physical machines that store some or all of a graph. By default, a single
  *   cluster named 'localhost' is defined for convenience. If you wish to create a <code>GraphConnection</code> for
  *   a graph stored on a different server/cluster, you'll need to register a new cluster first using the static
- *   methods below. Registering a cluster will provide you with a <code>MongoClient</code>. These are thread-safe and
- *   represent a pool of connections. There should be one <code>MongoClient</code> instance per database per JVM.</li>
+ *   methods below.</li>
  * </ul>
- *
- * See the following URLs for more information on creating MongoDB connections:
- * http://docs.mongodb.org/ecosystem/tutorial/getting-started-with-java-driver/
- * and
- * http://api.mongodb.org/java/current/com/mongodb/MongoClient.html
- * and
- * http://docs.mongodb.org/ecosystem/drivers/java-concurrency/
  *
  * @author Keith Flanagan
  */
@@ -61,104 +52,86 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   private static final Logger logger = Logger.getLogger(CouchGraphConnectionFactory.class.getName());
   public static final String DEFAULT_TMP_DB_NAME = "temp";
 
-  private static final Map<String, MongoClient> mongoPools = new HashMap<>();
+  /**
+   * A set of database cluster names --> access URLs (eg, http://localhost:5984).
+   * TODO currently, only a single URL is supported. We may want to support BigCouch with multiple URLs.
+   * http://bigcouch.cloudant.com/use
+   * According to this, we can use any URL of any machine in the cluster.
+   */
+  private static final Map<String, String> couchClusters = new HashMap<>();
 
-  public static MongoClient registerNamedPool(String poolName, ServerAddress... replicaServers)
+  public static void registerNamedCluster(String clusterName, String couchUrl)
       throws GraphConnectionFactoryException {
-    synchronized (mongoPools) {
-      if (mongoPools.containsKey(poolName)) {
-        logger.info(String.format("A MongoDB cluster with the name: %s already exists. Closing existing pool, " +
-            "and reconfiguring with new server set: %s", poolName, Arrays.asList(replicaServers)));
-        MongoClient pool = mongoPools.get(poolName);
-        pool.close();
+    synchronized (couchClusters) {
+      if (couchClusters.containsKey(clusterName)) {
+        logger.info(String.format("A CouchDB cluster with the name: %s already exists. " +
+            "Reconfiguring with new server set: %s", clusterName, Arrays.asList(couchUrl)));
       }
 
-      try {
-        MongoClient pool = new MongoClient(Arrays.asList(replicaServers));
-        pool.setWriteConcern(WriteConcern.SAFE);
-        mongoPools.put(poolName, pool);
-        return pool;
-      }
-      catch(Exception e) {
-        throw new GraphConnectionFactoryException("Failed to create MongoDB connection", e);
-      }
+      couchClusters.put(clusterName, couchUrl);
     }
   }
 
-  public static MongoClient getNamedPool(String poolName) {
-    synchronized (mongoPools) {
-      return mongoPools.get(poolName);
+  public static String getNamedClusterUrl(String clusterName) {
+    synchronized (couchClusters) {
+      return couchClusters.get(clusterName);
     }
   }
 
-  public static boolean containsNamedPool(String poolName) {
-    synchronized (mongoPools) {
-      return mongoPools.containsKey(poolName);
+  public static boolean containsNamedCluster(String clusterName) {
+    synchronized (couchClusters) {
+      return couchClusters.containsKey(clusterName);
     }
   }
 
-  private final ClassLoader classLoader;
-  private final MongoClient connectionPool;
-  private final String poolName;
+  private final String clusterName;
+  private final String clusterUrl;
   private final String databaseName;
 
-  private DbObjectMarshaller marshaller;
-
   public CouchGraphConnectionFactory(String clusterName, String databaseName) {
-    this(CouchGraphConnectionFactory.class.getClassLoader(), clusterName, databaseName);
-  }
-
-  public CouchGraphConnectionFactory(ClassLoader classLoader, String poolName, String databaseName) {
-    this.classLoader = classLoader;
-    this.marshaller = ObjectMarshallerFactory.create(classLoader);
-    this.connectionPool = getNamedPool(poolName);
-    this.poolName = poolName;
+    this.clusterName = clusterName;
+    this.clusterUrl = getNamedClusterUrl(clusterName);
     this.databaseName = databaseName;
   }
 
   public GraphConnection connect(String graphName) throws GraphConnectionFactoryException {
+    if (clusterUrl == null) {
+      throw new GraphConnectionFactoryException("Unknown CouchDB cluster name: "+clusterName);
+    }
     try {
-      if (connectionPool == null) {
-        throw new GraphConnectionFactoryException("Connection pool: "+poolName+" could not be found.");
-      }
-      logger.info("Connecting to: " + connectionPool.getServerAddressList() + ", graph: " + graphName);
+      logger.info("Connecting to: " + clusterUrl+ ", graph: " + graphName);
 
-      GraphConnection connection = new GraphConnection();
-      connection.setPoolName(poolName);
+      System.setProperty("org.ektorp.support.AutoUpdateViewOnChange", "true");
+
+
+      HttpClient httpClient = new StdHttpClient.Builder()
+          .url("http://localhost:5984")
+//        .username("admin")
+//        .password("secret")
+          .build();
+
+      ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory();
+      CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
+// if the second parameter is true, the database will be created if it doesn't exists
+      CouchDbConnector db = dbInstance.createConnector("my_first_database", true);
+      ObjectMapper om = omFactory.getLastCreatedObjectMapper();
+
+      CouchGraphConnection connection = new CouchGraphConnection();
+
+      connection.setClusterName(clusterName);
       connection.setDatabaseName(databaseName);
-
-      // Underlying connection to MongoDB
-//      MongoDbFactory dbFactory = new MongoDbFactory(hostname, database);
-//      Mongo mongo = dbFactory.createMongoConnection();
-//      DB db = mongo.getDB(database);
-      DB db = connectionPool.getDB(databaseName);
-
-      connection.setClassLoader(classLoader);
-      connection.setPool(connectionPool);
-      connection.setDb(db);
-      connection.setGraphBranch(graphBranch);
       connection.setGraphName(graphName);
-      connection.setMarshaller(marshaller);
+      connection.setDb(db);
+      connection.setOm(om);
 
-      GraphCheckoutNamingScheme collectionNamer = new GraphCheckoutNamingScheme(graphName, graphBranch);
-      DBCollection revCol = db.getCollection(collectionNamer.getRevCollectionName());
-      DBCollection nodeCol = db.getCollection(collectionNamer.getNodeCollectionName());
-      DBCollection edgeCol = db.getCollection(collectionNamer.getEdgeCollectionName());
+      RevisionLog revLog = new RevisionLogCouchDBImpl(db);
+      NodeDAO nodeDao = new NodeDAOCouchDbImpl(db);
+      EdgeDAO edgeDao = new EdgeDAOCouchDbImpl(db, om);
 
-      RevisionLog revLog = new RevisionLogDirectToMongoDbImpl(connection, revCol);
       connection.setRevisionLog(revLog);
-      NodeDAO nodeDao = GraphDAOFactory.createDefaultNodeDAO(classLoader, connectionPool, db, nodeCol);
-      EdgeDAO edgeDao = GraphDAOFactory.createDefaultEdgeDAO(classLoader, connectionPool, db, edgeCol);
-
-      connection.setEdgeDao(edgeDao);
       connection.setNodeDao(nodeDao);
+      connection.setEdgeDao(edgeDao);
 
-      // Connection object is fully populated at this point.
-
-      //Wire up a player by default (source revision log and destination collection are for the same graph in this case)
-      LogPlayer logPlayer = new LogPlayerMongoDbImpl(connection, connection);
-      GraphOpPostCommitPlayer opPlayer = new GraphOpPostCommitPlayer(logPlayer);
-      revLog.addListener(opPlayer);
 
       return connection;
     } catch (Exception e) {

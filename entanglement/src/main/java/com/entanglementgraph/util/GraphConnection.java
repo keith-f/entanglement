@@ -30,19 +30,16 @@ import com.entanglementgraph.graph.RevisionLog;
  * Time: 13:11
  * To change this template use File | Settings | File Templates.
  */
-public class  GraphConnection {
+abstract public class GraphConnection {
 
+  private String clusterName;
   private String databaseName;
 
   private String graphName;
-  private String graphBranch;
 
-  private ClassLoader classLoader;
   private RevisionLog revisionLog;
   private NodeDAO<? extends Content> nodeDao;
   private EdgeDAO<? extends Content, ? extends Content, ? extends Content> edgeDao;
-
-  private DbObjectMarshaller marshaller;
 
   public GraphConnection() {
   }
@@ -53,22 +50,6 @@ public class  GraphConnection {
 
   public void setGraphName(String graphName) {
     this.graphName = graphName;
-  }
-
-  public String getGraphBranch() {
-    return graphBranch;
-  }
-
-  public void setGraphBranch(String graphBranch) {
-    this.graphBranch = graphBranch;
-  }
-
-  public ClassLoader getClassLoader() {
-    return classLoader;
-  }
-
-  public void setClassLoader(ClassLoader classLoader) {
-    this.classLoader = classLoader;
   }
 
   public RevisionLog getRevisionLog() {
@@ -95,19 +76,19 @@ public class  GraphConnection {
     this.edgeDao = edgeDao;
   }
 
-  public DbObjectMarshaller getMarshaller() {
-    return marshaller;
-  }
-
-  public void setMarshaller(DbObjectMarshaller marshaller) {
-    this.marshaller = marshaller;
-  }
-
   public String getDatabaseName() {
     return databaseName;
   }
 
   public void setDatabaseName(String databaseName) {
     this.databaseName = databaseName;
+  }
+
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
   }
 }

@@ -33,7 +33,7 @@ import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 abstract public class AbstractLogItemPlayer
     implements LogItemPlayer
 {
-  protected GraphConnection graphConnection;
+  protected MongoGraphConnection graphConnection;
   protected NodeDAONodePerDocImpl nodeDao;
   protected EdgeDAOSeparateDocImpl edgeDao;
   protected DbObjectMarshaller marshaller;

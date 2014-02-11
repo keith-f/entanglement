@@ -19,6 +19,7 @@
 package com.entanglementgraph.graph.mongodb.player.spi;
 
 
+import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
 
@@ -28,7 +29,6 @@ import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 import com.entanglementgraph.graph.mongodb.player.LogPlayer;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerMongoDbImpl;
 import com.entanglementgraph.graph.commands.BranchImport;
-import com.entanglementgraph.graph.RevisionItem;
 
 /**
  *
@@ -49,16 +49,14 @@ public class BranchImportPlayer
   }
 
   @Override
-  public void playItem(RevisionItem item)
+  public void playItem(GraphOperation op)
       throws LogPlayerException
   {
     String sourceGraphName = null;
-    String sourceGraphBranch = null;
     try {
-      BranchImport command = (BranchImport) item.getOp();
+      BranchImport command = (BranchImport) op;
       
       sourceGraphName = command.getFromGraphUid();
-      sourceGraphBranch = command.getFromBranchUid();
       
       /*
        * The graphConnection object in this player is the TARGET graph connection. To replay updates from the SOURCE
@@ -69,16 +67,16 @@ public class BranchImportPlayer
        */
       MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(
           graphConnection.getClassLoader(),
-          graphConnection.getPoolName(), graphConnection.getDb().getName());
+          graphConnection.getClusterName(), graphConnection.getDatabaseName());
 
-      GraphConnection sourceGraphConn = connFact.connect(sourceGraphName, sourceGraphBranch);
+      GraphConnection sourceGraphConn = connFact.connect(sourceGraphName);
 
       LogPlayer sourceLogPlayer = new LogPlayerMongoDbImpl(sourceGraphConn, graphConnection);
       sourceLogPlayer.replayAllRevisions();
        
     } catch (Exception e) {
       throw new LogPlayerException("Failed to import all revision history from graph/branch: "
-          + sourceGraphName + "/" + sourceGraphBranch + ". Commands was:\n"+item.getOp(), e);
+          + sourceGraphName + ". Commands was:\n"+op.toString(), e);
     }
   }
 
