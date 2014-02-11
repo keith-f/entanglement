@@ -77,7 +77,9 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
       container.setTimestampAsText(new Date(now).toString());
 
 
-      if (op instanceof TransactionCommit) {
+      if (op instanceof TransactionBegin) {
+        logger.info("Start of new transaction. Nothing else to do at this point.");
+      } else if (op instanceof TransactionCommit) {
         commit((TransactionCommit) op);
       } else if (op instanceof TransactionRollback) {
         rollback((TransactionRollback) op);
