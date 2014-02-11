@@ -240,8 +240,8 @@ public class DepthFirstGraphIterator {
       BasicDBObject edgeDoc = nen.getRawEdge();
       BasicDBObject remoteNodeDoc = outgoingEdges ? nen.getRawDestinationNode() : nen.getRawSourceNode();
 
-      Edge edge = sourceGraph.getMarshaller().deserialize(edgeDoc, Edge.class);
       //TODO reimplement this
+//      Edge edge = sourceGraph.getMarshaller().deserialize(edgeDoc, Edge.class);
 //      EntityKeys<Node> localNodeId = outgoingEdges ? edge.getFrom() : edge.getTo();
 //      EntityKeys<Node> remoteNodeId = outgoingEdges ? edge.getTo() : edge.getFrom();
       EntityKeys remoteNodeId = null;
@@ -254,28 +254,28 @@ public class DepthFirstGraphIterator {
 //        continue;
 //      }
 //      cacheEdgeIds(edge.getKeys());
-
-      EntityRule.NextEdgeIteration nextIterationDecision =
-          executeRules(cursorName, currentDepth, currentPosition, edge.getKeys(), outgoingEdges, remoteNodeId,
-              localNodeDoc, edgeDoc, remoteNodeDoc);
-
-      switch (nextIterationDecision) {
-        case CONTINUE_AS_NORMAL:
-          // Step the cursor from 'here' to the next level down
-          //TODO reimplement this
+//
+//      EntityRule.NextEdgeIteration nextIterationDecision =
+//          executeRules(cursorName, currentDepth, currentPosition, edge.getKeys(), outgoingEdges, remoteNodeId,
+//              localNodeDoc, edgeDoc, remoteNodeDoc);
+//
+//      switch (nextIterationDecision) {
+//        case CONTINUE_AS_NORMAL:
+//          // Step the cursor from 'here' to the next level down
+//          //TODO reimplement this
 //          GraphCursor here = getCurrentCursorPosition(cursorName);
 //          GraphCursor child = here.stepToNode(cursorContext, remoteNodeId); // Child ref not currently needed
 //          addChildNodes(cursorName, currentDepth+1);
 //          // After we've done with this child, jump back to its parent (i.e., 'here')
 //          getCurrentCursorPosition(cursorName).jump(cursorContext, here.getPosition());
-          break;
-        case TERMINATE_BRANCH:
-          // Simply do nothing here. We'll skip over the children of the remote node
-          break;
-        case TERMINATE:
-          killSwitchActive = true;
-          break;
-      }
+//          break;
+//        case TERMINATE_BRANCH:
+//          // Simply do nothing here. We'll skip over the children of the remote node
+//          break;
+//        case TERMINATE:
+//          killSwitchActive = true;
+//          break;
+//      }
     }
   }
 

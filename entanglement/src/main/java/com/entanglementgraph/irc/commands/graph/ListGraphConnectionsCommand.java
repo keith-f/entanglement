@@ -22,7 +22,6 @@ import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import org.jibble.pircbot.Colors;
 
 import java.util.List;
 import java.util.Map;

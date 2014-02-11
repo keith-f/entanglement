@@ -18,6 +18,7 @@
 package com.entanglementgraph.irc.commands.cursor;
 
 import com.entanglementgraph.cursor.GraphCursor;
+import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
@@ -83,7 +84,7 @@ public class IrcEntanglementFormat extends IrcFormat {
     return this;
   }
 
-  public IrcEntanglementFormat formatNodeKeysetShort(EntityKeys<? extends Node> node, int maxUids, int maxNames) {
+  public IrcEntanglementFormat formatNodeKeysetShort(EntityKeys<? extends Content> node, int maxUids, int maxNames) {
 
     openSquareBracket().customFormat(node.getType(), COLOR_NODE_ANNOUNCE).append("; ");
 
@@ -105,7 +106,7 @@ public class IrcEntanglementFormat extends IrcFormat {
    * @param edge
    * @return
    */
-  public IrcEntanglementFormat formatEdgeKeyset(EntityKeys<? extends Edge> edge) {
+  public IrcEntanglementFormat formatEdgeKeyset(EntityKeys<? extends Content> edge) {
     openSquareBracket().customFormat("Edge", COLOR_EDGE_ANNOUNCE).append(" ");
     if (edge.getType() != null) {
       pushFormat(COLOR_EDGE_KEY).append("Type: ").popFormat();

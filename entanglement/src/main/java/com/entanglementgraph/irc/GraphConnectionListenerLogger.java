@@ -20,11 +20,6 @@ import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.scalesinformatics.uibot.BotLogger;
-import com.scalesinformatics.uibot.BotLoggerIrc;
-import com.scalesinformatics.uibot.BotLoggerStdOut;
-import com.scalesinformatics.uibot.GenericIrcBot;
-
-import java.util.logging.Logger;
 
 /**
  * A simple logger that prints out when an Entanglement bot acknowledges a new GraphConnectionDetails object being

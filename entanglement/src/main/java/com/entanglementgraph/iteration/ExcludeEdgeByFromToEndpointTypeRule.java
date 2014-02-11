@@ -46,13 +46,15 @@ public class ExcludeEdgeByFromToEndpointTypeRule extends AbstractRule {
                              EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
                              EntityKeys<? extends Node> remoteNodeId,
                              BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
-    try {
-      Edge edge = sourceGraph.getMarshaller().deserialize(rawEdge, Edge.class);
-      return edge.getFrom().getType().equals(fromNodeTargetType)
-          && edge.getTo().getType().equals(toNodeTargetType);
-    } catch (Exception e) {
-      throw new RuleException("Failed to process rule", e);
-    }
+    //TODO reimplement
+    return false;
+//    try {
+//      Edge edge = sourceGraph.getMarshaller().deserialize(rawEdge, Edge.class);
+//      return edge.getFrom().getType().equals(fromNodeTargetType)
+//          && edge.getTo().getType().equals(toNodeTargetType);
+//    } catch (Exception e) {
+//      throw new RuleException("Failed to process rule", e);
+//    }
   }
 
   @Override

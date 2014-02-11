@@ -27,42 +27,47 @@ import java.io.Serializable;
  */
 public class GraphConnectionDetails implements Serializable {
 
-  private String poolName;
+  public static enum DbType {
+    MONGO_DB,
+    COUCH_DB;
+  }
+
+  private String clusterName;
   private String database;
   private String username;
   private String password;
 
   private String graphName;
-  private String graphBranch;
+
+  private DbType dbType;
 
   public GraphConnectionDetails() {
   }
 
-  public GraphConnectionDetails(String poolName, String database, String graphName, String graphBranch) {
-    this.poolName = poolName;
+  public GraphConnectionDetails(String clusterName, String database, String graphName) {
+    this.clusterName = clusterName;
     this.database = database;
     this.graphName = graphName;
-    this.graphBranch = graphBranch;
   }
 
   @Override
   public String toString() {
     return "GraphConnectionDetails{" +
-        "poolName='" + poolName + '\'' +
+        "dbType='" + clusterName + '\'' +
+        "clusterName='" + dbType + '\'' +
         ", database='" + database + '\'' +
         ", username='" + username + '\'' +
         ", password='" + password + '\'' +
         ", graphName='" + graphName + '\'' +
-        ", graphBranch='" + graphBranch + '\'' +
         '}';
   }
 
-  public String getPoolName() {
-    return poolName;
+  public String getClusterName() {
+    return clusterName;
   }
 
-  public void setPoolName(String poolName) {
-    this.poolName = poolName;
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
   }
 
   public String getDatabase() {
@@ -97,11 +102,11 @@ public class GraphConnectionDetails implements Serializable {
     this.graphName = graphName;
   }
 
-  public String getGraphBranch() {
-    return graphBranch;
+  public DbType getDbType() {
+    return dbType;
   }
 
-  public void setGraphBranch(String graphBranch) {
-    this.graphBranch = graphBranch;
+  public void setDbType(DbType dbType) {
+    this.dbType = dbType;
   }
 }

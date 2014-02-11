@@ -192,31 +192,39 @@ public class CollectAllNodesAndEdgesRule extends AbstractRule {
   }
 
   public <T> T getNodeDeserialisedAs(EntityKeys<? extends Node> key, Class<T> type) throws DbObjectMarshallerException {
-    BasicDBObject doc = keyToNode.get(key);
-    return sourceGraph.getMarshaller().deserialize(doc, type);
+    // FIXME reimplement this
+    return null;
+//    BasicDBObject doc = keyToNode.get(key);
+//    return sourceGraph.getMarshaller().deserialize(doc, type);
   }
 
   public <T> T getEdgeDeserialisedAs(EntityKeys<? extends Edge> key, Class<T> type) throws DbObjectMarshallerException {
-    BasicDBObject doc = keyToEdge.get(key);
-    return sourceGraph.getMarshaller().deserialize(doc, type);
+    // FIXME reimplement this
+    return null;
+//    BasicDBObject doc = keyToEdge.get(key);
+//    return sourceGraph.getMarshaller().deserialize(doc, type);
   }
 
   public <T> Set<T> deserialiseNodesByType(String typeName, Class<T> type) throws DbObjectMarshallerException {
-    Set<T> nodes = new HashSet<>();
-    for (EntityKeys<? extends Node> key : nodesByType.get(typeName)) {
-      BasicDBObject doc = keyToNode.get(key);
-      nodes.add(sourceGraph.getMarshaller().deserialize(doc, type));
-    }
-    return nodes;
+    // FIXME reimplement this
+    return null;
+//    Set<T> nodes = new HashSet<>();
+//    for (EntityKeys<? extends Node> key : nodesByType.get(typeName)) {
+//      BasicDBObject doc = keyToNode.get(key);
+//      nodes.add(sourceGraph.getMarshaller().deserialize(doc, type));
+//    }
+//    return nodes;
   }
 
   public <T> Set<T> deserialiseEdgesByType(String typeName, Class<T> type) throws DbObjectMarshallerException {
-    Set<T> edges = new HashSet<>();
-    for (EntityKeys<? extends Edge> key : edgesByType.get(typeName)) {
-      BasicDBObject doc = keyToEdge.get(key);
-      edges.add(sourceGraph.getMarshaller().deserialize(doc, type));
-    }
-    return edges;
+    // FIXME reimplement this
+    return null;
+//    Set<T> edges = new HashSet<>();
+//    for (EntityKeys<? extends Edge> key : edgesByType.get(typeName)) {
+//      BasicDBObject doc = keyToEdge.get(key);
+//      edges.add(sourceGraph.getMarshaller().deserialize(doc, type));
+//    }
+//    return edges;
   }
 
   public Set<EntityKeys<? extends Edge>> findEdgesByTypeFromNode(String edgeTypeName, EntityKeys<? extends Node> node)

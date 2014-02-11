@@ -80,7 +80,9 @@ public class CursorGoto extends AbstractEntanglementCursorCommand {
 
     try {
       GraphCursor previous = cursor;
-      GraphCursor current = cursor.jump(cursorContext, newLocation);
+      // FIXME reimplement the following line
+      GraphCursor current = null;
+//      GraphCursor current = cursor.jump(cursorContext, newLocation);
 
       String outputText = String.format("Cursor %s moved %s %s %s %s. Movement type %s",
           entFormat.formatCursorName(cursor.getName()).toString(),

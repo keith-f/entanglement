@@ -19,7 +19,6 @@ package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
-import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -32,10 +31,9 @@ import java.util.List;
  */
 public class ConnectGraphCommand extends AbstractEntanglementCommand {
   private String connectionName;
-  private String poolName;
+  private String clusterName;
   private String database;
   private String graph;
-  private String branch;
 
   @Override
   public String getDescription() {
@@ -46,12 +44,10 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
-    params.add(new RequiredParam("pool", String.class,
-        "The name of a MongoDB connection pool name (as created by the 'connect MongoDB cluster' command. "));
+    params.add(new RequiredParam("cluster", String.class,
+        "The name of a MongoDB connection pool/cluster name (as created by the 'connect MongoDB cluster' command. "));
     params.add(new RequiredParam("database", String.class, "A database located within a MongoDB pool."));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
-    params.add(new OptionalParam("branch", String.class, "trunk",
-        "Name of the branch to use (defaults to 'trunk', if not specified)"));
     return params;
   }
 
@@ -59,18 +55,17 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
   protected void preProcessLine() throws UserException, BotCommandException {
     super.preProcessLine();
     connectionName = parsedArgs.get("conn").getStringValue();
-    poolName = parsedArgs.get("pool").getStringValue();
+    clusterName = parsedArgs.get("cluster").getStringValue();
     database = parsedArgs.get("database").getStringValue();
     graph = parsedArgs.get("graph").getStringValue();
-    branch = parsedArgs.get("branch").getStringValue();
   }
 
   @Override
   protected void processLine() throws UserException, BotCommandException {
     try {
-      GraphConnectionDetails details = new GraphConnectionDetails(poolName, database, graph, branch);
+      GraphConnectionDetails details = new GraphConnectionDetails(clusterName, database, graph);
       entRuntime.registerGraphConnectionDetails(connectionName, details);
-      logger.println("Graph %s on %s is now available with connection name: %s", graph, poolName, connectionName);
+      logger.println("Graph %s on %s is now available with connection name: %s", graph, clusterName, connectionName);
     } catch (Exception e) {
       throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
     }

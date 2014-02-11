@@ -56,7 +56,7 @@ abstract public class AbstractEntanglementGraphCommand extends AbstractEntanglem
     if (parsedArgs.containsKey("temp-cluster")) {
       tempClusterName = parsedArgs.get("temp-cluster").getStringValue();
     } else {
-      tempClusterName = graphConn.getPoolName();
+      tempClusterName = graphConn.getClusterName();
     }
   }
 

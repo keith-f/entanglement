@@ -78,11 +78,6 @@ public class CursorDescribe extends AbstractEntanglementCursorCommand {
 
   @Override
   protected void processLine() throws UserException, BotCommandException {
-
-
-//    EntanglementRuntime runtime = state.getUserObject();
-    DbObjectMarshaller m = graphConn.getMarshaller();
-
     boolean isAtDeadEnd = cursor.isAtDeadEnd();
     int historyIdx = cursor.getCursorHistoryIdx();
 
@@ -91,7 +86,8 @@ public class CursorDescribe extends AbstractEntanglementCursorCommand {
       DBObject currentNodeObj = null;
       if (!cursor.isAtDeadEnd()) {
         currentNodeObj = cursor.resolve(graphConn);
-        currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
+        // FIXME reimplement the following line
+        //currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
       }
 
       logger.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
@@ -113,7 +109,9 @@ public class CursorDescribe extends AbstractEntanglementCursorCommand {
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
 //            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
-            Edge edge = m.deserialize(edgeObj, Edge.class);
+            // FIXME reimplement the following line
+            Edge edge = null;
+//            Edge edge = m.deserialize(edgeObj, Edge.class);
             logger.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
                 edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames).toString());
           }
@@ -130,7 +128,9 @@ public class CursorDescribe extends AbstractEntanglementCursorCommand {
         if (verbose) {
           for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
 //            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
-            Edge edge = m.deserialize(edgeObj, Edge.class);
+            // FIXME reimplement the following line
+            Edge edge = null;
+//            Edge edge = m.deserialize(edgeObj, Edge.class);
             logger.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
                 edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), maxUids, maxNames).toString());
           }

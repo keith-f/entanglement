@@ -21,6 +21,7 @@ import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -34,6 +35,7 @@ import org.restlet.data.MediaType;
  */
 public class NodeTypeNameRestlet extends Restlet {
 
+  private final ObjectMapper mapper = new ObjectMapper();
   private final EntanglementRuntime runtime;
   private final GraphConnection conn;
 
@@ -52,7 +54,7 @@ public class NodeTypeNameRestlet extends Restlet {
       queryKeys.setType(type);
       queryKeys.addName(name);
       Node node = conn.getNodeDao().getByKey(queryKeys);
-      String message = conn.getMarshaller().serializeToString(node);
+      String message = mapper.writeValueAsString(node);
 
       response.setEntity(message, MediaType.TEXT_PLAIN);
     } catch (Exception e) {

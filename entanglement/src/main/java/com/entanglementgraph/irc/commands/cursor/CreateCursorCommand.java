@@ -78,12 +78,19 @@ public class CreateCursorCommand extends AbstractEntanglementCommand {
   @Override
   protected void processLine() throws UserException, BotCommandException {
 
-    EntityKeys<? extends Node> nodeLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
+    Node nodeLocation = new Node(); // new EntityKeys<>(nodeType, nodeUid, nodeName);
+    nodeLocation.getKeys().setType(nodeType);
+    if (nodeUid != null) {
+      nodeLocation.getKeys().addUid(nodeUid);
+    }
+    if (nodeName != null) {
+      nodeLocation.getKeys().addNames(nodeName);
+    }
 
 
     logger.infoln("Created new graph cursor: %s at location: %s",
         entFormat.formatCursorName(cursorName).toString(),
-        entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames));
+        entFormat.formatNodeKeysetShort(nodeLocation.getKeys(), maxUids, maxNames));
 
     try {
       GraphCursor newCursor = new GraphCursor(cursorName, nodeLocation);
@@ -95,7 +102,7 @@ public class CreateCursorCommand extends AbstractEntanglementCommand {
 
       String outputText = String.format("New cursor %s created at node: %s",
           entFormat.formatCursorName(cursorName).toString(),
-          entFormat.formatNodeKeysetShort(nodeLocation, maxUids, maxNames)).toString();
+          entFormat.formatNodeKeysetShort(nodeLocation.getKeys(), maxUids, maxNames)).toString();
 
       logger.println(outputText);
     } catch (Exception e) {

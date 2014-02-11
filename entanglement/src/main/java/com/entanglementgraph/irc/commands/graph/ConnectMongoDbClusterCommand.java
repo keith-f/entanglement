@@ -79,7 +79,7 @@ public class ConnectMongoDbClusterCommand extends AbstractEntanglementCommand {
         servers.add(server);
       }
 
-      MongoClient pool = MongoGraphConnectionFactory.registerNamedPool(
+      MongoClient pool = MongoGraphConnectionFactory.registerNamedCluster(
           poolName, servers.toArray(new ServerAddress[servers.size()]));
 
       logger.println("Connection pool '%s' is now available, containing %d servers and %d databases.",
