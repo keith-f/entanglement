@@ -138,10 +138,10 @@ public class RevisionLogDirectToMongoDbImpl
         commit((TransactionCommit) op);
       } else if (op instanceof TransactionRollback) {
         rollback((TransactionRollback) op);
-      } else  if (op instanceof NodeModification) {
-        container.addOperation((NodeModification) op);
-      } else if (op instanceof EdgeModification) {
-        container.addOperation((EdgeModification) op);
+      } else  if (op instanceof NodeUpdate) {
+        container.addOperation((NodeUpdate) op);
+      } else if (op instanceof EdgeUpdate) {
+        container.addOperation((EdgeUpdate) op);
       } else {
         throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
       }
@@ -182,10 +182,10 @@ public class RevisionLogDirectToMongoDbImpl
               + "submitted on their own instead of as a collection.");
         }
 
-        if (op instanceof NodeModification) {
-          container.addOperation((NodeModification) op);
-        } else if (op instanceof EdgeModification) {
-          container.addOperation((EdgeModification) op);
+        if (op instanceof NodeUpdate) {
+          container.addOperation((NodeUpdate) op);
+        } else if (op instanceof EdgeUpdate) {
+          container.addOperation((EdgeUpdate) op);
         } else {
           throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
         }

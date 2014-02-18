@@ -33,10 +33,10 @@ import java.util.*;
  * @author Keith Flanagan
  */
 @Views({
-    @View(name = "nameToNames", map = "classpath:nodeNameToNamesMap.js"),
-    @View(name = "uidToUids", map = "classpath:nodeUidToUidsMap.js"),
-    @View(name = "all_edges_by_name", map = "classpath:nodesByName.js"),
-    @View(name = "all_edges_by_uid", map = "classpath:nodesByUid.js"),
+    @View(name = "nameToNames", map = "classpath:edgeNameToNamesMap.js"),
+    @View(name = "uidToUids", map = "classpath:edgeUidToUidsMap.js"),
+    @View(name = "all_edges_by_name", map = "classpath:edgesByName.js"),
+    @View(name = "all_edges_by_uid", map = "classpath:edgesByUid.js"),
     @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js", reduce = "classpath:nodesAndEdgesReduce.js")
 })
 public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends Content>
@@ -355,5 +355,8 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
       }
     }
   }
+
+
+
 
 }

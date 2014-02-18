@@ -19,10 +19,10 @@
 package com.entanglementgraph;
 
 import com.entanglementgraph.graph.*;
-import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.commands.MergePolicy;
-import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
@@ -89,10 +89,10 @@ public class TestGraph1
 
   }
 
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException {
 
     String clusterName = "local";
-    String databaseName = "TestGraph1";
+    String databaseName = "testgraph1";
     CouchGraphConnectionFactory.registerNamedCluster(clusterName, "http://localhost:5984");
 
 
@@ -105,6 +105,9 @@ public class TestGraph1
     GraphConnection graphConn1 = connFact.connect("graph1");
 //    GraphConnection genesConn = connFact.connect("genes");
 
+    long totalOps = 0;
+    long started = System.currentTimeMillis();
+
     // Populate chromosomes
     String txnId = TxnUtils.beginNewTransaction(graphConn1);
     List<GraphOperation> ops = new LinkedList<>();
@@ -115,9 +118,11 @@ public class TestGraph1
       chromData.setLength((int) Math.random()*100000);
       Node chromNode = new Node(new EntityKeys("Chromosome", "c" + i), chromData);
 
-      ops.add(new NodeModification<>(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
+      ops.add(new NodeUpdate<>(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
       chromosomeNames.addAll(chromNode.getKeys().getNames());
     }
+    System.out.println("Committing "+ops.size()+" graph operations.");
+    totalOps = totalOps + ops.size();
     TxnUtils.submitTxnPart(graphConn1, txnId, 1, ops);
     TxnUtils.commitTransaction(graphConn1, txnId);
 
@@ -129,7 +134,7 @@ public class TestGraph1
       geneData.setDescription("This is gene " + i);
 
       Node geneNode = new Node(new EntityKeys("Gene", "g" + i), geneData);
-      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneNode));
+      ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneNode));
 
       // Create a hanging edge between this gene and a chromosome.
       // Note that the chromosome doesn't exist in the GENES graph.
@@ -142,28 +147,27 @@ public class TestGraph1
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
       Collections.shuffle(chromosomeNames);
       geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), chromosomeNames.iterator().next()));
-      ops.add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
+      ops.add(new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
     }
+    totalOps = totalOps + ops.size();
     TxnUtils.submitAsTxn(graphConn1, ops);
 
+    long ended = System.currentTimeMillis();
+    double secs = (ended - started) / 1000d;
+    double opsPerSec = totalOps / secs;
 
-    /*
-     * We now have two graphs:
-     * Chromosomes: contains 3 nodes
-     * Genes: contains 3 nodes, 3 (hanging edges)
-     *
-     * Next, try importing these graphs into a third 'integrated' graph:
-     */
-//    GraphConnection mergedConn = connFact.connect("merged", "trunk");
-//
-//    txnId = TxnUtils.beginNewTransaction(mergedConn);
-//    ops = new LinkedList<>();
-//    ops.add(new BranchImport("chromosomes", "trunk"));
-//    ops.add(new BranchImport("genes", "trunk"));
-//    mergedConn.getRevisionLog().submitRevisions(mergedConn.getGraphName(), mergedConn.getGraphBranch(), txnId, 1, ops);
-//    TxnUtils.commitTransaction(mergedConn, txnId);
+    System.out.println("\n\nDone graph creation. Processed "+totalOps+" in "+secs+" seconds.");
+    System.out.println("Ops per second: "+opsPerSec);
 
-    System.out.println("\n\nDone.");
+    System.out.println("\n\nIterating nodes/edges");
+
+    for (Node node : graphConn1.getNodeDao().iterateAll()) {
+      System.out.println(" * Node: "+node.toString());
+    }
+
+    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
+      System.out.println(" * Edge: "+node.toString());
+    }
   }
 
 }

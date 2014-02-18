@@ -21,11 +21,10 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.couchdb.EdgeMerger;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
-import com.entanglementgraph.graph.commands.EdgeModification;
-import com.mongodb.BasicDBObject;
 
 import java.util.logging.Logger;
 
@@ -43,12 +42,12 @@ public class EdgeModificationPlayer
    * These are set for every time <code>playItem</code> is called.
    */
   // The command wrapped by the RevisionItem
-  private EdgeModification command;
+  private EdgeUpdate command;
   
   @Override
   public String getSupportedLogItemType()
   {
-    return EdgeModification.class.getSimpleName();
+    return EdgeUpdate.class.getSimpleName();
   }
 
   @Override
@@ -56,7 +55,7 @@ public class EdgeModificationPlayer
       throws LogPlayerException
   {
     try {
-      command = (EdgeModification) op;
+      command = (EdgeUpdate) op;
 
       //The reference field should contain at least one identification key
       validateKeyset(command.getEdge().getKeys());
@@ -84,7 +83,7 @@ public class EdgeModificationPlayer
   }
 
 
-  private void createOrModify(EdgeModification command)
+  private void createOrModify(EdgeUpdate command)
       throws LogPlayerException
   {
 //    logger.info("Attempting playback of entity: "+keyset);
@@ -110,7 +109,7 @@ public class EdgeModificationPlayer
   /**
    * Called when an edge is found to not exist already - we need to create it.
    */
-  private void createNewEdge(EdgeModification command) throws GraphModelException, LogPlayerException {
+  private void createNewEdge(EdgeUpdate command) throws GraphModelException, LogPlayerException {
     try {
       edgeDao.store(marshaller.serialize(command.getEdge()));
     } catch(Exception e) {
@@ -119,7 +118,7 @@ public class EdgeModificationPlayer
   }
 
 
-  private void updateExistingEdge(EdgeModification command)
+  private void updateExistingEdge(EdgeUpdate command)
       throws LogPlayerException {
     try {
       // Edit existing node - need to perform a merge based on

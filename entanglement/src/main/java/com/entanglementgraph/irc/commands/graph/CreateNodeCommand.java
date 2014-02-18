@@ -18,15 +18,11 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.Node;
-import com.entanglementgraph.irc.EntanglementBotException;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
-import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.commands.MergePolicy;
-import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.specialistnodes.MapContent;
-import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.mongodb.BasicDBObject;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -89,7 +85,7 @@ public class CreateNodeCommand extends AbstractEntanglementGraphCommand {
       }
 
       ; //FIXME policy should be user-configurable
-      NodeModification nodeUpdateCommand = new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, node);
+      NodeUpdate nodeUpdateCommand = new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, node);
       TxnUtils.submitAsTxn(graphConn, nodeUpdateCommand);
       logger.println("Node created/updated: %s", entityName);
     } catch (Exception e) {

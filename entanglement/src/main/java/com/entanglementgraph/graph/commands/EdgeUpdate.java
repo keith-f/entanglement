@@ -19,56 +19,39 @@
 package com.entanglementgraph.graph.commands;
 
 import com.entanglementgraph.graph.Content;
-import com.entanglementgraph.graph.Node;
+import com.entanglementgraph.graph.Edge;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.util.logging.Logger;
-
 /**
- * This class can be used in cases where we just want to create a node entity
- * in the graph, without a corresponding Java bean.
- * 
+ *
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class NodeModification<C extends Content>
+public class EdgeUpdate<C extends Content, F extends Content, T extends Content>
     extends GraphOperation
 {
-  private static final Logger logger = 
-      Logger.getLogger(NodeModification.class.getName());
-
-
   private MergePolicy mergePol;
+  private Edge<C, F, T> edge;
 
-  private Node<C> node;
-  
-  public NodeModification()
-  {
+  public EdgeUpdate() {
   }
 
-  public NodeModification(MergePolicy mergePol, Node node)
-  {
+  public EdgeUpdate(MergePolicy mergePol, Edge<C, F, T> edge)  {
     this.mergePol = mergePol;
-    this.node = node;
-    if (node == null) {
-      throw new RuntimeException("The specified node was NULL!");
-    }
+    this.edge = edge;
   }
 
   @Override
   public String toString() {
-    return "NodeModification{" + "node=" + node + '}';
+    return "EdgeModification{" + "edge=" + edge + '}';
   }
 
-  public Node<C> getNode() {
-    return node;
+  public Edge<C, F, T> getEdge() {
+    return edge;
   }
 
-  public void setNode(Node<C> node) {
-    this.node = node;
-    if (node == null) {
-      throw new RuntimeException("The specified node was NULL!");
-    }
+  public void setEdge(Edge<C, F, T> edge) {
+    this.edge = edge;
   }
 
   public MergePolicy getMergePol() {
@@ -77,5 +60,7 @@ public class NodeModification<C extends Content>
 
   public void setMergePol(MergePolicy mergePol) {
     this.mergePol = mergePol;
-  } 
+  }
+
+
 }

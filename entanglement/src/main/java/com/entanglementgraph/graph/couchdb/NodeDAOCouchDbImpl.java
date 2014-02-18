@@ -40,9 +40,9 @@ import java.util.*;
 })
 public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupport<Node> implements NodeDAO<C> {
 
-  private static class NodeModificationViewByTimestampComparator implements Comparator<NodeModificationView> {
+  private static class NodeModificationViewByTimestampComparator implements Comparator<NodeUpdateView> {
     @Override
-    public int compare(NodeModificationView o1, NodeModificationView o2) {
+    public int compare(NodeUpdateView o1, NodeUpdateView o2) {
       return Long.compare(o1.getTimestamp(), o2.getTimestamp());
     }
   }
@@ -78,7 +78,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
   @Override
   public Node<C> getByKey(EntityKeys<C> keyset) throws GraphModelException {
 
-    List<NodeModificationView> updates = new ArrayList<>();
+    List<NodeUpdateView> updates = new ArrayList<>();
     for (String uid : keyset.getUids()) {
       updates.addAll(findUpdatesByUid(uid));
     }
@@ -144,12 +144,12 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
    * Internal methods
    */
 
-  private <C extends Content> Node<C> mergeRevisions(List<NodeModificationView> mods) throws GraphModelException {
+  private <C extends Content> Node<C> mergeRevisions(List<NodeUpdateView> mods) throws GraphModelException {
     Collections.sort(mods, new NodeModificationViewByTimestampComparator());
 
     NodeMerger<C> merger = new NodeMerger<>();
     Node<C> merged = null;
-    for (NodeModificationView<C> mod : mods) {
+    for (NodeUpdateView<C> mod : mods) {
       if (merged == null) {
         merged = mod.getNode();
       } else {
@@ -161,7 +161,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
   }
 
 
-  private List<NodeModificationView> findUpdatesByUid(String uid) {
+  private List<NodeUpdateView> findUpdatesByUid(String uid) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_nodes_by_uid");
 
@@ -173,7 +173,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
         .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeModificationView> updates = db.queryView(query, NodeModificationView.class);
+    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
 
 
     System.out.println("Found "+updates.size()+" modification entries for the node with UID: "+uid);
@@ -181,7 +181,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     return updates;
   }
 
-  private List<NodeModificationView> findUpdatesByName(String typeName, String name) {
+  private List<NodeUpdateView> findUpdatesByName(String typeName, String name) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_nodes_by_name");
 
@@ -193,7 +193,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
         .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeModificationView> updates = db.queryView(query, NodeModificationView.class);
+    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
 
 //    ObjectMapper mapper = new ObjectMapper();
 //    ViewResult result = db.queryView(query);
@@ -269,6 +269,30 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
     ViewQuery query = createQuery("nameToNames");
     query = query.key(ComplexKey.of(typeName, name));
+
+    ViewResult result = db.queryView(query);
+    //Read each row
+    for (ViewResult.Row row : result.getRows()) {
+      // Read each name in each row
+      for (JsonNode nameNode : row.getValueAsNode()) {
+        String nextName = nameNode.asText();
+        if (!queriedFor.contains(nextName)) {
+          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
+        }
+      }
+    }
+  }
+
+  private Set<String> findAllOtherNamesForName2(String typeName, String name) {
+    Set<String> queriedFor = new HashSet<>();
+    findAllOtherNamesForName2(typeName, name, queriedFor);
+    return queriedFor;
+  }
+  private void findAllOtherNamesForName2(String typeName, String name, Set<String> queriedFor) {
+    queriedFor.add(name);
+
+    ViewQuery query = createQuery("nameToNames");
+    query = query.key(ComplexKey.of("N", typeName, name));
 
     ViewResult result = db.queryView(query);
     //Read each row

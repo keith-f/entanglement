@@ -18,8 +18,8 @@
 
 package com.entanglementgraph.graph;
 
-import com.entanglementgraph.graph.commands.EdgeModification;
-import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.commands.EdgeUpdate;
+import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.ektorp.support.CouchDbDocument;
 
@@ -52,8 +52,8 @@ public class RevisionItemContainer extends CouchDbDocument
   private boolean committed;
   private Date dateCommitted;
   
-  private List<NodeModification> nodeUpdates;
-  private List<EdgeModification> edgeUpdates;
+  private List<NodeUpdate> nodeUpdates;
+  private List<EdgeUpdate> edgeUpdates;
 
   public RevisionItemContainer()
   {
@@ -78,11 +78,11 @@ public class RevisionItemContainer extends CouchDbDocument
         '}';
   }
 
-  public void addOperation(NodeModification op) {
+  public void addOperation(NodeUpdate op) {
     nodeUpdates.add(op);
   }
 
-  public void addOperation(EdgeModification op) {
+  public void addOperation(EdgeUpdate op) {
     edgeUpdates.add(op);
   }
 
@@ -105,19 +105,19 @@ public class RevisionItemContainer extends CouchDbDocument
     this.patchIdx = patchIdx;
   }
 
-  public List<NodeModification> getNodeUpdates() {
+  public List<NodeUpdate> getNodeUpdates() {
     return nodeUpdates;
   }
 
-  public void setNodeUpdates(List<NodeModification> nodeUpdates) {
+  public void setNodeUpdates(List<NodeUpdate> nodeUpdates) {
     this.nodeUpdates = nodeUpdates;
   }
 
-  public List<EdgeModification> getEdgeUpdates() {
+  public List<EdgeUpdate> getEdgeUpdates() {
     return edgeUpdates;
   }
 
-  public void setEdgeUpdates(List<EdgeModification> edgeUpdates) {
+  public void setEdgeUpdates(List<EdgeUpdate> edgeUpdates) {
     this.edgeUpdates = edgeUpdates;
   }
 

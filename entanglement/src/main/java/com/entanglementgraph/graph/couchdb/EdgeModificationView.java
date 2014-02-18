@@ -19,7 +19,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.Content;
-import com.entanglementgraph.graph.commands.EdgeModification;
+import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class EdgeModificationView<C extends Content, F extends Content, T extends Content> extends EdgeModification<C, F, T>
+public class EdgeModificationView<C extends Content, F extends Content, T extends Content> extends EdgeUpdate<C, F, T>
 {
   private long timestamp;
   private String graphUid;

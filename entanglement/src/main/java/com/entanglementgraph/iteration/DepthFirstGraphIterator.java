@@ -24,8 +24,6 @@ import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.graph.RevisionLogException;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.entanglementgraph.graph.commands.MergePolicy;
-import com.entanglementgraph.graph.commands.NodeModification;
 import com.entanglementgraph.util.*;
 import com.mongodb.BasicDBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;

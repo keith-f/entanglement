@@ -19,39 +19,56 @@
 package com.entanglementgraph.graph.commands;
 
 import com.entanglementgraph.graph.Content;
-import com.entanglementgraph.graph.Edge;
+import com.entanglementgraph.graph.Node;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.util.logging.Logger;
+
 /**
- *
+ * This class can be used in cases where we just want to create a node entity
+ * in the graph, without a corresponding Java bean.
+ * 
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class EdgeModification<C extends Content, F extends Content, T extends Content>
+public class NodeUpdate<C extends Content>
     extends GraphOperation
 {
-  private MergePolicy mergePol;
-  private Edge<C, F, T> edge;
+  private static final Logger logger = 
+      Logger.getLogger(NodeUpdate.class.getName());
 
-  public EdgeModification() {
+
+  private MergePolicy mergePol;
+
+  private Node<C> node;
+  
+  public NodeUpdate()
+  {
   }
 
-  public EdgeModification(MergePolicy mergePol, Edge<C, F, T> edge)  {
+  public NodeUpdate(MergePolicy mergePol, Node node)
+  {
     this.mergePol = mergePol;
-    this.edge = edge;
+    this.node = node;
+    if (node == null) {
+      throw new RuntimeException("The specified node was NULL!");
+    }
   }
 
   @Override
   public String toString() {
-    return "EdgeModification{" + "edge=" + edge + '}';
+    return "NodeModification{" + "node=" + node + '}';
   }
 
-  public Edge<C, F, T> getEdge() {
-    return edge;
+  public Node<C> getNode() {
+    return node;
   }
 
-  public void setEdge(Edge<C, F, T> edge) {
-    this.edge = edge;
+  public void setNode(Node<C> node) {
+    this.node = node;
+    if (node == null) {
+      throw new RuntimeException("The specified node was NULL!");
+    }
   }
 
   public MergePolicy getMergePol() {
@@ -60,7 +77,5 @@ public class EdgeModification<C extends Content, F extends Content, T extends Co
 
   public void setMergePol(MergePolicy mergePol) {
     this.mergePol = mergePol;
-  }
-
-
+  } 
 }

@@ -23,14 +23,12 @@ import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.couchdb.NodeMerger;
-import com.entanglementgraph.graph.mongodb.MongoUtils;
-import com.mongodb.*;
 
 import java.util.logging.Logger;
 
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
-import com.entanglementgraph.graph.commands.NodeModification;
+import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 /**
@@ -50,7 +48,7 @@ public class NodeModificationPlayer
   @Override
   public String getSupportedLogItemType()
   {
-    return NodeModification.class.getSimpleName();
+    return NodeUpdate.class.getSimpleName();
   }
 
   @Override
@@ -58,7 +56,7 @@ public class NodeModificationPlayer
       throws LogPlayerException
   {
     try {
-      NodeModification command = (NodeModification) op;
+      NodeUpdate command = (NodeUpdate) op;
       Node node = command.getNode();
 
       reqKeyset = node.getKeys();
@@ -89,7 +87,7 @@ public class NodeModificationPlayer
     }
   }
 
-  private void createOrModify(NodeModification command)
+  private void createOrModify(NodeUpdate command)
           throws LogPlayerException
   {
     try {
@@ -116,12 +114,12 @@ public class NodeModificationPlayer
   /**
    * Called when a node is found to not exist already - we need to create it.
    */
-  private void createNewNode(NodeModification command)
+  private void createNewNode(NodeUpdate command)
       throws GraphModelException, LogPlayerException, DbObjectMarshallerException {
     nodeDao.store(marshaller.serialize(command.getNode()));
   }
 
-  private void updateExistingNode(NodeModification command)
+  private void updateExistingNode(NodeUpdate command)
       throws LogPlayerException {
     try {
       // Edit existing node - need to perform a merge based on

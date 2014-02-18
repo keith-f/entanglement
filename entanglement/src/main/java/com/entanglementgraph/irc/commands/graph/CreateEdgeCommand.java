@@ -18,15 +18,11 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.Edge;
-import com.entanglementgraph.irc.EntanglementBotException;
+import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
-import com.entanglementgraph.graph.commands.EdgeModification;
-import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.specialistnodes.MapContent;
-import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.mongodb.BasicDBObject;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
@@ -98,7 +94,7 @@ public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
       }
 
       ; //FIXME policy should be user-configurable
-      EdgeModification edgeUpdateCommand = new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, edge);
+      EdgeUpdate edgeUpdateCommand = new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, edge);
       TxnUtils.submitAsTxn(graphConn, edgeUpdateCommand);
 
       logger.println("Edge created/updated: %s", entityName);
