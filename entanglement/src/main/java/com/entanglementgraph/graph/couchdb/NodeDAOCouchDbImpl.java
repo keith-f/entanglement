@@ -36,9 +36,12 @@ import java.util.*;
     @View(name = "nameToNames", map = "classpath:nodeNameToNamesMap.js"),
     @View(name = "uidToUids", map = "classpath:nodeUidToUidsMap.js"),
     @View(name = "all_nodes_by_name", map = "classpath:nodesByName.js"),
-    @View(name = "all_nodes_by_uid", map = "classpath:nodesByUid.js")
+    @View(name = "all_nodes_by_uid", map = "classpath:nodesByUid.js"),
+    @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js", reduce = "classpath:nodesAndEdgesReduce.js")
 })
 public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupport<Node> implements NodeDAO<C> {
+
+  private static final String VIEW_NODES_AND_EDGES = "nodes_and_edges";
 
   private static class NodeModificationViewByTimestampComparator implements Comparator<NodeUpdateView> {
     @Override
@@ -283,27 +286,62 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     }
   }
 
-  private Set<String> findAllOtherNamesForName2(String typeName, String name) {
-    Set<String> queriedFor = new HashSet<>();
-    findAllOtherNamesForName2(typeName, name, queriedFor);
+  private static enum IdentifierType {
+    UID,
+    NAME;
+  }
+
+  private Set<String> findAllOtherNamesForName2(IdentifierType idType, String typeName, String identifier) {
+//    Set<String> queriedFor = new HashSet<>();
+    EntityKeys queriedFor = new EntityKeys();
+    findAllOtherIdentifiersFor(IdentifierType.NAME, typeName, identifier, queriedFor);
     return queriedFor;
   }
-  private void findAllOtherNamesForName2(String typeName, String name, Set<String> queriedFor) {
-    queriedFor.add(name);
-
-    ViewQuery query = createQuery("nameToNames");
-    query = query.key(ComplexKey.of("N", typeName, name));
-
+  private void findAllOtherIdentifiersFor(IdentifierType idType, String typeName, String identifier, EntityKeys queriedFor) {
+    ViewQuery query = createQuery(VIEW_NODES_AND_EDGES);
+    switch (idType) {
+      case NAME:
+        queriedFor.addName(identifier);
+        query = query.key(ComplexKey.of(typeName, "N", identifier));
+        break;
+      case UID:
+        queriedFor.addUid(identifier);
+        query = query.key(ComplexKey.of(typeName, "U", identifier));
+        break;
+      default:
+        throw new UnsupportedOperationException("Unsupported identifier type: "+idType);
+    }
     ViewResult result = db.queryView(query);
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
-      // Read each name in each row
-      for (JsonNode nameNode : row.getValueAsNode()) {
-        String nextName = nameNode.asText();
-        if (!queriedFor.contains(nextName)) {
-          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
-        }
+      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
+      String nodeTypeName = keyItr.next().asText();
+      String uidOrName = keyItr.next().asText();
+      String identifier2 = keyItr.next().asText(); // Should be equal to <code>identifier</code>
+      int rowType =  keyItr.next().asInt(); //0=node; 1=edgeFrom; ...
+
+      switch (rowType) {
+        case 0 :
+          // Extract the 'nodeNames' from the value. This should be a list of strings.
+          JsonNode nodeNames = row.getValueAsNode().get("nodeNames");
+          // Check to see if any of these names are 'new' to us.
+          for (JsonNode nameJsonNode :nodeNames) {
+            String nextName = nameJsonNode.asText();
+            // If this is the first time we've encountered the identifier, perform another query
+            if (!queriedFor.getNames().contains(nextName)) {
+              findAllOtherIdentifiersFor(IdentifierType.NAME, typeName, identifier, queriedFor);
+            }
+          }
+          break;
+        case 1 :
+          break;
+        default:
+          log.info("Ignoring unrecognised row type: "+rowType+" for key: "+row.getKey());
       }
+
+
+
+
     }
   }
 

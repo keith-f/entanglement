@@ -2,7 +2,7 @@
 /*
  * A CouchDB View 'map' function that iterates over available patchsets and emits NodeUpdate and EdgeUpdate
  * view items with the one of the following key structures:
- * [ "U|N", <type>, <UID|Name>, [0|1], [ all UIDS ], [all Names]
+ * [ <type>, "U|N", <UID|Name>, [0|1], [ all UIDS ], [all Names]
  *
  * Values are either of the type NodeUpdateView or EdgeUpdateView.
  *
@@ -23,13 +23,13 @@ function(doc) {
       var nodeUpdateView = nodeUpdateToNodeUpdateView(doc, update);
 
       for (i=0; i < allUids.length; i=i+1) {
-        var outKey = ["U", node.keys.type, allUids[i], 0, allUids, allNames];
+        var outKey = [node.keys.type, "U", allUids[i], 0, allUids, allNames];
         emit(outKey, nodeUpdateView);
       }
 
 
       for (i=0; i < allNames.length; i=i+1) {
-        var outKey = ["N", node.keys.type, allNames[i], 0, allUids, allNames];
+        var outKey = [node.keys.type, "N", allNames[i], 0, allUids, allNames];
         emit(outKey, nodeUpdateView);
       }
     }
@@ -54,13 +54,13 @@ function(doc) {
       var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update);
 
       for (i=0; i < allFromUids.length; i=i+1) {
-        var outKey = ["U", node.keys.type, allFromUids[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        var outKey = [node.keys.type, "U", allFromUids[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
 
 
       for (i=0; i < allFromNames.length; i=i+1) {
-        var outKey = ["N", node.keys.type, allFromNames[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        var outKey = [node.keys.type, "N", allFromNames[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
     }

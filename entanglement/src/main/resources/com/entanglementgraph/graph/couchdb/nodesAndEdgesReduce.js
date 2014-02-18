@@ -3,7 +3,7 @@
  * A CouchDB View 'reduce' function that iterates over a set of keys/values.
  * Should be run with grouping = level 4.
  * Key items have the one of the following structures:
- * [ "U|N", <type>, <UID|Name>, [0|1], [ all UIDS ], [all Names]
+ * [ <type>, "U|N", <UID|Name>, [0|1], [ all UIDS ], [all Names]
  *
  * Values are either of the one of the following types:
  * TODO document each value type
@@ -23,8 +23,8 @@ function(keys, values, rereduce) {
       // Here, we extract the k'th key entry, and then the first element (orig emitted key)
       var key = keys[k][0];
 
-      var uidOrName = key[0];     // 'U' or 'N' to indicate UID or Name follows
-      var nodeType = key[1];      // The type name of the node
+      var nodeType = key[0];      // The type name of the node
+      var uidOrName = key[1];     // 'U' or 'N' to indicate UID or Name follows
       var nodeUidOrName = key[2]; // Either a UID or Name depending on 'U' or 'N' above
       var entryType = key[3];     //the 0 or 1 that represents a node/from edge
 
@@ -35,8 +35,13 @@ function(keys, values, rereduce) {
       if (k==0) {
         result.nodeUids = [];
         result.nodeNames = [];
-        result.nodeUpdates = [];
 
+        // Items specific to entries that tell us about nodes
+        if (entryType == 0) {
+          result.nodeUpdates = [];
+        }
+
+        // Items specific to entries that tell us about edges FROM a node.
         if (entryType == 1) {
           result.edgeUids = [];
           result.edgeNames = [];
