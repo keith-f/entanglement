@@ -18,8 +18,6 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
-import com.entanglementgraph.graph.commands.NodeUpdate;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.ComplexKey;
@@ -66,35 +64,37 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
 
   public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
-    EntityKeys full = new EntityKeys();
-    full.setType(partial.getType());
-    Set<String> knownUids = full.getUids();
-    Set<String> knownNames = full.getNames();
-
-    for (String uid : partial.getUids()) {
-      if (!knownUids.contains(uid)) {
-        knownUids.addAll(findAllOtherUidsForUid(uid));
-      }
-    }
-    for (String name : partial.getNames()) {
-      if (!knownNames.contains(name)) {
-        knownNames.addAll(findAllOtherNamesForName(partial.getType(), name));
-      }
-    }
-
-    return full;
+    return findAllIdentifiersAndUpdatesFor(partial).getFullKeyset();
+//    EntityKeys full = new EntityKeys();
+//    full.setType(partial.getType());
+//    Set<String> knownUids = full.getUids();
+//    Set<String> knownNames = full.getNames();
+//
+//    for (String uid : partial.getUids()) {
+//      if (!knownUids.contains(uid)) {
+//        knownUids.addAll(findAllOtherUidsForUid(uid));
+//      }
+//    }
+//    for (String name : partial.getNames()) {
+//      if (!knownNames.contains(name)) {
+//        knownNames.addAll(findAllOtherNamesForName(partial.getType(), name));
+//      }
+//    }
+//
+//    return full;
   }
 
   @Override
   public Node<C> getByKey(EntityKeys<C> keyset) throws GraphModelException {
+    LookupResult result = findAllIdentifiersAndUpdatesFor(keyset);
 
-    List<NodeUpdateView> updates = new ArrayList<>();
-    for (String uid : keyset.getUids()) {
-      updates.addAll(findUpdatesByUid(uid));
-    }
-    for (String name : keyset.getNames()) {
-      updates.addAll(findUpdatesByName(keyset.getType(), name));
-    }
+    List<NodeUpdateView> updates = result.getAllUpdates();
+//    for (String uid : keyset.getUids()) {
+//      updates.addAll(findUpdatesByUid(uid));
+//    }
+//    for (String name : keyset.getNames()) {
+//      updates.addAll(findUpdatesByName(keyset.getType(), name));
+//    }
 
     // Create a 'virtual' node if there's no database entry.
     // Otherwise, find all revisions and construct a 'merged' node.
@@ -118,6 +118,15 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
   @Override
   public Iterable<Node<C>> iterateAll() throws GraphModelException {
+    /*
+     * WARNING: this implementation is suitable only for small graphs.
+     * Due to the nature of data integration, the number of graph elements is only known after iterating.
+     * This method must keep track of all 'seen' node identifiers, and is therefore only suitable for datasets whose
+     * identifiers fit into RAM.
+     */
+
+
+
     return null;
   }
 
@@ -298,34 +307,69 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     NAME;
   }
 
-  private static class Result {
-    EntityKeys fullKeyset;
-    List<NodeUpdateView> allUpdates;
+  private static class LookupResult {
+    private final EntityKeys queryKeyset;
+    private final EntityKeys fullKeyset;
+    private final List<NodeUpdateView> allUpdates;
 
-    private Result(EntityKeys fullKeyset, List<NodeUpdateView> allUpdates) {
+    private LookupResult(EntityKeys queryKeyset, EntityKeys fullKeyset, List<NodeUpdateView> allUpdates) {
+      this.queryKeyset = queryKeyset;
       this.fullKeyset = fullKeyset;
       this.allUpdates = allUpdates;
     }
+
+    public EntityKeys getQueryKeyset() {
+      return queryKeyset;
+    }
+
+    public EntityKeys getFullKeyset() {
+      return fullKeyset;
+    }
+
+    public List<NodeUpdateView> getAllUpdates() {
+      return allUpdates;
+    }
   }
 
-  private Result findAllIdentifiersAndUpdatesFor(IdentifierType idType, String typeName, String identifier)
-      throws IOException {
-    EntityKeys queriedFor = new EntityKeys();
-    List<NodeUpdateView> foundUpdates = new ArrayList<>();
-    findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, identifier, queriedFor, foundUpdates);
-    Result result = new Result(queriedFor, foundUpdates);
+  /**
+   * Given a keyset describing a node, performs iterative database queries to return:
+   *   a) the complete keyset containing all identifiers the node is known by
+   *   b) the complete list of revision documents containing all updates to the node over time.
+   *
+   * @param queryKeyset the partial, or full node's Keyset. At least one identifier must be specified. Other identifiers
+   *                    will be found and returned in the result.
+   * @return an object containing the query keyset, the full keyset and the full list of modifications for the
+   * specified node.
+   * @throws IOException
+   */
+  private LookupResult findAllIdentifiersAndUpdatesFor(EntityKeys<C> queryKeyset)
+      throws GraphModelException {
+    EntityKeys fullKeyset = new EntityKeys(); // Keeps track of which identifiers we've already queried for.
+    List<NodeUpdateView> foundUpdates = new ArrayList<>();    //List of update documents found so far.
+
+    for (String uid : queryKeyset.getUids()) {
+      findAllIdentifiersAndUpdatesFor(IdentifierType.UID, queryKeyset.getType(), uid, fullKeyset, foundUpdates);
+    }
+    for (String name : queryKeyset.getNames()) {
+      findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, queryKeyset.getType(), name, fullKeyset, foundUpdates);
+    }
+
+
+    LookupResult result = new LookupResult(queryKeyset, fullKeyset, foundUpdates);
     return result;
   }
+
   private void findAllIdentifiersAndUpdatesFor(IdentifierType idType, String typeName, String identifier,
-                                          EntityKeys queriedFor, List<NodeUpdateView> foundUpdates) throws IOException {
+                                          EntityKeys fullKeyset, List<NodeUpdateView> foundUpdates)
+      throws GraphModelException {
     ViewQuery query = createQuery(VIEW_NODES_AND_EDGES);
     switch (idType) {
       case NAME:
-        queriedFor.addName(identifier);
+        fullKeyset.addName(identifier);
         query = query.key(ComplexKey.of(typeName, "N", identifier));
         break;
       case UID:
-        queriedFor.addUid(identifier);
+        fullKeyset.addUid(identifier);
         query = query.key(ComplexKey.of(typeName, "U", identifier));
         break;
       default:
@@ -343,8 +387,12 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
       // If this result row represents a node, then append all NodeUpdates to the discovery list
       for (JsonNode updateNode : value.get("nodeUpdates")) {
-        NodeUpdateView update = om.readValue(updateNode.asText(), NodeUpdateView.class);
-        foundUpdates.add(update);
+        try {
+          NodeUpdateView update = om.readValue(updateNode.asText(), NodeUpdateView.class);
+          foundUpdates.add(update);
+        } catch(IOException e) {
+          throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+updateNode.asText(), e);
+        }
       }
 
       /*
@@ -357,14 +405,14 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       // Check to see if any of these names are 'new' to us.
       for (JsonNode nameJsonNode : value.get("nodeNames")) {
         // If this is the first time we've encountered the identifier, perform another query
-        if (!queriedFor.getNames().contains(nameJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), queriedFor, foundUpdates);
+        if (!fullKeyset.getNames().contains(nameJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
       for (JsonNode uidJsonNode : value.get("nodeUids")) {
         // If this is the first time we've encountered the identifier, perform another query
-        if (!queriedFor.getNames().contains(uidJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), queriedFor, foundUpdates);
+        if (!fullKeyset.getNames().contains(uidJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
     }

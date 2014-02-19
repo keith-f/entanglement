@@ -132,7 +132,7 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       }
 
       RevisionLog revLog = new RevisionLogCouchDBImpl(db);
-      NodeDAO nodeDao = new NodeDAOCouchDbImpl(db);
+      NodeDAO nodeDao = new NodeDAOCouchDbImpl(db, om);
       EdgeDAO edgeDao = new EdgeDAOCouchDbImpl(db, om);
 
       connection.setRevisionLog(revLog);
