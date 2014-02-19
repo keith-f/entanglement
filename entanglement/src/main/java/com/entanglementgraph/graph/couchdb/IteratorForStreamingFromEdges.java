@@ -43,14 +43,14 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class FromEdgeStreamingIterator<C extends Content, F extends Content, T extends Content> implements Iterable<Edge<C, F, T>> {
-  private static final Logger logger = Logger.getLogger(FromEdgeStreamingIterator.class.getName());
+public class IteratorForStreamingFromEdges<C extends Content, F extends Content, T extends Content> implements Iterable<Edge<C, F, T>> {
+  private static final Logger logger = Logger.getLogger(IteratorForStreamingFromEdges.class.getName());
 
   private final CouchDbConnector db;
   private final EdgeDAO edgeDao;
   private final EntityKeys fromFullNodeKeyset;
 
-  public FromEdgeStreamingIterator(CouchDbConnector db, EdgeDAO edgeDao, EntityKeys fromFullNodeKeyset) {
+  public IteratorForStreamingFromEdges(CouchDbConnector db, EdgeDAO edgeDao, EntityKeys fromFullNodeKeyset) {
     this.db = db;
     this.edgeDao = edgeDao;
     this.fromFullNodeKeyset = fromFullNodeKeyset;

@@ -123,7 +123,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset) throws GraphModelException {
     try {
-      FromEdgeStreamingIterator<C, F, T> edgeItrable = new FromEdgeStreamingIterator<>(db, this, fromFullNodeKeyset);
+      IteratorForStreamingFromEdges<C, F, T> edgeItrable = new IteratorForStreamingFromEdges<>(db, this, fromFullNodeKeyset);
       return edgeItrable;
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform query", e);
