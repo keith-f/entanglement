@@ -39,10 +39,13 @@ import java.util.logging.Logger;
     @View(name = "uidToUids", map = "classpath:nodeUidToUidsMap.js"),
     @View(name = "all_nodes_by_name", map = "classpath:nodesByName.js"),
     @View(name = "all_nodes_by_uid", map = "classpath:nodesByUid.js"),
-    @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js", reduce = "classpath:nodesAndEdgesReduce.js")
+    @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js") //, reduce = "classpath:nodesAndEdgesReduce.js")
 })
 public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupport<Node> implements NodeDAO<C> {
   private static final Logger logger = Logger.getLogger(NodeDAOCouchDbImpl.class.getSimpleName());
+
+  public static final String DESIGN_DOC_ID = "_design/"+Node.class.getSimpleName();
+
 
   public static enum RowType {
     NODE (0),
@@ -327,7 +330,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
   private void findAllIdentifiersAndUpdatesFor(IdentifierType keyType, String typeName, String identifier,
                                                EntityKeys fullKeyset, List<NodeUpdateView> foundUpdates)
       throws GraphModelException {
-    ViewQuery query = ViewQueryFactory.createReducedNodesAndEdgesQuery(db);
+    ViewQuery query = ViewQueryFactory.createNodesAndEdgesQuery(db);
     switch (keyType) {
       case NAME:
         fullKeyset.addName(identifier);
@@ -344,7 +347,8 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       default:
         throw new GraphModelException("Unsupported identifier type: "+keyType);
     }
-    ViewResult result = db.queryView(query.reduce(true).group(true).groupLevel(4));
+//    ViewResult result = db.queryView(query.reduce(true).group(true).groupLevel(4));
+    ViewResult result = db.queryView(query);
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
       Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
@@ -352,38 +356,37 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
       String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
       int rowType =  keyItr.next().asInt();         //0=node; 1=edgeFrom; ...
+      JsonNode otherNodeUids = keyItr.next();       // (some) of the other UIDs this node is known by
+      JsonNode otherNodeNames = keyItr.next();       // (some) of the other names this node is known by
+
       JsonNode value = row.getValueAsNode();
 
-      // If this result row represents a node, then append all NodeUpdates to the discovery list
+      // If this result row represents a node, then append NodeUpdate (value) to the list of updates
       if (rowType == RowType.NODE.getDbTypeIdx()) {
-//        logger.info("Going to parse 'node' row: "+row.getKey()+", value: "+row.getValue());
-        for (JsonNode updateJsonNode : value.get("nodeUpdates")) {
-          try {
-//            logger.info("NodeUpdate as text: "+updateJsonNode);
-//            NodeUpdateView update = om.readValue(updateJsonNode.toString(), NodeUpdateView.class);
-            NodeUpdateView update2 = om.treeToValue(updateJsonNode, NodeUpdateView.class);
-            foundUpdates.add(update2);
-          } catch(IOException e) {
-            throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+updateJsonNode, e);
-          }
+        try {
+          NodeUpdateView update2 = om.treeToValue(value, NodeUpdateView.class);
+          foundUpdates.add(update2);
+        } catch(IOException e) {
+          throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+value, e);
         }
       }
 
       /*
-       * Regardless of the row type, there will be a field 'nodeNames' and 'nodeUids' that contain all node identifiers
-       * that are relevant to the current search. We should extract all identifiers, find out if we've encountered them
-       * before, and perform a recursive query for each 'new' identifier.
+       * Regardless of the row type, we should extract all other node identifiers from the row key (see 'otherNodeUids'
+       * and 'otherNodeNames').
+       * Find out if we've encountered them before, and perform a recursive query for each 'new' identifier if we
+       * haven't previously seen them.
        */
 
       // Extract the 'nodeNames' from the value. This should be a list of strings.
       // Check to see if any of these names are 'new' to us.
-      for (JsonNode nameJsonNode : value.get("nodeNames")) {
+      for (JsonNode nameJsonNode : otherNodeNames) {
         // If this is the first time we've encountered the identifier, perform another query
         if (!fullKeyset.getNames().contains(nameJsonNode.asText())) {
           findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
-      for (JsonNode uidJsonNode : value.get("nodeUids")) {
+      for (JsonNode uidJsonNode :otherNodeUids) {
         // If this is the first time we've encountered the identifier, perform another query
         if (!fullKeyset.getNames().contains(uidJsonNode.asText())) {
           findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);

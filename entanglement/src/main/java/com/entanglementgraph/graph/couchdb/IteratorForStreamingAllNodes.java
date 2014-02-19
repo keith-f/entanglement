@@ -53,10 +53,12 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
   public Iterator<Node<C>> iterator() {
     //TODO would it be more efficient to query a view that doesn't contain node updates? All we need here are identifiers
     //TODO we're also iterating over more than just 'node' row types (0). We don't need to iterate over everything here...
-    ViewQuery query = ViewQueryFactory.createReducedNodesAndEdgesQuery(db);
+//    ViewQuery query = ViewQueryFactory.createReducedNodesAndEdgesQuery(db);
+    ViewQuery query = ViewQueryFactory.createNodesAndEdgesQuery(db);
 
-    // query = query.key(ComplexKey.of(typeName)); // Optionally limit to a particular entity type
-    StreamingViewResult result = db.queryForStreamingView(query.reduce(true).group(true).groupLevel(4));
+    // query = query.key(ComplexKey.of(typeName)); // TODO Optionally limit to a particular entity type
+//    StreamingViewResult result = db.queryForStreamingView(query.reduce(true).group(true).groupLevel(4));
+    StreamingViewResult result = db.queryForStreamingView(query);
     final Iterator<ViewResult.Row> resultItr = result.iterator();
 
     return new Iterator<Node<C>>() {
@@ -94,6 +96,7 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
           }
 
           next = nodeDao.getByKey(partialKeyset);
+          seenEdges.cacheElementsOf(next.getKeys());
           break; // We've found the next node
         }
 

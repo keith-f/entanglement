@@ -34,8 +34,7 @@ import java.util.*;
     @View(name = "nameToNames", map = "classpath:edgeNameToNamesMap.js"),
     @View(name = "uidToUids", map = "classpath:edgeUidToUidsMap.js"),
     @View(name = "all_edges_by_name", map = "classpath:edgesByName.js"),
-    @View(name = "all_edges_by_uid", map = "classpath:edgesByUid.js"),
-    @View(name = "nodes_and_edges", map = "classpath:nodesAndEdgesMap.js", reduce = "classpath:nodesAndEdgesReduce.js")
+    @View(name = "all_edges_by_uid", map = "classpath:edgesByUid.js")
 })
 public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends Content>
     extends CouchDbRepositorySupport<Edge> implements EdgeDAO<C, F, T> {

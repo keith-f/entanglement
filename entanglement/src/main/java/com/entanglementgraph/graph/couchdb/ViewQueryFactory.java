@@ -28,19 +28,19 @@ public class ViewQueryFactory {
   public static ViewQuery createNodesAndEdgesQuery(CouchDbConnector db) {
     ViewQuery query = new ViewQuery()
         .dbPath(db.path())
-        .designDocId(EdgeDAOCouchDbImpl.DESIGN_DOC_ID)
+        .designDocId(NodeDAOCouchDbImpl.DESIGN_DOC_ID)
         .viewName("nodes_and_edges");
     return query;
   }
 
-  public static ViewQuery createReducedNodesAndEdgesQuery(CouchDbConnector db) {
-    ViewQuery query = new ViewQuery()
-        .dbPath(db.path())
-        .designDocId(EdgeDAOCouchDbImpl.DESIGN_DOC_ID)
-        .viewName("nodes_and_edges")
-        .reduce(true)
-        .group(true)
-        .groupLevel(4);
-    return query;
-  }
+//  public static ViewQuery createReducedNodesAndEdgesQuery(CouchDbConnector db) {
+//    ViewQuery query = new ViewQuery()
+//        .dbPath(db.path())
+//        .designDocId(NodeDAOCouchDbImpl.DESIGN_DOC_ID)
+//        .viewName("nodes_and_edges")
+//        .reduce(true)
+//        .group(true)
+//        .groupLevel(4);
+//    return query;
+//  }
 }
