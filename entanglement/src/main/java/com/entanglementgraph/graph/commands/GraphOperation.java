@@ -18,8 +18,6 @@
 
 package com.entanglementgraph.graph.commands;
 
-//import net.sourceforge.ondex.core.ONDEXGraph;
-
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.Serializable;

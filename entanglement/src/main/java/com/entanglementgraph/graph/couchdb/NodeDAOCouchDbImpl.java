@@ -161,7 +161,8 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
     NodeMerger<C> merger = new NodeMerger<>();
     Node<C> merged = null;
-    for (NodeUpdateView<C> mod : mods) {
+    //for (NodeUpdateView<C> mod : mods) {
+    for (NodeUpdateView mod : mods) {
       if (merged == null) {
         merged = mod.getNode();
       } else {
@@ -358,13 +359,19 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       // If this result row represents a node, then append all NodeUpdates to the discovery list
       if (rowType == RowType.NODE.getDbTypeIdx()) {
         logger.info("Going to parse 'node' row: "+row.getKey()+", value: "+row.getValue());
-        for (JsonNode updateNode : value.get("nodeUpdates")) {
+//        System.out.println("******* "+value.get("nodeUpdates").findVal);
+        for (JsonNode updateJsonNode : value.get("nodeUpdates")) {
           try {
-            logger.info("NodeUpdate as text: "+updateNode.asText());
-            NodeUpdateView update = om.readValue(updateNode.asText(), NodeUpdateView.class);
+            logger.info("NodeUpdate as text: "+updateJsonNode);
+
+            NodeUpdateView update = om.readValue(updateJsonNode.toString(), NodeUpdateView.class);
+            NodeUpdateView update2 = om.treeToValue(updateJsonNode, NodeUpdateView.class);
+
+            System.out.println("Update 1: "+update);
+            System.out.println("Update 2: "+update2);
             foundUpdates.add(update);
           } catch(IOException e) {
-            throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+updateNode.asText(), e);
+            throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+updateJsonNode, e);
           }
         }
       }

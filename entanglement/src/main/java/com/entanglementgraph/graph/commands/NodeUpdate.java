@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class NodeUpdate<C extends Content>
+public class NodeUpdate
     extends GraphOperation
 {
   private static final Logger logger = 
@@ -40,7 +40,7 @@ public class NodeUpdate<C extends Content>
 
   private MergePolicy mergePol;
 
-  private Node<C> node;
+  private Node node;
   
   public NodeUpdate()
   {
@@ -60,11 +60,11 @@ public class NodeUpdate<C extends Content>
     return "NodeModification{" + "node=" + node + '}';
   }
 
-  public Node<C> getNode() {
+  public Node getNode() {
     return node;
   }
 
-  public void setNode(Node<C> node) {
+  public void setNode(Node node) {
     this.node = node;
     if (node == null) {
       throw new RuntimeException("The specified node was NULL!");

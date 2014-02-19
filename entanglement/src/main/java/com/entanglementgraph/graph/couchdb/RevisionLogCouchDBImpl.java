@@ -61,7 +61,7 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
   }
 
   @Override
-  public void submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
+  public String submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
       throws RevisionLogException
   {
     RevisionItemContainer container = new RevisionItemContainer();
@@ -84,12 +84,21 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
       } else if (op instanceof TransactionRollback) {
         rollback((TransactionRollback) op);
       } else  if (op instanceof NodeUpdate) {
-      container.addOperation((NodeUpdate) op);
+        container.addOperation((NodeUpdate) op);
       } else if (op instanceof EdgeUpdate) {
-      container.addOperation((EdgeUpdate) op);
+        container.addOperation((EdgeUpdate) op);
       } else {
         throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
       }
+
+      //FIXME work out what to do with 'transaction' commands here. For now, do nothing.
+      if (op instanceof TransactionBegin ||
+          op instanceof TransactionCommit ||
+          op instanceof TransactionRollback) {
+        return null;
+      }
+      revLogDao.add(container);
+      return container.getId(); //Return database UID of the container document
     }
     catch(Exception e)
     {

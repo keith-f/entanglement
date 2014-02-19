@@ -119,7 +119,7 @@ public class RevisionLogDirectToMongoDbImpl
   }
   
   @Override
-  public void submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
+  public String submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
       throws RevisionLogException
   {
     RevisionItemContainer container = new RevisionItemContainer();
@@ -145,6 +145,10 @@ public class RevisionLogDirectToMongoDbImpl
       } else {
         throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
       }
+
+      DBObject dbObject = marshaller.serialize(container);
+      revLogCol.insert(dbObject);
+      return container.getId();
     }
     catch(Exception e)
     {

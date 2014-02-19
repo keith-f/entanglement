@@ -16,7 +16,7 @@
  * File created: 08-Nov-2012, 13:49:25
  */
 
-package com.entanglementgraph;
+package com.entanglementgraph.test;
 
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
@@ -37,34 +37,6 @@ import java.util.*;
  */
 public class TestGraph1
 {
-  private static class Chromosome implements Content {
-    private int length;
-    private String description;
-
-    @Override
-    public String toString() {
-      return "Chromosome{" +
-          "length=" + length +
-          ", description='" + description + '\'' +
-          '}';
-    }
-
-    public int getLength() {
-      return length;
-    }
-
-    public void setLength(int length) {
-      this.length = length;
-    }
-
-    public String getDescription() {
-      return description;
-    }
-
-    public void setDescription(String description) {
-      this.description = description;
-    }
-  }
 
   private static class Gene implements Content {
     private String description;
@@ -86,7 +58,22 @@ public class TestGraph1
   }
 
   private static class ExistsWithin implements Content {
+    private double weight;
 
+    private ExistsWithin() {
+    }
+
+    private ExistsWithin(double weight) {
+      this.weight = weight;
+    }
+
+    public double getWeight() {
+      return weight;
+    }
+
+    public void setWeight(double weight) {
+      this.weight = weight;
+    }
   }
 
   public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException {
@@ -118,7 +105,7 @@ public class TestGraph1
       chromData.setLength((int) Math.random()*100000);
       Node chromNode = new Node(new EntityKeys("Chromosome", "c" + i), chromData);
 
-      ops.add(new NodeUpdate<>(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
+      ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
       chromosomeNames.addAll(chromNode.getKeys().getNames());
     }
     System.out.println("Committing "+ops.size()+" graph operations.");
@@ -139,9 +126,12 @@ public class TestGraph1
       // Create a hanging edge between this gene and a chromosome.
       // Note that the chromosome doesn't exist in the GENES graph.
 
-      Edge geneToChrom = new Edge();
-      geneToChrom.getKeys().setType(ExistsWithin.class.getName());
+      //      Edge geneToChrom = new Edge();
+//      geneToChrom.getKeys().setType(ExistsWithin.class.getName());
+//      geneToChrom.setContent(new ExistsWithin(Math.random()));
+      Edge geneToChrom = new Edge(ExistsWithin.class.getName(), new ExistsWithin(Math.random()));
       geneToChrom.getKeys().addUid(UidGenerator.generateUid());
+
 
       geneToChrom.setFrom(geneNode.getKeys()); //Set the 'from' node
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names

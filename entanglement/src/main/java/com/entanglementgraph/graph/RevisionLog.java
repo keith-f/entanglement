@@ -60,7 +60,7 @@ public interface RevisionLog
    * @param op the operation to be performed on the graph
    * @throws RevisionLogException
    */
-  public void submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
+  public String submitRevision(String graphId, String patchUid, int patchIdx, GraphOperation op)
           throws RevisionLogException;
 
   /**

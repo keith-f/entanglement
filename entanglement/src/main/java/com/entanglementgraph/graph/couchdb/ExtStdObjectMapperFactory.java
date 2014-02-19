@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.impl.StdObjectMapperFactory;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -32,10 +33,16 @@ import java.util.logging.Logger;
 public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
   private static final Logger logger = Logger.getLogger(ExtStdObjectMapperFactory.class.getName());
 
+  private final Map<Class, String> classJsonMappings;
+
   private ObjectMapper objectMapper;
 
   public ObjectMapper getLastCreatedObjectMapper() {
     return objectMapper;
+  }
+
+  public ExtStdObjectMapperFactory(Map<Class, String> classJsonMappings) {
+    this.classJsonMappings = classJsonMappings;
   }
 
   @Override
@@ -61,6 +68,11 @@ public class ExtStdObjectMapperFactory extends StdObjectMapperFactory {
 ////
 ////    om.registerSubtypes(new NamedType(NodeWithContent.class, "NodeWithContent"));
 //    objectMapper.registerSubtypes(new NamedType(GeneContent.class, "GC"));
+
+    for (Map.Entry<Class, String> mapping : classJsonMappings.entrySet()) {
+      logger.info("Adding mapping "+mapping.getKey()+" --> "+mapping.getValue());
+      objectMapper.registerSubtypes(new NamedType(mapping.getKey(), mapping.getValue()));
+    }
 
 
     return objectMapper;

@@ -229,7 +229,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
     EdgeMerger<C, F, T> merger = new EdgeMerger<>();
     Edge<C, F, T> merged = null;
-    for (EdgeModificationView<C, F, T> mod : mods) {
+    for (EdgeModificationView mod : mods) {
       if (merged == null) {
         merged = mod.getEdge();
       } else {

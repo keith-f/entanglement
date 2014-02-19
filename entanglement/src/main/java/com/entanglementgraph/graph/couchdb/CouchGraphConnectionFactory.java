@@ -19,6 +19,8 @@ package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.util.GraphConnection;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.scalesinformatics.util.UidGenerator;
@@ -112,7 +114,7 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
 //        .password("secret")
           .build();
 
-      ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory();
+      ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory(classJsonMappings);
       CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
 // if the second parameter is true, the database will be created if it doesn't exists
       CouchDbConnector db = dbInstance.createConnector(databaseName, true);
@@ -126,10 +128,11 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       connection.setDb(db);
       connection.setOm(om);
 
-      //objectMapper.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
-      for (Map.Entry<Class, String> mapping : classJsonMappings.entrySet()) {
-        om.registerSubtypes(new NamedType(mapping.getKey(), mapping.getValue()));
-      }
+//      //objectMapper.registerSubtypes(new NamedType(Sofa.class, "Sfa"));
+//      for (Map.Entry<Class, String> mapping : classJsonMappings.entrySet()) {
+//        logger.info("Adding mapping "+mapping.getKey()+" --> "+mapping.getValue());
+//        om.registerSubtypes(new NamedType(mapping.getKey(), mapping.getValue()));
+//      }
 
       RevisionLog revLog = new RevisionLogCouchDBImpl(db);
       NodeDAO nodeDao = new NodeDAOCouchDbImpl(db, om);

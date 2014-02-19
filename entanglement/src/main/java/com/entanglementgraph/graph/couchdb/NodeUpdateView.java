@@ -30,7 +30,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class NodeUpdateView<C extends Content> extends NodeUpdate<C>
+//public class NodeUpdateView<C extends Content> extends NodeUpdate<C>
+public class NodeUpdateView extends NodeUpdate
 {
   private long timestamp;
   private String graphUid;

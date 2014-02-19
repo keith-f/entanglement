@@ -27,16 +27,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class EdgeUpdate<C extends Content, F extends Content, T extends Content>
+public class EdgeUpdate
     extends GraphOperation
 {
   private MergePolicy mergePol;
-  private Edge<C, F, T> edge;
+  private Edge edge;
 
   public EdgeUpdate() {
   }
 
-  public EdgeUpdate(MergePolicy mergePol, Edge<C, F, T> edge)  {
+  public EdgeUpdate(MergePolicy mergePol, Edge edge)  {
     this.mergePol = mergePol;
     this.edge = edge;
   }
@@ -46,11 +46,11 @@ public class EdgeUpdate<C extends Content, F extends Content, T extends Content>
     return "EdgeModification{" + "edge=" + edge + '}';
   }
 
-  public Edge<C, F, T> getEdge() {
+  public Edge getEdge() {
     return edge;
   }
 
-  public void setEdge(Edge<C, F, T> edge) {
+  public void setEdge(Edge edge) {
     this.edge = edge;
   }
 

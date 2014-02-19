@@ -69,6 +69,7 @@ function(keys, values, rereduce) {
         combineLists(result.edgeNames, allEdgeNames);
       }
     }
+    result.rereduced = false;
     return result;
   }
 }
@@ -80,7 +81,7 @@ function doReReduce(keys, values) {
    */
   var final = {};
   for (v=0; v<values.length; v++) {
-    partial = values[v];
+    var partial = values[v];
 
     // Combine all lists
     if (partial.nodeUids) {
@@ -103,6 +104,7 @@ function doReReduce(keys, values) {
       combineLists(final.edgeUpdates, partial.edgeUpdates);
     }
   }
+  final.rereduced = true;
   return final;
 }
 
