@@ -18,8 +18,6 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
-import com.entanglementgraph.util.EntityKeyElementCache;
-import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.*;
@@ -44,9 +42,9 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   public static final String DESIGN_DOC_ID = "_design/"+Edge.class.getSimpleName();
 
 
-  private static class EdgeModificationViewByTimestampComparator implements Comparator<EdgeModificationView> {
+  private static class EdgeModificationViewByTimestampComparator implements Comparator<EdgeUpdateView> {
     @Override
-    public int compare(EdgeModificationView o1, EdgeModificationView o2) {
+    public int compare(EdgeUpdateView o1, EdgeUpdateView o2) {
       return Long.compare(o1.getTimestamp(), o2.getTimestamp());
     }
   }
@@ -85,7 +83,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   public Edge<C, F, T> getByKey(EntityKeys<C> keyset)
       throws GraphModelException {
 
-    List<EdgeModificationView> updates = new ArrayList<>();
+    List<EdgeUpdateView> updates = new ArrayList<>();
     for (String uid : keyset.getUids()) {
       updates.addAll(findUpdatesByUid(uid));
     }
@@ -224,12 +222,12 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
    */
 
   private <C extends Content, F extends Content, T extends Content> Edge<C, F, T> mergeRevisions(
-      List<EdgeModificationView> mods) throws GraphModelException {
+      List<EdgeUpdateView> mods) throws GraphModelException {
     Collections.sort(mods, new EdgeModificationViewByTimestampComparator());
 
     EdgeMerger<C, F, T> merger = new EdgeMerger<>();
     Edge<C, F, T> merged = null;
-    for (EdgeModificationView mod : mods) {
+    for (EdgeUpdateView mod : mods) {
       if (merged == null) {
         merged = mod.getEdge();
       } else {
@@ -241,7 +239,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
 
-  private List<EdgeModificationView> findUpdatesByUid(String uid) {
+  private List<EdgeUpdateView> findUpdatesByUid(String uid) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_edges_by_uid");
 
@@ -253,7 +251,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
         .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<EdgeModificationView> updates = db.queryView(query, EdgeModificationView.class);
+    List<EdgeUpdateView> updates = db.queryView(query, EdgeUpdateView.class);
 
 
     System.out.println("Found "+updates.size()+" modification entries for the edge with UID: "+uid);
@@ -261,7 +259,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
     return updates;
   }
 
-  private List<EdgeModificationView> findUpdatesByName(String typeName, String name) {
+  private List<EdgeUpdateView> findUpdatesByName(String typeName, String name) {
     // Creates a ViewQuery with the 'standard' design doc name + the specified view name
     ViewQuery query = createQuery("all_edges_by_name");
 
@@ -273,7 +271,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
         .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
 
     // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<EdgeModificationView> updates = db.queryView(query, EdgeModificationView.class);
+    List<EdgeUpdateView> updates = db.queryView(query, EdgeUpdateView.class);
 
     System.out.println("Found "+updates.size()+" modification entries for the edge with type: "+typeName+", name: "+name);
 

@@ -39,7 +39,7 @@ public class NodeUpdateView extends NodeUpdate
 
   @Override
   public String toString() {
-    return "NodeModificationView{" +
+    return "NodeUpdateView{" +
         "timestamp=" + timestamp +
         ", graphUid='" + graphUid + '\'' +
         ", patchUid='" + patchUid + '\'' +

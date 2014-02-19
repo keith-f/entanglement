@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  * @author Keith Flanagan
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
-public class EdgeModificationView extends EdgeUpdate
+public class EdgeUpdateView extends EdgeUpdate
 {
   private long timestamp;
   private String graphUid;
@@ -38,7 +38,7 @@ public class EdgeModificationView extends EdgeUpdate
 
   @Override
   public String toString() {
-    return "EdgeModificationView{" +
+    return "EdgeUpdateView{" +
         "timestamp=" + timestamp +
         ", graphUid='" + graphUid + '\'' +
         ", patchUid='" + patchUid + '\'' +
