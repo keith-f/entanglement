@@ -38,7 +38,7 @@ import java.util.*;
 public class TestGraph1
 {
 
-  private static class Gene implements Content {
+  public static class Gene implements Content {
     private String description;
 
     @Override
@@ -57,7 +57,7 @@ public class TestGraph1
     }
   }
 
-  private static class ExistsWithin implements Content {
+  public static class ExistsWithin implements Content {
     private double weight;
 
     private ExistsWithin() {
@@ -155,9 +155,9 @@ public class TestGraph1
       System.out.println(" * Node: "+node.toString());
     }
 
-    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
-      System.out.println(" * Edge: "+node.toString());
-    }
+//    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
+//      System.out.println(" * Edge: "+node.toString());
+//    }
   }
 
 }

@@ -167,7 +167,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
         merged = mod.getNode();
       } else {
         Node<C> newNode = mod.getNode();
-        merged = merger.merge(mod.getMergePol(), merged, newNode);
+        merger.merge(mod.getMergePol(), merged, newNode);
       }
     }
     return merged;
@@ -331,14 +331,12 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     switch (keyType) {
       case NAME:
         fullKeyset.addName(identifier);
-//        query = query.key(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier));
         query = query
             .startKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier))
             .endKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier, ComplexKey.emptyObject()));
         break;
       case UID:
         fullKeyset.addUid(identifier);
-//        query = query.key(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier));
         query = query
             .startKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier))
             .endKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier, ComplexKey.emptyObject()));
@@ -358,18 +356,13 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
       // If this result row represents a node, then append all NodeUpdates to the discovery list
       if (rowType == RowType.NODE.getDbTypeIdx()) {
-        logger.info("Going to parse 'node' row: "+row.getKey()+", value: "+row.getValue());
-//        System.out.println("******* "+value.get("nodeUpdates").findVal);
+//        logger.info("Going to parse 'node' row: "+row.getKey()+", value: "+row.getValue());
         for (JsonNode updateJsonNode : value.get("nodeUpdates")) {
           try {
-            logger.info("NodeUpdate as text: "+updateJsonNode);
-
-            NodeUpdateView update = om.readValue(updateJsonNode.toString(), NodeUpdateView.class);
+//            logger.info("NodeUpdate as text: "+updateJsonNode);
+//            NodeUpdateView update = om.readValue(updateJsonNode.toString(), NodeUpdateView.class);
             NodeUpdateView update2 = om.treeToValue(updateJsonNode, NodeUpdateView.class);
-
-            System.out.println("Update 1: "+update);
-            System.out.println("Update 2: "+update2);
-            foundUpdates.add(update);
+            foundUpdates.add(update2);
           } catch(IOException e) {
             throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+updateJsonNode, e);
           }

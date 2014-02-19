@@ -45,30 +45,30 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
   public EdgeMerger() {
   }
 
-  public Edge<C, T, F> merge(MergePolicy mergePolicy, Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
+  public void merge(MergePolicy mergePolicy, Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
       throws GraphModelException {
     try {
-      Edge<C, T, F> outputEdge = new Edge<>();
+      //Edge<C, T, F> outputEdge = new Edge<>();
 
-      outputEdge.setKeys(mergeKeys(existingEdge.getKeys(), newEdge.getKeys()));
-      outputEdge.setFrom(mergeKeys(existingEdge.getFrom(), newEdge.getFrom()));
-      outputEdge.setTo(mergeKeys(existingEdge.getTo(), newEdge.getTo()));
+      existingEdge.setKeys(mergeKeys(existingEdge.getKeys(), newEdge.getKeys()));
+      existingEdge.setFrom(mergeKeys(existingEdge.getFrom(), newEdge.getFrom()));
+      existingEdge.setTo(mergeKeys(existingEdge.getTo(), newEdge.getTo()));
 
       switch(mergePolicy) {
         case NONE:
-          return existingEdge;
+          break;
         case ERR:
           throw new LogPlayerException("Attempt to merge nodes with one or more keyset items in common with" +
               "an existing node: "+existingEdge.getKeys());
         case APPEND_NEW__LEAVE_EXISTING:
-          doAppendNewLeaveExisting(outputEdge, existingEdge, newEdge);
-          return outputEdge;
+          doAppendNewLeaveExisting(existingEdge, newEdge);
+          break;
         case APPEND_NEW__OVERWRITE_EXSITING:
-          doAppendNewOverwriteExisting(outputEdge, existingEdge, newEdge);
-          return outputEdge;
+          doAppendNewOverwriteExisting(existingEdge, newEdge);
+          break;
         case OVERWRITE_ALL:
-          doOverwriteAll(outputEdge, newEdge);
-          return outputEdge;
+          doOverwriteAll(existingEdge, newEdge);
+          break;
         default:
           throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
       }
@@ -84,24 +84,30 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
    * properties on the existing node with the same name as the ones specified
    * in the update command, we leave the existing values as they are.
    */
-  private void doAppendNewLeaveExisting(
-      Edge<C, T, F> outputEdge, Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
+  private void doAppendNewLeaveExisting(Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputEdge.getContent().getClass());
+      if (existingEdge.getContent() == null) {
+        existingEdge.setContent(newEdge.getContent());
+        return;
+      }
+      if (newEdge.getContent() == null) {
+        return;
+      }
+
+      BeanInfo info = Introspector.getBeanInfo(existingEdge.getContent().getClass());
       // Loop over all properties on the existing content bean
       for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
         Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(existingEdge);
+        Method setter = pd.getWriteMethod();
+        Object existingValue = getter.invoke(existingEdge.getContent());
+        Object newValue = getter.invoke(newEdge.getContent());
 
-        // If the value of the existing node is non-null, copy the existing value to the target object
-        if (value != null) {
-          setter.invoke(outputEdge, getter.invoke(existingEdge));
-        } else {
-          // Otherwise, set the value from the 'new' object
-          setter.invoke(outputEdge, getter.invoke(newEdge));
+        // If the value of the existing edge is non-null, ignore.
+        // Otherwise, set the value from the 'new' object
+        if (existingValue == null) {
+          setter.invoke(existingEdge.getContent(), newValue);
         }
       }
     }
@@ -115,24 +121,29 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
    * This method adds new properties to an existing node and overwrites the
    * values of existing properties.
    */
-  private void doAppendNewOverwriteExisting(
-      Edge<C, T, F> outputEdge, Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
+  private void doAppendNewOverwriteExisting(Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputEdge.getContent().getClass());
+      if (existingEdge.getContent() == null) {
+        existingEdge.setContent(newEdge.getContent());
+        return;
+      }
+      if (newEdge.getContent() == null) {
+        return;
+      }
+
+      BeanInfo info = Introspector.getBeanInfo(existingEdge.getContent().getClass());
       // Loop over all properties on the new content bean
       for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
         Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(newEdge);
+        Method setter = pd.getWriteMethod();
+        Object existingValue = getter.invoke(existingEdge.getContent());
+        Object newValue = getter.invoke(newEdge.getContent());
 
-        // If the value of the new node is non-null, copy the new value to the target object
-        if (value != null) {
-          setter.invoke(outputEdge, getter.invoke(newEdge));
-        } else {
-          // Otherwise, set the value from the 'existing' object
-          setter.invoke(outputEdge, getter.invoke(existingEdge));
+        // If the value of the new edge is non-null, set it regardless of the existing value.
+        if (newValue != null) {
+          setter.invoke(existingEdge.getContent(), newValue);
         }
       }
     }
@@ -147,26 +158,27 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
    * values of existing properties.
    * Immutable properties (UID, type and name) are, of course, ignored.
    */
-  private void doOverwriteAll(Edge<C, T, F> outputEdge, Edge<C, T, F> newEdge)
+  private void doOverwriteAll(Edge<C, T, F> existingEdge, Edge<C, T, F> newEdge)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputEdge.getContent().getClass());
-      // Loop over all properties on the new content bean
-      for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-        Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(newEdge);
-
-        // If the value of the new node is non-null, copy the new value to the target object
-        if (value != null) {
-          setter.invoke(outputEdge, getter.invoke(newEdge));
-        }
-        // Otherwise, there's nothing to do. Leave it NULL.
-      }
+      existingEdge.setContent(newEdge.getContent());
+//      BeanInfo info = Introspector.getBeanInfo(outputEdge.getContent().getClass());
+//      // Loop over all properties on the new content bean
+//      for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
+//        Method getter = pd.getReadMethod();
+//        Method setter = pd.getWriteMethod();
+//        Object value = getter.invoke(newEdge);
+//
+//        // If the value of the new node is non-null, copy the new value to the target object
+//        if (value != null) {
+//          setter.invoke(outputEdge, getter.invoke(newEdge));
+//        }
+//        // Otherwise, there's nothing to do. Leave it NULL.
+//      }
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+outputEdge.getKeys(), e);
+      throw new GraphModelException("Failed to perform 'overwrite' operation on existing edge: "+existingEdge.getKeys(), e);
     }
   }
 
@@ -183,11 +195,11 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
       throws GraphModelException {
 
     if (existingKeys.getType() == null || newKeys.getType() == null) {
-      throw new GraphModelException("Attempt to merge nodes with no 'type' field set.");
+      throw new GraphModelException("Attempt to merge edges with no 'type' field set.");
     }
 
     if (!existingKeys.getType().equals(newKeys.getType())) {
-      throw new GraphModelException("Attempt to merge nodes with different types: "
+      throw new GraphModelException("Attempt to merge edges with different types: "
           + existingKeys.getType() + " != " + newKeys.getType());
     }
 

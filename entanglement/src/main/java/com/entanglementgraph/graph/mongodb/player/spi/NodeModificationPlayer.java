@@ -127,9 +127,9 @@ public class NodeModificationPlayer
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       NodeMerger merger = new NodeMerger();
-      Node updated = merger.merge(command.getMergePol(), existing, command.getNode());
+      merger.merge(command.getMergePol(), existing, command.getNode());
 
-      nodeDao.update(marshaller.serialize(updated));
+      nodeDao.update(marshaller.serialize(existing));
 
     } catch (Exception e) {
       throw new LogPlayerException("Failed to perform update on node with keyset: "+reqKeyset, e);

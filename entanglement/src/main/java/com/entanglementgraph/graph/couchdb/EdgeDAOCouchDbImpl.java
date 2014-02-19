@@ -232,7 +232,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
         merged = mod.getEdge();
       } else {
         Edge<C, F, T> newEdge = mod.getEdge();
-        merged = merger.merge(mod.getMergePol(), merged, newEdge);
+        merger.merge(mod.getMergePol(), merged, newEdge);
       }
     }
     return merged;

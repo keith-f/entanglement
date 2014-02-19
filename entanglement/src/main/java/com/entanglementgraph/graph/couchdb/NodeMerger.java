@@ -45,33 +45,38 @@ public class NodeMerger<C extends Content> {
   public NodeMerger() {
   }
 
-  public Node<C> merge(MergePolicy mergePolicy, Node<C> existingNode, Node<C> newNode)
+  public void merge(MergePolicy mergePolicy, Node<C> existingNode, Node<C> newNode)
       throws GraphModelException {
     try {
-      Node<C> outputNode = new Node<>();
+      //Node<C> outputNode = new Node<>();
+      //Node<C> outputNode = existingNode;
       EntityKeys<C> mergedKeys = mergeKeys(existingNode.getKeys(), newNode.getKeys());
-      outputNode.setKeys(mergedKeys);
+      existingNode.setKeys(mergedKeys);
 
       switch(mergePolicy) {
         case NONE:
-          return existingNode;
+          //return existingNode;
+          break;
         case ERR:
           throw new LogPlayerException("Attempt to merge nodes with one or more keyset items in common with" +
               "an existing node: "+existingNode.getKeys());
         case APPEND_NEW__LEAVE_EXISTING:
-          doAppendNewLeaveExisting(outputNode, existingNode, newNode);
-          return outputNode;
+          doAppendNewLeaveExisting(existingNode, newNode);
+//          return outputNode;
+          break;
         case APPEND_NEW__OVERWRITE_EXSITING:
-          doAppendNewOverwriteExisting(outputNode, existingNode, newNode);
-          return outputNode;
+          doAppendNewOverwriteExisting(existingNode, newNode);
+//          return outputNode;
+          break;
         case OVERWRITE_ALL:
-          doOverwriteAll(outputNode, newNode);
-          return outputNode;
+          doOverwriteAll(existingNode, newNode);
+//          return outputNode;
+          break;
         default:
           throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
       }
     } catch (Exception e) {
-      throw new GraphModelException("Failed to perform merge between nodes: "+existingNode.getKeys()+" and: "+newNode.getKeys(), e);
+      throw new GraphModelException("Failed to perform merge between nodes: "+existingNode+" and: "+newNode, e);
     }
   }
 
@@ -83,29 +88,36 @@ public class NodeMerger<C extends Content> {
    * in the update command, we leave the existing values as they are.
    */
   private void doAppendNewLeaveExisting(
-      Node<C> outputNode,  Node<C> existingNode, Node<C> newNode)
+      Node<C> existingNode, Node<C> newNode)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputNode.getContent().getClass());
+      if (existingNode.getContent() == null) {
+        existingNode.setContent(newNode.getContent());
+        return;
+      }
+      if (newNode.getContent() == null) {
+        return;
+      }
+
+      BeanInfo info = Introspector.getBeanInfo(existingNode.getContent().getClass());
       // Loop over all properties on the existing content bean
       for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
         Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(existingNode);
+        Method setter = pd.getWriteMethod();
+        Object existingValue = getter.invoke(existingNode.getContent());
+        Object newValue = getter.invoke(newNode.getContent());
 
-        // If the value of the existing node is non-null, copy the existing value to the target object
-        if (value != null) {
-          setter.invoke(outputNode, getter.invoke(existingNode));
-        } else {
-          // Otherwise, set the value from the 'new' object
-          setter.invoke(outputNode, getter.invoke(newNode));
+        // If the value of the existing node is non-null, ignore.
+        // Otherwise, set the value from the 'new' object
+        if (existingValue == null) {
+          setter.invoke(existingNode.getContent(), newValue);
         }
       }
     }
     catch(Exception e) {
       throw new GraphModelException(
-          "Failed to perform 'append new, leave existing' operation on existing node: "+existingNode.getKeys(), e);
+          "Failed to perform 'append new, leave existing' operation on existing node: "+existingNode, e);
     }
   }
 
@@ -113,30 +125,35 @@ public class NodeMerger<C extends Content> {
    * This method adds new properties to an existing node and overwrites the
    * values of existing properties.
    */
-  private void doAppendNewOverwriteExisting(
-      Node<C> outputNode, Node<C> existingNode, Node<C> newNode)
+  private void doAppendNewOverwriteExisting(Node<C> existingNode, Node<C> newNode)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputNode.getContent().getClass());
+      if (existingNode.getContent() == null) {
+        existingNode.setContent(newNode.getContent());
+        return;
+      }
+      if (newNode.getContent() == null) {
+        return;
+      }
+
+      BeanInfo info = Introspector.getBeanInfo(existingNode.getContent().getClass());
       // Loop over all properties on the new content bean
       for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
         Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(newNode);
+        Method setter = pd.getWriteMethod();
+        Object existingValue = getter.invoke(existingNode.getContent());
+        Object newValue = getter.invoke(newNode.getContent());
 
-        // If the value of the new node is non-null, copy the new value to the target object
-        if (value != null) {
-          setter.invoke(outputNode, getter.invoke(newNode));
-        } else {
-          // Otherwise, set the value from the 'existing' object
-          setter.invoke(outputNode, getter.invoke(existingNode));
+        // If the value of the new node is non-null, set it regardless of the existing value.
+        if (newValue != null) {
+          setter.invoke(existingNode.getContent(), newValue);
         }
       }
     }
     catch(Exception e) {
       throw new GraphModelException(
-          "Failed to perform 'append new, overwrite existing' operation on existing node: "+existingNode.getKeys(), e);
+          "Failed to perform 'append new, overwrite existing' operation on existing node: "+existingNode, e);
     }
   }
 
@@ -145,26 +162,33 @@ public class NodeMerger<C extends Content> {
    * values of existing properties.
    * Immutable properties (UID, type and name) are, of course, ignored.
    */
-  private void doOverwriteAll(Node<C> outputNode, Node<C> newNode)
+  private void doOverwriteAll(Node<C> existingNode, Node<C> newNode)
       throws GraphModelException
   {
     try {
-      BeanInfo info = Introspector.getBeanInfo(outputNode.getContent().getClass());
-      // Loop over all properties on the new content bean
-      for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-        Method getter = pd.getReadMethod();
-        Method setter = pd.getReadMethod();
-        Object value = getter.invoke(newNode);
-
-        // If the value of the new node is non-null, copy the new value to the target object
-        if (value != null) {
-          setter.invoke(outputNode, getter.invoke(newNode));
-        }
-        // Otherwise, there's nothing to do. Leave it NULL.
-      }
+      existingNode.setContent(newNode.getContent());
+//      if (existingNode.getContent() == null) {
+//        existingNode.setContent(newNode.getContent());
+//        return;
+//      }
+//      if (newNode.getContent() == null) {
+//        return;
+//      }
+//
+//      BeanInfo info = Introspector.getBeanInfo(existingNode.getContent().getClass());
+//      // Loop over all properties on the new content bean
+//      for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
+//        Method getter = pd.getReadMethod();
+//        Method setter = pd.getWriteMethod();
+//        Object existingValue = getter.invoke(existingNode.getContent());
+//        Object newValue = getter.invoke(newNode.getContent());
+//
+//        // Overwrite everything
+//        setter.invoke(existingNode.getContent(), newValue);
+//      }
     }
     catch(Exception e) {
-      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+outputNode.getKeys(), e);
+      throw new GraphModelException("Failed to perform 'overwrite' operation on existing node: "+existingNode, e);
     }
   }
 

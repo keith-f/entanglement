@@ -126,8 +126,8 @@ public class EdgeModificationPlayer
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       EdgeMerger merger = new EdgeMerger();
-      Edge updated = merger.merge(command.getMergePol(), existing, command.getEdge());
-      edgeDao.update(marshaller.serialize(updated));
+      merger.merge(command.getMergePol(), existing, command.getEdge());
+      edgeDao.update(marshaller.serialize(existing));
 
     } catch (Exception e) {
       throw new LogPlayerException("Failed to perform update on node with keyset: "+command.getEdge().getKeys(), e);
