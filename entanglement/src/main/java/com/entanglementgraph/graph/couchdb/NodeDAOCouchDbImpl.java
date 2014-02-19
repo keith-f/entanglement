@@ -18,7 +18,10 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.NodeUpdate;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.ComplexKey;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.ViewQuery;
@@ -27,6 +30,7 @@ import org.ektorp.support.CouchDbRepositorySupport;
 import org.ektorp.support.View;
 import org.ektorp.support.Views;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -43,6 +47,8 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
 
   private static final String VIEW_NODES_AND_EDGES = "nodes_and_edges";
 
+  private final ObjectMapper om;
+
   private static class NodeModificationViewByTimestampComparator implements Comparator<NodeUpdateView> {
     @Override
     public int compare(NodeUpdateView o1, NodeUpdateView o2) {
@@ -50,11 +56,12 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     }
   }
 
-  public NodeDAOCouchDbImpl(CouchDbConnector db)  {
+  public NodeDAOCouchDbImpl(CouchDbConnector db, ObjectMapper om)  {
     super(Node.class, db);
 //    CouchDbRepositorySupport support = new CouchDbRepositorySupport(null, null, null);
 
     initStandardDesignDocument(); // Causes Ektorp to create the views listed above
+    this.om = om;
   }
 
 
@@ -164,140 +171,153 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
   }
 
 
-  private List<NodeUpdateView> findUpdatesByUid(String uid) {
-    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
-    ViewQuery query = createQuery("all_nodes_by_uid");
+//  private List<NodeUpdateView> findUpdatesByUid(String uid) {
+//    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
+//    ViewQuery query = createQuery("all_nodes_by_uid");
+//
+//    //Next, specify a key or key range on to return from the view.
+//    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
+//    // Here, we specify the Node's UID only, and want to accept any timestamp
+//    query = query
+//        .startKey(ComplexKey.of(uid))
+//        .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
+//
+//    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
+//    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
+//
+//
+//    System.out.println("Found "+updates.size()+" modification entries for the node with UID: "+uid);
+//
+//    return updates;
+//  }
 
-    //Next, specify a key or key range on to return from the view.
-    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
-    // Here, we specify the Node's UID only, and want to accept any timestamp
-    query = query
-        .startKey(ComplexKey.of(uid))
-        .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
+//  private List<NodeUpdateView> findUpdatesByName(String typeName, String name) {
+//    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
+//    ViewQuery query = createQuery("all_nodes_by_name");
+//
+//    //Next, specify a key or key range on to return from the view.
+//    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
+//    // Here, we specify the Node's type and name as the key, and want to accept any timestamp
+//    query = query
+//        .startKey(ComplexKey.of(typeName, name))
+//        .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
+//
+//    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
+//    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
+//
+////    ObjectMapper mapper = new ObjectMapper();
+////    ViewResult result = db.queryView(query);
+////    for (ViewResult.Row row : result) {
+////      JsonNode timestampField = row.getKeyAsNode().get(2);
+////      Date ts = mapper.readValue(timestampField.asText(), Date.class);
+////    }
+//
+//    System.out.println("Found "+updates.size()+" modification entries for the node with type: "+typeName+", name: "+name);
+//
+//    return updates;
+//  }
 
-    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
 
 
-    System.out.println("Found "+updates.size()+" modification entries for the node with UID: "+uid);
-
-    return updates;
-  }
-
-  private List<NodeUpdateView> findUpdatesByName(String typeName, String name) {
-    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
-    ViewQuery query = createQuery("all_nodes_by_name");
-
-    //Next, specify a key or key range on to return from the view.
-    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
-    // Here, we specify the Node's type and name as the key, and want to accept any timestamp
-    query = query
-        .startKey(ComplexKey.of(typeName, name))
-        .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
-
-    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<NodeUpdateView> updates = db.queryView(query, NodeUpdateView.class);
-
-//    ObjectMapper mapper = new ObjectMapper();
+//  /**
+//   * Given a node UID, finds all other UIDs that the node is known by.
+//   * Queries a view whose rows look like:
+//   *
+//   * [uid1] --> [uid1, uid2, uid3, ...]
+//   * [uid1] --> [uid1, uid4, ...]
+//   *
+//   * We simply read each row, and extract all known names.
+//   *
+//   * @param uid
+//   * @return
+//   */
+//  private Set<String> findAllOtherUidsForUid(String uid) {
+//    Set<String> queriedFor = new HashSet<>();
+////    Set<String> allUids = new HashSet<>();
+//    findAllOtherUidsForUid(uid, queriedFor);
+//    return queriedFor;
+//  }
+//  private void findAllOtherUidsForUid(String uid, Set<String> queriedFor) { //}, Set<String> allUids) {
+////    allUids.add(uid);
+//    queriedFor.add(uid);
+//
+//    ViewQuery query = createQuery("uidToUids");
+//    query = query.key(uid);
+//
 //    ViewResult result = db.queryView(query);
-//    for (ViewResult.Row row : result) {
-//      JsonNode timestampField = row.getKeyAsNode().get(2);
-//      Date ts = mapper.readValue(timestampField.asText(), Date.class);
+//    //Read each row
+//    for (ViewResult.Row row : result.getRows()) {
+//      // Read each name in each row
+//      for (JsonNode uidNode : row.getValueAsNode()) {
+//        String nextUid = uidNode.asText();
+//        if (!queriedFor.contains(nextUid)) {
+//          findAllOtherUidsForUid(nextUid, queriedFor);
+//        }
+//      }
 //    }
+//  }
 
-    System.out.println("Found "+updates.size()+" modification entries for the node with type: "+typeName+", name: "+name);
-
-    return updates;
-  }
-
-
-
-  /**
-   * Given a node UID, finds all other UIDs that the node is known by.
-   * Queries a view whose rows look like:
-   *
-   * [uid1] --> [uid1, uid2, uid3, ...]
-   * [uid1] --> [uid1, uid4, ...]
-   *
-   * We simply read each row, and extract all known names.
-   *
-   * @param uid
-   * @return
-   */
-  private Set<String> findAllOtherUidsForUid(String uid) {
-    Set<String> queriedFor = new HashSet<>();
-//    Set<String> allUids = new HashSet<>();
-    findAllOtherUidsForUid(uid, queriedFor);
-    return queriedFor;
-  }
-  private void findAllOtherUidsForUid(String uid, Set<String> queriedFor) { //}, Set<String> allUids) {
-//    allUids.add(uid);
-    queriedFor.add(uid);
-
-    ViewQuery query = createQuery("uidToUids");
-    query = query.key(uid);
-
-    ViewResult result = db.queryView(query);
-    //Read each row
-    for (ViewResult.Row row : result.getRows()) {
-      // Read each name in each row
-      for (JsonNode uidNode : row.getValueAsNode()) {
-        String nextUid = uidNode.asText();
-        if (!queriedFor.contains(nextUid)) {
-          findAllOtherUidsForUid(nextUid, queriedFor);
-        }
-      }
-    }
-  }
-
-  /**
-   * Given a node name, finds all other names that the node is known by.
-   * Queries a view whose rows look like:
-   *
-   * [type, name1] --> [name1, name2, name3, ...]
-   * [type, name1] --> [name1, name4, ...]
-   *
-   * We simply read each row, and extract all known names.
-   *
-   * @param name
-   * @return
-   */
-  private Set<String> findAllOtherNamesForName(String typeName, String name) {
-    Set<String> queriedFor = new HashSet<>();
-    findAllOtherNamesForName(typeName, name, queriedFor);
-    return queriedFor;
-  }
-  private void findAllOtherNamesForName(String typeName, String name, Set<String> queriedFor) {
-    queriedFor.add(name);
-
-    ViewQuery query = createQuery("nameToNames");
-    query = query.key(ComplexKey.of(typeName, name));
-
-    ViewResult result = db.queryView(query);
-    //Read each row
-    for (ViewResult.Row row : result.getRows()) {
-      // Read each name in each row
-      for (JsonNode nameNode : row.getValueAsNode()) {
-        String nextName = nameNode.asText();
-        if (!queriedFor.contains(nextName)) {
-          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
-        }
-      }
-    }
-  }
+//  /**
+//   * Given a node name, finds all other names that the node is known by.
+//   * Queries a view whose rows look like:
+//   *
+//   * [type, name1] --> [name1, name2, name3, ...]
+//   * [type, name1] --> [name1, name4, ...]
+//   *
+//   * We simply read each row, and extract all known names.
+//   *
+//   * @param name
+//   * @return
+//   */
+//  private Set<String> findAllOtherNamesForName(String typeName, String name) {
+//    Set<String> queriedFor = new HashSet<>();
+//    findAllOtherNamesForName(typeName, name, queriedFor);
+//    return queriedFor;
+//  }
+//  private void findAllOtherNamesForName(String typeName, String name, Set<String> queriedFor) {
+//    queriedFor.add(name);
+//
+//    ViewQuery query = createQuery("nameToNames");
+//    query = query.key(ComplexKey.of(typeName, name));
+//
+//    ViewResult result = db.queryView(query);
+//    //Read each row
+//    for (ViewResult.Row row : result.getRows()) {
+//      // Read each name in each row
+//      for (JsonNode nameNode : row.getValueAsNode()) {
+//        String nextName = nameNode.asText();
+//        if (!queriedFor.contains(nextName)) {
+//          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
+//        }
+//      }
+//    }
+//  }
 
   private static enum IdentifierType {
     UID,
     NAME;
   }
 
-  private Set<String> findAllOtherNamesForName2(IdentifierType idType, String typeName, String identifier) {
-//    Set<String> queriedFor = new HashSet<>();
-    EntityKeys queriedFor = new EntityKeys();
-    findAllOtherIdentifiersFor(IdentifierType.NAME, typeName, identifier, queriedFor);
-    return queriedFor;
+  private static class Result {
+    EntityKeys fullKeyset;
+    List<NodeUpdateView> allUpdates;
+
+    private Result(EntityKeys fullKeyset, List<NodeUpdateView> allUpdates) {
+      this.fullKeyset = fullKeyset;
+      this.allUpdates = allUpdates;
+    }
   }
-  private void findAllOtherIdentifiersFor(IdentifierType idType, String typeName, String identifier, EntityKeys queriedFor) {
+
+  private Result findAllIdentifiersAndUpdatesFor(IdentifierType idType, String typeName, String identifier)
+      throws IOException {
+    EntityKeys queriedFor = new EntityKeys();
+    List<NodeUpdateView> foundUpdates = new ArrayList<>();
+    findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, identifier, queriedFor, foundUpdates);
+    Result result = new Result(queriedFor, foundUpdates);
+    return result;
+  }
+  private void findAllIdentifiersAndUpdatesFor(IdentifierType idType, String typeName, String identifier,
+                                          EntityKeys queriedFor, List<NodeUpdateView> foundUpdates) throws IOException {
     ViewQuery query = createQuery(VIEW_NODES_AND_EDGES);
     switch (idType) {
       case NAME:
@@ -311,37 +331,42 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       default:
         throw new UnsupportedOperationException("Unsupported identifier type: "+idType);
     }
-    ViewResult result = db.queryView(query);
+    ViewResult result = db.queryView(query.reduce(true));
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
       Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
-      String nodeTypeName = keyItr.next().asText();
-      String uidOrName = keyItr.next().asText();
-      String identifier2 = keyItr.next().asText(); // Should be equal to <code>identifier</code>
-      int rowType =  keyItr.next().asInt(); //0=node; 1=edgeFrom; ...
+      String nodeTypeName = keyItr.next().asText(); // Eg: "Gene". Should be equal to <code>typeName</code>
+      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
+      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
+      int rowType =  keyItr.next().asInt();         //0=node; 1=edgeFrom; ...
+      JsonNode value = row.getValueAsNode();
 
-      switch (rowType) {
-        case 0 :
-          // Extract the 'nodeNames' from the value. This should be a list of strings.
-          JsonNode nodeNames = row.getValueAsNode().get("nodeNames");
-          // Check to see if any of these names are 'new' to us.
-          for (JsonNode nameJsonNode :nodeNames) {
-            String nextName = nameJsonNode.asText();
-            // If this is the first time we've encountered the identifier, perform another query
-            if (!queriedFor.getNames().contains(nextName)) {
-              findAllOtherIdentifiersFor(IdentifierType.NAME, typeName, identifier, queriedFor);
-            }
-          }
-          break;
-        case 1 :
-          break;
-        default:
-          log.info("Ignoring unrecognised row type: "+rowType+" for key: "+row.getKey());
+      // If this result row represents a node, then append all NodeUpdates to the discovery list
+      for (JsonNode updateNode : value.get("nodeUpdates")) {
+        NodeUpdateView update = om.readValue(updateNode.asText(), NodeUpdateView.class);
+        foundUpdates.add(update);
       }
 
+      /*
+       * Regardless of the row type, there will be a field 'nodeNames' and 'nodeUids' that contain all node identifiers
+       * that are relevant to the current search. We should extract all identifiers, find out if we've encountered them
+       * before, and perform a recursive query for each 'new' identifier.
+       */
 
-
-
+      // Extract the 'nodeNames' from the value. This should be a list of strings.
+      // Check to see if any of these names are 'new' to us.
+      for (JsonNode nameJsonNode : value.get("nodeNames")) {
+        // If this is the first time we've encountered the identifier, perform another query
+        if (!queriedFor.getNames().contains(nameJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), queriedFor, foundUpdates);
+        }
+      }
+      for (JsonNode uidJsonNode : value.get("nodeUids")) {
+        // If this is the first time we've encountered the identifier, perform another query
+        if (!queriedFor.getNames().contains(uidJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), queriedFor, foundUpdates);
+        }
+      }
     }
   }
 
