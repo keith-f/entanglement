@@ -43,6 +43,11 @@ public interface NodeDAO<C extends Content> {
   //TODO implement these later
   public Iterable<Node<C>> iterateAll()
       throws GraphModelException;
+
+  public Iterable<Node<C>> iterateByType(String typeName)
+      throws GraphModelException;
+
+
 //  public long countAll()
 //      throws GraphModelException;
 //

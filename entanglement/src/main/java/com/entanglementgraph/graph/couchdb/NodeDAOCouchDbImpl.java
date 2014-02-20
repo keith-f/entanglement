@@ -149,6 +149,18 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     return itr;
   }
 
+  @Override
+  public Iterable<Node<C>> iterateByType(String typeName) throws GraphModelException {
+    /*
+     * WARNING: this implementation is suitable only for small graphs.
+     * Due to the nature of data integration, the number of graph elements is only known after iterating.
+     * This method must keep track of all 'seen' node identifiers, and is therefore only suitable for datasets whose
+     * identifiers fit into RAM.
+     */
+    IteratorForStreamingAllNodes itr = new IteratorForStreamingAllNodes(db, this, typeName);
+    return itr;
+  }
+
 
 
 

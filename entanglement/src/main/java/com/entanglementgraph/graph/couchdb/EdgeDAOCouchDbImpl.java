@@ -121,6 +121,18 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
+  public Iterable<Edge<C, F, T>> iterateByType(String typeName) throws GraphModelException {
+    /*
+     * WARNING: this implementation is suitable only for small graphs.
+     * Due to the nature of data integration, the number of graph elements is only known after iterating.
+     * This method must keep track of all 'seen' node identifiers, and is therefore only suitable for datasets whose
+     * identifiers fit into RAM.
+     */
+    IteratorForStreamingAllEdges itr = new IteratorForStreamingAllEdges(db, this, typeName);
+    return itr;
+  }
+
+  @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
     return null;
   }

@@ -45,6 +45,8 @@ public interface EdgeDAO<C extends Content, F extends Content, T extends Content
   //TODO implement these later
   public Iterable<Edge<C, F, T>> iterateAll()
       throws GraphModelException;
+  public Iterable<Edge<C, F, T>> iterateByType(String typeName)
+      throws GraphModelException;
 //  public long countAll()
 //      throws GraphModelException;
 //

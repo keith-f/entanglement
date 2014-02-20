@@ -21,10 +21,7 @@ import com.entanglementgraph.graph.*;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.ektorp.CouchDbConnector;
-import org.ektorp.StreamingViewResult;
-import org.ektorp.ViewQuery;
-import org.ektorp.ViewResult;
+import org.ektorp.*;
 
 import java.util.Iterator;
 
@@ -42,20 +39,30 @@ public class IteratorForStreamingAllEdges<C extends Content> implements Iterable
 
   private final CouchDbConnector db;
   private final EdgeDAO edgeDao;
+  private final String typeName;
 
   public IteratorForStreamingAllEdges(CouchDbConnector db, EdgeDAO edgeDao) {
     this.db = db;
     this.edgeDao = edgeDao;
+    this.typeName = null;
   }
+
+  public IteratorForStreamingAllEdges(CouchDbConnector db, EdgeDAO edgeDao, String typeName) {
+    this.db = db;
+    this.edgeDao = edgeDao;
+    this.typeName = typeName;
+  }
+
   @Override
   public Iterator<Edge> iterator() {
     //TODO would it be more efficient to query a view that doesn't contain node updates? All we need here are identifiers
     //TODO we're also iterating over more than just 'node' row types (0). We don't need to iterate over everything here...
-//    ViewQuery query = ViewQueryFactory.createReducedNodesAndEdgesQuery(db);
     ViewQuery query = ViewQueryFactory.createEdgesQuery(db);
 
-    // query = query.key(ComplexKey.of(typeName)); // TODO Optionally limit to a particular entity type
-//    StreamingViewResult result = db.queryForStreamingView(query.reduce(true).group(true).groupLevel(4));
+    if (typeName != null) {
+      query = query.startKey(ComplexKey.of(typeName)); // Optionally limit to a particular entity type
+    }
+
     StreamingViewResult result = db.queryForStreamingView(query);
     final Iterator<ViewResult.Row> resultItr = result.iterator();
 

@@ -120,6 +120,11 @@ public class TestGraph1
     for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
       System.out.println(" * Edge: "+node.toString());
     }
+
+    System.out.println("\n\nIterating nodes by type:");
+    for (Node node : graphConn1.getNodeDao().iterateByType("Gene")) {
+      System.out.println(" * Node: "+node.toString()+". Content type: "+node.getContent().getClass().getName());
+    }
   }
 
 }

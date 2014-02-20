@@ -497,21 +497,23 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
     }
   }
 
-  public Iterable<DBObject> iterateByType(String typeName)
+  public Iterable<Edge<C, F, T>> iterateByType(String typeName)
       throws GraphModelException
   {
-    DBObject query = new BasicDBObject();
-    query.put(FIELD_KEYS_TYPE, typeName);
-
-    try {
-      DBCursor cursor = col.find(query);
-      return cursor;
-    }
-    catch(Exception e) {
-      throw new GraphModelException(
-          "Failed to perform database operation to find nodes of type: "+typeName+"\n"
-              + "Query was: "+query, e);
-    }
+    //TODO reimplement
+    return null;
+//    DBObject query = new BasicDBObject();
+//    query.put(FIELD_KEYS_TYPE, typeName);
+//
+//    try {
+//      DBCursor cursor = col.find(query);
+//      return cursor;
+//    }
+//    catch(Exception e) {
+//      throw new GraphModelException(
+//          "Failed to perform database operation to find nodes of type: "+typeName+"\n"
+//              + "Query was: "+query, e);
+//    }
   }
 
   public Iterable<EntityKeys> iterateKeysByType(String typeName, int offset, int limit)
