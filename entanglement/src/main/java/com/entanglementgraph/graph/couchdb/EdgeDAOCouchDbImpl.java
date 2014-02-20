@@ -291,7 +291,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   private void findAllIdentifiersAndUpdatesFor(IdentifierType keyType, String typeName, String identifier,
                                                EntityKeys fullKeyset, List<EdgeUpdateView> foundUpdates)
       throws GraphModelException {
-    System.out.println("Querying for: "+keyType+", "+typeName+", "+identifier+", "+fullKeyset);
+//    System.out.println("Querying for: "+keyType+", "+typeName+", "+identifier+", "+fullKeyset);
     ViewQuery query = ViewQueryFactory.createEdgesQuery(db);
     switch (keyType) {
       case NAME:
