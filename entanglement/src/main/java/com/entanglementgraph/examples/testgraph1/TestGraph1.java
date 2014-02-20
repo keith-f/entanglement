@@ -16,7 +16,7 @@
  * File created: 08-Nov-2012, 13:49:25
  */
 
-package com.entanglementgraph.test;
+package com.entanglementgraph.examples.testgraph1;
 
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
@@ -37,44 +37,6 @@ import java.util.*;
  */
 public class TestGraph1
 {
-
-  public static class Gene implements Content {
-    private String description;
-
-    @Override
-    public String toString() {
-      return "Gene{" +
-          "description='" + description + '\'' +
-          '}';
-    }
-
-    public String getDescription() {
-      return description;
-    }
-
-    public void setDescription(String description) {
-      this.description = description;
-    }
-  }
-
-  public static class ExistsWithin implements Content {
-    private double weight;
-
-    private ExistsWithin() {
-    }
-
-    private ExistsWithin(double weight) {
-      this.weight = weight;
-    }
-
-    public double getWeight() {
-      return weight;
-    }
-
-    public void setWeight(double weight) {
-      this.weight = weight;
-    }
-  }
 
   public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException {
 
@@ -155,9 +117,9 @@ public class TestGraph1
       System.out.println(" * Node: "+node.toString());
     }
 
-//    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
-//      System.out.println(" * Edge: "+node.toString());
-//    }
+    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
+      System.out.println(" * Edge: "+node.toString());
+    }
   }
 
 }

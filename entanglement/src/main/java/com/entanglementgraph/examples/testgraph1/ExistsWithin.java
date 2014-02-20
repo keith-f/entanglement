@@ -15,38 +15,28 @@
  * 
  */
 
-package com.entanglementgraph.test;
+package com.entanglementgraph.examples.testgraph1;
 
 import com.entanglementgraph.graph.Content;
 
 /**
 * @author Keith Flanagan
 */
-public class Chromosome implements Content {
-  private int length;
-  private String description;
+public class ExistsWithin implements Content {
+  private double weight;
 
-  @Override
-  public String toString() {
-    return "Chromosome{" +
-        "length=" + length +
-        ", description='" + description + '\'' +
-        '}';
+  ExistsWithin() {
   }
 
-  public int getLength() {
-    return length;
+  ExistsWithin(double weight) {
+    this.weight = weight;
   }
 
-  public void setLength(int length) {
-    this.length = length;
+  public double getWeight() {
+    return weight;
   }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
+  public void setWeight(double weight) {
+    this.weight = weight;
   }
 }
