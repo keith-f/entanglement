@@ -28,8 +28,9 @@ import org.ektorp.CouchDbConnector;
  */
 public class CouchGraphConnection extends GraphConnection {
   private CouchDbConnector db;
-
   private ObjectMapper om;
+
+  private ForceIndexAfterSubmitListener indexer;
 
 
 
@@ -50,5 +51,13 @@ public class CouchGraphConnection extends GraphConnection {
 
   public void setOm(ObjectMapper om) {
     this.om = om;
+  }
+
+  public ForceIndexAfterSubmitListener getIndexer() {
+    return indexer;
+  }
+
+  public void setIndexer(ForceIndexAfterSubmitListener indexer) {
+    this.indexer = indexer;
   }
 }

@@ -144,6 +144,10 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
       connection.setNodeDao(nodeDao);
       connection.setEdgeDao(edgeDao);
 
+      ForceIndexAfterSubmitListener indexer = new ForceIndexAfterSubmitListener(nodeDao, edgeDao);
+      revLog.addListener(indexer);
+      connection.setIndexer(indexer);
+
 
       return connection;
     } catch (Exception e) {

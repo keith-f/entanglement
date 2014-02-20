@@ -39,6 +39,13 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
   private final RevisionsCouchDbDAO revLogDao;
   private final Set<RevisionLogListener> listeners;
 
+  // Performance measures
+  private long totalDocsSubmitted = 0;
+  private long totalOpsSubmitted = 0;
+  private long totalNodeUpdates = 0;
+  private long totalEdgeUpdates = 0;
+  private long totalMsSpentSubmitting = 0; //Includes submission only. Doesn't include time taken for commit listeners.
+
   public RevisionLogCouchDBImpl(CouchDbConnector db) {
     this.revLogDao = new RevisionsCouchDbDAO(db);
     this.listeners = new HashSet<>();
@@ -85,8 +92,10 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
         rollback((TransactionRollback) op);
       } else  if (op instanceof NodeUpdate) {
         container.addOperation((NodeUpdate) op);
+        totalNodeUpdates++;
       } else if (op instanceof EdgeUpdate) {
         container.addOperation((EdgeUpdate) op);
+        totalEdgeUpdates++;
       } else {
         throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
       }
@@ -97,11 +106,15 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
           op instanceof TransactionRollback) {
         return null;
       }
+      long start = System.currentTimeMillis();
       revLogDao.add(container);
+      long end = System.currentTimeMillis();
+      totalMsSpentSubmitting = totalOpsSubmitted + (end-start);
+      totalOpsSubmitted++;
+      totalDocsSubmitted++;
       return container.getId(); //Return database UID of the container document
     }
-    catch(Exception e)
-    {
+    catch(Exception e) {
       throw new RevisionLogException("Failed to store revision log item: "+container, e);
     }
   }
@@ -112,10 +125,8 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
     if (ops.isEmpty()) {
       return null;
     }
-    try
-    {
-//      List<DBObject> dbObjects = new LinkedList<>();
 
+    try {
       RevisionItemContainer container = new RevisionItemContainer();
       container.setId(UidGenerator.generateUid());
       container.setGraphUid(graphId);
@@ -136,19 +147,25 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
 
         if (op instanceof NodeUpdate) {
           container.addOperation((NodeUpdate) op);
+          totalNodeUpdates++;
         } else if (op instanceof EdgeUpdate) {
           container.addOperation((EdgeUpdate) op);
+          totalEdgeUpdates++;
         } else {
           throw new UnsupportedOperationException("Currently, operations of type: "+op.getClass()+" aren't supported.");
         }
 
       }
 
+      long start = System.currentTimeMillis();
       revLogDao.add(container);
+      long end = System.currentTimeMillis();
+      totalMsSpentSubmitting = totalOpsSubmitted + (end-start);
+      totalOpsSubmitted = totalOpsSubmitted + ops.size();
+      totalDocsSubmitted++;
       return container.getId(); //Return database UID of the container document
     }
-    catch(Exception e)
-    {
+    catch(Exception e)  {
       throw new RevisionLogException(
           "Failed to store "+ops.size()+" revision log items", e);
     }
@@ -210,5 +227,25 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
   @Override
   public Iterable<RevisionItemContainer> iterateCommittedRevisionsForGraph(String graphId) {
     return null;
+  }
+
+  public long getTotalOpsSubmitted() {
+    return totalOpsSubmitted;
+  }
+
+  public long getTotalMsSpentSubmitting() {
+    return totalMsSpentSubmitting;
+  }
+
+  public long getTotalNodeUpdates() {
+    return totalNodeUpdates;
+  }
+
+  public long getTotalEdgeUpdates() {
+    return totalEdgeUpdates;
+  }
+
+  public long getTotalDocsSubmitted() {
+    return totalDocsSubmitted;
   }
 }
