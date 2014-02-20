@@ -91,14 +91,14 @@ public class TestGraph1
       //      Edge geneToChrom = new Edge();
 //      geneToChrom.getKeys().setType(ExistsWithin.class.getName());
 //      geneToChrom.setContent(new ExistsWithin(Math.random()));
-      Edge geneToChrom = new Edge(ExistsWithin.class.getName(), new ExistsWithin(Math.random()));
+      Edge geneToChrom = new Edge("exists-within", new ExistsWithin(Math.random()));
       geneToChrom.getKeys().addUid(UidGenerator.generateUid());
 
 
       geneToChrom.setFrom(geneNode.getKeys()); //Set the 'from' node
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
       Collections.shuffle(chromosomeNames);
-      geneToChrom.setTo(new EntityKeys(Chromosome.class.getName(), chromosomeNames.iterator().next()));
+      geneToChrom.setTo(new EntityKeys("Chromosome", chromosomeNames.iterator().next()));
       ops.add(new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
     }
     totalOps = totalOps + ops.size();
