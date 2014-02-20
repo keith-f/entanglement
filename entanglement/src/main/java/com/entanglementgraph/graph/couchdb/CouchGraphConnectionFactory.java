@@ -30,10 +30,7 @@ import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -55,26 +52,26 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   private static final Logger logger = Logger.getLogger(CouchGraphConnectionFactory.class.getName());
 
   /**
-   * A set of database cluster names --> access URLs (eg, http://localhost:5984).
-   * TODO currently, only a single URL is supported. We may want to support BigCouch with multiple URLs later.
+   * A set of database cluster names --> set {access URLs (eg, http://localhost:5984) }.
    * http://bigcouch.cloudant.com/use
    * According to this, we can use any URL of any machine in the cluster.
    */
-  private static final Map<String, String> couchClusters = new HashMap<>();
+  private static final Map<String, Set<String>> couchClusters = new HashMap<>();
 
-  public static void registerNamedCluster(String clusterName, String couchUrl)
+  public static void registerNamedCluster(String clusterName, String... couchUrls)
       throws GraphConnectionFactoryException {
+    Set<String> couchUrlSet = new HashSet<>(Arrays.asList(couchUrls));
     synchronized (couchClusters) {
       if (couchClusters.containsKey(clusterName)) {
         logger.info(String.format("A CouchDB cluster with the name: %s already exists. " +
-            "Reconfiguring with new server set: %s", clusterName, Arrays.asList(couchUrl)));
+            "Reconfiguring with new server set: %s", clusterName, Arrays.asList(couchUrlSet)));
       }
 
-      couchClusters.put(clusterName, couchUrl);
+      couchClusters.put(clusterName, couchUrlSet);
     }
   }
 
-  public static String getNamedClusterUrl(String clusterName) {
+  public static Set<String> getNamedClusterUrls(String clusterName) {
     synchronized (couchClusters) {
       return couchClusters.get(clusterName);
     }
@@ -87,29 +84,33 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   }
 
   private final String clusterName;
-  private final String clusterUrl;
+  private final Set<String> clusterUrls;
   private final String databaseName;
   private final Map<Class, String> classJsonMappings;
 
   public CouchGraphConnectionFactory(String clusterName, String databaseName, Map<Class, String> classJsonMappings) {
     this.clusterName = clusterName;
-    this.clusterUrl = getNamedClusterUrl(clusterName);
+    this.clusterUrls = getNamedClusterUrls(clusterName);
     this.databaseName = databaseName;
     this.classJsonMappings = classJsonMappings;
   }
 
   public GraphConnection connect(String graphName) throws GraphConnectionFactoryException {
-    if (clusterUrl == null) {
+    if (clusterUrls == null) {
       throw new GraphConnectionFactoryException("Unknown CouchDB cluster name: "+clusterName);
     }
     try {
-      logger.info("Connecting to: " + clusterUrl + ", database: "+ databaseName + ", graph: " + graphName);
+      List<String> urlList = new ArrayList<>(clusterUrls);
+      Collections.shuffle(urlList);
+      String chosenUrl = urlList.iterator().next();
+      logger.info("Connecting to: " + chosenUrl + " (out of a choice of "+clusterUrls.size()+" servers), " +
+          "database: "+ databaseName + ", graph: " + graphName);
 
       System.setProperty("org.ektorp.support.AutoUpdateViewOnChange", "true");
 
 
       HttpClient httpClient = new StdHttpClient.Builder()
-          .url("http://localhost:5984")
+          .url(chosenUrl)
 //        .username("admin")
 //        .password("secret")
           .socketTimeout(600000)  // Default is 10000
