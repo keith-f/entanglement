@@ -55,7 +55,7 @@ public class BigGraph
     GraphConnection graphConn1 = connFact.connect("graph1");
 
     // Graph construction properties
-    int numRootNodes = 4000000;
+    int numRootNodes = 5000000;
     double probabilityOfGeneratingChildNode = 0.05;
     int maxChildNodesPerRoot = 5;
 
@@ -74,7 +74,7 @@ public class BigGraph
     EntityKeys lastRootNode = null;
     for (int i=0; i<numRootNodes; i++) {
       if (i % 50000 == 0) {
-        System.out.println("\nGenerated "+i+" of "+numRootNodes+" root nodes so far...");
+        System.out.println("\nGenerated "+i+" of "+numRootNodes+" root nodes so far ("+totalOps+" total graph operations)");
       }
       if (ops.size() >= maxPatchSetSize) {
         System.out.print(".");
