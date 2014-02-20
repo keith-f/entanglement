@@ -50,19 +50,34 @@ function(doc) {
       if (edge.from.uids) { allFromUids = edge.from.uids; } else { allFromUids = []; }
       if (edge.from.names) { allFromNames = edge.from.names; } else { allFromNames = []; }
 
+      var allToUids;
+      var allToNames;
+      if (edge.to.uids) { allToUids = edge.to.uids; } else { allToUids = []; }
+      if (edge.to.names) { allToNames = edge.to.names; } else { allToNames = []; }
+
       //Create a EdgeUpdateView (based on the EdgeUpdate, but with additional properties from the revision container)
       var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update);
 
+      // Emit 'from' node entries
       for (i=0; i < allFromUids.length; i=i+1) {
         var outKey = [edge.from.type, "U", allFromUids[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
-
-
       for (i=0; i < allFromNames.length; i=i+1) {
         var outKey = [edge.from.type, "N", allFromNames[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
+
+      // Emit 'to' node entries
+      for (i=0; i < allToUids.length; i=i+1) {
+        var outKey = [edge.to.type, "U", allToUids[i], 2, allToUids, allToNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        emit(outKey, edgeUpdateView);
+      }
+      for (i=0; i < allToNames.length; i=i+1) {
+        var outKey = [edge.to.type, "N", allToNames[i], 2, allToUids, allToNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        emit(outKey, edgeUpdateView);
+      }
+
     }
   }
 }
