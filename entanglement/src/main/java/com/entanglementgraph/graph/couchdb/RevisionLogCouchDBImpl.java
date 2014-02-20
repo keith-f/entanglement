@@ -78,7 +78,7 @@ public class RevisionLogCouchDBImpl implements RevisionLog {
 
 
       if (op instanceof TransactionBegin) {
-        logger.info("Start of new transaction. Nothing else to do at this point.");
+//        logger.info("Start of new transaction. Nothing else to do at this point.");
       } else if (op instanceof TransactionCommit) {
         commit((TransactionCommit) op);
       } else if (op instanceof TransactionRollback) {
