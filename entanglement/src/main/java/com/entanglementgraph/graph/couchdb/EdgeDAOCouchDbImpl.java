@@ -25,21 +25,45 @@ import org.ektorp.support.CouchDbRepositorySupport;
 import org.ektorp.support.View;
 import org.ektorp.support.Views;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * @author Keith Flanagan
  */
 @Views({
-    @View(name = "nameToNames", map = "classpath:edgeNameToNamesMap.js"),
-    @View(name = "uidToUids", map = "classpath:edgeUidToUidsMap.js"),
-    @View(name = "all_edges_by_name", map = "classpath:edgesByName.js"),
-    @View(name = "all_edges_by_uid", map = "classpath:edgesByUid.js")
+    @View(name = "edges", map = "classpath:edgesMap.js")
 })
 public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends Content>
     extends CouchDbRepositorySupport<Edge> implements EdgeDAO<C, F, T> {
+  private static final Logger logger = Logger.getLogger(EdgeDAOCouchDbImpl.class.getName());
+
   public static final String DESIGN_DOC_ID = "_design/"+Edge.class.getSimpleName();
 
+  public static class EdgeLookupResult {
+    private final EntityKeys queryKeyset;
+    private final EntityKeys fullKeyset;
+    private final List<EdgeUpdateView> allUpdates;
+
+    private EdgeLookupResult(EntityKeys queryKeyset, EntityKeys fullKeyset, List<EdgeUpdateView> allUpdates) {
+      this.queryKeyset = queryKeyset;
+      this.fullKeyset = fullKeyset;
+      this.allUpdates = allUpdates;
+    }
+
+    public EntityKeys getQueryKeyset() {
+      return queryKeyset;
+    }
+
+    public EntityKeys getFullKeyset() {
+      return fullKeyset;
+    }
+
+    public List<EdgeUpdateView> getAllUpdates() {
+      return allUpdates;
+    }
+  }
 
   private static class EdgeModificationViewByTimestampComparator implements Comparator<EdgeUpdateView> {
     @Override
@@ -59,39 +83,18 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
 
   public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
-    EntityKeys full = new EntityKeys();
-    full.setType(partial.getType());
-    Set<String> knownUids = full.getUids();
-    Set<String> knownNames = full.getNames();
-
-    for (String uid : partial.getUids()) {
-      if (!knownUids.contains(uid)) {
-        knownUids.addAll(findAllOtherUidsForUid(uid));
-      }
-    }
-    for (String name : partial.getNames()) {
-      if (!knownNames.contains(name)) {
-        knownNames.addAll(findAllOtherNamesForName(partial.getType(), name));
-      }
-    }
-
-    return full;
+    return findAllIdentifiersAndUpdatesFor(partial).getFullKeyset();
   }
 
   @Override
-  public Edge<C, F, T> getByKey(EntityKeys<C> keyset)
+  public Edge<C, F, T> getByKey(EntityKeys<C> partialOrFullKeyset)
       throws GraphModelException {
+    EdgeLookupResult result = findAllIdentifiersAndUpdatesFor(partialOrFullKeyset);
 
-    List<EdgeUpdateView> updates = new ArrayList<>();
-    for (String uid : keyset.getUids()) {
-      updates.addAll(findUpdatesByUid(uid));
-    }
-    for (String name : keyset.getNames()) {
-      updates.addAll(findUpdatesByName(keyset.getType(), name));
-    }
+    List<EdgeUpdateView> updates = result.getAllUpdates();
+//    logger.info("Found updates "+updates.size()+" for query keyset: "+partialOrFullKeyset);
 
-    // If the edge doesn't exist in the database, return null.
-    // Otherwise, find all revisions and construct a 'merged' node.
+    // Merge edge updates
     Edge<C, F, T> edge = null;
     if (!updates.isEmpty()) {
       edge = mergeRevisions(updates);
@@ -107,7 +110,14 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public Iterable<Edge<C, F, T>> iterateAll() throws GraphModelException {
-    return null;
+    /*
+     * WARNING: this implementation is suitable only for small graphs.
+     * Due to the nature of data integration, the number of graph elements is only known after iterating.
+     * This method must keep track of all 'seen' node identifiers, and is therefore only suitable for datasets whose
+     * identifiers fit into RAM.
+     */
+    IteratorForStreamingAllEdges itr = new IteratorForStreamingAllEdges(db, this);
+    return itr;
   }
 
   @Override
@@ -238,122 +248,100 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
 
-  private List<EdgeUpdateView> findUpdatesByUid(String uid) {
-    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
-    ViewQuery query = createQuery("all_edges_by_uid");
-
-    //Next, specify a key or key range on to return from the view.
-    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
-    // Here, we specify the Node's UID only, and want to accept any timestamp
-    query = query
-        .startKey(ComplexKey.of(uid))
-        .endKey(ComplexKey.of(uid, ComplexKey.emptyObject()));
-
-    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<EdgeUpdateView> updates = db.queryView(query, EdgeUpdateView.class);
-
-
-    System.out.println("Found "+updates.size()+" modification entries for the edge with UID: "+uid);
-
-    return updates;
-  }
-
-  private List<EdgeUpdateView> findUpdatesByName(String typeName, String name) {
-    // Creates a ViewQuery with the 'standard' design doc name + the specified view name
-    ViewQuery query = createQuery("all_edges_by_name");
-
-    //Next, specify a key or key range on to return from the view.
-    // If you want to use a wild card in your key, often used in date ranges, add a ComplexKey.emptyObject()
-    // Here, we specify the Node's type and name as the key, and want to accept any timestamp
-    query = query
-        .startKey(ComplexKey.of(typeName, name))
-        .endKey(ComplexKey.of(typeName, name, ComplexKey.emptyObject()));
-
-    // Pull back all matching docs as an in-memory List. This should be fine since we're querying for a single node.
-    List<EdgeUpdateView> updates = db.queryView(query, EdgeUpdateView.class);
-
-    System.out.println("Found "+updates.size()+" modification entries for the edge with type: "+typeName+", name: "+name);
-
-    return updates;
-  }
-
-
-
   /**
-   * Given a node UID, finds all other UIDs that the node is known by.
-   * Queries a view whose rows look like:
+   * Given a keyset describing a edge, performs iterative database queries to return:
+   *   a) the complete keyset containing all identifiers the edge is known by
+   *   b) the complete list of revision documents containing all updates to the edge over time.
    *
-   * [uid1] --> [uid1, uid2, uid3, ...]
-   * [uid1] --> [uid1, uid4, ...]
-   *
-   * We simply read each row, and extract all known names.
-   *
-   * @param uid
-   * @return
+   * @param queryKeyset the partial, or full edge's Keyset. At least one identifier must be specified. Other identifiers
+   *                    will be found and returned in the result.
+   * @return an object containing the query keyset, the full keyset and the full list of modifications for the
+   * specified edge.
+   * @throws java.io.IOException
    */
-  private Set<String> findAllOtherUidsForUid(String uid) {
-    Set<String> queriedFor = new HashSet<>();
-//    Set<String> allUids = new HashSet<>();
-    findAllOtherUidsForUid(uid, queriedFor);
-    return queriedFor;
-  }
-  private void findAllOtherUidsForUid(String uid, Set<String> queriedFor) {
-//    allUids.add(uid);
-    queriedFor.add(uid);
+  private EdgeLookupResult findAllIdentifiersAndUpdatesFor(EntityKeys<C> queryKeyset)
+      throws GraphModelException {
+    EntityKeys fullKeyset = new EntityKeys(); // Keeps track of which identifiers we've already queried for.
+    List<EdgeUpdateView> foundUpdates = new ArrayList<>();    //List of update documents found so far.
 
-    ViewQuery query = createQuery("uidToUids");
-    query = query.key(uid);
+    for (String uid : queryKeyset.getUids()) {
+      findAllIdentifiersAndUpdatesFor(IdentifierType.UID, queryKeyset.getType(), uid, fullKeyset, foundUpdates);
+    }
+    for (String name : queryKeyset.getNames()) {
+      findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, queryKeyset.getType(), name, fullKeyset, foundUpdates);
+    }
+
+
+    EdgeLookupResult result = new EdgeLookupResult(queryKeyset, fullKeyset, foundUpdates);
+    return result;
+  }
+
+  private void findAllIdentifiersAndUpdatesFor(IdentifierType keyType, String typeName, String identifier,
+                                               EntityKeys fullKeyset, List<EdgeUpdateView> foundUpdates)
+      throws GraphModelException {
+    System.out.println("Querying for: "+keyType+", "+typeName+", "+identifier+", "+fullKeyset);
+    ViewQuery query = ViewQueryFactory.createEdgesQuery(db);
+    switch (keyType) {
+      case NAME:
+        fullKeyset.addName(identifier);
+        query = query
+            .startKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier))
+            .endKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier, ComplexKey.emptyObject()));
+        break;
+      case UID:
+        fullKeyset.addUid(identifier);
+        query = query
+            .startKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier))
+            .endKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier, ComplexKey.emptyObject()));
+        break;
+      default:
+        throw new GraphModelException("Unsupported identifier type: "+keyType);
+    }
 
     ViewResult result = db.queryView(query);
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
-      // Read each name in each row
-      for (JsonNode uidNode : row.getValueAsNode()) {
-        String nextUid = uidNode.asText();
-        if (!queriedFor.contains(nextUid)) {
-          findAllOtherUidsForUid(nextUid, queriedFor);
+      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
+      String nodeTypeName = keyItr.next().asText(); // Eg: "part-of". Should be equal to <code>typeName</code>
+      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
+      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
+      int rowType =  keyItr.next().asInt();         //0=edge ...
+      JsonNode otherEdgeUids = keyItr.next();       // (some) of the other UIDs this edge is known by
+      JsonNode otherEdgeNames = keyItr.next();      // (some) of the other names this edge is known by
+
+      JsonNode value = row.getValueAsNode();
+
+      // If this result row represents a node, then append NodeUpdate (value) to the list of updates
+      if (rowType == 0) {
+        try {
+          EdgeUpdateView update2 = om.treeToValue(value, EdgeUpdateView.class);
+          foundUpdates.add(update2);
+        } catch(IOException e) {
+          throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+value, e);
+        }
+      }
+
+      /*
+       * Regardless of the row type, we should extract all other node identifiers from the row key (see 'otherEdgeUids'
+       * and 'otherEdgeNames').
+       * Find out if we've encountered them before, and perform a recursive query for each 'new' identifier if we
+       * haven't previously seen them.
+       */
+
+      // Check to see if any of these names are 'new' to us.
+      for (JsonNode nameJsonNode : otherEdgeNames) {
+        // If this is the first time we've encountered the identifier, perform another query
+        if (!fullKeyset.getNames().contains(nameJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), fullKeyset, foundUpdates);
+        }
+      }
+      for (JsonNode uidJsonNode :otherEdgeUids) {
+        // If this is the first time we've encountered the identifier, perform another query
+        if (!fullKeyset.getUids().contains(uidJsonNode.asText())) {
+          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
     }
   }
-
-  /**
-   * Given a node name, finds all other names that the node is known by.
-   * Queries a view whose rows look like:
-   *
-   * [type, name1] --> [name1, name2, name3, ...]
-   * [type, name1] --> [name1, name4, ...]
-   *
-   * We simply read each row, and extract all known names.
-   *
-   * @param name
-   * @return
-   */
-  private Set<String> findAllOtherNamesForName(String typeName, String name) {
-    Set<String> queriedFor = new HashSet<>();
-    findAllOtherNamesForName(typeName, name, queriedFor);
-    return queriedFor;
-  }
-  private void findAllOtherNamesForName(String typeName, String name, Set<String> queriedFor) {
-    queriedFor.add(name);
-
-    ViewQuery query = createQuery("nameToNames");
-    query = query.key(ComplexKey.of(typeName, name));
-
-    ViewResult result = db.queryView(query);
-    //Read each row
-    for (ViewResult.Row row : result.getRows()) {
-      // Read each name in each row
-      for (JsonNode nameNode : row.getValueAsNode()) {
-        String nextName = nameNode.asText();
-        if (!queriedFor.contains(nextName)) {
-          findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
-        }
-      }
-    }
-  }
-
-
-
 
 }

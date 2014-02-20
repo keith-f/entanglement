@@ -33,6 +33,14 @@ public class ViewQueryFactory {
     return query;
   }
 
+  public static ViewQuery createEdgesQuery(CouchDbConnector db) {
+    ViewQuery query = new ViewQuery()
+        .dbPath(db.path())
+        .designDocId(EdgeDAOCouchDbImpl.DESIGN_DOC_ID)
+        .viewName("edges");
+    return query;
+  }
+
 //  public static ViewQuery createReducedNodesAndEdgesQuery(CouchDbConnector db) {
 //    ViewQuery query = new ViewQuery()
 //        .dbPath(db.path())

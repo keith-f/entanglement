@@ -29,7 +29,7 @@ import org.ektorp.ViewResult;
 import java.util.Iterator;
 
 /**
- * An iterable that is capable of streaming nodes from the database (either ALL nodes, or nodes by type).
+ * An iterable that is capable of streaming edges from the database (either ALL edges, or edges by type).
  *
  * WARNING: this implementation is suitable only for small graphs.
  * Due to the nature of data integration, the number of graph elements is only known after iterating.
@@ -38,48 +38,41 @@ import java.util.Iterator;
  *
  * @author Keith Flanagan
  */
-public class IteratorForStreamingAllNodes<C extends Content> implements Iterable<Node<C>> {
+public class IteratorForStreamingAllEdges<C extends Content> implements Iterable<Edge> {
 
   private final CouchDbConnector db;
-  private final NodeDAO nodeDao;
-//  private final EntityKeys fromFullNodeKeyset;
+  private final EdgeDAO edgeDao;
 
-  public IteratorForStreamingAllNodes(CouchDbConnector db, NodeDAO nodeDao) { //}, EntityKeys fromFullNodeKeyset) {
+  public IteratorForStreamingAllEdges(CouchDbConnector db, EdgeDAO edgeDao) {
     this.db = db;
-    this.nodeDao = nodeDao;
-//    this.fromFullNodeKeyset = fromFullNodeKeyset;
+    this.edgeDao = edgeDao;
   }
   @Override
-  public Iterator<Node<C>> iterator() {
+  public Iterator<Edge> iterator() {
     //TODO would it be more efficient to query a view that doesn't contain node updates? All we need here are identifiers
     //TODO we're also iterating over more than just 'node' row types (0). We don't need to iterate over everything here...
 //    ViewQuery query = ViewQueryFactory.createReducedNodesAndEdgesQuery(db);
-    ViewQuery query = ViewQueryFactory.createNodesAndEdgesQuery(db);
+    ViewQuery query = ViewQueryFactory.createEdgesQuery(db);
 
     // query = query.key(ComplexKey.of(typeName)); // TODO Optionally limit to a particular entity type
 //    StreamingViewResult result = db.queryForStreamingView(query.reduce(true).group(true).groupLevel(4));
     StreamingViewResult result = db.queryForStreamingView(query);
     final Iterator<ViewResult.Row> resultItr = result.iterator();
 
-    return new Iterator<Node<C>>() {
-      private final EntityKeyElementCache seenNodes = new InMemoryEntityKeyElementCache();
-      private Node<C> nextNode = null;
+    return new Iterator<Edge>() {
+      private final EntityKeyElementCache seenEdges = new InMemoryEntityKeyElementCache();
+      private Edge nextEdge = null;
 
-      private Node<C> findNext() throws GraphModelException {
-        Node<C> next = null;
+      private Edge findNext() throws GraphModelException {
+        Edge next = null;
         while(resultItr.hasNext()) {
           ViewResult.Row row = resultItr.next();
           Iterator<JsonNode> keyNodeItr = row.getKeyAsNode().iterator();
-          String entityType = keyNodeItr.next().asText(); // Entity type (eg, 'Gene', 'Chromosome')
+          String entityType = keyNodeItr.next().asText(); // Entity type (eg, 'has-location', 'part-of')
           String keyType = keyNodeItr.next().asText();    // Key type (either 'N' or 'U' for Name/UID, respectively)
           String identifier = keyNodeItr.next().asText(); // The entity name/UID
-          int rowType = keyNodeItr.next().asInt();        // 0 for node info, 1 for 'from' edge.
+          int rowType = keyNodeItr.next().asInt();        // 0 for edge info
           // We don't need further key items
-
-          if (rowType != NodeDAOCouchDbImpl.RowType.NODE.getDbTypeIdx()) {
-            // FIXME we wouldn't need this if we used a more appropriate CouchDB View that didn't contain edge info as well.
-            continue;
-          }
 
           EntityKeys partialKeyset = new EntityKeys();
           partialKeyset.setType(entityType);
@@ -91,13 +84,13 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
             throw new RuntimeException("Unsupported identifier type: "+keyType);
           }
 
-          if (seenNodes.seenElementOf(partialKeyset)) {
+          if (seenEdges.seenElementOf(partialKeyset)) {
             continue; //We've seen this identifier as the name of another entity. Skip to avoid returning duplicates.
           }
 
-          next = nodeDao.getByKey(partialKeyset);
-          seenNodes.cacheElementsOf(next.getKeys());
-          break; // We've found the next node
+          next = edgeDao.getByKey(partialKeyset);
+          seenEdges.cacheElementsOf(next.getKeys());
+          break; // We've found the next edge
         }
 
         return next;
@@ -105,24 +98,24 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
 
       @Override
       public boolean hasNext() {
-        if (nextNode != null) {
+        if (nextEdge != null) {
           return true;
         }
         try {
-          nextNode = findNext();
+          nextEdge = findNext();
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to find the next item", e);
         }
-        return nextNode != null;
+        return nextEdge != null;
       }
 
       @Override
-      public Node<C> next() {
+      public Edge next() {
         if (!hasNext()) {
           throw new RuntimeException("Attempt to iterate beyond the resultset.");
         }
-        Node<C> toReturn = nextNode;
-        nextNode = null;
+        Edge toReturn = nextEdge;
+        nextEdge = null;
         return toReturn;
       }
 

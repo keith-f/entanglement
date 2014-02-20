@@ -50,29 +50,29 @@ public class RevisionsCouchDbDAO
   }
 
 
-//  @View( name = "nodes_by_name", map = "classpath:nodesByName.js")
-  public List<Node> getAllNodes() {
-    ViewQuery query = new ViewQuery()
-        .designDocId("_design/nodes_by_name")
-        .viewName("_all");
-//        .key("red");
-
-    List<Node> nodes = db.queryView(query, Node.class);
-    return nodes;
-  }
-
-  @View( name = "all_nodes_by_name", map = "classpath:nodesByName.js")
-  public List<Node> getAllNodes2() {
+////  @View( name = "nodes_by_name", map = "classpath:nodesByName.js")
+//  public List<Node> getAllNodes() {
 //    ViewQuery query = new ViewQuery()
 //        .designDocId("_design/nodes_by_name")
 //        .viewName("_all");
 ////        .key("red");
-
-    ViewQuery query = createQuery("all_nodes_by_name");
-
-    List<Node> nodes = db.queryView(query, Node.class);
-    return nodes;
-  }
+//
+//    List<Node> nodes = db.queryView(query, Node.class);
+//    return nodes;
+//  }
+//
+//  @View( name = "all_nodes_by_name", map = "classpath:nodesByName.js")
+//  public List<Node> getAllNodes2() {
+////    ViewQuery query = new ViewQuery()
+////        .designDocId("_design/nodes_by_name")
+////        .viewName("_all");
+//////        .key("red");
+//
+//    ViewQuery query = createQuery("all_nodes_by_name");
+//
+//    List<Node> nodes = db.queryView(query, Node.class);
+//    return nodes;
+//  }
 
 
 }

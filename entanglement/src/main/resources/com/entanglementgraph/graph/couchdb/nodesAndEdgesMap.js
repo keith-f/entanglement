@@ -54,13 +54,13 @@ function(doc) {
       var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update);
 
       for (i=0; i < allFromUids.length; i=i+1) {
-        var outKey = [node.keys.type, "U", allFromUids[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        var outKey = [edge.from.type, "U", allFromUids[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
 
 
       for (i=0; i < allFromNames.length; i=i+1) {
-        var outKey = [node.keys.type, "N", allFromNames[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
+        var outKey = [edge.from.type, "N", allFromNames[i], 1, allFromUids, allFromNames, edge.keys.type, allEdgeUids, allEdgeNames];
         emit(outKey, edgeUpdateView);
       }
     }
