@@ -73,7 +73,7 @@ public class BigGraph
     System.out.println("Generating nodes/edge to an in-memory patch set.");
     List<GraphOperation> ops = new LinkedList<>();
 
-    System.out.println("Time since last commit (s)\t"+"Current ops"
+    System.out.println("Time since start\tTime since last commit (s)\t"+"Current ops"
         +"\t"+"Total ops"
         +"\t"+"Total docs"
         +"\t"+"Total ops (revlog)"
@@ -86,7 +86,8 @@ public class BigGraph
     );
 
     EntityKeys lastRootNode = null;
-    long lastCommit = System.currentTimeMillis();
+    long start = System.currentTimeMillis();
+    long lastCommit = start;
     for (int i=0; i<numRootNodes; i++) {
       if (i % 100000 == 0) {
         System.out.println("\nGenerated "+i+" of "+numRootNodes+" root nodes so far ("+totalOps+" total graph operations)");
@@ -106,8 +107,9 @@ public class BigGraph
         CouchGraphConnection conn = (CouchGraphConnection) graphConn1;
         long now = System.currentTimeMillis();
         double timeSinceLastCommit = (now - lastCommit) / 1000d;
+        double timeSinceStart = (now - start) / 1000d;
         lastCommit = now;
-        System.out.println(timeSinceLastCommit +
+        System.out.println(timeSinceStart + "\t" + timeSinceLastCommit +
             "\t"+opsThisTime
             +"\t"+totalOps
             +"\t"+revLog.getTotalDocsSubmitted()
