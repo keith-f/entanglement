@@ -23,7 +23,9 @@ import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.commands.NodeUpdate;
+import com.entanglementgraph.graph.couchdb.CouchGraphConnection;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
+import com.entanglementgraph.graph.couchdb.RevisionLogCouchDBImpl;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -71,18 +73,47 @@ public class BigGraph
     System.out.println("Generating nodes/edge to an in-memory patch set.");
     List<GraphOperation> ops = new LinkedList<>();
 
+    System.out.println("Key\t"+"Current ops"
+        +"\t"+"Total ops"
+        +"\t"+"Total docs"
+        +"\t"+"Total ops (revlog)"
+        +"\t"+"Nodes"
+        +"\t"+"Edges"
+        +"\t"+"Submit time"
+        +"\t"+"Index time total"
+        +"\t"+"Index time nodes"
+        +"\t"+"Index time edges"
+    );
+
     EntityKeys lastRootNode = null;
     for (int i=0; i<numRootNodes; i++) {
-      if (i % 50000 == 0) {
+      if (i % 100000 == 0) {
         System.out.println("\nGenerated "+i+" of "+numRootNodes+" root nodes so far ("+totalOps+" total graph operations)");
       }
       if (ops.size() >= maxPatchSetSize) {
-        System.out.print(".");
-//        System.out.println("   Committing "+ops.size()+" graph operations.");
+//        System.out.print("c");
+        int opsThisTime = ops.size();
         totalOps = totalOps + ops.size();
         TxnUtils.submitAsTxn(graphConn1, ops);
         ops.clear();
-//        System.out.println("   Commit done. Back to dataset generation.");
+
+        // Now try querying the view to force incremental updates (apparently this is faster)
+//        System.out.print("i");
+        graphConn1.getNodeDao().getByKey(new EntityKeys("Nonexistent...", "foo"));
+//        System.out.print(".");
+        RevisionLogCouchDBImpl revLog = (RevisionLogCouchDBImpl) graphConn1.getRevisionLog();
+        CouchGraphConnection conn = (CouchGraphConnection) graphConn1;
+        System.out.println("Commit\t"+opsThisTime
+            +"\t"+totalOps
+            +"\t"+revLog.getTotalDocsSubmitted()
+            +"\t"+revLog.getTotalOpsSubmitted()
+            +"\t"+revLog.getTotalNodeUpdates()
+            +"\t"+revLog.getTotalEdgeUpdates()
+            +"\t"+revLog.getTotalMsSpentSubmitting()
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexing()
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexingNodes()
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexingEdges()
+        );
       }
       ParentNodeData newRootData = new ParentNodeData();
       newRootData.setDescription(String.valueOf(Math.random()));
