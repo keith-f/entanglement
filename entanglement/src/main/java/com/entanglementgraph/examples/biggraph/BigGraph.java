@@ -73,19 +73,20 @@ public class BigGraph
     System.out.println("Generating nodes/edge to an in-memory patch set.");
     List<GraphOperation> ops = new LinkedList<>();
 
-    System.out.println("Key\t"+"Current ops"
+    System.out.println("Time since last commit (s)\t"+"Current ops"
         +"\t"+"Total ops"
         +"\t"+"Total docs"
         +"\t"+"Total ops (revlog)"
         +"\t"+"Nodes"
         +"\t"+"Edges"
-        +"\t"+"Submit time"
-        +"\t"+"Index time total"
-        +"\t"+"Index time nodes"
-        +"\t"+"Index time edges"
+        +"\t"+"Submit time (s)"
+        +"\t"+"Index time total (s)"
+        +"\t"+"Index time nodes (s)"
+        +"\t"+"Index time edges (s)"
     );
 
     EntityKeys lastRootNode = null;
+    long lastCommit = System.currentTimeMillis();
     for (int i=0; i<numRootNodes; i++) {
       if (i % 100000 == 0) {
         System.out.println("\nGenerated "+i+" of "+numRootNodes+" root nodes so far ("+totalOps+" total graph operations)");
@@ -103,16 +104,20 @@ public class BigGraph
 //        System.out.print(".");
         RevisionLogCouchDBImpl revLog = (RevisionLogCouchDBImpl) graphConn1.getRevisionLog();
         CouchGraphConnection conn = (CouchGraphConnection) graphConn1;
-        System.out.println("Commit\t"+opsThisTime
+        long now = System.currentTimeMillis();
+        double timeSinceLastCommit = (now - lastCommit) / 1000d;
+        lastCommit = now;
+        System.out.println(timeSinceLastCommit +
+            "\t"+opsThisTime
             +"\t"+totalOps
             +"\t"+revLog.getTotalDocsSubmitted()
             +"\t"+revLog.getTotalOpsSubmitted()
             +"\t"+revLog.getTotalNodeUpdates()
             +"\t"+revLog.getTotalEdgeUpdates()
-            +"\t"+revLog.getTotalMsSpentSubmitting()
-            +"\t" +conn.getIndexer().getTotalMsSpentIndexing()
-            +"\t" +conn.getIndexer().getTotalMsSpentIndexingNodes()
-            +"\t" +conn.getIndexer().getTotalMsSpentIndexingEdges()
+            +"\t"+revLog.getTotalMsSpentSubmitting() / 1000d
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexing() / 1000d
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexingNodes() / 1000d
+            +"\t" +conn.getIndexer().getTotalMsSpentIndexingEdges() / 1000d
         );
       }
       ParentNodeData newRootData = new ParentNodeData();
