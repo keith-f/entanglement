@@ -112,6 +112,7 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
           .url("http://localhost:5984")
 //        .username("admin")
 //        .password("secret")
+          .socketTimeout(600000)  // Default is 10000
           .build();
 
       ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory(classJsonMappings);
