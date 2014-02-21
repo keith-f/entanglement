@@ -87,10 +87,6 @@ public class TestGraph1
 
       // Create a hanging edge between this gene and a chromosome.
       // Note that the chromosome doesn't exist in the GENES graph.
-
-      //      Edge geneToChrom = new Edge();
-//      geneToChrom.getKeys().setType(ExistsWithin.class.getName());
-//      geneToChrom.setContent(new ExistsWithin(Math.random()));
       Edge geneToChrom = new Edge("exists-within", new ExistsWithin(Math.random()));
       geneToChrom.getKeys().addUid(UidGenerator.generateUid());
 
@@ -117,13 +113,24 @@ public class TestGraph1
       System.out.println(" * Node: "+node.toString());
     }
 
-    for (Edge node : graphConn1.getEdgeDao().iterateAll()) {
-      System.out.println(" * Edge: "+node.toString());
+    for (Edge edge : graphConn1.getEdgeDao().iterateAll()) {
+      System.out.println(" * Edge: "+edge.toString());
     }
 
     System.out.println("\n\nIterating nodes by type:");
     for (Node node : graphConn1.getNodeDao().iterateByType("Gene")) {
       System.out.println(" * Node: "+node.toString()+". Content type: "+node.getContent().getClass().getName());
+    }
+
+
+    System.out.println("Iterating edges from g1");
+    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g1"))) {
+      System.out.println(" * Edge: "+node.toString());
+    }
+
+    System.out.println("Iterating edges from g2");
+    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g2"))) {
+      System.out.println(" * Edge: "+node.toString());
     }
   }
 
