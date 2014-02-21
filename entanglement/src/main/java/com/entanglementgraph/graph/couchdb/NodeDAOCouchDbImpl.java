@@ -18,8 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
-import com.entanglementgraph.util.EntityKeyElementCache;
-import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
+import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.*;
@@ -238,13 +237,17 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     ViewResult result = db.queryView(query);
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
-      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
-      String nodeTypeName = keyItr.next().asText(); // Eg: "Gene". Should be equal to <code>typeName</code>
-      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
-      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
-      int rowType =  keyItr.next().asInt();         //0=node; 1=edgeFrom; ...
-      JsonNode otherNodeUids = keyItr.next();       // (some) of the other UIDs this node is known by
-      JsonNode otherNodeNames = keyItr.next();       // (some) of the other names this node is known by
+      NodesAndEdgesViewRowParser parsedRow = new NodesAndEdgesViewRowParser(row);
+      final int rowType = parsedRow.getRowType();
+      final JsonNode otherNodeUids = parsedRow.getOtherNodeUids();
+      final JsonNode otherNodeNames = parsedRow.getOtherNodeNames();
+//      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
+//      String nodeTypeName = keyItr.next().asText(); // Eg: "Gene". Should be equal to <code>typeName</code>
+//      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
+//      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
+//      int rowType =  keyItr.next().asInt();         //0=node; 1=edgeFrom; ...
+//      JsonNode otherNodeUids = keyItr.next();       // (some) of the other UIDs this node is known by
+//      JsonNode otherNodeNames = keyItr.next();       // (some) of the other names this node is known by
 
       JsonNode value = row.getValueAsNode();
 

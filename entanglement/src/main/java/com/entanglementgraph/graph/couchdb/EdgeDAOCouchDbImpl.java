@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.couchdb.viewparsers.EdgesViewRowParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ektorp.*;
@@ -313,13 +314,10 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
     ViewResult result = db.queryView(query);
     //Read each row
     for (ViewResult.Row row : result.getRows()) {
-      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
-      String nodeTypeName = keyItr.next().asText(); // Eg: "part-of". Should be equal to <code>typeName</code>
-      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
-      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
-      int rowType =  keyItr.next().asInt();         //0=edge ...
-      JsonNode otherEdgeUids = keyItr.next();       // (some) of the other UIDs this edge is known by
-      JsonNode otherEdgeNames = keyItr.next();      // (some) of the other names this edge is known by
+      EdgesViewRowParser parser = new EdgesViewRowParser(row);
+      final int rowType = parser.getRowType();
+      final JsonNode otherEdgeUids = parser.getOtherEdgeUids();
+      final JsonNode otherEdgeNames = parser.getOtherEdgeNames();
 
       JsonNode value = row.getValueAsNode();
 
@@ -329,8 +327,10 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
           EdgeUpdateView update2 = om.treeToValue(value, EdgeUpdateView.class);
           foundUpdates.add(update2);
         } catch(IOException e) {
-          throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+value, e);
+          throw new GraphModelException("Failed to decode EdgeUpdateView. Raw text was: "+value, e);
         }
+      } else {
+        throw new GraphModelException("Unexpected row type: "+rowType+". Key text was: "+row.getKey());
       }
 
       /*
