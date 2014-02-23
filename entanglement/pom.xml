@@ -32,7 +32,8 @@
     <jung.version>2.0.1</jung.version>
     <jfreechart.version>1.0.14</jfreechart.version>
     <restlet.version>2.1.4</restlet.version>
-    <ektorp.version>1.4.1</ektorp.version>
+    <!--<ektorp.version>1.4.1</ektorp.version>-->
+    <ektorp.version>1.4.2-SNAPSHOT</ektorp.version>
   </properties>
 
 
