@@ -1,0 +1,26 @@
+language: java
+jdk:
+  - oraclejdk7
+  - openjdk7
+  - openjdk6
+
+
+# blacklist
+#branches:
+#  except:
+#    - legacy
+#    - experimental
+
+# whitelist
+branches:
+  only:
+    - master
+    - develop
+    - feature/kf-couchdb-test
+
+
+#before_script:
+#	cd entanglement
+
+script: build.sh
+
