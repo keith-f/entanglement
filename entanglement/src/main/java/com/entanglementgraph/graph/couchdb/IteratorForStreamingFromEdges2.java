@@ -152,8 +152,10 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
          * Here, we only really want one row, but we may have to read several before we find an edge that is 'new'
          */
         while (edge == null) {
+          logger.info("There is currently no 'next' edge known. Going to attempt to find one.");
           // If there are no more result Rows and now more result sets, then there aren't any more edges
           if (!hasNextResultRow()) {
+            logger.info("There aren't any more result sets to try. There really is no next edge.");
             return null;
           }
 
@@ -188,7 +190,9 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
           if (rowType == 0) {
             logger.info("Found node entry with node type:"+nodeTypeName
                 +", node identifier: "+uidOrName+":"+nodeIdentifier
-                +", other node identifiers: U:"+otherNodeUids.asText()+" N:"+otherNodeNames.asText());
+//                +", other node identifiers: U:"+otherNodeUids.asText()+" N:"+otherNodeNames.asText()
+                + ". Skipping since we're interested in edges only..."
+            );
           } else if (rowType == 1) {
             String edgeTypeName = parser.getEdgeTypeName();
             // Optionally limit to a particular entity type
@@ -199,8 +203,8 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
             JsonNode otherEdgeNames = parser.getOtherEdgeNames();
             logger.info("Found edge entry with node type:"+nodeTypeName+", node identifier: "+nodeIdentifier
                 +", edge type: "+edgeTypeName
-                +", edge UIDs: "+otherEdgeUids.asText()
-                +", edge names: "+otherEdgeNames.asText());
+                +", edge UIDs: "+otherEdgeUids
+                +", edge names: "+otherEdgeNames);
             EntityKeys fromEdgePartial = new EntityKeys(); // Partial because this may not be all the edge's identifiers
             fromEdgePartial.setType(edgeTypeName);
             for (JsonNode identifier : otherEdgeUids) {
@@ -216,6 +220,7 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
               //We've seen at least one of the names before (and therefore returned it already).
               //Ensure all the names are cached, and proceed to read the next row.
               seenEdges.cacheElementsOf(fromEdgePartial);
+              logger.info("We've seen this edge before. Skipping.");
               continue;
             }
 
@@ -226,12 +231,14 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
               //We've seen at least one of the names before (and therefore returned it already).
               //Ensure all the names are cached, and proceed to read the next row.
               seenEdges.cacheElementsOf(edge.getKeys());
+              logger.info("We've seen this edge before. Skipping.");
               continue;
             }
 
             //If we get here then this is a novel edge.
             // Cache all identifiers. Then find all EdgeModifications. Merge. Return the complete Edge.
             seenEdges.cacheElementsOf(fromEdgePartial);
+            logger.info("Returning new edge.");
 
           } else {
             throw new GraphModelException("Unsupported row type found in view: "+rowType+" on row: "+nextRow);
@@ -345,32 +352,33 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
     public Iterator<ViewResult.Row> iterator() {
       final ViewQuery query =
           ViewQueryFactory.createNodesAndEdgesQuery(db)
-              .startKey(ComplexKey.of(nodeTypeName, IdentifierType.NAME.getDbString(), nodeName))
-              .endKey(ComplexKey.of(nodeTypeName, IdentifierType.NAME.getDbString(), nodeName, ComplexKey.emptyObject()));
+              .startKey(ComplexKey.of(
+                  nodeTypeName, IdentifierType.NAME.getDbString(), nodeName,
+                  NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx()))
+              .endKey(ComplexKey.of(
+                  nodeTypeName, IdentifierType.NAME.getDbString(), nodeName,
+                  NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx(), ComplexKey.emptyObject()));
 
-//        ViewQuery query = new ViewQuery()
-//            .dbPath(db.path())
-//            .designDocId(EdgeDAOCouchDbImpl.DESIGN_DOC_ID)
-//            .viewName("nodes_and_edges")
-//            .key(ComplexKey.of(nodeType, nodeName))
-//            .reduce(true)
-//            .group(true)
-//            .groupLevel(2);
-
-//      final StreamingViewResult result = db.queryForStreamingView(query);
-      final ViewResult result = db.queryView(query); //FIXME why doesn't this work with streaming view???
+      final StreamingViewResult result = db.queryForStreamingView(query);
+//      final ViewResult result = db.queryView(query);
       final Iterator<ViewResult.Row> resultItr = result.iterator();
 
       return new Iterator<ViewResult.Row>() {
+        int returnedCount = 0;
 
         @Override
         public boolean hasNext() {
+
           return resultItr.hasNext();
         }
 
         @Override
         public ViewResult.Row next() {
-          return resultItr.next();
+          ViewResult.Row next = resultItr.next();
+          returnedCount++;
+          logger.info("Returned "+returnedCount+" of "+result.getTotalRows());
+          logger.info("Row: "+next.getKey());
+          return next;
         }
 
         @Override
@@ -403,17 +411,12 @@ public class IteratorForStreamingFromEdges2<C extends Content, F extends Content
 
         ViewQuery query =
             ViewQueryFactory.createNodesAndEdgesQuery(db)
-                .startKey(ComplexKey.of(nodeTypeName, IdentifierType.UID.getDbString(), nodeUid))
-                .endKey(ComplexKey.of(nodeTypeName, IdentifierType.UID.getDbString(), nodeUid, ComplexKey.emptyObject()));
-
-//        ViewQuery query = new ViewQuery()
-//            .dbPath(db.path())
-//            .designDocId(EdgeDAOCouchDbImpl.DESIGN_DOC_ID)
-//            .viewName("nodes_and_edges_by_node_uid")
-//            .key(ComplexKey.of(nodeUid))
-//            .reduce(true)
-//            .group(true)
-//            .groupLevel(2);
+                .startKey(ComplexKey.of(
+                    nodeTypeName, IdentifierType.UID.getDbString(), nodeUid,
+                    NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx()))
+                .endKey(ComplexKey.of(
+                    nodeTypeName, IdentifierType.UID.getDbString(), nodeUid,
+                    NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx(), ComplexKey.emptyObject()));
 
         final StreamingViewResult result = db.queryForStreamingView(query);
         final Iterator<ViewResult.Row> resultItr = result.iterator();

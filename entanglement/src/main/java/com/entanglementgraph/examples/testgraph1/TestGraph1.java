@@ -30,6 +30,7 @@ import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.util.UidGenerator;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  *
@@ -37,8 +38,9 @@ import java.util.*;
  */
 public class TestGraph1
 {
+  private static final Logger logger = Logger.getLogger(TestGraph1.class.getSimpleName());
 
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException, InterruptedException {
 
     String clusterName = "local";
     String databaseName = "testgraph1";
@@ -114,7 +116,7 @@ public class TestGraph1
     }
 
     for (Edge edge : graphConn1.getEdgeDao().iterateAll()) {
-      System.out.println(" * Edge: "+edge.toString());
+      System.out.println(" * Edge: " + edge.toString());
     }
 
     System.out.println("\n\nIterating nodes by type:");
@@ -122,16 +124,16 @@ public class TestGraph1
       System.out.println(" * Node: "+node.toString()+". Content type: "+node.getContent().getClass().getName());
     }
 
-
-    System.out.println("Iterating edges from g1");
-    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g1"))) {
+//    Thread.sleep(5000);
+    System.out.println("Iterating edges from g0");
+    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g0"))) {
       System.out.println(" * Edge: "+node.toString());
     }
 
-    System.out.println("Iterating edges from g2");
-    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g2"))) {
-      System.out.println(" * Edge: "+node.toString());
-    }
+//    System.out.println("Iterating edges from g2");
+//    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g2"))) {
+//      System.out.println(" * Edge: "+node.toString());
+//    }
   }
 
 }
