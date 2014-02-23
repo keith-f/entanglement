@@ -1,6 +1,6 @@
 #!/bin/bash
 
 cd entanglement
-mvn clean install
+mvn package
 
 

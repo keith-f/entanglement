@@ -22,5 +22,5 @@ branches:
 #before_script:
 #	cd entanglement
 
-script: build.sh
+script: ./build.sh
 
