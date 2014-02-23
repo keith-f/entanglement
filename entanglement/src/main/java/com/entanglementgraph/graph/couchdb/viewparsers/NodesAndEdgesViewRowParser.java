@@ -32,6 +32,21 @@ import java.util.Iterator;
  */
 public class NodesAndEdgesViewRowParser {
 
+  public static enum RowType {
+    NODE (0),
+    EDGE_FROM_NODE (1);
+
+    private final int dbTypeIdx;
+
+    RowType(int dbTypeIdx) {
+      this.dbTypeIdx = dbTypeIdx;
+    }
+
+    public int getDbTypeIdx() {
+      return dbTypeIdx;
+    }
+  }
+
   private final ViewResult.Row row;
   private final Iterator<JsonNode> keyItr;
 

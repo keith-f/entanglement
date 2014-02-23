@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -81,7 +82,7 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
           int rowType = keyNodeItr.next().asInt();        // 0 for node info, 1 for 'from' edge.
           // We don't need further key items
 
-          if (rowType != NodeDAOCouchDbImpl.RowType.NODE.getDbTypeIdx()) {
+          if (rowType != NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx()) {
             // FIXME we wouldn't need this if we used a more appropriate CouchDB View that didn't contain edge info as well.
             continue;
           }

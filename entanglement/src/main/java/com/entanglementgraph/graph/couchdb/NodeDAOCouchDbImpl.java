@@ -46,22 +46,6 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
   public static final String DESIGN_DOC_ID = "_design/"+Node.class.getSimpleName();
 
 
-  public static enum RowType {
-    NODE (0),
-    EDGE_FROM_NODE (1);
-
-    private final int dbTypeIdx;
-
-    RowType(int dbTypeIdx) {
-      this.dbTypeIdx = dbTypeIdx;
-    }
-
-    public int getDbTypeIdx() {
-      return dbTypeIdx;
-    }
-  }
-
-
   public static class NodeLookupResult {
     private final EntityKeys queryKeyset;
     private final EntityKeys fullKeyset;
@@ -252,7 +236,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       JsonNode value = row.getValueAsNode();
 
       // If this result row represents a node, then append NodeUpdate (value) to the list of updates
-      if (rowType == RowType.NODE.getDbTypeIdx()) {
+      if (rowType == NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx()) {
         try {
           NodeUpdateView update2 = om.treeToValue(value, NodeUpdateView.class);
           foundUpdates.add(update2);
