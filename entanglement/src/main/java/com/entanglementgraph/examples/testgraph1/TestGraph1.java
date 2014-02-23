@@ -127,13 +127,18 @@ public class TestGraph1
 //    Thread.sleep(5000);
     System.out.println("Iterating edges from g0");
     for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g0"))) {
-      System.out.println(" * Edge: "+node.toString());
+      System.out.println(" * Edge from <-- "+node.toString());
     }
 
-//    System.out.println("Iterating edges from g2");
-//    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g2"))) {
-//      System.out.println(" * Edge: "+node.toString());
-//    }
+    System.out.println("Iterating edges from c1");
+    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Chromosome", "c1"))) {
+      System.out.println(" * Edge to --> "+node.toString());
+    }
+
+    System.out.println("Iterating edges to c1");
+    for (Edge node : graphConn1.getEdgeDao().iterateEdgesToNode(new EntityKeys("Chromosome", "c1"))) {
+      System.out.println(" * Edge to --> "+node.toString());
+    }
   }
 
 }

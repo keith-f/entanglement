@@ -33,8 +33,18 @@ import java.util.Iterator;
 public class NodesAndEdgesViewRowParser {
 
   public static enum RowType {
+    /**
+     * Indicates that this row contains a description of a node.
+     */
     NODE (0),
-    EDGE_FROM_NODE (1);
+    /**
+     * Indicates that this row contains a description of an edge starting at the specified node.
+     */
+    EDGE_FROM_NODE (1),
+    /**
+     * Indicates that this row contains a description of an edge ending at the specified node.
+     */
+    EDGE_TO_NODE (2);
 
     private final int dbTypeIdx;
 

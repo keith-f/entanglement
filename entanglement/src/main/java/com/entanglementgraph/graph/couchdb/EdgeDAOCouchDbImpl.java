@@ -146,7 +146,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesFromNode(EntityKeys<F> fromFullNodeKeyset) throws GraphModelException {
     try {
-      IteratorForStreamingFromEdges2<C, F, T> edgeItrable = new IteratorForStreamingFromEdges2<>(db, this, fromFullNodeKeyset);
+      IteratorForStreamingFromEdges<C, F, T> edgeItrable = new IteratorForStreamingFromEdges<>(db, this, fromFullNodeKeyset);
       return edgeItrable;
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform query", e);
@@ -154,28 +154,13 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Iterable<JsonNode> iterateEdgesFromNode(String edgeType, EntityKeys from) throws GraphModelException {
-//    try {
-//      queriedFor.add(name);
-//
-//      ViewQuery query = createQuery("nodes_and_edges");
-//      query = query.key(ComplexKey.of(typeName, name));
-//
-//      ViewResult result = db.queryView(query);
-//      //Read each row
-//      for (ViewResult.Row row : result.getRows()) {
-//        // Read each name in each row
-//        for (JsonNode nameNode : row.getValueAsNode()) {
-//          String nextName = nameNode.asText();
-//          if (!queriedFor.contains(nextName)) {
-//            findAllOtherNamesForName(typeName, nextName, queriedFor); //, allUids);
-//          }
-//        }
-//      }
-//    } catch (Exception e) {
-//      throw new GraphModelException("Failed to perform query", e);
-//    }
-    return null;
+  public Iterable<Edge<C, F, T>> iterateEdgesFromNode(String edgeType, EntityKeys fromFullNodeKeyset) throws GraphModelException {
+    try {
+      IteratorForStreamingFromEdges<C, F, T> edgeItrable = new IteratorForStreamingFromEdges<>(db, this, fromFullNodeKeyset, edgeType);
+      return edgeItrable;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform query", e);
+    }
   }
 
   @Override
@@ -189,13 +174,23 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Iterable<Edge<C, F, T>> iterateEdgesToNode(EntityKeys to) throws GraphModelException {
-    return null;
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(EntityKeys toFullNodeKeyset) throws GraphModelException {
+    try {
+      IteratorForStreamingToEdges<C, F, T> edgeItrable = new IteratorForStreamingToEdges<>(db, this, toFullNodeKeyset);
+      return edgeItrable;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform query", e);
+    }
   }
 
   @Override
-  public Iterable<Edge<C, F, T>> iterateEdgesToNode(String edgeType, EntityKeys to) throws GraphModelException {
-    return null;
+  public Iterable<Edge<C, F, T>> iterateEdgesToNode(String edgeType, EntityKeys toFullNodeKeyset) throws GraphModelException {
+    try {
+      IteratorForStreamingToEdges<C, F, T> edgeItrable = new IteratorForStreamingToEdges<>(db, this, toFullNodeKeyset, edgeType);
+      return edgeItrable;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform query", e);
+    }
   }
 
   @Override
