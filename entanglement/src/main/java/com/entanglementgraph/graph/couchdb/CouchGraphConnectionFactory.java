@@ -118,7 +118,10 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
 
       ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory(classJsonMappings);
       CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
-// if the second parameter is true, the database will be created if it doesn't exists
+
+      // CouchDbConnector is thread-safe and can be shared for simultaneous queries.
+      // Any methods that return streaming results should ultimately be 'closed' by the caller
+      // if the second parameter is true, the database will be created if it doesn't exists
       CouchDbConnector db = dbInstance.createConnector(databaseName, true);
       ObjectMapper om = omFactory.getLastCreatedObjectMapper();
 
