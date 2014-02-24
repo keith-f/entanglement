@@ -71,7 +71,7 @@ public class ListNodesCommand extends AbstractEntanglementGraphCommand {
           bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
         }
       } else {
-        for (Node node : graphConn.getNodeDao().iterateAll()) {
+        for (Node node : graphConn.getNodeDao().iterateByType(type)) {
           count++;
           EntityKeys keys = node.getKeys();
           bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());

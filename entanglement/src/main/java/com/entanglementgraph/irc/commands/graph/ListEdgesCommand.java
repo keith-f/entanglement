@@ -73,7 +73,7 @@ public class ListEdgesCommand extends AbstractEntanglementGraphCommand {
           bot.debugln(channel, "  * "+fromStr+"   ------ "+edge.getKeys().getType() + " ----->> " + toStr);
         }
       } else {
-        for (Edge edge : graphConn.getEdgeDao().iterateAll()) {
+        for (Edge edge : graphConn.getEdgeDao().iterateByType(type)) {
           count++;
 
           String fromStr = edge.getFrom().getType()+"/"+edge.getFrom().getNames();

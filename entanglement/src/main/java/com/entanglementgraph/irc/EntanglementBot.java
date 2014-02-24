@@ -109,6 +109,7 @@ public class EntanglementBot extends GenericIrcBot {
 
 
     addCommand("/entanglement/db/connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
+    addCommand("/entanglement/db/connect-couchdb-pool", ConnectCouchDbClusterCommand.class);
     addCommand("/entanglement/db/connect-graph", ConnectGraphCommand.class);
     addCommand("/entanglement/db/list-connections", ListGraphConnectionsCommand.class);
     addCommand("/entanglement/db/playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
