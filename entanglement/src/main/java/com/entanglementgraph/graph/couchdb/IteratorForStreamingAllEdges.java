@@ -112,6 +112,9 @@ public class IteratorForStreamingAllEdges<C extends Content> implements Iterable
           nextEdge = findNext();
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to find the next item", e);
+        } catch (Exception e) {
+          // Workaround for Ektorp throwing a JsonMappingException when calling hasNext on an empty result set
+          return false;
         }
         return nextEdge != null;
       }

@@ -21,6 +21,7 @@ import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.ektorp.*;
 
@@ -118,7 +119,11 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
           nextNode = findNext();
         } catch (GraphModelException e) {
           throw new RuntimeException("Failed to find the next item", e);
+        } catch (Exception e) {
+          // Workaround for Ektorp throwing a JsonMappingException when calling hasNext on an empty result set
+          return false;
         }
+
         return nextNode != null;
       }
 
