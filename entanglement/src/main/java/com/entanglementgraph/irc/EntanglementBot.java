@@ -19,6 +19,7 @@ package com.entanglementgraph.irc;
 
 import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.irc.commands.benchmarks.RunBenchmarksCommand;
+import com.entanglementgraph.irc.commands.benchmarks.RunBigRandomGraphBenchmarkCommand;
 import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
@@ -150,6 +151,7 @@ public class EntanglementBot extends GenericIrcBot {
 //    addCommand("/entanglement/analyse/list-walkers", ListKnownGraphWalkersCommand.class);
 
     addCommand("/entanglement/benchmarks/run-benchmarks", RunBenchmarksCommand.class);
+    addCommand("/entanglement/benchmarks/run-big-random-graph-builder", RunBigRandomGraphBenchmarkCommand.class);
   }
 
   protected void addHazelcastToBotState() {
