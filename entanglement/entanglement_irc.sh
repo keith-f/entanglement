@@ -4,7 +4,7 @@
 # Author: Keith Flanagan
 
 # The Java class to run
-EXE_CLASSNAME="com.entanglementgraph.irc.EntanglementBot"
+EXE_CLASSNAME="com.entanglementgraph.irc.EntanglementBotLauncher"
 RAM="-Xmx768M"
 
 # Get the filename of this script
