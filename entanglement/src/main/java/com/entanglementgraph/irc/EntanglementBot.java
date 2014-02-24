@@ -23,6 +23,7 @@ import com.entanglementgraph.irc.commands.cursor.*;
 import com.entanglementgraph.irc.commands.graph.*;
 import com.entanglementgraph.irc.commands.imageexport.ExportGephiCommand;
 import com.entanglementgraph.irc.commands.restlet.StartRestletCommand;
+import com.entanglementgraph.specialistnodes.MapContent;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.ScalesHazelcastInstanceFactory;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
@@ -163,5 +164,8 @@ public class EntanglementBot extends GenericIrcBot {
     EntanglementRuntime runtime = new EntanglementRuntime(logger, cl, m, hzInstance);
 
     getGlobalState().getUserObjs().put(STATE_PROP_ENTANGLEMENT, runtime);
+
+    // Define CouchDB mappings for our own custom content types:
+    runtime.addClassToJsonMapping(MapContent.class, MapContent.class.getSimpleName());
   }
 }

@@ -62,7 +62,7 @@ public class CreateNodeCommand extends AbstractEntanglementGraphCommand {
     entityName = parsedArgs.get("entityName").getStringValue();
 
     // Parse annotations
-    Map<String, String> attributes = parseAttributes(args);
+    attributes = parseAttributes(args);
     //FIXME do this properly - remove entries that are used as part of the command.
     attributes.remove("type");
     attributes.remove("entityName");
