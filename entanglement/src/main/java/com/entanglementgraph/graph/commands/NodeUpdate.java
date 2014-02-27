@@ -38,17 +38,14 @@ public class NodeUpdate
       Logger.getLogger(NodeUpdate.class.getName());
 
 
-  private MergePolicy mergePol;
-
   private Node node;
   
   public NodeUpdate()
   {
   }
 
-  public NodeUpdate(MergePolicy mergePol, Node node)
+  public NodeUpdate(Node node)
   {
-    this.mergePol = mergePol;
     this.node = node;
     if (node == null) {
       throw new RuntimeException("The specified node was NULL!");
@@ -70,12 +67,4 @@ public class NodeUpdate
       throw new RuntimeException("The specified node was NULL!");
     }
   }
-
-  public MergePolicy getMergePol() {
-    return mergePol;
-  }
-
-  public void setMergePol(MergePolicy mergePol) {
-    this.mergePol = mergePol;
-  } 
 }

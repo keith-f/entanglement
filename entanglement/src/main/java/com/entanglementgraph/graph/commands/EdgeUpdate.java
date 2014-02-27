@@ -30,14 +30,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class EdgeUpdate
     extends GraphOperation
 {
-  private MergePolicy mergePol;
   private Edge edge;
 
   public EdgeUpdate() {
   }
 
-  public EdgeUpdate(MergePolicy mergePol, Edge edge)  {
-    this.mergePol = mergePol;
+  public EdgeUpdate(Edge edge)  {
     this.edge = edge;
   }
 
@@ -53,14 +51,5 @@ public class EdgeUpdate
   public void setEdge(Edge edge) {
     this.edge = edge;
   }
-
-  public MergePolicy getMergePol() {
-    return mergePol;
-  }
-
-  public void setMergePol(MergePolicy mergePol) {
-    this.mergePol = mergePol;
-  }
-
 
 }

@@ -85,7 +85,7 @@ public class CreateNodeCommand extends AbstractEntanglementGraphCommand {
       }
 
       ; //FIXME policy should be user-configurable
-      NodeUpdate nodeUpdateCommand = new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, node);
+      NodeUpdate nodeUpdateCommand = new NodeUpdate(node);
       TxnUtils.submitAsTxn(graphConn, nodeUpdateCommand);
       logger.println("Node created/updated: %s", entityName);
     } catch (Exception e) {

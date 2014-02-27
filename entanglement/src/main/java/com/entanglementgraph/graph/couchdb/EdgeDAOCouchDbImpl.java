@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.couchdb.viewparsers.EdgesViewRowParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,7 +99,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
     // Merge edge updates
     Edge<C, F, T> edge = null;
     if (!updates.isEmpty()) {
-      edge = mergeRevisions(updates);
+      edge = mergeRevisions(updates, MergePolicy.APPEND_NEW__LEAVE_EXISTING);
       edge.setLoaded(true);
     }
     return edge;
@@ -239,7 +240,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
    */
 
   private <C extends Content, F extends Content, T extends Content> Edge<C, F, T> mergeRevisions(
-      List<EdgeUpdateView> mods) throws GraphModelException {
+      List<EdgeUpdateView> mods, MergePolicy mergePolicy) throws GraphModelException {
     Collections.sort(mods, new EdgeModificationViewByTimestampComparator());
 
     EdgeMerger<C, F, T> merger = new EdgeMerger<>();
@@ -249,7 +250,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
         merged = mod.getEdge();
       } else {
         Edge<C, F, T> newEdge = mod.getEdge();
-        merger.merge(mod.getMergePol(), merged, newEdge);
+        merger.merge(mergePolicy, merged, newEdge);
       }
     }
     return merged;

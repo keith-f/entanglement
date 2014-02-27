@@ -165,7 +165,7 @@ public class BigGraphBuilder
         ParentNodeData newRootData = new ParentNodeData();
         newRootData.setDescription(String.valueOf(Math.random()));
         Node newRoot = new Node(new EntityKeys(ParentNodeData.getTypeName(), UidGenerator.generateUid()), newRootData);
-        ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, newRoot));
+        ops.add(new NodeUpdate(newRoot));
         parentNodes++;
 
         // Generate a link to the previous root node
@@ -178,7 +178,7 @@ public class BigGraphBuilder
           edge.setFrom(lastRootNode);
           edge.setTo(newRoot.getKeys());
 
-          ops.add(new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, edge));
+          ops.add(new EdgeUpdate(edge));
           edgeCount++;
         }
         lastRootNode = newRoot.getKeys();
@@ -189,7 +189,7 @@ public class BigGraphBuilder
             ChildNodeData childNodeData = new ChildNodeData();
             childNodeData.setDescription(String.valueOf(Math.random()));
             Node childNode = new Node(new EntityKeys(ChildNodeData.getTypeName(), UidGenerator.generateUid()), childNodeData);
-            ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, childNode));
+            ops.add(new NodeUpdate(childNode));
             childNodes++;
 
             //Create link to parent
@@ -200,7 +200,7 @@ public class BigGraphBuilder
             parentToChild.setFrom(newRoot.getKeys());
             parentToChild.setTo(childNode.getKeys());
 
-            ops.add(new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, parentToChild));
+            ops.add(new EdgeUpdate(parentToChild));
             edgeCount++;
           }
         }

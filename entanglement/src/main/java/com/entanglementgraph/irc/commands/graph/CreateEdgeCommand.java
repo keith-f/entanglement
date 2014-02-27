@@ -94,7 +94,7 @@ public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
       }
 
       ; //FIXME policy should be user-configurable
-      EdgeUpdate edgeUpdateCommand = new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, edge);
+      EdgeUpdate edgeUpdateCommand = new EdgeUpdate(edge);
       TxnUtils.submitAsTxn(graphConn, edgeUpdateCommand);
 
       logger.println("Edge created/updated: %s", entityName);

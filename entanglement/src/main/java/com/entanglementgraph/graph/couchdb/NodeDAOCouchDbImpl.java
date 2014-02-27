@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,7 +110,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       node.setLoaded(false);
       node.setVirtual(true);
     } else {
-      node = mergeRevisions(updates);
+      node = mergeRevisions(updates, MergePolicy.APPEND_NEW__LEAVE_EXISTING);
       node.setLoaded(true);
     }
     return node;
@@ -151,7 +152,8 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
    * Internal methods
    */
 
-  private <C extends Content> Node<C> mergeRevisions(List<NodeUpdateView> mods) throws GraphModelException {
+  private <C extends Content> Node<C> mergeRevisions(List<NodeUpdateView> mods, MergePolicy mergePolicy)
+      throws GraphModelException {
     Collections.sort(mods, new NodeModificationViewByTimestampComparator());
 
     NodeMerger<C> merger = new NodeMerger<>();
@@ -162,7 +164,7 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
         merged = mod.getNode();
       } else {
         Node<C> newNode = mod.getNode();
-        merger.merge(mod.getMergePol(), merged, newNode);
+        merger.merge(mergePolicy, merged, newNode);
       }
     }
     return merged;

@@ -69,7 +69,7 @@ public class TestGraph1
       chromData.setLength((int) Math.random()*100000);
       Node chromNode = new Node(new EntityKeys("Chromosome", "c" + i), chromData);
 
-      ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, chromNode));
+      ops.add(new NodeUpdate(chromNode));
       chromosomeNames.addAll(chromNode.getKeys().getNames());
     }
     System.out.println("Committing "+ops.size()+" graph operations.");
@@ -85,7 +85,7 @@ public class TestGraph1
       geneData.setDescription("This is gene " + i);
 
       Node geneNode = new Node(new EntityKeys("Gene", "g" + i), geneData);
-      ops.add(new NodeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneNode));
+      ops.add(new NodeUpdate(geneNode));
 
       // Create a hanging edge between this gene and a chromosome.
       // Note that the chromosome doesn't exist in the GENES graph.
@@ -97,7 +97,7 @@ public class TestGraph1
       //Set the 'to' node. Note that we don't know the chromosome's UID, but we do know its type and one of its names
       Collections.shuffle(chromosomeNames);
       geneToChrom.setTo(new EntityKeys("Chromosome", chromosomeNames.iterator().next()));
-      ops.add(new EdgeUpdate(MergePolicy.APPEND_NEW__LEAVE_EXISTING, geneToChrom));
+      ops.add(new EdgeUpdate(geneToChrom));
     }
     totalOps = totalOps + ops.size();
     TxnUtils.submitAsTxn(graphConn1, ops);
