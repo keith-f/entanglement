@@ -22,6 +22,7 @@ package com.entanglementgraph.graph.mongodb.player.spi;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.couchdb.NodeMerger;
 
 import java.util.logging.Logger;
@@ -127,7 +128,7 @@ public class NodeModificationPlayer
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       NodeMerger merger = new NodeMerger();
-      merger.merge(command.getMergePol(), existing, command.getNode());
+      merger.merge(MergePolicy.APPEND_NEW__LEAVE_EXISTING, existing, command.getNode());
 
       nodeDao.update(marshaller.serialize(existing));
 

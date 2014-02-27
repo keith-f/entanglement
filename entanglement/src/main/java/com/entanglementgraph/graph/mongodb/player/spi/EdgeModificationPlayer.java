@@ -23,6 +23,7 @@ import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
+import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.couchdb.EdgeMerger;
 import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 
@@ -126,7 +127,7 @@ public class EdgeModificationPlayer
 //      logger.info("NodeModification matched an existing node. Query document: "+reqSerializedNode+".\nExisting (matching) database document was : "+existing);
 
       EdgeMerger merger = new EdgeMerger();
-      merger.merge(command.getMergePol(), existing, command.getEdge());
+      merger.merge(MergePolicy.APPEND_NEW__LEAVE_EXISTING, existing, command.getEdge());
       edgeDao.update(marshaller.serialize(existing));
 
     } catch (Exception e) {
