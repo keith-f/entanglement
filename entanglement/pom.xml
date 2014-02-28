@@ -101,43 +101,50 @@
         <!-- Note: versions 1.1.16 to 1.1.19 fail with a 'HTTP 301' error -->
         <version>1.1.15</version>
       </extension>
+
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-ssh-external</artifactId>
+         <version>1.0-beta-6</version>
+      </extension>
     </extensions>
   </build>
 
-  <!--Destination for Maven deployment of artifacts to S3 -->
   <distributionManagement>
-    <site>
-      <id>intbio.maven</id>
-      <url>s3://intbio.maven/site</url>
-    </site>
     <repository>
-      <id>intbio.maven</id>
-      <url>s3://intbio.maven/release/</url>
+      <id>intbio-releases</id>
+      <url>scpexe://intbio.ncl.ac.uk/var/www/maven/releases</url>
     </repository>
     <snapshotRepository>
-      <id>intbio.maven</id>
-      <url>s3://intbio.maven/snapshot/</url>
+      <id>intbio-snapshots</id>
+      <url>scpexe://intbio.ncl.ac.uk/var/www/maven/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
   <!-- Remote repository info -->
   <repositories>
     <repository>
-      <id>scalesinformatics-snapshot</id>
-      <url>http://scalesinformatics.maven.s3.amazonaws.com/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>intbio-releases</id>
+      <url>http://intbio.ncl.ac.uk/maven/releases</url>
     </repository>
-
     <repository>
       <id>intbio-snapshot</id>
-      <url>http://intbio.maven.s3.amazonaws.com/snapshot</url>
+      <url>http://intbio.ncl.ac.uk/maven/snapshot</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
     </repository>
-
+    <repository>
+      <id>scalesinformatics-releases</id>
+      <url>http://www.scalesinformatics.com/maven/releases</url>
+    </repository>
+    <repository>
+      <id>scalesinformatics-snapshot</id>
+      <url>http://www.scalesinformatics.com/maven/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
     <!-- Required for the creation of files in GEXF format for Gephi -->
     <repository>
       <id>gephi-snapshots</id>
