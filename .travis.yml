@@ -2,7 +2,6 @@ language: java
 jdk:
   - oraclejdk7
   - openjdk7
-  - openjdk6
 
 
 # blacklist
@@ -14,8 +13,8 @@ jdk:
 # whitelist
 branches:
   only:
-    - master
-    - develop
+#    - master
+#    - develop
     - feature/kf-couchdb-test
 
 
