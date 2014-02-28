@@ -83,6 +83,12 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
     this.om = om;
   }
 
+  @Override
+  public <C extends Content, F extends Content, T extends Content> EdgeDAO<C, F, T> forContent(
+      Class<C> contentType, Class<F> fromType, Class<T> toType) {
+    return new EdgeDAOCouchDbImpl<>(db, om);
+  }
+
 
   public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
     return findAllIdentifiersAndUpdatesFor(partial).getFullKeyset();
@@ -136,12 +142,12 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(String edgeType, EntityKeys<F> from, EntityKeys<T> to) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
@@ -166,12 +172,12 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesFromNodeToNodeOfType(EntityKeys<? extends Node> from, String toNodeType) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesToNodeFromNodeOfType(EntityKeys<? extends Node> to, String fromNodeType) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
@@ -196,42 +202,70 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public boolean existsEdgeToNodeOfType(EntityKeys from, String toNodeType) throws GraphModelException {
-    return false;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
   public Long countEdgesFromNode(EntityKeys from) throws GraphModelException {
-    return null;
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateEdgesFromNode(from)) {
+      count++;
+    }
+    return count;
   }
 
   @Override
   public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from) throws GraphModelException {
-    return null;
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateEdgesFromNode(edgeType, from)) {
+      count++;
+    }
+    return count;
   }
 
   @Override
   public Long countEdgesToNode(EntityKeys to) throws GraphModelException {
-    return null;
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateEdgesToNode(to)) {
+      count++;
+    }
+    return count;
   }
 
   @Override
   public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to) throws GraphModelException {
-    return null;
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateEdgesToNode(edgeType, to)) {
+      count++;
+    }
+    return count;
   }
 
   @Override
   public Long countEdgesOfTypeBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
   public Map<String, Long> countEdgesByTypeFromNode(EntityKeys from) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
   public Map<String, Long> countEdgesByTypeToNode(EntityKeys to) throws GraphModelException {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
 

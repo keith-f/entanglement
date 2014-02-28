@@ -64,6 +64,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
     return EntityKeys.buildKeyIndexes(FIELD_TO_KEYS);
   }
 
+  private final ClassLoader classLoader;
   protected final Mongo m;
   protected final DB db;
 
@@ -88,6 +89,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
 
   public EdgeDAOSeparateDocImpl(ClassLoader classLoader, Mongo m, DB db,
                                 DBCollection edgeCol) {
+    this.classLoader = classLoader;
     this.m = m;
     this.db = db;
     this.col = edgeCol;
@@ -100,6 +102,12 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
     MongoUtils.createIndexes(edgeCol, buildKeysetIndexes());
     MongoUtils.createIndexes(edgeCol, buildFromIndexes());
     MongoUtils.createIndexes(edgeCol, buildToIndexes());
+  }
+
+  @Override
+  public <C extends Content, F extends Content, T extends Content> EdgeDAO<C, F, T> forContent(
+      Class<C> contentType, Class<F> fromType, Class<T> toType) {
+    return new EdgeDAOSeparateDocImpl<>(classLoader, m, db, col);
   }
 
 

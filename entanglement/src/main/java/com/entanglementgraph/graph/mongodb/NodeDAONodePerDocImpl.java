@@ -47,6 +47,7 @@ public class NodeDAONodePerDocImpl<C extends Content>
 
   public static final String FIELD_VIRTUAL = "entanglement_virtual_node";
 
+  private final ClassLoader classLoader;
   protected final Mongo m;
   protected final DB db;
 
@@ -84,6 +85,7 @@ public class NodeDAONodePerDocImpl<C extends Content>
    */
   public NodeDAONodePerDocImpl(ClassLoader classLoader, Mongo m, DB db, DBCollection col)
   {
+    this.classLoader = classLoader;
     this.m = m;
     this.db = db;
     this.col = col;
@@ -93,6 +95,11 @@ public class NodeDAONodePerDocImpl<C extends Content>
     insertCount = 0;
     //Make sure indexes exist
     MongoUtils.createIndexes(this.col, buildKeysetIndexes());
+  }
+
+  @Override
+  public <C extends Content> NodeDAO<C> forContent(Class<C> contentType) {
+    return new NodeDAONodePerDocImpl<C>(classLoader, m, db, col);
   }
 
 

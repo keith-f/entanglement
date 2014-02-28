@@ -25,6 +25,8 @@ import java.util.List;
  */
 public interface NodeDAO<C extends Content> {
 
+  public <C extends Content> NodeDAO<C> forContent(Class<C> contentType);
+
   /**
    * Given a partial keyset (a keyset suspected of containing less then the complete number of UIDs or names for a
    * given node), queries the database and returns a fully populated keyset.
@@ -44,7 +46,10 @@ public interface NodeDAO<C extends Content> {
   public Iterable<Node<C>> iterateAll()
       throws GraphModelException;
 
-  public Iterable<Node<C>> iterateByType(String typeName)
+  public <C extends Content> Iterable<Node<C>> iterateByType(String typeName)
+      throws GraphModelException;
+
+  public long countByType(String typeName)
       throws GraphModelException;
 
 
@@ -52,8 +57,6 @@ public interface NodeDAO<C extends Content> {
 //      throws GraphModelException;
 //
 //  public <C extends Content> Iterable<Node<C>> iterateByType(String typeName)
-//      throws GraphModelException;
-//  public long countByType(String typeName)
 //      throws GraphModelException;
 //  public List<String> listTypes()
 //      throws GraphModelException;

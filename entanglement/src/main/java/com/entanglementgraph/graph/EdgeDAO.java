@@ -27,6 +27,9 @@ import java.util.Map;
  */
 public interface EdgeDAO<C extends Content, F extends Content, T extends Content> {
 
+  public <C extends Content, F extends Content, T extends Content> EdgeDAO<C, F, T>
+      forContent(Class<C> contentType, Class<F> fromType, Class<T> toType);
+
   /**
    * Given a partial keyset (a keyset suspected of containing less then the complete number of UIDs or names for a
    * given node), queries the database and returns a fully populated keyset.

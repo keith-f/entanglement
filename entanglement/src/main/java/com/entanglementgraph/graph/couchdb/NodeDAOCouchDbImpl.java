@@ -89,6 +89,11 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     this.om = om;
   }
 
+  @Override
+  public <C extends Content> NodeDAO<C> forContent(Class<C> contentType) {
+    return new NodeDAOCouchDbImpl<C>(db, om);
+  }
+
 
   public EntityKeys<C> populateFullKeyset(EntityKeys<C> partial) throws GraphModelException {
     return findAllIdentifiersAndUpdatesFor(partial).getFullKeyset();
@@ -143,6 +148,21 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
      */
     IteratorForStreamingAllNodes itr = new IteratorForStreamingAllNodes(db, this, typeName);
     return itr;
+  }
+
+  @Override
+  public long countByType(String typeName) throws GraphModelException {
+    long count = 0;
+    /*
+     * Performance will be terrible, but for now this is the only way since we don't know the number of nodes
+     * ahead of time.
+     * If you need better performance, consider creating a custom CouchDB View that lists node types and has a
+     * 'reduce' function for counting.
+     */
+    for (Node<C> node : iterateByType(typeName)) {
+      count++;
+    }
+    return count;
   }
 
 
