@@ -129,7 +129,7 @@
     </repository>
     <repository>
       <id>intbio-snapshot</id>
-      <url>http://intbio.ncl.ac.uk/maven/snapshot</url>
+      <url>http://intbio.ncl.ac.uk/maven/snapshots</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -140,7 +140,7 @@
     </repository>
     <repository>
       <id>scalesinformatics-snapshot</id>
-      <url>http://www.scalesinformatics.com/maven/snapshot</url>
+      <url>http://www.scalesinformatics.com/maven/snapshots</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
