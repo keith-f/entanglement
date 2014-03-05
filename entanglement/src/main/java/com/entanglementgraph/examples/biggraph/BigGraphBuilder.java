@@ -26,8 +26,10 @@ import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnection;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.graph.couchdb.RevisionLogCouchDBImpl;
+import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
+import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.util.UidGenerator;
@@ -35,18 +37,17 @@ import com.scalesinformatics.util.UidGenerator;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * A simple program to generate random graphs. Useful for testing raw throughput of databases.
  *
  * @author Keith Flanagan
  */
-public class BigGraphBuilder
-{
+public class BigGraphBuilder {
+  private final IrcEntanglementFormat formatter = new IrcEntanglementFormat();
+
   private final BotLogger logger;
   private final GraphConnection conn;
   private final BufferedWriter logFileOutput;
@@ -59,18 +60,24 @@ public class BigGraphBuilder
   // Used for benchmarks
   private long benchmarkStartTimestamp;
   private long lastCommitTimestamp;
-  private long totalOps = 0;
+  private long totalOpsSubmitted = 0;
+  private long totalOpsCommitted = 0;
   private long parentNodes = 0;
   private long childNodes = 0;
   private long edgeCount = 0;
-  private int maxPatchSetSize = 10000;
+  private int maxPatchSetSize;
+
+  private final ScheduledThreadPoolExecutor exe;
 
 
-  public BigGraphBuilder(BotLogger logger, GraphConnection conn, BufferedWriter logFileOutput, int numRootNodes,
+  public BigGraphBuilder(BotLogger logger, GraphConnection conn, BufferedWriter logFileOutput,
+                         int commitThreads, int maxUpdatesPerDocument, int numRootNodes,
                          double probabilityOfGeneratingChildNode, int maxChildNodesPerRoot) {
     this.logger = logger;
     this.conn = conn;
     this.logFileOutput = logFileOutput;
+    this.maxPatchSetSize = maxUpdatesPerDocument;
+    this.exe = new ScheduledThreadPoolExecutor(commitThreads);
     this.numRootNodes = numRootNodes;
     this.probabilityOfGeneratingChildNode = probabilityOfGeneratingChildNode;
     this.maxChildNodesPerRoot = maxChildNodesPerRoot;
@@ -79,23 +86,22 @@ public class BigGraphBuilder
   private String createLogHeader() {
 
     return "Time since start"
-        +"\tTime since last commit (s)"
+//        +"\tTime since last commit (s)"
         +"\t"+"Total docs"
-        +"\t"+"Total ops"
+        +"\t"+"Total ops submitted"
+        +"\t"+"Total ops committed"
         +"\t"+"Total node updates"
         +"\t"+"Total edge updates"
-        +"\t"+"Submit time (s)"
+        +"\t"+"Commit time (s)"
         +"\t"+"Index time total (s)"
         +"\t"+"Index time nodes (s)"
         +"\t"+"Index time edges (s)"
 
         +"\t"+"Avg ops per second"
-        +"\t"+"Avg nodes per second"
-        +"\t"+"Avg edges per second"
     ;
   }
 
-  private void printCouchSpecificBenchmarkInfo(int numOpsCommittedLastTime) throws IOException {
+  private void printCouchSpecificBenchmarkInfo() throws IOException {
     if (!(conn instanceof CouchGraphConnection)) {
       return;
     }
@@ -110,13 +116,12 @@ public class BigGraphBuilder
 
     double totalSecondsSinceStart = (now - benchmarkStartTimestamp) / 1000d;
     double opsPerSec = revLog.getTotalOpsSubmitted() / totalSecondsSinceStart;
-    double nodeUpdatesPerSec = revLog.getTotalNodeUpdates() / totalSecondsSinceStart;
-    double edgeUpdatesPerSec = revLog.getTotalEdgeUpdates() / totalSecondsSinceStart;
 
     String benchLine =
         timeSinceStart
-        +"\t"+timeSinceLastCommit
+//        +"\t"+timeSinceLastCommit
         +"\t"+revLog.getTotalDocsSubmitted()
+        +"\t"+totalOpsSubmitted
         +"\t"+revLog.getTotalOpsSubmitted()
         +"\t"+revLog.getTotalNodeUpdates()
         +"\t"+revLog.getTotalEdgeUpdates()
@@ -126,8 +131,6 @@ public class BigGraphBuilder
         +"\t" +couchConn.getIndexer().getTotalMsSpentIndexingEdges() / 1000d
 
         +"\t"+opsPerSec
-        +"\t"+nodeUpdatesPerSec
-        +"\t"+edgeUpdatesPerSec
     ;
 
     logger.println(benchLine);
@@ -136,12 +139,37 @@ public class BigGraphBuilder
   }
 
   private void doCommit(List<GraphOperation> ops) throws RevisionLogException, IOException {
-    int opsThisTime = ops.size();
-    totalOps = totalOps + ops.size();
-    TxnUtils.submitAsTxn(conn, ops);
-    ops.clear();
+    int activeCount = exe.getActiveCount();
+    int corePoolSize = exe.getCorePoolSize();
+    while (activeCount >= corePoolSize) {
+      logger.infoln("Active threads (%s) >= core pool size (%s). Waiting for a free slot...",
+          formatter.format(activeCount).toString(),
+          formatter.format(corePoolSize).toString());
+      ThreadUtils.sleep(5000);
+      activeCount = exe.getActiveCount();
+      corePoolSize = exe.getCorePoolSize();
+    }
 
-    printCouchSpecificBenchmarkInfo(opsThisTime);
+    final List<GraphOperation> threadOps = new ArrayList<>(ops);
+    ops.clear();
+    exe.execute(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (this) {
+          totalOpsSubmitted = totalOpsSubmitted + threadOps.size();
+        }
+        try {
+          TxnUtils.submitAsTxn(conn, threadOps);
+          synchronized (this) {
+            totalOpsCommitted = totalOpsCommitted + threadOps.size();
+            printCouchSpecificBenchmarkInfo();
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+          logger.printException("Something failed...", e);
+        }
+      }
+    });
   }
 
   public void run() {
@@ -157,7 +185,7 @@ public class BigGraphBuilder
       lastCommitTimestamp = benchmarkStartTimestamp;
       for (int i=0; i<numRootNodes; i++) {
         if (i % 100000 == 0) {
-          logger.println("\nGenerated " + i + " of " + numRootNodes + " root nodes so far (" + totalOps + " total graph operations)");
+          logger.println("\nGenerated " + i + " of " + numRootNodes + " root nodes so far (" + totalOpsCommitted + " total graph operations)");
         }
         if (ops.size() >= maxPatchSetSize) {
           doCommit(ops);
@@ -205,14 +233,17 @@ public class BigGraphBuilder
           }
         }
       }
+      while(exe.getActiveCount() > 0) {
+        ThreadUtils.sleep(50);
+      }
       logger.println("Done dataset generation. Committing final "+ops.size()+" graph operations.");
       doCommit(ops);
 
       long benchmarkEndedTimestamp = System.currentTimeMillis();
       double secs = (benchmarkEndedTimestamp - benchmarkStartTimestamp) / 1000d;
-      double opsPerSec = totalOps / secs;
+      double opsPerSec = totalOpsCommitted / secs;
 
-      logger.println("Done graph creation. Processed "+totalOps+" operations in "+secs+" seconds.");
+      logger.println("Done graph creation. Processed "+totalOpsCommitted+" operations in "+secs+" seconds.");
       logger.println("Created "+parentNodes+" parent nodes, "+childNodes+" child nodes, "+edgeCount+" edges.");
       logger.println("Ops per second: "+opsPerSec);
     } catch (Exception e) {

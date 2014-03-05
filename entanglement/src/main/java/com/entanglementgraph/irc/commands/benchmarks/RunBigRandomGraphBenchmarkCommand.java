@@ -38,6 +38,8 @@ import java.util.List;
 public class RunBigRandomGraphBenchmarkCommand extends AbstractEntanglementGraphCommand {
   private String connName;
   private File logFile;
+  private int commitThreads;
+  private int maxUpdatesPerDocument;
   private int numRootNodes;
   private double probabilityOfGeneratingChildNode;
   private int maxChildNodesPerRoot;
@@ -56,6 +58,9 @@ public class RunBigRandomGraphBenchmarkCommand extends AbstractEntanglementGraph
     params.add(new OptionalParam("num-root-nodes", Integer.class, "500000", "The number of root nodes to generate."));
     params.add(new OptionalParam("max-child-nodes-per-root", Integer.class, "15", "The maximum number of child nodes that will be generated for each root node."));
     params.add(new OptionalParam("probability-of-child-node", Double.class, "0.1", "The probability that each child node generation operation will succeed."));
+
+    params.add(new OptionalParam("commit-threads", Integer.class, "1", "The maximum number of threads used to process the generated graph operations."));
+    params.add(new OptionalParam("max-items-per-doc", Integer.class, "1000", "The maximum number of graph operations per document."));
     return params;
   }
 
@@ -67,6 +72,9 @@ public class RunBigRandomGraphBenchmarkCommand extends AbstractEntanglementGraph
     numRootNodes = parsedArgs.get("num-root-nodes").parseValueAsInteger();
     maxChildNodesPerRoot = parsedArgs.get("max-child-nodes-per-root").parseValueAsInteger();
     probabilityOfGeneratingChildNode = parsedArgs.get("probability-of-child-node").parseValueAsDouble();
+
+    commitThreads = parsedArgs.get("commit-threads").parseValueAsInteger();
+    maxUpdatesPerDocument = parsedArgs.get("max-items-per-doc").parseValueAsInteger();
   }
 
   @Override
@@ -76,6 +84,7 @@ public class RunBigRandomGraphBenchmarkCommand extends AbstractEntanglementGraph
       logger.infoln("Running 'big random graph' benchmarks ... ");
       BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
       BigGraphBuilder builder = new BigGraphBuilder(logger, graphConn, bw,
+          commitThreads, maxUpdatesPerDocument,
           numRootNodes, probabilityOfGeneratingChildNode, maxChildNodesPerRoot);
       builder.run();
       bw.flush();
