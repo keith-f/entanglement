@@ -126,18 +126,30 @@ public class TestGraph1
 
 //    Thread.sleep(5000);
     System.out.println("Iterating edges from g0");
-    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g0"))) {
-      System.out.println(" * Edge from <-- "+node.toString());
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Gene", "g0"))) {
+      System.out.println(" * Edge from <-- " + edge.toString());
     }
 
     System.out.println("Iterating edges from c1");
-    for (Edge node : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Chromosome", "c1"))) {
-      System.out.println(" * Edge to --> "+node.toString());
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesFromNode(new EntityKeys("Chromosome", "c1"))) {
+      System.out.println(" * Edge to --> " + edge.toString());
     }
 
     System.out.println("Iterating edges to c1");
-    for (Edge node : graphConn1.getEdgeDao().iterateEdgesToNode(new EntityKeys("Chromosome", "c1"))) {
-      System.out.println(" * Edge to --> "+node.toString());
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesToNode(new EntityKeys("Chromosome", "c1"))) {
+      System.out.println(" * Edge to --> " + edge.toString());
+    }
+
+
+    System.out.println("Iterating edges between g1 and cX");
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesBetweenNodes(new EntityKeys("Gene", "g1"), new EntityKeys("Chromosome", "c1"))) {
+      System.out.println(" * Between edge:  " + edge.toString());
+    }
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesBetweenNodes(new EntityKeys("Gene", "g1"), new EntityKeys("Chromosome", "c2"))) {
+      System.out.println(" * Between edge:  " + edge.toString());
+    }
+    for (Edge edge : graphConn1.getEdgeDao().iterateEdgesBetweenNodes(new EntityKeys("Gene", "g1"), new EntityKeys("Chromosome", "c3"))) {
+      System.out.println(" * Between edge:  " + edge.toString());
     }
   }
 
