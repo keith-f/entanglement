@@ -233,7 +233,8 @@ public class BigGraphBuilder {
           }
         }
       }
-      while(exe.getActiveCount() > 0) {
+      exe.shutdown();
+      while(exe.isTerminating()) {
         ThreadUtils.sleep(50);
       }
       logger.println("Done dataset generation. Committing final "+ops.size()+" graph operations.");
