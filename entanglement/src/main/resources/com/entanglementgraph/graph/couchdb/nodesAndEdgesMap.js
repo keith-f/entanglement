@@ -2,7 +2,7 @@
 /*
  * A CouchDB View 'map' function that iterates over available patchsets and emits NodeUpdate and EdgeUpdate
  * view items with the one of the following key structures:
- * [ <type>, "U|N", <UID|Name>, [0|1], [ all UIDS ], [all Names]
+ * [ <type>, "U|N", <UID|Name>, [0|1], [ all UIDS ], [all Names] ]
  *
  * Values are either of the type NodeUpdateView or EdgeUpdateView.
  *

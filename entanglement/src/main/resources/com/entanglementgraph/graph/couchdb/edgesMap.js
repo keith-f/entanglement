@@ -1,8 +1,8 @@
 
 /*
- * A CouchDB View 'map' function that iterates over available patchsets and EdgeUpdates only.
+ * A CouchDB View 'map' function that iterates over available patchsets (EdgeUpdates only).
  * View items have the following key structures:
- * [ <type>, "U|N", <UID|Name>, [0|1], [ all UIDS ], [all Names]
+ * [ <type>, "U|N", <UID|Name>, [0], [ all UIDS ], [all Names] ]
  *
  * Values are of type EdgeUpdateView.
  *

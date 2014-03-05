@@ -35,7 +35,8 @@ import java.util.logging.Logger;
  * @author Keith Flanagan
  */
 @Views({
-    @View(name = "edges", map = "classpath:edgesMap.js")
+    @View(name = "edges", map = "classpath:edgesMap.js"),
+    @View(name = "edges_between_nodes", map = "classpath:edgesBetweenNodesMap.js")
 })
 public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends Content>
     extends CouchDbRepositorySupport<Edge> implements EdgeDAO<C, F, T> {
@@ -142,12 +143,24 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
-    throw new UnsupportedOperationException("Not yet implemented");
+    try {
+      IteratorForStreamingEdgesBetweenNodes<C, F, T> edgeItrable =
+          new IteratorForStreamingEdgesBetweenNodes<>(db, this, fromNode, to);
+      return edgeItrable;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform query", e);
+    }
   }
 
   @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(String edgeType, EntityKeys<F> from, EntityKeys<T> to) throws GraphModelException {
-    throw new UnsupportedOperationException("Not yet implemented");
+    try {
+      IteratorForStreamingEdgesBetweenNodes<C, F, T> edgeItrable =
+          new IteratorForStreamingEdgesBetweenNodes<>(db, this, from, to, edgeType);
+      return edgeItrable;
+    } catch (Exception e) {
+      throw new GraphModelException("Failed to perform query", e);
+    }
   }
 
   @Override
@@ -255,7 +268,14 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
 
   @Override
   public Long countEdgesOfTypeBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
-    throw new UnsupportedOperationException("Not yet implemented");
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateEdgesBetweenNodes(edgeType, from, to)) {
+      count++;
+    }
+    return count;
   }
 
   @Override
