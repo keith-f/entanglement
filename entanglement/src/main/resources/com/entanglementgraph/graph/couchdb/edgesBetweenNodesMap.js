@@ -38,11 +38,11 @@ function(doc) {
 
       // Emit 'from' node UID entries --> 'to' node UID/Name entries
       for (i=0; i < allFromUids.length; i=i+1) {
-        for (j=0; i < allToUids.length; j=j+1) {
+        for (j=0; j < allToUids.length; j=j+1) {
           var outKey = [edge.from.type, "U", allFromUids[i], edge.to.type, "U", allToUids[j], edge.keys.type, allEdgeUids, allEdgeNames];
           emit(outKey, edgeUpdateView);
         }
-        for (j=0; i < allToNames.length; j=j+1) {
+        for (j=0; j < allToNames.length; j=j+1) {
           var outKey = [edge.from.type, "U", allFromUids[i], edge.to.type, "N", allToNames[j], edge.keys.type, allEdgeUids, allEdgeNames];
           emit(outKey, edgeUpdateView);
         }
@@ -50,11 +50,11 @@ function(doc) {
 
       // Emit 'from' node Name entries --> 'to' node UID/Name entries
       for (i=0; i < allFromNames.length; i=i+1) {
-        for (j=0; i < allToUids.length; j=j+1) {
+        for (j=0; j < allToUids.length; j=j+1) {
           var outKey = [edge.from.type, "N", allFromNames[i], edge.to.type, "U", allToUids[j], edge.keys.type, allEdgeUids, allEdgeNames];
           emit(outKey, edgeUpdateView);
         }
-        for (j=0; i < allToNames.length; j=j+1) {
+        for (j=0; j < allToNames.length; j=j+1) {
           var outKey = [edge.from.type, "N", allFromNames[i], edge.to.type, "N", allToNames[j], edge.keys.type, allEdgeUids, allEdgeNames];
           emit(outKey, edgeUpdateView);
         }
