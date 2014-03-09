@@ -20,6 +20,8 @@ package com.entanglementgraph.graph;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.io.Serializable;
+
 /**
  * @author Keith Flanagan
  */
@@ -28,5 +30,5 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "+jt")
-public interface Content {
+public interface Content extends Serializable {
 }
