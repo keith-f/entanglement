@@ -36,7 +36,7 @@ import com.entanglementgraph.util.GraphConnection;
  */
 public class DefaultCursorBasedGraphWalker implements CursorBasedGraphWalker {
   protected EntanglementRuntime runtime;
-  protected GraphCursor.CursorContext cursorContext;
+//  protected GraphCursor.CursorContext cursorContext;
   protected DepthFirstGraphIterator graphIterator;
   protected GraphConnection sourceGraph;
   protected GraphConnection destinationGraph;
@@ -47,10 +47,10 @@ public class DefaultCursorBasedGraphWalker implements CursorBasedGraphWalker {
     this.runtime = runtime;
   }
 
-  @Override
-  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
-    this.cursorContext = cursorContext;
-  }
+//  @Override
+//  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
+//    this.cursorContext = cursorContext;
+//  }
 
   @Override
   public void setSourceGraph(GraphConnection sourceGraph) {
@@ -69,15 +69,15 @@ public class DefaultCursorBasedGraphWalker implements CursorBasedGraphWalker {
 
   @Override
   public void initialise() throws GraphWalkerException {
-    graphIterator = new DepthFirstGraphIterator(sourceGraph, destinationGraph, runtime, cursorContext, true);
+//    graphIterator = new DepthFirstGraphIterator(sourceGraph, destinationGraph, runtime, cursorContext, true);
   }
 
   public void execute() throws GraphWalkerException {
-    try {
-      graphIterator.execute(startPosition);
-    } catch (GraphIteratorException e) {
-      throw new GraphWalkerException("Failed to execute graph walker", e);
-    }
+//    try {
+//      graphIterator.execute(startPosition);
+//    } catch (GraphIteratorException e) {
+//      throw new GraphWalkerException("Failed to execute graph walker", e);
+//    }
   }
 
 }

@@ -82,24 +82,24 @@ public class CursorStepToNode extends AbstractEntanglementCursorCommand {
 
     EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
 
-    try {
-      GraphCursor previous = cursor;
-      // FIXME reimplement the following line
-      GraphCursor current = null;
-//      GraphCursor current = cursor.stepToNode(cursorContext, newLocation);
-
-      String outputText = String.format("Cursor %s moved %s %s %s %s. Movement type %s",
-          entFormat.formatCursorName(cursor.getName()).toString(),
-          entFormat.customFormat("from", Colors.BOLD).toString(),
-          entFormat.formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames).toString(),
-          entFormat.customFormat("to", Colors.BOLD).toString(),
-          entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames).toString(),
-          entFormat.formatMovementType(current.getMovementType()).toString());
-
-      logger.println(outputText);
-    } catch (Exception e) {
-      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
-    }
+//    try {
+//      GraphCursor previous = cursor;
+//      // FIXME reimplement the following line
+//      GraphCursor current = null;
+////      GraphCursor current = cursor.stepToNode(cursorContext, newLocation);
+//
+//      String outputText = String.format("Cursor %s moved %s %s %s %s. Movement type %s",
+//          entFormat.formatCursorName(cursor.getName()).toString(),
+//          entFormat.customFormat("from", Colors.BOLD).toString(),
+//          entFormat.formatNodeKeysetShort(previous.getPosition(), maxUids, maxNames).toString(),
+//          entFormat.customFormat("to", Colors.BOLD).toString(),
+//          entFormat.formatNodeKeysetShort(current.getPosition(), maxUids, maxNames).toString(),
+//          entFormat.formatMovementType(current.getMovementType()).toString());
+//
+//      logger.println(outputText);
+//    } catch (Exception e) {
+//      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
+//    }
   }
 
 }

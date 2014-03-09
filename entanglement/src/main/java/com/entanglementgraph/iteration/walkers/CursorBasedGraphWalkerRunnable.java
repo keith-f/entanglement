@@ -66,36 +66,36 @@ public class CursorBasedGraphWalkerRunnable implements Runnable {
 
   @Override
   public void run() {
-    try {
-      //Initialise a temporary graph cursor.
-      //TODO reimplement this
-//      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), startPosition);
-      GraphCursor tmpCursor = null;
-      runtime.getCursorRegistry().addCursor(tmpCursor);
-
-      //Configure walker
-      walker.setRuntime(runtime);
-      GraphCursor.CursorContext cursorContext = new GraphCursor.CursorContext(sourceGraph, runtime.getHzInstance());
-      walker.setCursorContext(cursorContext);
-      walker.setSourceGraph(sourceGraph);
-      walker.setDestinationGraph(destinationGraph);
-      walker.setStartPosition(tmpCursor);
-
-      // Go for a walk
-     logger.infoln("Exporting a subgraph from %s to %s", sourceGraph.getGraphName(), destinationGraph.getGraphName());
-      walker.initialise();
-      walker.execute();
-      logger.infoln("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
-          sourceGraph.getGraphName(), walker.getClass().getName(),
-          destinationGraph.getClusterName(), destinationGraph.getDatabaseName(), destinationGraph.getGraphName());
-
-      //Remove temporary graph cursor
-      runtime.getCursorRegistry().removeCursor(tmpCursor);
-      // At this point, we've run the walker. The destination graph should contain the required nodes/edges.
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.printException("Graph walker failure", e);
-    }
+//    try {
+//      //Initialise a temporary graph cursor.
+//      //TODO reimplement this
+////      GraphCursor tmpCursor = new GraphCursor(UidGenerator.generateUid(), startPosition);
+//      GraphCursor tmpCursor = null;
+//      runtime.getCursorRegistry().addCursor(tmpCursor);
+//
+//      //Configure walker
+//      walker.setRuntime(runtime);
+//      GraphCursor.CursorContext cursorContext = new GraphCursor.CursorContext(sourceGraph, runtime.getHzInstance());
+//      walker.setCursorContext(cursorContext);
+//      walker.setSourceGraph(sourceGraph);
+//      walker.setDestinationGraph(destinationGraph);
+//      walker.setStartPosition(tmpCursor);
+//
+//      // Go for a walk
+//     logger.infoln("Exporting a subgraph from %s to %s", sourceGraph.getGraphName(), destinationGraph.getGraphName());
+//      walker.initialise();
+//      walker.execute();
+//      logger.infoln("Iteration of %s by %s completed. Destination graph is: %s/%s/%s",
+//          sourceGraph.getGraphName(), walker.getClass().getName(),
+//          destinationGraph.getClusterName(), destinationGraph.getDatabaseName(), destinationGraph.getGraphName());
+//
+//      //Remove temporary graph cursor
+//      runtime.getCursorRegistry().removeCursor(tmpCursor);
+//      // At this point, we've run the walker. The destination graph should contain the required nodes/edges.
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//      logger.printException("Graph walker failure", e);
+//    }
 
   }
 

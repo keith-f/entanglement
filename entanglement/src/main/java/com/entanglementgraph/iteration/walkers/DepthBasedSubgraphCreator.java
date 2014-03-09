@@ -48,7 +48,7 @@ public class DepthBasedSubgraphCreator extends DefaultCursorBasedGraphWalker {
   public void initialise() throws GraphWalkerException {
     super.initialise();
 
-    graphIterator.addRule(new StopAfterDepthRule(targetDepth));
+//    graphIterator.addRule(new StopAfterDepthRule(targetDepth));
   }
 
   public int getTargetDepth() {

@@ -34,7 +34,7 @@ import java.util.List;
 abstract public class AbstractEntanglementCursorCommand extends AbstractEntanglementGraphCommand {
   protected String cursorName;
   protected GraphCursor cursor;
-  protected GraphCursor.CursorContext cursorContext;
+//  protected GraphCursor.CursorContext cursorContext;
 
   @Override
   public List<Param> getParams() {
@@ -49,7 +49,7 @@ abstract public class AbstractEntanglementCursorCommand extends AbstractEntangle
 
     cursorName = parsedArgs.get("cursor").getStringValue();
     cursor = entRuntime.getCursorRegistry().getCursorCurrentPosition(cursorName);
-    cursorContext = new GraphCursor.CursorContext(graphConn, hazelcast);
+//    cursorContext = new GraphCursor.CursorContext(graphConn, hazelcast);
   }
 
 }

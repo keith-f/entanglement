@@ -75,16 +75,16 @@ public class GraphCursorPositionListenerLogger implements EntryListener<String, 
 
   @Override
   public void entryUpdated(EntryEvent<String, GraphCursor> event) {
-    GraphCursor previousCursor = event.getOldValue();
-    GraphCursor cursor = event.getValue();
-    logger.println("Acknowledging GraphCursor %s moved from %s %s %s. Index: %s. Type: %s. (by host: %s)",
-        entFormat.formatCursorName(cursor.getName()).toString(),
-        entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
-        entFormat.customFormat("==>", Colors.CYAN).toString(),
-        entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3).toString(),
-        entFormat.format(cursor.getCursorHistoryIdx()).toString(),
-        entFormat.formatMovementType(cursor.getMovementType()).toString(),
-        entFormat.formatHost(event.getMember().toString()).toString());
+//    GraphCursor previousCursor = event.getOldValue();
+//    GraphCursor cursor = event.getValue();
+//    logger.println("Acknowledging GraphCursor %s moved from %s %s %s. Index: %s. Type: %s. (by host: %s)",
+//        entFormat.formatCursorName(cursor.getName()).toString(),
+//        entFormat.formatNodeKeysetShort(previousCursor.getPosition(), 1, 3).toString(),
+//        entFormat.customFormat("==>", Colors.CYAN).toString(),
+//        entFormat.formatNodeKeysetShort(cursor.getPosition(), 1, 3).toString(),
+//        entFormat.format(cursor.getCursorHistoryIdx()).toString(),
+//        entFormat.formatMovementType(cursor.getMovementType()).toString(),
+//        entFormat.formatHost(event.getMember().toString()).toString());
   }
 
   @Override

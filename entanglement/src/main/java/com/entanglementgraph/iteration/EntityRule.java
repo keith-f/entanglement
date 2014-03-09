@@ -81,7 +81,7 @@ public interface EntityRule {
   public void setSourceGraph(GraphConnection sourceGraph);
   public void setDestinationGraph(GraphConnection destinationGraph);
   public void setEntanglementRuntime(EntanglementRuntime entanglementRuntime);
-  public void setCursorContext(GraphCursor.CursorContext cursorContext);
+//  public void setCursorContext(GraphCursor.CursorContext cursorContext);
 
   /**
    * A method that is triggered when the graph iterator is about to start iterating. You should use this method to

@@ -47,7 +47,7 @@ public interface CursorBasedGraphWalker {
 
 
   public void setRuntime(EntanglementRuntime runtime);
-  public void setCursorContext(GraphCursor.CursorContext cursorContext);
+//  public void setCursorContext(GraphCursor.CursorContext cursorContext);
 //  public void setGraphIterator(DepthFirstGraphIterator graphIterator);
   public void setSourceGraph(GraphConnection sourceGraph);
   public void setDestinationGraph(GraphConnection destinationGraph);

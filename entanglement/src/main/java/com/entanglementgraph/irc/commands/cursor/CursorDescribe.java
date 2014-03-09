@@ -78,68 +78,68 @@ public class CursorDescribe extends AbstractEntanglementCursorCommand {
 
   @Override
   protected void processLine() throws UserException, BotCommandException {
-    boolean isAtDeadEnd = cursor.isAtDeadEnd();
-    int historyIdx = cursor.getCursorHistoryIdx();
-
-    try {
-      EntityKeys<? extends Node> currentPos = cursor.getPosition();
-      DBObject currentNodeObj = null;
-      if (!cursor.isAtDeadEnd()) {
-        currentNodeObj = cursor.resolve(graphConn);
-        // FIXME reimplement the following line
-        //currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
-      }
-
-      logger.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
-          entFormat.formatCursorName(cursor.getName()).toString(),
-          entFormat.formatNodeKeyset(currentPos).toString(),
-          entFormat.formatBoolean(isAtDeadEnd).toString(),
-          entFormat.formatHistoryIndex(historyIdx).toString());
-      logger.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
-
-      if (displayEdgeCounts) {
-        /*
-         * Incoming edges
-         */
-        logger.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)).toString());
-        if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
-          logger.println("* Incoming edge types: %s", entFormat.format(typeToCount).toString());
-        }
-        if (verbose) {
-          for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
-//            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
-            // FIXME reimplement the following line
-            Edge edge = null;
-//            Edge edge = m.deserialize(edgeObj, Edge.class);
-            logger.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
-                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames).toString());
-          }
-        }
-
-        /*
-         * Outgoing edges
-         */
-        logger.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)).toString());
-        if (displayEdgeTypes) {
-          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
-          logger.println("* Outgoing edge types: %s", entFormat.format(typeToCount).toString());
-        }
-        if (verbose) {
-          for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
-//            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
-            // FIXME reimplement the following line
-            Edge edge = null;
-//            Edge edge = m.deserialize(edgeObj, Edge.class);
-            logger.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
-                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), maxUids, maxNames).toString());
-          }
-        }
-      }
-
-    } catch (Exception e) {
-      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
-    }
+//    boolean isAtDeadEnd = cursor.isAtDeadEnd();
+//    int historyIdx = cursor.getCursorHistoryIdx();
+//
+//    try {
+//      EntityKeys<? extends Node> currentPos = cursor.getPosition();
+//      DBObject currentNodeObj = null;
+//      if (!cursor.isAtDeadEnd()) {
+//        currentNodeObj = cursor.resolve(graphConn);
+//        // FIXME reimplement the following line
+//        //currentPos = MongoUtils.parseKeyset(m, (BasicDBObject) currentNodeObj);
+//      }
+//
+//      logger.println("Cursor %s is currently located at: %s; Dead end? %s; Steps taken: %s",
+//          entFormat.formatCursorName(cursor.getName()).toString(),
+//          entFormat.formatNodeKeyset(currentPos).toString(),
+//          entFormat.formatBoolean(isAtDeadEnd).toString(),
+//          entFormat.formatHistoryIndex(historyIdx).toString());
+//      logger.println("Short version: %s", entFormat.formatNodeKeysetShort(currentPos, maxUids, maxNames));
+//
+//      if (displayEdgeCounts) {
+//        /*
+//         * Incoming edges
+//         */
+//        logger.println("* Incoming edges: %s", entFormat.format(cursor.countIncomingEdges(graphConn)).toString());
+//        if (displayEdgeTypes) {
+//          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeToNode(cursor.getPosition());
+//          logger.println("* Incoming edge types: %s", entFormat.format(typeToCount).toString());
+//        }
+//        if (verbose) {
+//          for (DBObject edgeObj : cursor.iterateIncomingEdges(graphConn)) {
+////            msg.println("  <= %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
+//            // FIXME reimplement the following line
+//            Edge edge = null;
+////            Edge edge = m.deserialize(edgeObj, Edge.class);
+//            logger.println("  %sthis%s <= %s: %s", Colors.CYAN, Colors.OLIVE,
+//                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getFrom(), maxUids, maxNames).toString());
+//          }
+//        }
+//
+//        /*
+//         * Outgoing edges
+//         */
+//        logger.println("* Outgoing edges: %s", entFormat.format(cursor.countOutgoingEdges(graphConn)).toString());
+//        if (displayEdgeTypes) {
+//          Map<String, Long> typeToCount = graphConn.getEdgeDao().countEdgesByTypeFromNode(cursor.getPosition());
+//          logger.println("* Outgoing edge types: %s", entFormat.format(typeToCount).toString());
+//        }
+//        if (verbose) {
+//          for (DBObject edgeObj : cursor.iterateOutgoingEdges(graphConn)) {
+////            msg.println("  => %s", formatEdge(m.deserialize(edgeObj, Edge.class)));
+//            // FIXME reimplement the following line
+//            Edge edge = null;
+////            Edge edge = m.deserialize(edgeObj, Edge.class);
+//            logger.println("  %sthis%s => %s: %s", Colors.CYAN, Colors.OLIVE,
+//                edge.getKeys().getType(), entFormat.formatNodeKeysetShort(edge.getTo(), maxUids, maxNames).toString());
+//          }
+//        }
+//      }
+//
+//    } catch (Exception e) {
+//      throw new BotCommandException("WARNING: an Exception occurred while processing.", e);
+//    }
   }
 
 

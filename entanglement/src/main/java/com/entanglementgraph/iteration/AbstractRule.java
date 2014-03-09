@@ -36,7 +36,7 @@ abstract public class AbstractRule implements EntityRule {
   protected GraphConnection sourceGraph;
   protected GraphConnection destinationGraph;
   protected EntanglementRuntime entanglementRuntime;
-  protected GraphCursor.CursorContext cursorContext;
+//  protected GraphCursor.CursorContext cursorContext;
 
   @Override
   public void setSourceGraph(GraphConnection sourceGraph) {
@@ -53,10 +53,10 @@ abstract public class AbstractRule implements EntityRule {
     this.entanglementRuntime = entanglementRuntime;
   }
 
-  @Override
-  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
-    this.cursorContext = cursorContext;
-  }
+//  @Override
+//  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
+//    this.cursorContext = cursorContext;
+//  }
 
   @Override
   public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)

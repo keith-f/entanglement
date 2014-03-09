@@ -43,95 +43,96 @@ import java.util.logging.Logger;
  *
  * @author Keith Flanagan
  */
-public class EdgeIteratorToNENTupleIterator implements Iterable<GraphCursor.NodeEdgeNodeTuple> {
-  private static final Logger logger = Logger.getLogger(EdgeIteratorToNENTupleIterator.class.getSimpleName());
-
-  private final GraphConnection conn;
-//  private final BasicDBObject subjectNodePosition;
-  private final BasicDBObject subjectNode;
-  private final boolean edgesAreOutgoing;
-  private final boolean fillNodeDocsOfHangingEdges; //If true, dummy node objects will be created for hanging edges
-  private final Callable<DBCursor> queryExecutor;
-
-  /**
-   * Creates an edge iterator for the specified source (subject) node.
-   *
-   * @param conn a graph connection to use
-   * @param fillNodeDocsOfHangingEdges If true, dummy node objects will be created for hanging edges.
-   *                                   If false, the 'node' parts of hanging edges will remain NULL.
-   * @param subjectNodePosition The node whose edges are to be iterated
-   * @param subjectNode The full document of the node whose edges are to be iterated
-   * @param edgesAreOutgoing Set TRUE to iterate outgoing edges. Set FALSE to iterate incoming edges
-   * @param queryExecutor The custom query executor to use
-   */
-  public EdgeIteratorToNENTupleIterator(GraphConnection conn, boolean fillNodeDocsOfHangingEdges,
-                                        EntityKeys<? extends Node> subjectNodePosition, BasicDBObject subjectNode,
-                                        boolean edgesAreOutgoing, Callable<DBCursor> queryExecutor) {
-    this.conn = conn;
-    this.fillNodeDocsOfHangingEdges = fillNodeDocsOfHangingEdges;
-
-//    this.subjectNodePosition = subjectNodePosition;
-    this.edgesAreOutgoing = edgesAreOutgoing;
-    this.queryExecutor = queryExecutor;
-    this.subjectNode = subjectNode;
-  }
-
-  @Override
-  public Iterator<GraphCursor.NodeEdgeNodeTuple> iterator() {
-    final DBCursor edgeItr;
-    try {
-//      edgeItr = conn.getEdgeDao().iterateEdgesFromNode(position);
-      edgeItr = queryExecutor.call();
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to query database", e);
-    }
-    return new Iterator<GraphCursor.NodeEdgeNodeTuple>() {
-
-      @Override
-      public boolean hasNext() {
-        return edgeItr.hasNext();
-      }
-
-      @Override
-      public GraphCursor.NodeEdgeNodeTuple next() {
-        return null;
-//        BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
-//        try {
-//          EntityKeys<? extends Node> queryKeys = edgesAreOutgoing
-//              ? marshaller.deserialize(edgeObj, Edge.class).getTo()
-//              : marshaller.deserialize(edgeObj, Edge.class).getFrom();
+public class EdgeIteratorToNENTupleIterator {
+//    implements Iterable<GraphCursor.NodeEdgeNodeTuple> {
+//  private static final Logger logger = Logger.getLogger(EdgeIteratorToNENTupleIterator.class.getSimpleName());
 //
-////          EntityKeys<? extends Node> destinationKeys = marshaller.deserialize(edgeObj, Edge.class).getTo();
-//          Node queryNode = conn.getNodeDao().getByKey(queryKeys);
-//          if (queryNode == null) {
-//            //This is probably a 'hanging' edge - we have the node reference, but no node exists.
-//            logger.info("Potential hanging edge found: "+queryKeys);
-//            if (fillNodeDocsOfHangingEdges) {
-////              BasicDBObject filler = new BasicDBObject();
-////              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
-////              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
-////              logger.info("Created 'filler' document for missing node: "+filler);
-////              queryNode = filler;
-//              queryNode = new Node(queryKeys);
-//              queryNode.setVirtual(true);
-//            }
-//          }
+//  private final GraphConnection conn;
+////  private final BasicDBObject subjectNodePosition;
+//  private final BasicDBObject subjectNode;
+//  private final boolean edgesAreOutgoing;
+//  private final boolean fillNodeDocsOfHangingEdges; //If true, dummy node objects will be created for hanging edges
+//  private final Callable<DBCursor> queryExecutor;
 //
+//  /**
+//   * Creates an edge iterator for the specified source (subject) node.
+//   *
+//   * @param conn a graph connection to use
+//   * @param fillNodeDocsOfHangingEdges If true, dummy node objects will be created for hanging edges.
+//   *                                   If false, the 'node' parts of hanging edges will remain NULL.
+//   * @param subjectNodePosition The node whose edges are to be iterated
+//   * @param subjectNode The full document of the node whose edges are to be iterated
+//   * @param edgesAreOutgoing Set TRUE to iterate outgoing edges. Set FALSE to iterate incoming edges
+//   * @param queryExecutor The custom query executor to use
+//   */
+//  public EdgeIteratorToNENTupleIterator(GraphConnection conn, boolean fillNodeDocsOfHangingEdges,
+//                                        EntityKeys<? extends Node> subjectNodePosition, BasicDBObject subjectNode,
+//                                        boolean edgesAreOutgoing, Callable<DBCursor> queryExecutor) {
+//    this.conn = conn;
+//    this.fillNodeDocsOfHangingEdges = fillNodeDocsOfHangingEdges;
 //
-//          GraphCursor.NodeEdgeNodeTuple nodeEdgeNode = edgesAreOutgoing
-//              ? new GraphCursor.NodeEdgeNodeTuple(subjectNode, edgeObj, queryNode)
-//              : new GraphCursor.NodeEdgeNodeTuple(queryNode, edgeObj, subjectNode);
-//          return nodeEdgeNode;
-//        } catch (Exception e) {
-//          throw new RuntimeException("Failed to iterate destination nodes for: "+ subjectNode, e);
-//        }
-
-      }
-
-      @Override
-      public void remove() {
-        throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
-      }
-    };
-  }
+////    this.subjectNodePosition = subjectNodePosition;
+//    this.edgesAreOutgoing = edgesAreOutgoing;
+//    this.queryExecutor = queryExecutor;
+//    this.subjectNode = subjectNode;
+//  }
+//
+//  @Override
+//  public Iterator<GraphCursor.NodeEdgeNodeTuple> iterator() {
+//    final DBCursor edgeItr;
+//    try {
+////      edgeItr = conn.getEdgeDao().iterateEdgesFromNode(position);
+//      edgeItr = queryExecutor.call();
+//    } catch (Exception e) {
+//      throw new RuntimeException("Failed to query database", e);
+//    }
+//    return new Iterator<GraphCursor.NodeEdgeNodeTuple>() {
+//
+//      @Override
+//      public boolean hasNext() {
+//        return edgeItr.hasNext();
+//      }
+//
+//      @Override
+//      public GraphCursor.NodeEdgeNodeTuple next() {
+//        return null;
+////        BasicDBObject edgeObj = (BasicDBObject) edgeItr.next();
+////        try {
+////          EntityKeys<? extends Node> queryKeys = edgesAreOutgoing
+////              ? marshaller.deserialize(edgeObj, Edge.class).getTo()
+////              : marshaller.deserialize(edgeObj, Edge.class).getFrom();
+////
+//////          EntityKeys<? extends Node> destinationKeys = marshaller.deserialize(edgeObj, Edge.class).getTo();
+////          Node queryNode = conn.getNodeDao().getByKey(queryKeys);
+////          if (queryNode == null) {
+////            //This is probably a 'hanging' edge - we have the node reference, but no node exists.
+////            logger.info("Potential hanging edge found: "+queryKeys);
+////            if (fillNodeDocsOfHangingEdges) {
+//////              BasicDBObject filler = new BasicDBObject();
+//////              filler.put(GraphEntityDAO.FIELD_KEYS, marshaller.serialize(queryKeys));
+//////              filler.put(GraphEntityDAO.FIELD_VIRTUAL, true); // Flag this 'node' as fake
+//////              logger.info("Created 'filler' document for missing node: "+filler);
+//////              queryNode = filler;
+////              queryNode = new Node(queryKeys);
+////              queryNode.setVirtual(true);
+////            }
+////          }
+////
+////
+////          GraphCursor.NodeEdgeNodeTuple nodeEdgeNode = edgesAreOutgoing
+////              ? new GraphCursor.NodeEdgeNodeTuple(subjectNode, edgeObj, queryNode)
+////              : new GraphCursor.NodeEdgeNodeTuple(queryNode, edgeObj, subjectNode);
+////          return nodeEdgeNode;
+////        } catch (Exception e) {
+////          throw new RuntimeException("Failed to iterate destination nodes for: "+ subjectNode, e);
+////        }
+//
+//      }
+//
+//      @Override
+//      public void remove() {
+//        throw new UnsupportedOperationException("remove() is not supported by this Iterator.");
+//      }
+//    };
+//  }
 }
