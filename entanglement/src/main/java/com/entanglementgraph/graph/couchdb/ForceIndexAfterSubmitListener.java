@@ -63,8 +63,14 @@ public class ForceIndexAfterSubmitListener implements RevisionLogListener {
       long startEdge = System.currentTimeMillis();
 //      logger.info("Forcing Edge View index updates");
       edgeDao.getByKey(new EntityKeys(UidGenerator.generateUid(), UidGenerator.generateUid()));
+      edgeDao.iterateEdgesBetweenNodes(
+          new EntityKeys(UidGenerator.generateUid(), UidGenerator.generateUid()),
+          new EntityKeys(UidGenerator.generateUid(), UidGenerator.generateUid())
+      );
       long endEdge = System.currentTimeMillis();
       totalMsSpentIndexingEdges = totalMsSpentIndexingEdges + (endEdge - startEdge);
+
+
 
       totalMsSpentIndexing = totalMsSpentIndexingNodes + totalMsSpentIndexingEdges;
 
