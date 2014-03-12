@@ -21,7 +21,6 @@ import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.ektorp.*;
 
@@ -118,25 +117,19 @@ public class IteratorForStreamingFromEdges<C extends Content, F extends Content,
           NodesAndEdgesViewRowParser parser = new NodesAndEdgesViewRowParser(nextRow);
 
           String nodeTypeName = parser.getNodeTypeName();
-          String uidOrName = parser.getUidOrName();
           String nodeIdentifier = parser.getNodeIdentifer();
           int rowType = parser.getRowType();
 
           JsonNode otherNodeUids = parser.getOtherNodeUids();
-          JsonNode otherNodeNames = parser.getOtherNodeNames();
 
           // Extract all node identifiers from the row key
           for (JsonNode identifier : otherNodeUids) {
             inferredFullNodeKeys.addUid(identifier.asText());
           }
-          for (JsonNode identifier : otherNodeNames) {
-            inferredFullNodeKeys.addName(identifier.asText());
-          }
 
           if (rowType == NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx()) {
             logger.info("Found node entry with node type:"+nodeTypeName
-                +", node identifier: "+uidOrName+":"+nodeIdentifier
-//                +", other node identifiers: U:"+otherNodeUids.asText()+" N:"+otherNodeNames.asText()
+                +", node identifier: "+nodeIdentifier
                 + ". Skipping since we're interested in edges only..."
             );
           } else if (rowType == NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx()) {
@@ -146,18 +139,13 @@ public class IteratorForStreamingFromEdges<C extends Content, F extends Content,
               continue; //Not interested in this edge if it's type doesn't match the user-specified type.
             }
             JsonNode otherEdgeUids = parser.getOtherEdgeUids();
-            JsonNode otherEdgeNames = parser.getOtherEdgeNames();
             logger.info("Found edge entry with node type:"+nodeTypeName+", node identifier: "+nodeIdentifier
                 +", edge type: "+edgeTypeName
-                +", edge UIDs: "+otherEdgeUids
-                +", edge names: "+otherEdgeNames);
+                +", edge UIDs: "+otherEdgeUids);
             EntityKeys fromEdgePartial = new EntityKeys(); // Partial because this may not be all the edge's identifiers
             fromEdgePartial.setType(edgeTypeName);
             for (JsonNode identifier : otherEdgeUids) {
               fromEdgePartial.addUid(identifier.asText());
-            }
-            for (JsonNode identifier : otherEdgeNames) {
-              fromEdgePartial.addName(identifier.asText());
             }
 
             // Have we seen any of the partial edge names before?
@@ -251,20 +239,16 @@ public class IteratorForStreamingFromEdges<C extends Content, F extends Content,
       return new Iterator<Iterable<ViewResult.Row>>() {
 
         final Iterator<String> uidItr = fullNodeKeyset.getUids().iterator();
-        final Iterator<String> nameItr = fullNodeKeyset.getNames().iterator();
 
         @Override
         public boolean hasNext() {
-          return uidItr.hasNext() || nameItr.hasNext();
+          return uidItr.hasNext();
         }
 
         @Override
         public Iterable<ViewResult.Row> next() {
           if (uidItr.hasNext()) {
             return new StreamRowsForNodeUidIterator(db, fullNodeKeyset.getType(), uidItr.next());
-          } else
-          if (nameItr.hasNext()) {
-            return new StreamRowsForNodeNameIterator(db, fullNodeKeyset.getType(), nameItr.next());
           } else {
             throw new NoSuchElementException("No more elements in this iterator.");
           }
@@ -278,64 +262,6 @@ public class IteratorForStreamingFromEdges<C extends Content, F extends Content,
     }
   }
 
-  /**
-   * Given a node name, streams all rows from a view starting with the node name.
-   */
-  private static class StreamRowsForNodeNameIterator implements Iterable<ViewResult.Row> {
-
-    private final CouchDbConnector db;
-    private final String nodeTypeName;
-    private final String nodeName;
-
-    public StreamRowsForNodeNameIterator(CouchDbConnector db, String nodeTypeName, String nodeName) {
-      this.db = db;
-      this.nodeTypeName = nodeTypeName;
-      this.nodeName = nodeName;
-    }
-
-
-    @Override
-    public Iterator<ViewResult.Row> iterator() {
-      final ViewQuery query =
-          ViewQueryFactory.createNodesAndEdgesQuery(db)
-              .startKey(ComplexKey.of(
-                  nodeTypeName, IdentifierType.NAME.getDbString(), nodeName,
-                  NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx()))
-              .endKey(ComplexKey.of(
-                  nodeTypeName, IdentifierType.NAME.getDbString(), nodeName,
-                  NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx(), ComplexKey.emptyObject()));
-
-      final StreamingViewResult result = db.queryForStreamingView(query);
-//      final ViewResult result = db.queryView(query);
-      final Iterator<ViewResult.Row> resultItr = result.iterator();
-
-      return new Iterator<ViewResult.Row>() {
-        int returnedCount = 0;
-
-        @Override
-        public boolean hasNext() {
-          try {
-            return resultItr.hasNext();
-          } catch (Exception e) {
-            // Workaround for Ektorp throwing a JsonMappingException when calling hasNext on an empty result set
-            return false;
-          }
-        }
-
-        @Override
-        public ViewResult.Row next() {
-          ViewResult.Row next = resultItr.next();
-          returnedCount++;
-          return next;
-        }
-
-        @Override
-        public void remove() {
-          throw new UnsupportedOperationException("Removal is not supported");
-        }
-      };
-    }
-  }
 
   /**
    * Given a node UID, streams all rows from a view starting with the UID.
@@ -360,10 +286,10 @@ public class IteratorForStreamingFromEdges<C extends Content, F extends Content,
         ViewQuery query =
             ViewQueryFactory.createNodesAndEdgesQuery(db)
                 .startKey(ComplexKey.of(
-                    nodeTypeName, IdentifierType.UID.getDbString(), nodeUid,
+                    nodeTypeName, nodeUid,
                     NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx()))
                 .endKey(ComplexKey.of(
-                    nodeTypeName, IdentifierType.UID.getDbString(), nodeUid,
+                    nodeTypeName, nodeUid,
                     NodesAndEdgesViewRowParser.RowType.EDGE_FROM_NODE.getDbTypeIdx(), ComplexKey.emptyObject()));
 
         final StreamingViewResult result = db.queryForStreamingView(query);

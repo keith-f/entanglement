@@ -18,6 +18,7 @@
 package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
+import com.entanglementgraph.graph.couchdb.viewparsers.EdgesViewRowParser;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -74,22 +75,16 @@ public class IteratorForStreamingAllEdges<C extends Content> implements Iterable
         Edge next = null;
         while(resultItr.hasNext()) {
           ViewResult.Row row = resultItr.next();
-          Iterator<JsonNode> keyNodeItr = row.getKeyAsNode().iterator();
-          String entityType = keyNodeItr.next().asText(); // Entity type (eg, 'has-location', 'part-of')
-          String keyType = keyNodeItr.next().asText();    // Key type (either 'N' or 'U' for Name/UID, respectively)
-          String identifier = keyNodeItr.next().asText(); // The entity name/UID
-          int rowType = keyNodeItr.next().asInt();        // 0 for edge info
+          EdgesViewRowParser parser = new EdgesViewRowParser(row);
+
+          String entityType = parser.getEdgeTypeName();  // Entity type (eg, 'has-location', 'part-of')
+          String identifier = parser.getEdgeIdentifer(); // The entity name/UID
+          int rowType = parser.getRowType();             // 0 for edge info
           // We don't need further key items
 
           EntityKeys partialKeyset = new EntityKeys();
           partialKeyset.setType(entityType);
-          if (keyType.equals(IdentifierType.NAME.getDbString())) {
-            partialKeyset.addName(identifier);
-          } else if (keyType.equals(IdentifierType.UID.getDbString())) {
-            partialKeyset.addUid(identifier);
-          } else {
-            throw new RuntimeException("Unsupported identifier type: "+keyType);
-          }
+          partialKeyset.addUid(identifier);
 
           if (seenEdges.seenElementOf(partialKeyset)) {
             continue; //We've seen this identifier as the name of another entity. Skip to avoid returning duplicates.

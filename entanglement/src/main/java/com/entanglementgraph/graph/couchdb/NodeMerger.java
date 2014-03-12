@@ -22,7 +22,6 @@ import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.graph.commands.MergePolicy;
-import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -58,7 +57,7 @@ public class NodeMerger<C extends Content> {
           //return existingNode;
           break;
         case ERR:
-          throw new LogPlayerException("Attempt to merge nodes with one or more keyset items in common with" +
+          throw new GraphModelException("Attempt to merge nodes with one or more keyset items in common with" +
               "an existing node: "+existingNode.getKeys());
         case APPEND_NEW__LEAVE_EXISTING:
           doAppendNewLeaveExisting(existingNode, newNode);
@@ -73,7 +72,7 @@ public class NodeMerger<C extends Content> {
 //          return outputNode;
           break;
         default:
-          throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
+          throw new GraphModelException("Unsupported merge policy type: "+mergePolicy);
       }
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform merge between nodes: "+existingNode+" and: "+newNode, e);
@@ -218,8 +217,6 @@ public class NodeMerger<C extends Content> {
 
     merged.addUids(existingKeys.getUids());
     merged.addUids(newKeys.getUids());
-    merged.addNames(existingKeys.getNames());
-    merged.addNames(newKeys.getNames());
 
     return merged;
   }

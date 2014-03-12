@@ -75,7 +75,7 @@ public class CreateNodeCommand extends AbstractEntanglementGraphCommand {
 
       Node<MapContent> node = new Node();
       node.getKeys().setType(type);
-      node.getKeys().addName(entityName);
+      node.getKeys().addUid(entityName);
 
       // Add further custom properties
       MapContent content = new MapContent();

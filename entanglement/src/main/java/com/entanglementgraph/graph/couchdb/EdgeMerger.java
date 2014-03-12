@@ -22,7 +22,6 @@ import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.commands.MergePolicy;
-import com.entanglementgraph.graph.mongodb.player.LogPlayerException;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -58,7 +57,7 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
         case NONE:
           break;
         case ERR:
-          throw new LogPlayerException("Attempt to merge nodes with one or more keyset items in common with" +
+          throw new GraphModelException("Attempt to merge nodes with one or more keyset items in common with" +
               "an existing node: "+existingEdge.getKeys());
         case APPEND_NEW__LEAVE_EXISTING:
           doAppendNewLeaveExisting(existingEdge, newEdge);
@@ -70,7 +69,7 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
           doOverwriteAll(existingEdge, newEdge);
           break;
         default:
-          throw new LogPlayerException("Unsupported merge policy type: "+mergePolicy);
+          throw new GraphModelException("Unsupported merge policy type: "+mergePolicy);
       }
     } catch (Exception e) {
       throw new GraphModelException("Failed to perform merge between nodes: "+existingEdge.getKeys()+" and: "+newEdge.getKeys(), e);
@@ -208,8 +207,6 @@ public class EdgeMerger<C extends Content, T extends Content, F extends Content>
 
     merged.addUids(existingKeys.getUids());
     merged.addUids(newKeys.getUids());
-    merged.addNames(existingKeys.getNames());
-    merged.addNames(newKeys.getNames());
 
     return merged;
   }

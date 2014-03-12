@@ -340,38 +340,23 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
     List<EdgeUpdateView> foundUpdates = new ArrayList<>();    //List of update documents found so far.
 
     for (String uid : queryKeyset.getUids()) {
-      findAllIdentifiersAndUpdatesFor(IdentifierType.UID, queryKeyset.getType(), uid, fullKeyset, foundUpdates);
+      findAllIdentifiersAndUpdatesFor(queryKeyset.getType(), uid, fullKeyset, foundUpdates);
     }
-    for (String name : queryKeyset.getNames()) {
-      findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, queryKeyset.getType(), name, fullKeyset, foundUpdates);
-    }
-
 
     EdgeLookupResult result = new EdgeLookupResult(queryKeyset, fullKeyset, foundUpdates);
     return result;
   }
 
-  private void findAllIdentifiersAndUpdatesFor(IdentifierType keyType, String typeName, String identifier,
+  private void findAllIdentifiersAndUpdatesFor(String typeName, String identifier,
                                                EntityKeys fullKeyset, List<EdgeUpdateView> foundUpdates)
       throws GraphModelException {
 //    System.out.println("Querying for: "+keyType+", "+typeName+", "+identifier+", "+fullKeyset);
     ViewQuery query = ViewQueryFactory.createEdgesQuery(db);
-    switch (keyType) {
-      case NAME:
-        fullKeyset.addName(identifier);
-        query = query
-            .startKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier))
-            .endKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier, ComplexKey.emptyObject()));
-        break;
-      case UID:
-        fullKeyset.addUid(identifier);
-        query = query
-            .startKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier))
-            .endKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier, ComplexKey.emptyObject()));
-        break;
-      default:
-        throw new GraphModelException("Unsupported identifier type: "+keyType);
-    }
+    fullKeyset.addUid(identifier);
+    query = query
+        .startKey(ComplexKey.of(typeName,identifier))
+        .endKey(ComplexKey.of(typeName, identifier, ComplexKey.emptyObject()));
+
 
     ViewResult result = db.queryView(query);
     //Read each row
@@ -379,7 +364,6 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
       EdgesViewRowParser parser = new EdgesViewRowParser(row);
       final int rowType = parser.getRowType();
       final JsonNode otherEdgeUids = parser.getOtherEdgeUids();
-      final JsonNode otherEdgeNames = parser.getOtherEdgeNames();
 
       JsonNode value = row.getValueAsNode();
 
@@ -396,23 +380,14 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
       }
 
       /*
-       * Regardless of the row type, we should extract all other node identifiers from the row key (see 'otherEdgeUids'
-       * and 'otherEdgeNames').
+       * Regardless of the row type, we should extract all other node identifiers from the row key (see 'otherEdgeUids')
        * Find out if we've encountered them before, and perform a recursive query for each 'new' identifier if we
        * haven't previously seen them.
        */
-
-      // Check to see if any of these names are 'new' to us.
-      for (JsonNode nameJsonNode : otherEdgeNames) {
-        // If this is the first time we've encountered the identifier, perform another query
-        if (!fullKeyset.getNames().contains(nameJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), fullKeyset, foundUpdates);
-        }
-      }
       for (JsonNode uidJsonNode :otherEdgeUids) {
         // If this is the first time we've encountered the identifier, perform another query
         if (!fullKeyset.getUids().contains(uidJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
+          findAllIdentifiersAndUpdatesFor(typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
     }

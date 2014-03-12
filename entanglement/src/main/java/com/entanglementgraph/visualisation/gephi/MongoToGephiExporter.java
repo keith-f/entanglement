@@ -18,7 +18,6 @@
  */
 package com.entanglementgraph.visualisation.gephi;
 
-import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.NodeDAO;
@@ -32,12 +31,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
-import com.scalesinformatics.mongodb.dbobject.DeserialisingIterable;
 import org.gephi.data.attributes.AttributeControllerImpl;
-import org.gephi.data.attributes.api.AttributeColumn;
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
-import org.gephi.data.attributes.api.AttributeType;
 import org.gephi.dynamic.DynamicControllerImpl;
 import org.gephi.dynamic.api.DynamicController;
 import org.gephi.dynamic.api.DynamicModel;
@@ -73,8 +69,7 @@ public class MongoToGephiExporter {
 
 
   private static final Color DEFAULT_COLOR = Color.BLACK;
-  private static final DbObjectMarshaller marshaller =
-      ObjectMarshallerFactory.create(MongoToGephiExporter.class.getClassLoader());
+  private static final DbObjectMarshaller marshaller = null;
 
   private final Map<String, Color> colorMapping;
 
@@ -182,11 +177,8 @@ public class MongoToGephiExporter {
       return (String) keys.getUids().iterator().next();
     }
 
-    if (!keys.getNames().isEmpty() && !keys.getType().isEmpty()) {
-      return keys.getType() + keys.getNames();
-    }
     throw new IllegalArgumentException("An entity must have at least "
-        + "one UID -OR- a suitable type/name combination. Offending entanglement object was: " + keys);
+        + "one UID. Offending entanglement object was: " + keys);
   }
 
 //  @SuppressWarnings("UnusedDeclaration")

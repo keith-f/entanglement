@@ -68,13 +68,13 @@ public class ListNodesCommand extends AbstractEntanglementGraphCommand {
         for (Node node : graphConn.getNodeDao().iterateAll()) {
           count++;
           EntityKeys keys = node.getKeys();
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
+          bot.debugln(channel, "  * %s: UIDs: %s", keys.getType(), keys.getUids());
         }
       } else {
         for (Node node : graphConn.getNodeDao().iterateByType(type)) {
           count++;
           EntityKeys keys = node.getKeys();
-          bot.debugln(channel, "  * %s: names: %s; UIDs: %s", keys.getType(), keys.getNames(), keys.getUids());
+          bot.debugln(channel, "  * %s: UIDs: %s", keys.getType(), keys.getUids());
         }
       }
 

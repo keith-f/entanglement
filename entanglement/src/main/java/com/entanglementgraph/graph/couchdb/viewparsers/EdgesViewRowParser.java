@@ -32,13 +32,10 @@ public class EdgesViewRowParser {
   private final ViewResult.Row row;
   private final Iterator<JsonNode> keyItr;
 
-
   private final String edgeTypeName;
-  private final String uidOrName;
   private final String edgeIdentifer;
   private final int rowType;
   private final JsonNode otherEdgeUids;
-  private final JsonNode otherEdgeNames;
 
 
   public EdgesViewRowParser(ViewResult.Row row) {
@@ -46,20 +43,13 @@ public class EdgesViewRowParser {
     keyItr = row.getKeyAsNode().iterator();
 
     edgeTypeName = keyItr.next().asText();   // Eg: "has-part".
-    uidOrName = keyItr.next().asText();      // Either 'U' or 'N'
     edgeIdentifer = keyItr.next().asText();  // The edge UID or Name string
     rowType =  keyItr.next().asInt();        // currently only '0'
     otherEdgeUids = keyItr.next();           // (some) of the other UIDs this edge is known by
-    otherEdgeNames = keyItr.next();          // (some) of the other names this edge is known by
-
   }
 
   public String getEdgeTypeName() {
     return edgeTypeName;
-  }
-
-  public String getUidOrName() {
-    return uidOrName;
   }
 
   public String getEdgeIdentifer() {
@@ -72,9 +62,5 @@ public class EdgesViewRowParser {
 
   public JsonNode getOtherEdgeUids() {
     return otherEdgeUids;
-  }
-
-  public JsonNode getOtherEdgeNames() {
-    return otherEdgeNames;
   }
 }

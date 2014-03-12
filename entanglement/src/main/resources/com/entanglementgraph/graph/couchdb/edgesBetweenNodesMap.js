@@ -4,7 +4,7 @@
  * that can be used to search for edges between two specified nodes.
  *
  * View items have the following key structures:
- * [ <from node type>, "U|N", <UID|Name>, <to node type>, "U|N", <UID|Name>, <edge type>, [ all edge UIDS ], [all edge names] ]
+ * [ <FROM node type>, <FROM UID>, <TO node type>, <TO UID>, <edge type>, [ all edge UIDS ] ]
  *
  * Values are of type EdgeUpdateView.
  *
@@ -18,47 +18,25 @@ function(doc) {
       var edge = update.edge;
 
       var allEdgeUids;
-      var allEdgeNames;
       if (edge.keys.uids) { allEdgeUids = edge.keys.uids; } else { allEdgeUids = []; }
-      if (edge.keys.names) { allEdgeNames = edge.keys.names; } else { allEdgeNames = []; }
 
       var allFromUids;
-      var allFromNames;
       if (edge.from.uids) { allFromUids = edge.from.uids; } else { allFromUids = []; }
-      if (edge.from.names) { allFromNames = edge.from.names; } else { allFromNames = []; }
 
       var allToUids;
-      var allToNames;
       if (edge.to.uids) { allToUids = edge.to.uids; } else { allToUids = []; }
-      if (edge.to.names) { allToNames = edge.to.names; } else { allToNames = []; }
 
       //Create a EdgeUpdateView (based on the EdgeUpdate, but with additional properties from the revision container)
       var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update);
 
-
-      // Emit 'from' node UID entries --> 'to' node UID/Name entries
+      // Emit 'from' node UID entries --> 'to' node UID entries
       for (i=0; i < allFromUids.length; i=i+1) {
         for (j=0; j < allToUids.length; j=j+1) {
-          var outKey = [edge.from.type, "U", allFromUids[i], edge.to.type, "U", allToUids[j], edge.keys.type, allEdgeUids, allEdgeNames];
-          emit(outKey, edgeUpdateView);
-        }
-        for (j=0; j < allToNames.length; j=j+1) {
-          var outKey = [edge.from.type, "U", allFromUids[i], edge.to.type, "N", allToNames[j], edge.keys.type, allEdgeUids, allEdgeNames];
+          var outKey = [edge.from.type, allFromUids[i], edge.to.type, allToUids[j], edge.keys.type, allEdgeUids];
           emit(outKey, edgeUpdateView);
         }
       }
 
-      // Emit 'from' node Name entries --> 'to' node UID/Name entries
-      for (i=0; i < allFromNames.length; i=i+1) {
-        for (j=0; j < allToUids.length; j=j+1) {
-          var outKey = [edge.from.type, "N", allFromNames[i], edge.to.type, "U", allToUids[j], edge.keys.type, allEdgeUids, allEdgeNames];
-          emit(outKey, edgeUpdateView);
-        }
-        for (j=0; j < allToNames.length; j=j+1) {
-          var outKey = [edge.from.type, "N", allFromNames[i], edge.to.type, "N", allToNames[j], edge.keys.type, allEdgeUids, allEdgeNames];
-          emit(outKey, edgeUpdateView);
-        }
-      }
 
       /*
        * We could consider doing the above for 'to' node entries for convenience, but it would bloat (double) the

@@ -33,44 +33,30 @@ import java.util.Set;
  * @author Keith Flanagan
  */
 public class InMemoryEntityKeyElementCache<T extends Content> implements EntityKeyElementCache<T> {
-  private final Set<String> seenUids;
-  private final Map<String, Set<String>> seenNames;
+  private final Map<String, Set<String>> seenUids;
 
   public InMemoryEntityKeyElementCache() {
-    seenUids = new HashSet<>();
-    seenNames = new HashMap<>();
+    seenUids = new HashMap<>();
   }
 
   @Override
   public void cacheElementsOf(EntityKeys<T> key) {
-    seenUids.addAll(key.getUids());
-
-    if (key.getNames().isEmpty()) {
-      return;
+    Set<String> uids = seenUids.get(key.getType());
+    if (uids == null) {
+      uids = new HashSet<>();
+      seenUids.put(key.getType(), uids);
     }
-
-    Set<String> names = seenNames.get(key.getType());
-    if (names == null) {
-      names = new HashSet<>();
-      seenNames.put(key.getType(), names);
-    }
-    names.addAll(key.getNames());
+    uids.addAll(key.getUids());
   }
 
   @Override
   public boolean seenElementOf(EntityKeys<T> key) {
-    for (String uid : key.getUids()) {
-      if (seenUids.contains(uid)) {
-        return true;
-      }
-    }
-
-    Set<String> names = seenNames.get(key.getType());
-    if (names == null) {
+    Set<String> uids = seenUids.get(key.getType());
+    if (uids == null) {
       return false;
     }
-    for (String name : key.getNames()) {
-      if (names.contains(name)) {
+    for (String uid : key.getUids()) {
+      if (uids.contains(uid)) {
         return true;
       }
     }

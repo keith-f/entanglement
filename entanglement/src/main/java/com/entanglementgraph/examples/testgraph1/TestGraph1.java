@@ -70,7 +70,7 @@ public class TestGraph1
       Node chromNode = new Node(new EntityKeys("Chromosome", "c" + i), chromData);
 
       ops.add(new NodeUpdate(chromNode));
-      chromosomeNames.addAll(chromNode.getKeys().getNames());
+      chromosomeNames.addAll(chromNode.getKeys().getUids());
     }
     System.out.println("Committing "+ops.size()+" graph operations.");
     totalOps = totalOps + ops.size();

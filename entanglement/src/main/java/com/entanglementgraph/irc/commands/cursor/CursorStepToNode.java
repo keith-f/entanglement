@@ -53,11 +53,9 @@ public class CursorStepToNode extends AbstractEntanglementCursorCommand {
   public List<Param> getParams() {
     List<Param> params = super.getParams();
     params.add(new OptionalParam("node-type", String.class, "The type name of the node to jump to."));
-    params.add(new OptionalParam("node-name", String.class, "The unique name of the node to jump to."));
     params.add(new OptionalParam("node-uid", String.class, "The UID of the node to jump to."));
 
     params.add(new OptionalParam("display-max-uids", Integer.class, "0", "Specifies the maximum number of UIDs to display for graph entities. Reduce this number for readability, increase this number for more detail."));
-    params.add(new OptionalParam("display-max-names", Integer.class, "2", "Specifies the maximum number of names to display for graph entities. Reduce this number for readability, increase this number for more detail."));
     return params;
   }
 
@@ -80,7 +78,7 @@ public class CursorStepToNode extends AbstractEntanglementCursorCommand {
   protected void processLine() throws UserException, BotCommandException {
 
 
-    EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid, nodeName);
+    EntityKeys<? extends Node> newLocation = new EntityKeys<>(nodeType, nodeUid);
 
 //    try {
 //      GraphCursor previous = cursor;

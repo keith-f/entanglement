@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.irc;
 
-import com.entanglementgraph.graph.mongodb.ObjectMarshallerFactory;
 import com.entanglementgraph.irc.commands.benchmarks.RunBenchmarksCommand;
 import com.entanglementgraph.irc.commands.benchmarks.RunBigRandomGraphBenchmarkCommand;
 import com.entanglementgraph.irc.commands.cursor.*;
@@ -109,12 +108,9 @@ public class EntanglementBot extends GenericIrcBot {
     addHazelcastToBotState();
     addEntanglementToBotState();
 
-
-    addCommand("/entanglement/db/connect-mongodb-pool", ConnectMongoDbClusterCommand.class);
     addCommand("/entanglement/db/connect-couchdb-pool", ConnectCouchDbClusterCommand.class);
     addCommand("/entanglement/db/connect-graph", ConnectGraphCommand.class);
     addCommand("/entanglement/db/list-connections", ListGraphConnectionsCommand.class);
-    addCommand("/entanglement/db/playback-committed-log-items", PlaybackCommittedLogItemsCommand.class);
     addCommand("/entanglement/graph/create-edge", CreateEdgeCommand.class);
     addCommand("/entanglement/graph/create-node", CreateNodeCommand.class);
     addCommand("/entanglement/graph/export-gephi", ExportGephiCommand.class);
@@ -160,10 +156,10 @@ public class EntanglementBot extends GenericIrcBot {
 
   protected void addEntanglementToBotState() {
     ClassLoader cl = EntanglementBot.class.getClassLoader();
-    DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
+//    DbObjectMarshaller m = ObjectMarshallerFactory.create(cl);
     // Set EntanglementRuntime logging to STDOUT by default (since we don't currently know of any channels).
     BotLogger logger = new BotLoggerStdOut(EntanglementBot.class.getSimpleName());
-    EntanglementRuntime runtime = new EntanglementRuntime(logger, cl, m, hzInstance);
+    EntanglementRuntime runtime = new EntanglementRuntime(logger, cl, hzInstance);
 
     getGlobalState().getUserObjs().put(STATE_PROP_ENTANGLEMENT, runtime);
 

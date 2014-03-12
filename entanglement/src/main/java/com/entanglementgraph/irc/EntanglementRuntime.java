@@ -19,13 +19,11 @@ package com.entanglementgraph.irc;
 
 import com.entanglementgraph.cursor.GraphCursorRegistry;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
-import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.BotLoggerFactory;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -52,7 +50,6 @@ public class EntanglementRuntime {
 
 //  private final BotState<EntanglementRuntime> state; // The channel state for which *this* is the user object.
   private final ClassLoader classLoader;
-  private final DbObjectMarshaller marshaller;
   private final HazelcastInstance hzInstance;
 
   private final IMap<String, GraphConnectionDetails> graphConnectionDetails;
@@ -68,15 +65,12 @@ public class EntanglementRuntime {
    * processes.
 `  *
    * @param classLoader
-   * @param marshaller
    */
   public EntanglementRuntime(BotLogger botLogger,
-                              ClassLoader classLoader, DbObjectMarshaller marshaller,
-                              HazelcastInstance hzInstance) {
+                              ClassLoader classLoader, HazelcastInstance hzInstance) {
     this.classJsonMappings = new HashMap<>();
     this.classLoader = classLoader;
     this.hzInstance = hzInstance;
-    this.marshaller = marshaller;
     this.graphConnectionDetails = hzInstance.getMap(HZ_CONN_DETAILS);;
 
     // Currently, this listener simply logs updates to <code>graphConnectionDetails</code>
@@ -143,14 +137,6 @@ public class EntanglementRuntime {
       } catch (GraphConnectionFactoryException e) {
         throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
       }
-    } else if (details.getDbType() == GraphConnectionDetails.DbType.MONGO_DB) {
-      try {
-        MongoGraphConnectionFactory gcf = new MongoGraphConnectionFactory(
-            classLoader, details.getClusterName(), details.getDatabase());
-        return gcf.connect(details.getGraphName());
-      } catch (GraphConnectionFactoryException e) {
-        throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
-      }
     } else {
       throw new BotCommandException("Unsupported database type: "+details.getDbType());
     }
@@ -158,10 +144,6 @@ public class EntanglementRuntime {
 
   public ClassLoader getClassLoader() {
     return classLoader;
-  }
-
-  public DbObjectMarshaller getMarshaller() {
-    return marshaller;
   }
 
   public IMap<String, GraphConnectionDetails> getGraphConnectionDetails() {

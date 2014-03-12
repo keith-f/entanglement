@@ -62,43 +62,33 @@ public class NodesAndEdgesViewRowParser {
 
   // Node key items (common to all rows in this view)
   private final String nodeTypeName;
-  private final String uidOrName;
   private final String nodeIdentifer;
   private final int rowType;
   private final JsonNode otherNodeUids;
-  private final JsonNode otherNodeNames;
 
   // When rowType == 1, this indicates a 'from node' edge entry. Additional key fields exist.
   private String edgeTypeName;
   private JsonNode otherEdgeUids;
-  private JsonNode otherEdgeNames;
 
   public NodesAndEdgesViewRowParser (ViewResult.Row row) {
     this.row = row;
     keyItr = row.getKeyAsNode().iterator();
 
     nodeTypeName = keyItr.next().asText();   // Eg: "Gene".
-    uidOrName = keyItr.next().asText();      // Either 'U' or 'N'
     nodeIdentifer = keyItr.next().asText();  // The node UID or Name string
     rowType =  keyItr.next().asInt();        // 0=node; 1=edgeFrom; ...
     otherNodeUids = keyItr.next();           // (some) of the other UIDs this node is known by
-    otherNodeNames = keyItr.next();          // (some) of the other names this node is known by
 
      if (rowType == 1 || rowType == 2) {
       // additional key fields: edge.keys.type, allEdgeUids, allEdgeNames
       edgeTypeName = keyItr.next().asText();   // The type name of the edge (e.g., 'has-part')
       otherEdgeUids = keyItr.next();           // (some) of the other UIDs this edge is known by
-      otherEdgeNames = keyItr.next();          // (some) of the other names this edge is known by
     }
   }
 
 
   public String getNodeTypeName() {
     return nodeTypeName;
-  }
-
-  public String getUidOrName() {
-    return uidOrName;
   }
 
   public String getNodeIdentifer() {
@@ -113,19 +103,11 @@ public class NodesAndEdgesViewRowParser {
     return otherNodeUids;
   }
 
-  public JsonNode getOtherNodeNames() {
-    return otherNodeNames;
-  }
-
   public String getEdgeTypeName() {
     return edgeTypeName;
   }
 
   public JsonNode getOtherEdgeUids() {
     return otherEdgeUids;
-  }
-
-  public JsonNode getOtherEdgeNames() {
-    return otherEdgeNames;
   }
 }

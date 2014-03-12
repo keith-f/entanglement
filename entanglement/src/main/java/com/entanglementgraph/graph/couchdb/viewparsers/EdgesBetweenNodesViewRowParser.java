@@ -37,41 +37,31 @@ public class EdgesBetweenNodesViewRowParser {
 
   // Node key items (common to all rows in this view)
   private final String fromNodeType;
-  private final String fromNodeUidOrName;
   private final String fromNodeIdentifer;
 
   private final String toNodeType;
-  private final String toNodeUidOrName;
   private final String toNodeIdentifer;
 
   private final String edgeTypeName;
   private final JsonNode edgeUids;
-  private final JsonNode edgeNames;
 
   public EdgesBetweenNodesViewRowParser(ViewResult.Row row) {
     this.row = row;
     keyItr = row.getKeyAsNode().iterator();
 
     fromNodeType = keyItr.next().asText();       // Eg: "Gene".
-    fromNodeUidOrName = keyItr.next().asText();  // Either 'U' or 'N'
     fromNodeIdentifer = keyItr.next().asText();  // The node UID or Name string
 
     toNodeType = keyItr.next().asText();         // Eg: "Gene".
-    toNodeUidOrName = keyItr.next().asText();    // Either 'U' or 'N'
     toNodeIdentifer = keyItr.next().asText();    // The node UID or Name string
 
     edgeTypeName = keyItr.next().asText();       // The type name of the edge (e.g., 'has-part')
     edgeUids = keyItr.next();                    // (some) of the UIDs this edge is known by
-    edgeNames = keyItr.next();                   // (some) of the names this edge is known by
 
   }
 
   public String getFromNodeType() {
     return fromNodeType;
-  }
-
-  public String getFromNodeUidOrName() {
-    return fromNodeUidOrName;
   }
 
   public String getFromNodeIdentifer() {
@@ -80,10 +70,6 @@ public class EdgesBetweenNodesViewRowParser {
 
   public String getToNodeType() {
     return toNodeType;
-  }
-
-  public String getToNodeUidOrName() {
-    return toNodeUidOrName;
   }
 
   public String getToNodeIdentifer() {
@@ -96,9 +82,5 @@ public class EdgesBetweenNodesViewRowParser {
 
   public JsonNode getEdgeUids() {
     return edgeUids;
-  }
-
-  public JsonNode getEdgeNames() {
-    return edgeNames;
   }
 }

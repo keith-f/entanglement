@@ -19,7 +19,7 @@ package com.entanglementgraph.visualisation.gephi;
 
 import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.RevisionLogException;
-import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
+import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.graph.GraphConnectionFactoryException;
 import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
@@ -139,8 +139,8 @@ public class MongoGraphToGephi {
       System.exit(1);
     }
 
-    MongoGraphConnectionFactory connFact = new MongoGraphConnectionFactory(
-        classLoader, mongoHost, mongoDatabaseName);
+    CouchGraphConnectionFactory connFact = null; //new CouchGraphConnectionFactory(
+//        classLoader, mongoHost, mongoDatabaseName);
     GraphConnection conn = connFact.connect(graphName);
 
     Map<String, Color> entityToColor = ColorLoader.loadColorMappings(new File(colorPropsFile));

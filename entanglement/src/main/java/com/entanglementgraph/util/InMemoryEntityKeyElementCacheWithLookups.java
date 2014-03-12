@@ -21,7 +21,6 @@ import com.entanglementgraph.graph.EntityKeys;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An implementation of <code>EntityKeyElementCache</code> that stores elements in RAM.
@@ -32,31 +31,27 @@ import java.util.Set;
  * @author Keith Flanagan
  */
 public class InMemoryEntityKeyElementCacheWithLookups<T extends Content, U> implements EntityKeyElementCacheWithLookups<T, U> {
-  private final Map<String, U> seenUids;               // A map of UID to user object
-  private final Map<String, Map<String, U>> seenNames; // A map of type -> name -> user object
+//  private final Map<String, U> seenUids;               // A map of UID to user object
+  private final Map<String, Map<String, U>> seenUids;    // A map of type -> UID -> user object
 
   public InMemoryEntityKeyElementCacheWithLookups() {
     seenUids = new HashMap<>();
-    seenNames = new HashMap<>();
+//    seenNames = new HashMap<>();
   }
 
   @Override
   public void cacheElementsAndAssociateWithObject(EntityKeys<T> key, U userObject) {
+//    for (String uid : key.getUids()) {
+//      seenUids.put(uid, userObject);
+//    }
+
+    Map<String, U> uidToUserObject = seenUids.get(key.getType());
+    if (uidToUserObject == null) {
+      uidToUserObject = new HashMap<>();
+      seenUids.put(key.getType(), uidToUserObject);
+    }
     for (String uid : key.getUids()) {
-      seenUids.put(uid, userObject);
-    }
-
-    if (key.getNames().isEmpty()) {
-      return;
-    }
-
-    Map<String, U> nameToUserObject = seenNames.get(key.getType());
-    if (nameToUserObject == null) {
-      nameToUserObject = new HashMap<>();
-      seenNames.put(key.getType(), nameToUserObject);
-    }
-    for (String name : key.getNames()) {
-      nameToUserObject.put(name, userObject);
+      uidToUserObject.put(uid, userObject);
     }
   }
 
@@ -68,12 +63,12 @@ public class InMemoryEntityKeyElementCacheWithLookups<T extends Content, U> impl
       }
     }
 
-    Map<String, U> names = seenNames.get(key.getType());
-    if (names == null) {
+    Map<String, U> uids = seenUids.get(key.getType());
+    if (uids == null) {
       return false;
     }
-    for (String name : key.getNames()) {
-      if (names.containsKey(name)) {
+    for (String uid : key.getUids()) {
+      if (uids.containsKey(uid)) {
         return true;
       }
     }
@@ -82,19 +77,13 @@ public class InMemoryEntityKeyElementCacheWithLookups<T extends Content, U> impl
 
   @Override
   public U getUserObjectFor(EntityKeys<T> key) {
-    for (String uid : key.getUids()) {
-      if (seenUids.containsKey(uid)) {
-        return seenUids.get(uid);
-      }
-    }
-
-    Map<String, U> nameToUserObject = seenNames.get(key.getType());
-    if (nameToUserObject == null) {
+    Map<String, U> uidToUserObject = seenUids.get(key.getType());
+    if (uidToUserObject == null) {
       return null;
     }
-    for (String name : key.getNames()) {
-      if (nameToUserObject.containsKey(name)) {
-        return nameToUserObject.get(name);
+    for (String uid : key.getUids()) {
+      if (uidToUserObject.containsKey(uid)) {
+        return uidToUserObject.get(uid);
       }
     }
     return null;

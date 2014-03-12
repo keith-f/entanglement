@@ -48,11 +48,9 @@ public class NodeTypeNameRestlet extends Restlet {
   public void handle(Request request, Response response) {
     try {
       String type = (String) request.getAttributes().get("type");
-      String name = (String) request.getAttributes().get("name");
 
       EntityKeys queryKeys = new EntityKeys();
       queryKeys.setType(type);
-      queryKeys.addName(name);
       Node node = conn.getNodeDao().getByKey(queryKeys);
       String message = mapper.writeValueAsString(node);
 

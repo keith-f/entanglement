@@ -19,7 +19,6 @@ package com.entanglementgraph.graph.couchdb;
 
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.couchdb.viewparsers.EdgesBetweenNodesViewRowParser;
-import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
 import com.entanglementgraph.util.EntityKeyElementCache;
 import com.entanglementgraph.util.InMemoryEntityKeyElementCache;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -126,24 +125,14 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
           EdgesBetweenNodesViewRowParser parser = new EdgesBetweenNodesViewRowParser(nextRow);
 
           String fromNodeTypeName = parser.getFromNodeType();
-          String fromNodeUidOrName = parser.getFromNodeUidOrName();
           String fromNodeIdentifier = parser.getFromNodeIdentifer();
 
           String toNodeTypeName = parser.getToNodeType();
-          String toNodeUidOrName = parser.getToNodeUidOrName();
           String toNodeIdentifier = parser.getToNodeIdentifer();
 
           String edgeTypeName = parser.getEdgeTypeName();
           JsonNode edgeUids = parser.getEdgeUids();
-          JsonNode edgeNames = parser.getEdgeNames();
 
-//          String nodeTypeName = parser.getNodeTypeName();
-//          String uidOrName = parser.getUidOrName();
-//          String nodeIdentifier = parser.getNodeIdentifer();
-//          int rowType = parser.getRowType();
-//
-//          JsonNode otherNodeUids = parser.getOtherNodeUids();
-//          JsonNode otherNodeNames = parser.getOtherNodeNames();
 
 
           // Optionally limit to a particular entity type
@@ -155,9 +144,6 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
           fromEdgePartial.setType(edgeTypeName);
           for (JsonNode identifier : edgeUids) {
             fromEdgePartial.addUid(identifier.asText());
-          }
-          for (JsonNode identifier : edgeNames) {
-            fromEdgePartial.addName(identifier.asText());
           }
 
           // Have we seen any of the partial edge names before?
@@ -239,22 +225,12 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
    */
   private static class KeysetRowIterator implements Iterable<Iterable<ViewResult.Row>> {
 
-    static class Key {
-      private Key(IdentifierType type, String identifier) {
-        this.type = type;
-        this.identifier = identifier;
-      }
-
-      IdentifierType type;
-      String identifier;
-    }
-
     private final CouchDbConnector db;
     private final EntityKeys fromNodeKeyset;
     private final EntityKeys toNodeKeyset;
 
-    private final List<Key> fromKeys;
-    private final List<Key> toKeys;
+    private final List<String> fromKeys;
+    private final List<String> toKeys;
 
     public KeysetRowIterator(CouchDbConnector db, EntityKeys<? extends Content> fromNodeKeyset, EntityKeys<? extends Content> toNodeKeyset) {
       this.db = db;
@@ -264,19 +240,13 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
       // Build a list of all 'from' keys:
       fromKeys = new LinkedList<>();
       for (String uid : fromNodeKeyset.getUids()) {
-        fromKeys.add(new Key(IdentifierType.UID, uid));
-      }
-      for (String name : fromNodeKeyset.getNames()) {
-        fromKeys.add(new Key(IdentifierType.NAME, name));
+        fromKeys.add(uid);
       }
 
       // Build a list of all 'to' keys:
       toKeys = new LinkedList<>();
       for (String uid : toNodeKeyset.getUids()) {
-        toKeys.add(new Key(IdentifierType.UID, uid));
-      }
-      for (String name : toNodeKeyset.getNames()) {
-        toKeys.add(new Key(IdentifierType.NAME, name));
+        toKeys.add(uid);
       }
 
       if (fromKeys.isEmpty() || toKeys.isEmpty())  {
@@ -290,10 +260,10 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
     public Iterator<Iterable<ViewResult.Row>> iterator() {
       return new Iterator<Iterable<ViewResult.Row>>() {
 
-        final Iterator<Key> fromKeyItr = fromKeys.iterator();
+        final Iterator<String> fromKeyItr = fromKeys.iterator();
 
-        Iterator<Key> toKeyItr = toKeys.iterator();;
-        Key currentFromKey = null;
+        Iterator<String> toKeyItr = toKeys.iterator();;
+        String currentFromKey = null;
 
         @Override
         public boolean hasNext() {
@@ -315,7 +285,7 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
             throw new NoSuchElementException("No more elements in this iterator.");
           }
 
-          Key toKey = toKeyItr.next();
+          String toKey = toKeyItr.next();
 
           return new StreamRowsForFromToNodesIterator(db, fromNodeKeyset.getType(), currentFromKey,
               toNodeKeyset.getType(), toKey);
@@ -336,14 +306,14 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
 
     private final CouchDbConnector db;
     private final String fromNodeTypeName;
-    private final KeysetRowIterator.Key fromKey;
+    private final String fromKey;
 
     private final String toNodeTypeName;
-    private final KeysetRowIterator.Key toKey;
+    private final String toKey;
 
     public StreamRowsForFromToNodesIterator(CouchDbConnector db,
-                                            String fromNodeTypeName, KeysetRowIterator.Key fromKey,
-                                            String toNodeTypeName, KeysetRowIterator.Key toKey) {
+                                            String fromNodeTypeName, String fromKey,
+                                            String toNodeTypeName, String toKey) {
       this.db = db;
       this.fromNodeTypeName = fromNodeTypeName;
       this.fromKey = fromKey;
@@ -358,11 +328,9 @@ public class IteratorForStreamingEdgesBetweenNodes<C extends Content, F extends 
       final ViewQuery query =
           ViewQueryFactory.createEdgesBetweenNodesQuery(db)
               .startKey(ComplexKey.of(
-                  fromNodeTypeName, fromKey.type.getDbString(), fromKey.identifier,
-                  toNodeTypeName, toKey.type.getDbString(), toKey.identifier))
+                  fromNodeTypeName, fromKey, toNodeTypeName, toKey))
               .endKey(ComplexKey.of(
-                  fromNodeTypeName, fromKey.type.getDbString(), fromKey.identifier,
-                  toNodeTypeName, toKey.type.getDbString(), toKey.identifier, ComplexKey.emptyObject()));
+                  fromNodeTypeName, fromKey, toNodeTypeName, toKey, ComplexKey.emptyObject()));
 
       final StreamingViewResult result = db.queryForStreamingView(query);
 //      final ViewResult result = db.queryView(query);

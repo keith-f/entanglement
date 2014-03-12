@@ -83,7 +83,7 @@ public class CreateEdgeCommand extends AbstractEntanglementGraphCommand {
 
       Edge edge = new Edge();
       edge.getKeys().setType(type);
-      edge.getKeys().addName(entityName);
+      edge.getKeys().addUid(entityName);
       //TODO from/to
 
       // Add further custom properties

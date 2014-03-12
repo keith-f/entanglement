@@ -22,7 +22,6 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.graph.GraphConnectionFactoryException;
-import com.entanglementgraph.graph.mongodb.TmpGraphConnectionFactory;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.uibot.commands.AbstractCommand;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -40,7 +39,6 @@ import java.util.Set;
  */
 abstract public class AbstractEntanglementCommand extends AbstractCommand {
 
-  private final TmpGraphConnectionFactory tmpConnFact = new TmpGraphConnectionFactory();
   private final Set<GraphConnection> temporaryConnections;
 
   protected final IrcEntanglementFormat entFormat;
@@ -100,18 +98,19 @@ abstract public class AbstractEntanglementCommand extends AbstractCommand {
    */
   protected GraphConnection createTemporaryGraph(String tempClusterName, boolean disposeOnCommandCompletion)
       throws GraphConnectionFactoryException {
-    if (tempClusterName == null) {
-      throw new GraphConnectionFactoryException("No temporary cluster name was specified");
-    }
-
-    GraphConnection conn = tmpConnFact.createTemporaryGraph(tempClusterName);
-
-    if (disposeOnCommandCompletion) {
-      temporaryConnections.add(conn);
-    }
-
-    logger.infoln("Created temporary graph: %s", conn.getGraphName());
-    return conn;
+    throw new UnsupportedOperationException("This function is not yet implemented");
+//    if (tempClusterName == null) {
+//      throw new GraphConnectionFactoryException("No temporary cluster name was specified");
+//    }
+//
+//    GraphConnection conn = tmpConnFact.createTemporaryGraph(tempClusterName);
+//
+//    if (disposeOnCommandCompletion) {
+//      temporaryConnections.add(conn);
+//    }
+//
+//    logger.infoln("Created temporary graph: %s", conn.getGraphName());
+//    return conn;
   }
 
   /**
@@ -157,16 +156,16 @@ abstract public class AbstractEntanglementCommand extends AbstractCommand {
    * @throws GraphConnectionFactoryException
    */
   protected void disposeOfTempGraph(GraphConnection tmpConnection) {
-    if (tmpConnection == null) {
-      return;
-    }
-    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
-    try {
-      tmpConnFact.disposeOfTempGraph(tmpConnection);
-    } catch (Exception e) {
-      logger.printException("Failed to dispose of one or more temporary graph collections.", e);
-    }
-
+    throw new UnsupportedOperationException("This function is not yet implemented");
+//    if (tmpConnection == null) {
+//      return;
+//    }
+//    logger.infoln("Attempting to drop datastructures relating to temporary graph: %s", tmpConnection.getGraphName());
+//    try {
+//      tmpConnFact.disposeOfTempGraph(tmpConnection);
+//    } catch (Exception e) {
+//      logger.printException("Failed to dispose of one or more temporary graph collections.", e);
+//    }
   }
 
 }

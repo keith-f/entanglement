@@ -18,7 +18,6 @@
 package com.entanglementgraph.irc.commands.graph;
 
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
-import com.entanglementgraph.graph.mongodb.MongoGraphConnectionFactory;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.scalesinformatics.uibot.Param;
@@ -48,7 +47,7 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
     List<Param> params = super.getParams();
     params.add(new RequiredParam("conn", String.class, "A unique name to use for this connection object"));
     params.add(new RequiredParam("cluster", String.class,
-        "The name of a CouchDB/MongoDB connection pool/cluster name (as created by the 'connect CouchDB/MongoDB cluster' command."));
+        "The name of a CouchDB connection pool/cluster name (as created by the 'connect CouchDB/MongoDB cluster' command."));
     params.add(new RequiredParam("database", String.class, "A database located within a MongoDB pool."));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
     return params;
@@ -69,8 +68,6 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
       GraphConnectionDetails details = new GraphConnectionDetails(clusterName, database, graph);
       if (CouchGraphConnectionFactory.containsNamedCluster(clusterName)) {
         details.setDbType(GraphConnectionDetails.DbType.COUCH_DB);
-      } else if (MongoGraphConnectionFactory.containsNamedCluster(clusterName)) {
-        details.setDbType(GraphConnectionDetails.DbType.MONGO_DB);
       } else {
         throw new UserException("Unknown cluster name: "+clusterName);
       }

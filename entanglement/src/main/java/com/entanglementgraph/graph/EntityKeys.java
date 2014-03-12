@@ -24,11 +24,8 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: keith
- * Date: 10/03/2013
- * Time: 21:09
- * To change this template use File | Settings | File Templates.
+ *
+ * @author Keith Flanagan
  */
 public class EntityKeys<E extends Content>
   implements Serializable, Cloneable {
@@ -50,26 +47,16 @@ public class EntityKeys<E extends Content>
     return indexes;
   }
 
-  public static EntityKeys createWithType(String type) {
-    EntityKeys keyset = new EntityKeys();
-    keyset.setType(type);
-    return keyset;
-  }
-
-  public static boolean containsAtLeastOneName(EntityKeys keyset) {
-    return !keyset.names.isEmpty();
-  }
-
   public static boolean containsAtLeastOneUid(EntityKeys keyset) {
     return !keyset.uids.isEmpty();
   }
 
   public static boolean containsAtLeastOneKey(EntityKeys keyset) {
-    return !keyset.names.isEmpty() || !keyset.uids.isEmpty();
+    return containsAtLeastOneUid(keyset);
   }
 
   /**
-   * Returns true if two keysets are of the same type, and have identical UID and name content.
+   * Returns true if two keysets are of the same type, and have identical UID content.
    * @param first
    * @param second
    * @param ignoreTypeField if set to true, ignores the EntityKeys 'type' field. This is useful if one of the keys
@@ -81,8 +68,7 @@ public class EntityKeys<E extends Content>
     if (!ignoreTypeField && !first.getType().equals(second.getType())) {
       throw new IllegalArgumentException("Attempt to compare keysets with different types: "+first+"; "+second);
     }
-    return first.getUids().equals(second.getUids())
-        && first.getNames().equals(second.getNames());
+    return first.getUids().equals(second.getUids());
   }
 
   /**
@@ -102,59 +88,36 @@ public class EntityKeys<E extends Content>
     }
     Set<String> uids = new HashSet<String>(first.getUids());
     uids.retainAll(second.getUids());
-    if (!uids.isEmpty()) return true;
-
-    Set<String> names = new HashSet<String>(first.getNames());
-    names.retainAll(second.getNames());
-    return !names.isEmpty();
+    return !uids.isEmpty();
   }
 
 
   protected String type;
   protected Set<String> uids;
-  protected Set<String> names;
 
   public EntityKeys() {
     uids = new HashSet<>();
-    names = new HashSet<>();
   }
 
-  public EntityKeys(String uid) {
-    this();
-    uids.add(uid);
-  }
 
-  public EntityKeys(String type, String name) {
+  public EntityKeys(String type, String id) {
     this();
     this.type = type;
-    names.add(name);
+    addUid(id);
   }
 
-  public EntityKeys(String type, Collection<String> names) {
-    this();
-    this.type = type;
-    names.addAll(names);
-  }
-
-  public EntityKeys(String type, String uid, String name) {
-    this();
-    this.type = type;
-    uids.add(uid);
-    names.add(name);
-  }
 
   @Override
   public EntityKeys<E> clone() {
     EntityKeys<E> clone = new EntityKeys<>();
     clone.setType(getType());
     clone.getUids().addAll(getUids());
-    clone.getNames().addAll(getNames());
     return clone;
   }
 
   @Override
   public String toString() {
-    return String.format("EntityKeys{type='%s', uids=%s, names=%s}", type, uids, names);
+    return String.format("EntityKeys{type='%s', uids=%s}", type, uids);
   }
 
   @Override
@@ -164,7 +127,6 @@ public class EntityKeys<E extends Content>
 
     EntityKeys that = (EntityKeys) o;
 
-    if (names != null ? !names.equals(that.names) : that.names != null) return false;
     if (type != null ? !type.equals(that.type) : that.type != null) return false;
     if (uids != null ? !uids.equals(that.uids) : that.uids != null) return false;
 
@@ -175,7 +137,6 @@ public class EntityKeys<E extends Content>
   public int hashCode() {
     int result = type != null ? type.hashCode() : 0;
     result = 31 * result + (uids != null ? uids.hashCode() : 0);
-    result = 31 * result + (names != null ? names.hashCode() : 0);
     return result;
   }
 
@@ -186,24 +147,6 @@ public class EntityKeys<E extends Content>
           + type + " vs " + toImport.type);
     }
     uids.addAll(toImport.uids);
-    names.addAll(toImport.names);
-  }
-
-  public void addName(String name)
-  {
-    if (name != null) {
-      names.add(name);
-    }
-  }
-
-  public void addNames(Collection<String> newNames)
-  {
-    names.addAll(newNames);
-  }
-
-  public void addNames(String... newNames)
-  {
-    names.addAll(Arrays.asList(newNames));
   }
 
   public void addUid(String uid)
@@ -238,11 +181,4 @@ public class EntityKeys<E extends Content>
     this.uids = uids;
   }
 
-  public Set<String> getNames() {
-    return names;
-  }
-
-  public void setNames(Set<String> names) {
-    this.names = names;
-  }
 }

@@ -76,11 +76,11 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
         Node<C> next = null;
         while(resultItr.hasNext()) {
           ViewResult.Row row = resultItr.next();
-          Iterator<JsonNode> keyNodeItr = row.getKeyAsNode().iterator();
-          String entityType = keyNodeItr.next().asText(); // Entity type (eg, 'Gene', 'Chromosome')
-          String keyType = keyNodeItr.next().asText();    // Key type (either 'N' or 'U' for Name/UID, respectively)
-          String identifier = keyNodeItr.next().asText(); // The entity name/UID
-          int rowType = keyNodeItr.next().asInt();        // 0 for node info, 1 for 'from' edge.
+          NodesAndEdgesViewRowParser parser = new NodesAndEdgesViewRowParser(row);
+
+          String entityType = parser.getNodeTypeName();   // Entity type (eg, 'Gene', 'Chromosome')
+          String identifier = parser.getNodeIdentifer();  // The entity name/UID
+          int rowType = parser.getRowType();              // 0 for node info, 1 for 'from' edge.
           // We don't need further key items
 
           if (rowType != NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx()) {
@@ -90,13 +90,7 @@ public class IteratorForStreamingAllNodes<C extends Content> implements Iterable
 
           EntityKeys partialKeyset = new EntityKeys();
           partialKeyset.setType(entityType);
-          if (keyType.equals(IdentifierType.NAME.getDbString())) {
-            partialKeyset.addName(identifier);
-          } else if (keyType.equals(IdentifierType.UID.getDbString())) {
-            partialKeyset.addUid(identifier);
-          } else {
-            throw new RuntimeException("Unsupported identifier type: "+keyType);
-          }
+          partialKeyset.addUid(identifier);
 
           if (seenNodes.seenElementOf(partialKeyset)) {
             continue; //We've seen this identifier as the name of another entity. Skip to avoid returning duplicates.

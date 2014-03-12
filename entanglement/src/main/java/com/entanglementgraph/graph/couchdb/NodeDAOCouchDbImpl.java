@@ -208,37 +208,23 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
     List<NodeUpdateView> foundUpdates = new ArrayList<>();    //List of update documents found so far.
 
     for (String uid : queryKeyset.getUids()) {
-      findAllIdentifiersAndUpdatesFor(IdentifierType.UID, queryKeyset.getType(), uid, fullKeyset, foundUpdates);
+      findAllIdentifiersAndUpdatesFor(queryKeyset.getType(), uid, fullKeyset, foundUpdates);
     }
-    for (String name : queryKeyset.getNames()) {
-      findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, queryKeyset.getType(), name, fullKeyset, foundUpdates);
-    }
-
 
     NodeLookupResult result = new NodeLookupResult(queryKeyset, fullKeyset, foundUpdates);
     return result;
   }
 
-  private void findAllIdentifiersAndUpdatesFor(IdentifierType keyType, String typeName, String identifier,
+  private void findAllIdentifiersAndUpdatesFor(String typeName, String identifier,
                                                EntityKeys fullKeyset, List<NodeUpdateView> foundUpdates)
       throws GraphModelException {
     ViewQuery query = ViewQueryFactory.createNodesAndEdgesQuery(db);
-    switch (keyType) {
-      case NAME:
-        fullKeyset.addName(identifier);
-        query = query
-            .startKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier))
-            .endKey(ComplexKey.of(typeName, IdentifierType.NAME.getDbString(), identifier, ComplexKey.emptyObject()));
-        break;
-      case UID:
-        fullKeyset.addUid(identifier);
-        query = query
-            .startKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier))
-            .endKey(ComplexKey.of(typeName, IdentifierType.UID.getDbString(), identifier, ComplexKey.emptyObject()));
-        break;
-      default:
-        throw new GraphModelException("Unsupported identifier type: "+keyType);
-    }
+
+    fullKeyset.addUid(identifier);
+    query = query
+        .startKey(ComplexKey.of(typeName, identifier))
+        .endKey(ComplexKey.of(typeName, identifier, ComplexKey.emptyObject()));
+
 //    ViewResult result = db.queryView(query.reduce(true).group(true).groupLevel(4));
     ViewResult result = db.queryView(query);
     //Read each row
@@ -246,14 +232,6 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
       NodesAndEdgesViewRowParser parsedRow = new NodesAndEdgesViewRowParser(row);
       final int rowType = parsedRow.getRowType();
       final JsonNode otherNodeUids = parsedRow.getOtherNodeUids();
-      final JsonNode otherNodeNames = parsedRow.getOtherNodeNames();
-//      Iterator<JsonNode> keyItr = row.getKeyAsNode().iterator();
-//      String nodeTypeName = keyItr.next().asText(); // Eg: "Gene". Should be equal to <code>typeName</code>
-//      String uidOrName = keyItr.next().asText();    // Either 'U' or 'N'
-//      String identifier2 = keyItr.next().asText();  // Should be equal to <code>identifier</code>
-//      int rowType =  keyItr.next().asInt();         //0=node; 1=edgeFrom; ...
-//      JsonNode otherNodeUids = keyItr.next();       // (some) of the other UIDs this node is known by
-//      JsonNode otherNodeNames = keyItr.next();       // (some) of the other names this node is known by
 
       JsonNode value = row.getValueAsNode();
 
@@ -274,18 +252,12 @@ public class NodeDAOCouchDbImpl<C extends Content> extends CouchDbRepositorySupp
        * haven't previously seen them.
        */
 
-      // Extract the 'nodeNames' from the value. This should be a list of strings.
-      // Check to see if any of these names are 'new' to us.
-      for (JsonNode nameJsonNode : otherNodeNames) {
-        // If this is the first time we've encountered the identifier, perform another query
-        if (!fullKeyset.getNames().contains(nameJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.NAME, typeName, nameJsonNode.asText(), fullKeyset, foundUpdates);
-        }
-      }
+      // Extract the 'nodeUids' from the value. This should be a list of strings.
+      // Check to see if any of these identifiers are 'new' to us.
       for (JsonNode uidJsonNode :otherNodeUids) {
         // If this is the first time we've encountered the identifier, perform another query
         if (!fullKeyset.getUids().contains(uidJsonNode.asText())) {
-          findAllIdentifiersAndUpdatesFor(IdentifierType.UID, typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
+          findAllIdentifiersAndUpdatesFor(typeName, uidJsonNode.asText(), fullKeyset, foundUpdates);
         }
       }
     }

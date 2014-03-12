@@ -17,21 +17,13 @@
 
 package com.entanglementgraph.irc.commands.cursor;
 
-import com.entanglementgraph.graph.Edge;
-import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCursorCommand;
-import com.entanglementgraph.graph.mongodb.MongoUtils;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.commands.BotCommandException;
 import com.scalesinformatics.uibot.commands.UserException;
-import org.jibble.pircbot.Colors;
 
-import java.util.*;
+import java.util.List;
 
 
 /**

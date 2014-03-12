@@ -76,10 +76,6 @@ public class IrcEntanglementFormat extends IrcFormat {
       pushFormat(COLOR_NODE_VALUE).format(node.getUids()).popFormat();
       append("; ");
     }
-    if (!node.getNames().isEmpty()) {
-      pushFormat(COLOR_NODE_KEY).append("Names: ").popFormat();
-      pushFormat(COLOR_NODE_VALUE).format(node.getNames()).popFormat();
-    }
     closeSquareBracket();
     return this;
   }
@@ -91,10 +87,6 @@ public class IrcEntanglementFormat extends IrcFormat {
     if (!node.getUids().isEmpty()) {
       pushFormat(COLOR_NODE_KEY).append("ID:").popFormat();
       pushFormat(COLOR_NODE_VALUE).format(node.getUids(), maxUids).popFormat().append("; ");
-    }
-    if (!node.getNames().isEmpty()) {
-      pushFormat(COLOR_NODE_KEY).append("ns:").popFormat();
-      pushFormat(COLOR_NODE_VALUE).format(node.getNames(), maxNames).popFormat();
     }
     closeSquareBracket();
 
@@ -116,10 +108,6 @@ public class IrcEntanglementFormat extends IrcFormat {
       pushFormat(COLOR_EDGE_KEY).append("UIDs: ").popFormat();
       pushFormat(COLOR_EDGE_VALUE).format(edge.getUids()).popFormat();
       append("; ");
-    }
-    if (!edge.getNames().isEmpty()) {
-      pushFormat(COLOR_EDGE_KEY).append("Names: ").popFormat();
-      pushFormat(COLOR_EDGE_VALUE).format(edge.getNames()).popFormat();
     }
     closeSquareBracket();
     return this;
