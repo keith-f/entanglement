@@ -55,8 +55,8 @@ public interface EdgeDAO<C extends Content, F extends Content, T extends Content
 //
 //  public <C extends Content> Iterable<Node<C>> iterateByType(String typeName)
 //      throws GraphModelException;
-//  public long countByType(String typeName)
-//      throws GraphModelException;
+  public long countByType(String typeName)
+      throws GraphModelException;
 //  public List<String> listTypes()
 //      throws GraphModelException;
 
@@ -177,16 +177,16 @@ public interface EdgeDAO<C extends Content, F extends Content, T extends Content
       throws GraphModelException;
 
 
-  public Long countEdgesFromNode(EntityKeys from)
+  public long countEdgesFromNode(EntityKeys from)
       throws GraphModelException;
 
-  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
+  public long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
       throws GraphModelException;
 
-  public Long countEdgesToNode(EntityKeys to)
+  public long countEdgesToNode(EntityKeys to)
       throws GraphModelException;
 
-  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
+  public long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
       throws GraphModelException;
 
   /**
@@ -197,7 +197,7 @@ public interface EdgeDAO<C extends Content, F extends Content, T extends Content
    * @return
    * @throws GraphModelException
    */
-  public Long countEdgesOfTypeBetweenNodes(
+  public long countEdgesOfTypeBetweenNodes(
       String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException;
 

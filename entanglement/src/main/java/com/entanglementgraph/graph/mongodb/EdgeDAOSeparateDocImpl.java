@@ -798,7 +798,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
   }
 
 
-  public Long countEdgesFromNode(EntityKeys from)
+  public long countEdgesFromNode(EntityKeys from)
       throws GraphModelException {
 //    DBObject query = new BasicDBObject();
 //    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
@@ -812,7 +812,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
   }
 
 
-  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
+  public long countEdgesOfTypeFromNode(String edgeType, EntityKeys from)
       throws GraphModelException {
 //    DBObject query = new BasicDBObject();
 //    query.put(FIELD_FROM_KEYS_UIDS, new BasicDBObject("$in", list(from.getUids())));
@@ -832,7 +832,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
   }
 
 
-  public Long countEdgesToNode(EntityKeys to)
+  public long countEdgesToNode(EntityKeys to)
       throws GraphModelException {
     DBObject query = buildToNodeQuery(to);
     logger.log(Level.FINE, "Query: {0}", new Object[]{query});
@@ -847,7 +847,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
 
 
   @Override
-  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
+  public long countEdgesOfTypeToNode(String edgeType, EntityKeys to)
       throws GraphModelException {
     DBObject query = buildToNodeQuery(to);
     //Add a restriction on the edge type
@@ -863,7 +863,7 @@ public class EdgeDAOSeparateDocImpl<C extends Content, F extends Content, T exte
   }
 
 
-  public Long countEdgesOfTypeBetweenNodes(
+  public long countEdgesOfTypeBetweenNodes(
       String edgeType, EntityKeys from, EntityKeys to)
       throws GraphModelException {
 //    DBObject query = new BasicDBObject();

@@ -142,6 +142,18 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
+  public long countByType(String typeName) throws GraphModelException {
+    /*
+     * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
+     */
+    long count = 0;
+    for (Edge edge : iterateByType(typeName)) {
+      count++;
+    }
+    return count;
+  }
+
+  @Override
   public Iterable<Edge<C, F, T>> iterateEdgesBetweenNodes(EntityKeys<F> fromNode, EntityKeys<T> to) throws GraphModelException {
     try {
       IteratorForStreamingEdgesBetweenNodes<C, F, T> edgeItrable =
@@ -219,7 +231,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Long countEdgesFromNode(EntityKeys from) throws GraphModelException {
+  public long countEdgesFromNode(EntityKeys from) throws GraphModelException {
     /*
      * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
      */
@@ -231,7 +243,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Long countEdgesOfTypeFromNode(String edgeType, EntityKeys from) throws GraphModelException {
+  public long countEdgesOfTypeFromNode(String edgeType, EntityKeys from) throws GraphModelException {
     /*
      * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
      */
@@ -243,7 +255,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Long countEdgesToNode(EntityKeys to) throws GraphModelException {
+  public long countEdgesToNode(EntityKeys to) throws GraphModelException {
     /*
      * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
      */
@@ -255,7 +267,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Long countEdgesOfTypeToNode(String edgeType, EntityKeys to) throws GraphModelException {
+  public long countEdgesOfTypeToNode(String edgeType, EntityKeys to) throws GraphModelException {
     /*
      * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
      */
@@ -267,7 +279,7 @@ public class EdgeDAOCouchDbImpl<C extends Content, F extends Content, T extends 
   }
 
   @Override
-  public Long countEdgesOfTypeBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
+  public long countEdgesOfTypeBetweenNodes(String edgeType, EntityKeys from, EntityKeys to) throws GraphModelException {
     /*
      * There isn't currently a sane way to do this since we don't know the number of items ahead of time.
      */
