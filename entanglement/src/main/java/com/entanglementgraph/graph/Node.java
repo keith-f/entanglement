@@ -61,6 +61,11 @@ public class Node<C extends Content> implements Serializable {
     this.content = content;
   }
 
+  public Node(String typeName, String entityName, C content) {
+    this.keys = new EntityKeys(typeName, entityName);
+    this.content = content;
+  }
+
 
   @Override
   public String toString() {

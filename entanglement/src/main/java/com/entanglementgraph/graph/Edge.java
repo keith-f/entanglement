@@ -61,6 +61,11 @@ public class Edge<C extends Content, F extends Content, T extends Content> imple
     this.content = content;
   }
 
+  public Edge(String typeName, String entityName, C content) {
+    this.keys = new EntityKeys(typeName, entityName);
+    this.content = content;
+  }
+
   @Override
   public String toString() {
     return "Edge{" +
