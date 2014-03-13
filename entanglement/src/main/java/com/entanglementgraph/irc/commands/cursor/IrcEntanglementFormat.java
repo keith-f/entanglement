@@ -65,7 +65,7 @@ public class IrcEntanglementFormat extends IrcFormat {
    * @param node
    * @return
    */
-  public IrcEntanglementFormat formatNodeKeyset(EntityKeys<? extends Node> node) {
+  public IrcEntanglementFormat formatNodeKeyset(EntityKeys<? extends Content> node) {
     openSquareBracket().customFormat("Node", COLOR_NODE_ANNOUNCE).append(" ");
     if (node.getType() != null) {
       pushFormat(COLOR_NODE_KEY).append("Type: ").popFormat();
@@ -80,7 +80,7 @@ public class IrcEntanglementFormat extends IrcFormat {
     return this;
   }
 
-  public IrcEntanglementFormat formatNodeKeysetShort(EntityKeys<? extends Content> node, int maxUids, int maxNames) {
+  public IrcEntanglementFormat formatNodeKeysetShort(EntityKeys<? extends Content> node, int maxUids) {
 
     openSquareBracket().customFormat(node.getType(), COLOR_NODE_ANNOUNCE).append("; ");
 
@@ -121,7 +121,7 @@ public class IrcEntanglementFormat extends IrcFormat {
    */
   public IrcEntanglementFormat formatEdge(Edge edge) {
     openSquareBracket();
-    formatNodeKeysetShort(edge.getFrom(), 0, 1);
+    formatNodeKeysetShort(edge.getFrom(), 1);
     pushFormat(COLOR_EDGE_ARROW).append("---")
         .customFormat(edge.getKeys().getType(), COLOR_EDGE_ARROW_TEXT)
         .append("--->").popFormat();
@@ -129,7 +129,7 @@ public class IrcEntanglementFormat extends IrcFormat {
 //    append(String.format("  ---%s--->  ",
 //        tmpFormat.customFormat(edge.getKeys().getType(), COLOR_EDGE_ARROW_TEXT).toString()));
 //    popFormat();
-    formatNodeKeysetShort(edge.getTo(), 0, 1);
+    formatNodeKeysetShort(edge.getTo(), 1);
 
     closeSquareBracket();
     return this;

@@ -176,7 +176,7 @@ public class GraphCursor implements Serializable {
    */
   public GraphCursor start(Node node) throws GraphCursorException {
     logger.println("Clearing history and setting new starting point: %s",
-        entFormat.formatNodeKeysetShort(node.getKeys(), 3, 3).toString());
+        entFormat.formatNodeKeysetShort(node.getKeys(), 3).toString());
     historyItems.clear();
 
     HistoryItem item = new HistoryItem(node, null, MovementTypes.START_POSITION);
@@ -213,7 +213,7 @@ public class GraphCursor implements Serializable {
     }
 
     logger.println("Stepping from: %s, via edge %s",
-        entFormat.formatNodeKeysetShort(current.getKeys(), 3, 3).toString(),
+        entFormat.formatNodeKeysetShort(current.getKeys(), 3).toString(),
         entFormat.formatEdgeKeyset(via.getKeys()).toString()
     );
 
