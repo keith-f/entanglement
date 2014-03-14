@@ -17,8 +17,7 @@
 
 package com.entanglementgraph.graph;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.*;
@@ -29,23 +28,6 @@ import java.util.*;
  */
 public class EntityKeys<E extends Content>
   implements Serializable, Cloneable {
-
-  public static Iterable<DBObject> buildKeyIndexes(String prefix) {
-    List<DBObject> indexes = new ArrayList<>(3);
-    indexes.add(new BasicDBObject(String.format("%s.uids", prefix), 1));
-    indexes.add(new BasicDBObject(String.format("%s.names", prefix), 1));
-    indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1));
-
-    //Note that if both of the following indexes are present, MongoDB queries run *really* slowly (lots of scans)
-    //indexes.add(new BasicDBObject(String.format("%s.type", prefix), 1).append(String.format("%s.names", prefix), 1));
-    //indexes.add(new BasicDBObject(String.format("%s.names", prefix), 1).append(String.format("%s.type", prefix), 1));
-    /*
-     * ^^^ Disabling the above for the moment, since a compound index doesn't really give us much advantage here anyway.
-     * For current datasets, names are sufficiently unique that only a few objects are scanned. We can make do with
-     * just the 'names' index only.
-     */
-    return indexes;
-  }
 
   public static boolean containsAtLeastOneUid(EntityKeys keyset) {
     return !keyset.uids.isEmpty();
