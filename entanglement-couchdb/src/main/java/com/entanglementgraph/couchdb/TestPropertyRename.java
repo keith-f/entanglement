@@ -71,7 +71,11 @@ public class TestPropertyRename {
     CouchDbConnector db = dbInstance.createConnector(databaseName, true);
     ObjectMapper om = omFactory.getLastCreatedObjectMapper();
 
+    long startTime = System.currentTimeMillis();
+    long count = 0;
+    boolean updated;
     for (String docId : db.getAllDocIds()) {
+      count++;
       if (docId.startsWith("_design")) {
         continue;
       }
@@ -84,28 +88,30 @@ public class TestPropertyRename {
 
       // Update
       for (JsonNode nodeUpdate : doc.get("nodeUpdates")) {
-        System.out.println("Class: " + nodeUpdate.getClass().getName());
+//        System.out.println("Class: " + nodeUpdate.getClass().getName());
         System.out.println("Before: " + nodeUpdate);
         rename(oldName, newName, (ObjectNode) nodeUpdate.get("node").get("keys"));
         System.out.println("After: " + nodeUpdate);
-
-        // Save back to DB:
-        db.update(doc);
       }
       for (JsonNode edgeUpdate : doc.get("edgeUpdates")) {
-        System.out.println("Class: "+edgeUpdate.getClass().getName());
+//        System.out.println("Class: "+edgeUpdate.getClass().getName());
         System.out.println("Before: " + edgeUpdate);
         rename(oldName, newName,  (ObjectNode) edgeUpdate.get("edge").get("keys"));
         rename(oldName, newName, (ObjectNode) edgeUpdate.get("edge").get("from"));
         rename(oldName, newName, (ObjectNode) edgeUpdate.get("edge").get("to"));
 
         System.out.println("After: " + edgeUpdate);
-
-        // Save back to DB:
-        db.update(doc);
       }
+
+      // Save back to DB:
+      db.update(doc);
     }
 
+    long endTime = System.currentTimeMillis();
+    double durationSec = ((double) endTime-startTime) / 1000d;
+    double docsPerSec = (double) count / durationSec;
+    System.out.println("Processed "+count+" docs in "+durationSec+" seconds");
+    System.out.println("Documents per second: "+docsPerSec);
   }
 
   private static void rename(String oldName, String newName, ObjectNode keysNode) {
