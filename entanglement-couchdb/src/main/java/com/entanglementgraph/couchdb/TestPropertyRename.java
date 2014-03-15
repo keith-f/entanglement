@@ -53,11 +53,14 @@ public class TestPropertyRename {
 
   public static void main(String[] args) throws Exception {
 
+    String serverUrl = args[0]; // "eg: http://localhost:5984"
+    String databaseName = args[1]; // "my-db"
+
     System.setProperty("org.ektorp.support.AutoUpdateViewOnChange", "true");
 
 
     HttpClient httpClient = new StdHttpClient.Builder()
-        .url("http://localhost:5984")
+        .url(serverUrl)
 //        .username("admin")
 //        .password("secret")
         .build();
@@ -65,7 +68,7 @@ public class TestPropertyRename {
     ExtStdObjectMapperFactory omFactory = new ExtStdObjectMapperFactory();
     CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient, omFactory);
 // if the second parameter is true, the database will be created if it doesn't exists
-    CouchDbConnector db = dbInstance.createConnector("testgraph1", true);
+    CouchDbConnector db = dbInstance.createConnector(databaseName, true);
     ObjectMapper om = omFactory.getLastCreatedObjectMapper();
 
     for (String docId : db.getAllDocIds()) {
