@@ -135,7 +135,7 @@ public class EntanglementRuntime {
             details.getClusterName(), details.getDatabase(), classJsonMappings);
         return gcf.connect(details.getGraphName());
       } catch (GraphConnectionFactoryException e) {
-        throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details);
+        throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details, e);
       }
     } else {
       throw new BotCommandException("Unsupported database type: "+details.getDbType());
