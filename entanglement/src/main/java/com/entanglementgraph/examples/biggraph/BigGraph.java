@@ -53,7 +53,8 @@ public class BigGraph
     mappings.put(ChildNodeData.class, ChildNodeData.class.getSimpleName());
     mappings.put(SomeEdgeData.class, SomeEdgeData.class.getSimpleName());
 
-    CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(clusterName, databaseName, mappings);
+    CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(
+        clusterName, databaseName, "anonymous", "anonymous", mappings);
     GraphConnection graphConn1 = connFact.connect("graph1");
 
     // Graph construction properties

@@ -20,6 +20,7 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.irc.commands.AbstractEntanglementCommand;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
+import com.scalesinformatics.uibot.OptionalParam;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;
@@ -35,6 +36,8 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
   private String connectionName;
   private String clusterName;
   private String database;
+  private String dbUser;
+  private String dbPassword;
   private String graph;
 
   @Override
@@ -49,6 +52,8 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
     params.add(new RequiredParam("cluster", String.class,
         "The name of a CouchDB connection pool/cluster name (as created by the 'connect CouchDB/MongoDB cluster' command."));
     params.add(new RequiredParam("database", String.class, "A database located within a MongoDB pool."));
+    params.add(new OptionalParam("username", String.class, "Database username."));
+    params.add(new OptionalParam("password", String.class, "Database password."));
     params.add(new RequiredParam("graph", String.class, "Name of the Entanglement graph to use"));
     return params;
   }
@@ -59,6 +64,8 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
     connectionName = parsedArgs.get("conn").getStringValue();
     clusterName = parsedArgs.get("cluster").getStringValue();
     database = parsedArgs.get("database").getStringValue();
+    dbUser = parsedArgs.get("username") == null ? null : parsedArgs.get("username").getStringValue();
+    dbPassword = parsedArgs.get("password") == null ? null : parsedArgs.get("password").getStringValue();
     graph = parsedArgs.get("graph").getStringValue();
   }
 
@@ -66,6 +73,8 @@ public class ConnectGraphCommand extends AbstractEntanglementCommand {
   protected void processLine() throws UserException, BotCommandException {
     try {
       GraphConnectionDetails details = new GraphConnectionDetails(clusterName, database, graph);
+      details.setUsername(dbUser);
+      details.setPassword(dbPassword);
       if (CouchGraphConnectionFactory.containsNamedCluster(clusterName)) {
         details.setDbType(GraphConnectionDetails.DbType.COUCH_DB);
       } else {

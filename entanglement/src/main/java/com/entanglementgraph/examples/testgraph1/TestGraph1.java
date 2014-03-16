@@ -52,7 +52,8 @@ public class TestGraph1
     mappings.put(Gene.class, "Gene");
     mappings.put(ExistsWithin.class, "ExistsWithin");
 
-    CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(clusterName, databaseName, mappings);
+    CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(
+        clusterName, databaseName, "anonymous", "anonymous", mappings);
     GraphConnection graphConn1 = connFact.connect("graph1");
 //    GraphConnection genesConn = connFact.connect("genes");
 

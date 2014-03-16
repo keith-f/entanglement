@@ -132,7 +132,8 @@ public class EntanglementRuntime {
     if (details.getDbType() == GraphConnectionDetails.DbType.COUCH_DB) {
       try {
         CouchGraphConnectionFactory gcf = new CouchGraphConnectionFactory(
-            details.getClusterName(), details.getDatabase(), classJsonMappings);
+            details.getClusterName(), details.getDatabase(), details.getUsername(), details.getPassword(),
+            classJsonMappings);
         return gcf.connect(details.getGraphName());
       } catch (GraphConnectionFactoryException e) {
         throw new BotCommandException("Failed to connect to graph via connection: "+connName+", "+details, e);

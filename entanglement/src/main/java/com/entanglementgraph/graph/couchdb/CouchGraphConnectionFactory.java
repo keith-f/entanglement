@@ -86,12 +86,17 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
   private final String clusterName;
   private final Set<String> clusterUrls;
   private final String databaseName;
+  private final String dbUser;
+  private final String dbPassword;
   private final Map<Class, String> classJsonMappings;
 
-  public CouchGraphConnectionFactory(String clusterName, String databaseName, Map<Class, String> classJsonMappings) {
+  public CouchGraphConnectionFactory(String clusterName, String databaseName, String dbUser, String dbPassword,
+                                     Map<Class, String> classJsonMappings) {
     this.clusterName = clusterName;
     this.clusterUrls = getNamedClusterUrls(clusterName);
     this.databaseName = databaseName;
+    this.dbUser = dbUser;
+    this.dbPassword = dbPassword;
     this.classJsonMappings = classJsonMappings;
   }
 
@@ -111,8 +116,8 @@ public class CouchGraphConnectionFactory implements GraphConnectionFactory{
 
       HttpClient httpClient = new StdHttpClient.Builder()
           .url(chosenUrl)
-//        .username("admin")
-//        .password("secret")
+          .username(dbUser)
+          .password(dbPassword)
           .socketTimeout(600000)  // Default is 10000
           .build();
 
