@@ -18,7 +18,6 @@
 package com.entanglementgraph.util;
 
 import com.entanglementgraph.graph.Content;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.entanglementgraph.graph.EdgeDAO;
 import com.entanglementgraph.graph.NodeDAO;
 import com.entanglementgraph.graph.RevisionLog;

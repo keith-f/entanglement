@@ -25,28 +25,18 @@ import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.ItemEvent;
-import com.hazelcast.core.ItemListener;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.uibot.BotLoggerFactory;
-import com.scalesinformatics.uibot.BotLoggerIrc;
 
 import java.io.Serializable;
-import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * This class implements a 'cursor' that is able to walk through a graph from node to node. This class may be more
  * convenient that using the low-level <code>NodeDAO</code> and <code>EdgeDAO</code> means of accessing a graph since
  * it makes the process of stepping between nodes much smoother and less disjoint.
  *
- * Cursor objects represent a particular step through a graph and are immutable once created. This approach allows for
- * a history of graph movement operations to be logged. Graph histories may be useful for a number of applications
+ * Graph histories may be useful for a number of applications
  * including: logging and debugging, graphical display, or even motif pattern matching operations.
- *
- *
  *
  * 1) Cursor name
  * 2a) Distributed history object with the same name (or with a prefix).
@@ -69,7 +59,7 @@ public class GraphCursor implements Serializable {
     STEP_VIA_FIRST_EDGE_OF_TYPE; //TODO needed?
   }
 
-  public static class HistoryItem {
+  public static class HistoryItem implements Serializable {
     /**
      * The coordinate of the node that we ended up at.
      */
@@ -139,20 +129,6 @@ public class GraphCursor implements Serializable {
   /*
    * Utilities
    */
-
-  /**
-   * A convenience method that records this GraphCursor in a distributed history, and notifies other processes
-   * of the cursor's new position. You should call this method after every cursor movement if this cursor is a
-   * distributed cursor.
-   * @param hzInstance
-   */
-  private void recordHistoryAndNotify(HazelcastInstance hzInstance, GraphCursor cursor) {
-    if (hzInstance != null) {
-      //Update current position and history for this named cursor
-      hzInstance.getMap(GraphCursorRegistry.HZ_CURSOR_POSITIONS_MAP).put(name, cursor);
-      hzInstance.getMultiMap(GraphCursorRegistry.HZ_CURSOR_HISTORIES_MULTIMAP).put(name, cursor);
-    }
-  }
 
   private Node currentPosition() {
     if (historyItems.isEmpty()) {
@@ -412,8 +388,8 @@ public class GraphCursor implements Serializable {
    * @return the MongoDB document for the current cursor location.
    * @throws GraphCursorException
    */
-  public BasicDBObject resolve(GraphConnection conn)  throws GraphCursorException {
-    return null;
+//  public BasicDBObject resolve(GraphConnection conn)  throws GraphCursorException {
+//    return null;
 //    BasicDBObject nodeDoc;
 //    try {
 //      nodeDoc = conn.getNodeDao().getByKey(position);
@@ -429,7 +405,7 @@ public class GraphCursor implements Serializable {
 //      throw new GraphCursorException("The current position could not be resolved (no database object exists) for: "+position);
 //    }
 //    return nodeDoc;
-  }
+//  }
 
   public <T> T resolveAndDeserialise(GraphConnection conn, Class<T> javaBeanType)  throws GraphCursorException {
     return null;
@@ -444,15 +420,15 @@ public class GraphCursor implements Serializable {
 
   /*
    * Generic edge queries
-   */
-  public DBCursor iterateIncomingEdges(GraphConnection conn) throws GraphCursorException {
-    return null;
+//   */
+//  public DBCursor iterateIncomingEdges(GraphConnection conn) throws GraphCursorException {
+//    return null;
 //    try {
 //      return conn.getEdgeDao().iterateEdgesToNode(position);
 //    } catch (GraphModelException e) {
 //      throw new GraphCursorException("Failed to query graph.", e);
 //    }
-  }
+//  }
   public long countIncomingEdges(GraphConnection conn) throws GraphCursorException {
     return -1;
 //    try {
@@ -461,14 +437,14 @@ public class GraphCursor implements Serializable {
 //      throw new GraphCursorException("Failed to query graph.", e);
 //    }
   }
-  public DBCursor iterateOutgoingEdges(GraphConnection conn) throws GraphCursorException {
-    return null;
+//  public DBCursor iterateOutgoingEdges(GraphConnection conn) throws GraphCursorException {
+//    return null;
 //    try {
 //      return conn.getEdgeDao().iterateEdgesFromNode(position);
 //    } catch (GraphModelException e) {
 //      throw new GraphCursorException("Failed to query graph.", e);
 //    }
-  }
+//  }
   public long countOutgoingEdges(GraphConnection conn) throws GraphCursorException {
     return -1;
 //    try {
@@ -481,14 +457,14 @@ public class GraphCursor implements Serializable {
   /*
    * Edge by type queries
    */
-  public DBCursor iterateOutgoingEdgesOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
-    return null;
+//  public DBCursor iterateOutgoingEdgesOfType(GraphConnection conn, String edgeType) throws GraphCursorException {
+//    return null;
 //    try {
 //      return conn.getEdgeDao().iterateEdgesFromNode(edgeType, position);
 //    } catch (GraphModelException e) {
 //      throw new GraphCursorException("Failed to query graph.", e);
 //    }
-  }
+//  }
 
 
   public Iterable<EntityKeys<? extends Node>> iterateOutgoingNodeRefs(GraphConnection conn) throws GraphCursorException {
