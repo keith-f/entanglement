@@ -25,8 +25,8 @@
     <encoding>UTF-8</encoding>
 
     <!-- version constants -->
-    <uiBot.version>1.0-SNAPSHOT</uiBot.version>
-    <scales-common.version>SC-SNAPSHOT</scales-common.version>
+    <scales-common.version>1.0</scales-common.version>
+    <uiBot.version>1.0</uiBot.version>
     <cliche.version>1.0-SNAPSHOT</cliche.version>
     <gephi.version>0.8.2</gephi.version>
     <jung.version>2.0.1</jung.version>
@@ -180,10 +180,9 @@
       <scope>compile</scope>
     </dependency>
 
-    <!-- MongoDB -->
     <dependency>
       <groupId>com.scalesinformatics</groupId>
-      <artifactId>mongodb-util</artifactId>
+      <artifactId>hazelcast-util</artifactId>
       <version>${scales-common.version}</version>
       <scope>compile</scope>
     </dependency>
@@ -193,13 +192,6 @@
       <groupId>org.ektorp</groupId>
       <artifactId>org.ektorp</artifactId>
       <version>${ektorp.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.scalesinformatics</groupId>
-      <artifactId>hazelcast-util</artifactId>
-      <version>${scales-common.version}</version>
-      <scope>compile</scope>
     </dependency>
 
     <!-- IRC bot library -->
