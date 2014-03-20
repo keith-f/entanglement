@@ -6,6 +6,9 @@
  * View items have the following key structures:
  * [ <FROM node type>, <FROM UID>, <TO node type>, <TO UID>, <edge type>, [ all edge UIDS ] ]
  *
+ * also:
+ * [ <TO node type>, <TO UID>, <FROM node type>, <FROM UID>, <edge type>, [ all edge UIDS ] ]
+ *
  * Values are of type EdgeUpdateView.
  *
  * @author Keith Flanagan
@@ -37,12 +40,13 @@ function(doc) {
         }
       }
 
-
-      /*
-       * We could consider doing the above for 'to' node entries for convenience, but it would bloat (double) the
-       * index size.
-       * For now we don't do this (and instead need to perform two queries when finding edges between nodes).
-       */
+      // Emit 'to' node UID entries --> 'from' node UID entries
+      for (i=0; i < allToUids.length; i=i+1) {
+        for (j=0; j < allFromUids.length; j=j+1) {
+          var outKey = [edge.to.type, allToUids[i], edge.from.type, allFromUids[j], edge.keys.type, allEdgeUids];
+          emit(outKey, edgeUpdateView);
+        }
+      }
     }
   }
 }
