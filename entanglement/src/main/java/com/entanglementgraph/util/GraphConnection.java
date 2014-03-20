@@ -37,8 +37,8 @@ abstract public class GraphConnection {
   private String graphName;
 
   private RevisionLog revisionLog;
-  private NodeDAO<? extends Content> nodeDao;
-  private EdgeDAO<? extends Content, ? extends Content, ? extends Content> edgeDao;
+  private NodeDAO<Content> nodeDao;
+  private EdgeDAO<Content, Content, Content> edgeDao;
 
   public GraphConnection() {
   }
@@ -59,19 +59,19 @@ abstract public class GraphConnection {
     this.revisionLog = revisionLog;
   }
 
-  public NodeDAO<? extends Content> getNodeDao() {
+  public NodeDAO<Content> getNodeDao() {
     return nodeDao;
   }
 
-  public void setNodeDao(NodeDAO<? extends Content> nodeDao) {
+  public void setNodeDao(NodeDAO<Content> nodeDao) {
     this.nodeDao = nodeDao;
   }
 
-  public EdgeDAO<? extends Content, ? extends Content, ? extends Content> getEdgeDao() {
+  public EdgeDAO<Content, Content, Content> getEdgeDao() {
     return edgeDao;
   }
 
-  public void setEdgeDao(EdgeDAO<? extends Content, ? extends Content, ? extends Content> edgeDao) {
+  public void setEdgeDao(EdgeDAO<Content, Content, Content> edgeDao) {
     this.edgeDao = edgeDao;
   }
 
