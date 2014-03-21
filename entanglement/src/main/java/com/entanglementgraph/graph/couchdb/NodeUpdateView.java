@@ -22,6 +22,8 @@ import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.util.Comparator;
+
 /**
  * An extension of NodeModification for use with the appropriate CouchDB View.
  * The View contains additional fields from the 'root' document (of type RevisionItemContainer) that
@@ -31,11 +33,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_EMPTY)
 //public class NodeUpdateView<C extends Content> extends NodeUpdate<C>
-public class NodeUpdateView extends NodeUpdate
+public class NodeUpdateView extends NodeUpdate implements UpdateView
 {
+
   private long timestamp;
   private String graphUid;
   private String patchUid;
+  private int updateIdx;
 
   @Override
   public String toString() {
@@ -43,6 +47,7 @@ public class NodeUpdateView extends NodeUpdate
         "timestamp=" + timestamp +
         ", graphUid='" + graphUid + '\'' +
         ", patchUid='" + patchUid + '\'' +
+        ", updateIdx='" + updateIdx + '\'' +
         "} " + super.toString();
   }
 
@@ -68,5 +73,13 @@ public class NodeUpdateView extends NodeUpdate
 
   public void setPatchUid(String patchUid) {
     this.patchUid = patchUid;
+  }
+
+  public int getUpdateIdx() {
+    return updateIdx;
+  }
+
+  public void setUpdateIdx(int updateIdx) {
+    this.updateIdx = updateIdx;
   }
 }

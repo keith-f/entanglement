@@ -20,6 +20,7 @@ package com.entanglementgraph.graph.updateview;
 
 import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.EntityKeys;
+import com.entanglementgraph.graph.GraphModelException;
 import com.entanglementgraph.graph.couchdb.EdgeUpdateView;
 import com.entanglementgraph.graph.couchdb.NodeUpdateView;
 
@@ -42,7 +43,7 @@ public interface UpdateStream {
    * @param keys the keys for which updates should be returned
    * @return
    */
-  public List<NodeUpdateView> findNodeUpdatesForKey(EntityKeys keys);
+  public List<NodeUpdateView> findNodeUpdatesForKey(EntityKeys keys) throws GraphModelException;
 
   /**
    * Given a set of keys, returns a list of timestamp-ordered graph updates.
@@ -53,12 +54,12 @@ public interface UpdateStream {
    * @param graphNames a set of graph names to include updates from
    * @return
    */
-  public List<NodeUpdateView> findNodeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames);
+  public List<NodeUpdateView> findNodeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) throws GraphModelException;
 
 
 
-  public List<EdgeUpdateView> findEdgeUpdatesForKey(EntityKeys keys);
-  public List<EdgeUpdateView> findEdgeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames);
+  public List<EdgeUpdateView> findEdgeUpdatesForKey(EntityKeys keys) throws GraphModelException;
+  public List<EdgeUpdateView> findEdgeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) throws GraphModelException;
 
 
 }

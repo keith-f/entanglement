@@ -20,7 +20,7 @@ function(doc) {
       if (node.keys.uids) { allUids = node.keys.uids; } else { allUids = []; }
 
       //Create a NodeUpdateView (based on the NodeUpdate, but with additional properties from the revision container)
-      var nodeUpdateView = nodeUpdateToNodeUpdateView(doc, update);
+      var nodeUpdateView = nodeUpdateToNodeUpdateView(doc, update, u);
 
       for (i=0; i < allUids.length; i=i+1) {
         var outKey = [node.keys.type, allUids[i], 0, allUids];
@@ -44,7 +44,7 @@ function(doc) {
       if (edge.to.uids) { allToUids = edge.to.uids; } else { allToUids = []; }
 
       //Create a EdgeUpdateView (based on the EdgeUpdate, but with additional properties from the revision container)
-      var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update);
+      var edgeUpdateView = edgeUpdateToEdgeUpdateView(doc, update, u);
 
       // Emit 'from' node entries
       for (i=0; i < allFromUids.length; i=i+1) {
@@ -66,7 +66,7 @@ function(doc) {
  * Returns a NodeUpdate with additional properties taken from the container (such as graph ID, timestamp, etc).
  * The returned result is compatible with the NodeUpdateView Java bean and contains fields useful for integration.
  */
-function nodeUpdateToNodeUpdateView(revisionItemContainer, update) {
+function nodeUpdateToNodeUpdateView(revisionItemContainer, update, updateIdx) {
   var outVal = new Object();
 
   // Add all fields from the NodeUpdate
@@ -77,6 +77,7 @@ function nodeUpdateToNodeUpdateView(revisionItemContainer, update) {
   outVal.timestamp = revisionItemContainer.timestamp;
   outVal.graphUid = revisionItemContainer.graphUid;
   outVal.patchUid = revisionItemContainer.patchUid;
+  outVal.updateIdx = updateIdx;
 
   return outVal;
 
@@ -87,7 +88,7 @@ function nodeUpdateToNodeUpdateView(revisionItemContainer, update) {
  * Returns a EdgeUpdate with additional properties taken from the container (such as graph ID, timestamp, etc).
  * The returned result is compatible with the EdgeUpdateView Java bean and contains fields useful for integration.
  */
-function edgeUpdateToEdgeUpdateView(revisionItemContainer, update){
+function edgeUpdateToEdgeUpdateView(revisionItemContainer, update, updateIdx){
   var outVal = new Object();
 
   // Add all fields from the EdgeUpdate
@@ -98,6 +99,7 @@ function edgeUpdateToEdgeUpdateView(revisionItemContainer, update){
   outVal.timestamp = revisionItemContainer.timestamp;
   outVal.graphUid = revisionItemContainer.graphUid;
   outVal.patchUid = revisionItemContainer.patchUid;
+  outVal.updateIdx = updateIdx;
 
   return outVal;
 }

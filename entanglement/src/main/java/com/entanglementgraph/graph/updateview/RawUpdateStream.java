@@ -18,9 +18,19 @@
 package com.entanglementgraph.graph.updateview;
 
 import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.couchdb.EdgeUpdateView;
-import com.entanglementgraph.graph.couchdb.NodeUpdateView;
+import com.entanglementgraph.graph.GraphModelException;
+import com.entanglementgraph.graph.couchdb.*;
+import com.entanglementgraph.graph.couchdb.viewparsers.NodesAndEdgesViewRowParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.ektorp.ComplexKey;
+import org.ektorp.CouchDbConnector;
+import org.ektorp.ViewQuery;
+import org.ektorp.ViewResult;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -37,23 +47,119 @@ import java.util.Set;
  * @author Keith Flanagan
  */
 public class RawUpdateStream implements UpdateStream {
-  @Override
-  public List<NodeUpdateView> findNodeUpdatesForKey(EntityKeys keys) {
-    return null;
+
+  private final CouchDbConnector db;
+  private final ObjectMapper om;
+
+  public RawUpdateStream(CouchDbConnector db, ObjectMapper om) {
+    this.db = db;
+    this.om = om;
+  }
+
+  private List<NodeUpdateView> queryNodeByKey(String type, String identifier) throws GraphModelException {
+    ViewQuery query = ViewQueryFactory.createNodesAndEdgesQuery(db)
+        .startKey(ComplexKey.of(type, identifier, NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx()))
+        .endKey(ComplexKey.of(type, identifier, NodesAndEdgesViewRowParser.RowType.NODE.getDbTypeIdx(), ComplexKey.emptyObject()));
+
+    ViewResult result = db.queryView(query);
+    List<NodeUpdateView> foundUpdates = new ArrayList<>();
+    for (ViewResult.Row row : result.getRows()) {
+      JsonNode value = row.getValueAsNode();
+      try {
+        NodeUpdateView update = om.treeToValue(value, NodeUpdateView.class);
+        foundUpdates.add(update);
+      } catch(IOException e) {
+        throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+value, e);
+      }
+    }
+
+    return foundUpdates;
+  }
+
+  private List<EdgeUpdateView> queryEdgeByKey(String type, String identifier) throws GraphModelException {
+    ViewQuery query = ViewQueryFactory.createEdgesQuery(db)
+        .startKey(ComplexKey.of(type, identifier))
+        .endKey(ComplexKey.of(type, identifier, ComplexKey.emptyObject()));
+
+    ViewResult result = db.queryView(query);
+    List<EdgeUpdateView> foundUpdates = new ArrayList<>();
+    for (ViewResult.Row row : result.getRows()) {
+      JsonNode value = row.getValueAsNode();
+      try {
+        EdgeUpdateView update = om.treeToValue(value, EdgeUpdateView.class);
+        foundUpdates.add(update);
+      } catch(IOException e) {
+        throw new GraphModelException("Failed to decode NodeUpdateView. Raw text was: "+value, e);
+      }
+    }
+
+    return foundUpdates;
+  }
+
+  private <U extends UpdateView> List<U> filterDuplicates(List<U> allUpdates) {
+    // Sort updates by timestamp, document patch set, then index within the patchset.
+    Collections.sort(allUpdates, NodeUpdateView.TIMESTAMP_PATCH_COMPARATOR);
+
+    List<U> filtered = new ArrayList<>();
+    U last = null;
+    for (U update : allUpdates) {
+      if (last != null
+          && last.getPatchUid().equals(update.getPatchUid())
+          && last.getUpdateIdx() == update.getUpdateIdx()) {
+        continue;
+      } else {
+        filtered.add(update);
+      }
+      last = update;
+    }
+    return filtered;
   }
 
   @Override
-  public List<NodeUpdateView> findNodeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) {
-    return null;
+  public List<NodeUpdateView> findNodeUpdatesForKey(EntityKeys keys) throws GraphModelException {
+    List<NodeUpdateView> allUpdates = new ArrayList<>();
+    for (String identifier : keys.getUids()) {
+      allUpdates.addAll(queryNodeByKey(keys.getType(), identifier));
+    }
+
+    // Now filter out duplicate updates
+    return filterDuplicates(allUpdates);
   }
 
   @Override
-  public List<EdgeUpdateView> findEdgeUpdatesForKey(EntityKeys keys) {
-    return null;
+  public List<NodeUpdateView> findNodeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) throws GraphModelException {
+    List<NodeUpdateView> allUpdates = new ArrayList<>();
+    for (String identifier : keys.getUids()) {
+      for (NodeUpdateView update : queryNodeByKey(keys.getType(), identifier)) {
+        if (graphNames.contains(update.getGraphUid())) {
+          allUpdates.add(update);
+        }
+      }
+    }
+
+    return filterDuplicates(allUpdates);
   }
 
   @Override
-  public List<EdgeUpdateView> findEdgeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) {
-    return null;
+  public List<EdgeUpdateView> findEdgeUpdatesForKey(EntityKeys keys) throws GraphModelException {
+    List<EdgeUpdateView> allUpdates = new ArrayList<>();
+    for (String identifier : keys.getUids()) {
+      allUpdates.addAll(queryEdgeByKey(keys.getType(), identifier));
+    }
+    return filterDuplicates(allUpdates);
+  }
+
+  @Override
+  public List<EdgeUpdateView> findEdgeUpdatesForKeyInGraphs(EntityKeys keys, Set<String> graphNames) throws GraphModelException {
+    List<EdgeUpdateView> allUpdates = new ArrayList<>();
+    for (String identifier : keys.getUids()) {
+      for (EdgeUpdateView update : queryEdgeByKey(keys.getType(), identifier)) {
+        if (graphNames.contains(update.getGraphUid())) {
+          allUpdates.add(update);
+        }
+      }
+    }
+
+    return filterDuplicates(allUpdates);
   }
 }
