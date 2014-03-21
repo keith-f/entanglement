@@ -26,7 +26,7 @@ import java.util.*;
  *
  * @author Keith Flanagan
  */
-public class EntityKeys<E extends Content>
+public class EntityKeys
   implements Serializable, Cloneable {
 
   public static boolean containsAtLeastOneUid(EntityKeys keyset) {
@@ -88,14 +88,6 @@ public class EntityKeys<E extends Content>
     addUid(id);
   }
 
-
-  @Override
-  public EntityKeys<E> clone() {
-    EntityKeys<E> clone = new EntityKeys<>();
-    clone.setType(getType());
-    clone.getUids().addAll(getUids());
-    return clone;
-  }
 
   @Override
   public String toString() {
