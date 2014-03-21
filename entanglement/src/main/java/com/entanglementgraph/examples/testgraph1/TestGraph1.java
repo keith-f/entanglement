@@ -42,7 +42,9 @@ public class TestGraph1
       GraphConnectionFactoryException, GraphModelException, InterruptedException {
 
     String clusterName = "local";
-    String databaseName = "testgraph1";
+    String databaseName = args[0];
+    String username = args[1];
+    String password = args[2];
     CouchGraphConnectionFactory.registerNamedCluster(clusterName, "http://localhost:5984");
 
 
@@ -52,7 +54,7 @@ public class TestGraph1
     mappings.put(ExistsWithin.class, "ExistsWithin");
 
     CouchGraphConnectionFactory connFact = new CouchGraphConnectionFactory(
-        clusterName, databaseName, "anonymous", "anonymous", mappings);
+        clusterName, databaseName, username, password, mappings);
     GraphConnection graphConn1 = connFact.connect("graph1");
 //    GraphConnection genesConn = connFact.connect("genes");
 
