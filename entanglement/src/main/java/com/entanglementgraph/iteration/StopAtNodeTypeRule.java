@@ -19,7 +19,6 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
-import com.mongodb.BasicDBObject;
 
 /**
  * A rule that causes graph iterations to stop when a particular (remote) node type at the end of the current
@@ -40,29 +39,29 @@ public class StopAtNodeTypeRule extends AbstractRule {
     this.includeNodeInDestination = includeNodeInDestination;
   }
 
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
-    return remoteNodeId.getType().equals(nodeType);
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    return null; //TODO reimplement
-//    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+//    return remoteNodeId.getType().equals(nodeType);
+//  }
 //
-//    if (includeNodeInDestination) {
-//      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
-//      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
-//    }
-//
-//    return action;
-  }
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    return null; //TODO reimplement
+////    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+////
+////    if (includeNodeInDestination) {
+////      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+////      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
+////    }
+////
+////    return action;
+//  }
 }

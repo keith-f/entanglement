@@ -25,8 +25,6 @@ import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.graph.RevisionLogException;
 import com.entanglementgraph.graph.commands.GraphOperation;
 import com.entanglementgraph.util.*;
-import com.mongodb.BasicDBObject;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.util.*;
 import java.util.logging.Logger;

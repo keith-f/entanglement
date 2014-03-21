@@ -19,7 +19,6 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
-import com.mongodb.BasicDBObject;
 
 import java.util.logging.Logger;
 
@@ -53,49 +52,49 @@ public class SkipEdgeByTypeRule extends AbstractRule {
     this.options = options;
   }
 
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
-    return edgeId.getType().equals(targetEdgeType);
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    //TODO reimplement
-    return null;
-//    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-//    action.setProcessFurtherRules(false);
-//    logger.info("Excluding edge based on type: "+targetEdgeType);
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+//    return edgeId.getType().equals(targetEdgeType);
+//  }
 //
-//
-//    BasicDBObject fromNode = outgoingEdge ? rawLocalNode : rawRemoteNode;
-//    BasicDBObject toNode = !outgoingEdge ? rawLocalNode : rawRemoteNode;
-//    for (Option option : options) {
-//      switch (option) {
-//        case INCLUDE_FROM_NODE:
-//          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, fromNode));
-//          break;
-//        case INCLUDE_TO_NODE:
-//          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, toNode));
-//          break;
-//        case INCLUDE_LOCAL_NODE:
-//          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawLocalNode));
-//          break;
-//        case INCLUDE_REMOTE_NODE:
-//          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawRemoteNode));
-//          break;
-//        default:
-//          throw new RuleException("Unsupported option type: "+option);
-//      }
-//    }
-//
-//    return action;
-  }
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    //TODO reimplement
+//    return null;
+////    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
+////    action.setProcessFurtherRules(false);
+////    logger.info("Excluding edge based on type: "+targetEdgeType);
+////
+////
+////    BasicDBObject fromNode = outgoingEdge ? rawLocalNode : rawRemoteNode;
+////    BasicDBObject toNode = !outgoingEdge ? rawLocalNode : rawRemoteNode;
+////    for (Option option : options) {
+////      switch (option) {
+////        case INCLUDE_FROM_NODE:
+////          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, fromNode));
+////          break;
+////        case INCLUDE_TO_NODE:
+////          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, toNode));
+////          break;
+////        case INCLUDE_LOCAL_NODE:
+////          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawLocalNode));
+////          break;
+////        case INCLUDE_REMOTE_NODE:
+////          action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__OVERWRITE_EXSITING, rawRemoteNode));
+////          break;
+////        default:
+////          throw new RuleException("Unsupported option type: "+option);
+////      }
+////    }
+////
+////    return action;
+//  }
 }

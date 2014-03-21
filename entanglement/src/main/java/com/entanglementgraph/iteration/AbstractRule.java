@@ -38,45 +38,45 @@ abstract public class AbstractRule implements EntityRule {
   protected EntanglementRuntime entanglementRuntime;
 //  protected GraphCursor.CursorContext cursorContext;
 
-  @Override
-  public void setSourceGraph(GraphConnection sourceGraph) {
-    this.sourceGraph = sourceGraph;
-  }
-
-  @Override
-  public void setDestinationGraph(GraphConnection destinationGraph) {
-    this.destinationGraph = destinationGraph;
-  }
-
-  @Override
-  public void setEntanglementRuntime(EntanglementRuntime entanglementRuntime) {
-    this.entanglementRuntime = entanglementRuntime;
-  }
-
 //  @Override
-//  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
-//    this.cursorContext = cursorContext;
+//  public void setSourceGraph(GraphConnection sourceGraph) {
+//    this.sourceGraph = sourceGraph;
 //  }
-
-  @Override
-  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
-      throws RuleException {
-    return new LinkedList<>();
-  }
-
-  @Override
-  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth,
-                                        EntityKeys<? extends Node> currentPosition) throws RuleException {
-    // The default action is to perform no action, and not to affect other rules.
-    HandlerAction defaultAction = new HandlerAction();
-    defaultAction.setProcessFurtherRules(true);
-    return defaultAction;
-  }
-
-  @Override
-  public List<GraphOperation> iterationFinished(String cursorName)
-      throws RuleException {
-    return new LinkedList<>();
-  }
+//
+//  @Override
+//  public void setDestinationGraph(GraphConnection destinationGraph) {
+//    this.destinationGraph = destinationGraph;
+//  }
+//
+//  @Override
+//  public void setEntanglementRuntime(EntanglementRuntime entanglementRuntime) {
+//    this.entanglementRuntime = entanglementRuntime;
+//  }
+//
+////  @Override
+////  public void setCursorContext(GraphCursor.CursorContext cursorContext) {
+////    this.cursorContext = cursorContext;
+////  }
+//
+//  @Override
+//  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition)
+//      throws RuleException {
+//    return new LinkedList<>();
+//  }
+//
+//  @Override
+//  public HandlerAction preEdgeIteration(String cursorName, int currentEdgeDepth,
+//                                        EntityKeys<? extends Node> currentPosition) throws RuleException {
+//    // The default action is to perform no action, and not to affect other rules.
+//    HandlerAction defaultAction = new HandlerAction();
+//    defaultAction.setProcessFurtherRules(true);
+//    return defaultAction;
+//  }
+//
+//  @Override
+//  public List<GraphOperation> iterationFinished(String cursorName)
+//      throws RuleException {
+//    return new LinkedList<>();
+//  }
 
 }

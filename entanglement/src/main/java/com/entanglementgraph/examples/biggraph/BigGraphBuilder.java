@@ -21,22 +21,18 @@ package com.entanglementgraph.examples.biggraph;
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnection;
-import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.graph.couchdb.RevisionLogCouchDBImpl;
 import com.entanglementgraph.irc.commands.cursor.IrcEntanglementFormat;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
 import com.scalesinformatics.hazelcast.concurrent.ThreadUtils;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.uibot.BotLogger;
 import com.scalesinformatics.util.UidGenerator;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 

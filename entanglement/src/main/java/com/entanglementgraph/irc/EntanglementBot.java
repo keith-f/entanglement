@@ -26,7 +26,6 @@ import com.entanglementgraph.irc.commands.restlet.StartRestletCommand;
 import com.entanglementgraph.specialistnodes.MapContent;
 import com.hazelcast.core.HazelcastInstance;
 import com.scalesinformatics.hazelcast.ScalesHazelcastInstanceFactory;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshaller;
 import com.scalesinformatics.uibot.*;
 
 import java.net.InetAddress;
@@ -126,7 +125,7 @@ public class EntanglementBot extends GenericIrcBot {
      * Cursor commands
      */
     addCommand("/entanglement/cursor/create", CreateCursorCommand.class);
-    addCommand("/entanglement/cursor/list", ListGraphCursorsCommand.class);
+//    addCommand("/entanglement/cursor/list", ListGraphCursorsCommand.class);
     addCommand("/entanglement/cursor/describe", CursorDescribe.class);
     addCommand("/entanglement/cursor/goto", CursorGoto.class);
     addCommand("/entanglement/cursor/step", CursorStepToNode.class);

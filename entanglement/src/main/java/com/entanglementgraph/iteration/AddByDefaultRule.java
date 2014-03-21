@@ -19,7 +19,6 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
-import com.mongodb.BasicDBObject;
 
 /**
  * A rule that simply stores the edges and nodes unchanged in the destination graph.
@@ -31,31 +30,31 @@ import com.mongodb.BasicDBObject;
  */
 public class AddByDefaultRule extends AbstractRule {
 
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
-                             throws RuleException {
-    return true;
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
-                             throws RuleException {
-    //TODO reimplement
-    return null;
-//    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-//    action.setProcessFurtherRules(false);
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+//                             throws RuleException {
+//    return true;
+//  }
 //
-//    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
-//    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
-//    return action;
-  }
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+//                             throws RuleException {
+//    //TODO reimplement
+//    return null;
+////    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
+////    action.setProcessFurtherRules(false);
+////
+////    action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+////    action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
+////    return action;
+//  }
 
 }

@@ -48,8 +48,7 @@ abstract public class AbstractEntanglementCursorCommand extends AbstractEntangle
     super.preProcessLine();
 
     cursorName = parsedArgs.get("cursor").getStringValue();
-    cursor = entRuntime.getCursorRegistry().getCursorCurrentPosition(cursorName);
-//    cursorContext = new GraphCursor.CursorContext(graphConn, hazelcast);
+    cursor = new GraphCursor(logger, entRuntime.getHzInstance(), graphConn, cursorName);
   }
 
 }

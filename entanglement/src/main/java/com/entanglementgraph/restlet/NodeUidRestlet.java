@@ -22,7 +22,6 @@ import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.EntanglementRuntime;
 import com.entanglementgraph.util.GraphConnection;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.BasicDBObject;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;

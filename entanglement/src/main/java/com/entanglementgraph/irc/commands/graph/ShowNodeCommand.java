@@ -20,7 +20,6 @@ package com.entanglementgraph.irc.commands.graph;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.irc.commands.AbstractEntanglementGraphCommand;
-import com.mongodb.BasicDBObject;
 import com.scalesinformatics.uibot.Param;
 import com.scalesinformatics.uibot.RequiredParam;
 import com.scalesinformatics.uibot.commands.BotCommandException;

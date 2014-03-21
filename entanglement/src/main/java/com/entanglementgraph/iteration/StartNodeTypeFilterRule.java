@@ -21,7 +21,6 @@ import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.mongodb.BasicDBObject;
 
 import java.util.List;
 
@@ -41,40 +40,40 @@ public class StartNodeTypeFilterRule extends AbstractRule {
     this.startTypeName = startTypeName;
   }
 
-  @Override
-  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition) throws RuleException {
-    return null; //TODO reimplement
-//    rootNodeWasValidStartType = currentPosition.getType().equals(startTypeName);
-//    List<GraphOperation> ops = super.iterationStarted(cursorName, currentPosition);
-//    if (!rootNodeWasValidStartType) {
-//      return ops;
-//    }
+//  @Override
+//  public List<GraphOperation> iterationStarted(String cursorName, EntityKeys<? extends Node> currentPosition) throws RuleException {
+//    return null; //TODO reimplement
+////    rootNodeWasValidStartType = currentPosition.getType().equals(startTypeName);
+////    List<GraphOperation> ops = super.iterationStarted(cursorName, currentPosition);
+////    if (!rootNodeWasValidStartType) {
+////      return ops;
+////    }
+////
+////    try {
+////      BasicDBObject currentNode = sourceGraph.getNodeDao().getByKey(currentPosition);
+////      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, currentNode));
+////    } catch (Exception e) {
+////      throw new RuleException("Failed to retrieve start node content", e);
+////    }
+////
+////    return ops;
+//  }
 //
-//    try {
-//      BasicDBObject currentNode = sourceGraph.getNodeDao().getByKey(currentPosition);
-//      ops.add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, currentNode));
-//    } catch (Exception e) {
-//      throw new RuleException("Failed to retrieve start node content", e);
-//    }
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    return !rootNodeWasValidStartType;
+//  }
 //
-//    return ops;
-  }
-
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    return !rootNodeWasValidStartType;
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    return new HandlerAction(NextEdgeIteration.TERMINATE);
-  }
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    return new HandlerAction(NextEdgeIteration.TERMINATE);
+//  }
 }

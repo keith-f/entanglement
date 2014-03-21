@@ -19,7 +19,6 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
-import com.mongodb.BasicDBObject;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,42 +32,42 @@ import java.util.logging.Logger;
  */
 public class CollectRemoteNodeByTypeRule extends AbstractRule {
   private static final Logger logger = Logger.getLogger(CollectRemoteNodeByTypeRule.class.getName());
-  private final String targetType;
-  private final Set<BasicDBObject> collectedObjects;
-
-  public CollectRemoteNodeByTypeRule(String targetType) {
-    this.targetType = targetType;
-    this.collectedObjects = new HashSet<>();
-  }
-
-
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
-      throws RuleException  {
-    return remoteNodeId.getType().equals(targetType);
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
-    action.setProcessFurtherRules(true);
-    collectedObjects.add(rawRemoteNode);
-    return action;
-  }
-
-  public Set<BasicDBObject> getCollectedObjects() {
-    return collectedObjects;
-  }
-
-  public String getTargetType() {
-    return targetType;
-  }
+//  private final String targetType;
+//  private final Set<BasicDBObject> collectedObjects;
+//
+//  public CollectRemoteNodeByTypeRule(String targetType) {
+//    this.targetType = targetType;
+//    this.collectedObjects = new HashSet<>();
+//  }
+//
+//
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode)
+//      throws RuleException  {
+//    return remoteNodeId.getType().equals(targetType);
+//  }
+//
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    HandlerAction action = new HandlerAction(NextEdgeIteration.CONTINUE_AS_NORMAL);
+//    action.setProcessFurtherRules(true);
+//    collectedObjects.add(rawRemoteNode);
+//    return action;
+//  }
+//
+//  public Set<BasicDBObject> getCollectedObjects() {
+//    return collectedObjects;
+//  }
+//
+//  public String getTargetType() {
+//    return targetType;
+//  }
 }

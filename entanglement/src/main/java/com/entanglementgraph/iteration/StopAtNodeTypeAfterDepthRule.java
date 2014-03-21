@@ -19,7 +19,6 @@ package com.entanglementgraph.iteration;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
 import com.entanglementgraph.graph.Node;
-import com.mongodb.BasicDBObject;
 
 /**
  * A rule that causes graph iterations to stop when a particular (remote) node type at the end of the current
@@ -29,39 +28,39 @@ import com.mongodb.BasicDBObject;
  * @author Keith Flanagan
  */
 public class StopAtNodeTypeAfterDepthRule extends AbstractRule {
-  private String nodeType;
-  private final int targetDepth;
-  private boolean includeNodeInDestination;
-
-  public StopAtNodeTypeAfterDepthRule(String nodeType, int targetDepth, boolean includeNodeInDestination) {
-    this.nodeType = nodeType;
-    this.targetDepth = targetDepth;
-    this.includeNodeInDestination = includeNodeInDestination;
-  }
-
-  @Override
-  public boolean ruleMatches(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
-    return currentDepth >= targetDepth && remoteNodeId.getType().equals(nodeType);
-  }
-
-  @Override
-  public HandlerAction apply(String cursorName, int currentDepth,
-                             EntityKeys<? extends Node> currentPosition,
-                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
-                             EntityKeys<? extends Node> remoteNodeId,
-                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
-    return null; //TODO reimplement
-//    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+//  private String nodeType;
+//  private final int targetDepth;
+//  private boolean includeNodeInDestination;
 //
-//    if (includeNodeInDestination) {
-//      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
-//      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
-//    }
+//  public StopAtNodeTypeAfterDepthRule(String nodeType, int targetDepth, boolean includeNodeInDestination) {
+//    this.nodeType = nodeType;
+//    this.targetDepth = targetDepth;
+//    this.includeNodeInDestination = includeNodeInDestination;
+//  }
 //
-//    return action;
-  }
+//  @Override
+//  public boolean ruleMatches(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException  {
+//    return currentDepth >= targetDepth && remoteNodeId.getType().equals(nodeType);
+//  }
+//
+//  @Override
+//  public HandlerAction apply(String cursorName, int currentDepth,
+//                             EntityKeys<? extends Node> currentPosition,
+//                             EntityKeys<? extends Edge> edgeId, boolean outgoingEdge,
+//                             EntityKeys<? extends Node> remoteNodeId,
+//                             BasicDBObject rawLocalNode, BasicDBObject rawEdge, BasicDBObject rawRemoteNode) throws RuleException {
+//    return null; //TODO reimplement
+////    HandlerAction action = new HandlerAction(NextEdgeIteration.TERMINATE_BRANCH);
+////
+////    if (includeNodeInDestination) {
+////      action.getOperations().add(new NodeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawRemoteNode));
+////      action.getOperations().add(new EdgeModification(MergePolicy.APPEND_NEW__LEAVE_EXISTING, rawEdge));
+////    }
+////
+////    return action;
+//  }
 }

@@ -22,7 +22,6 @@ import com.entanglementgraph.graph.RevisionLogException;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.graph.GraphConnectionFactoryException;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 
 import java.awt.Color;
 import java.io.File;
@@ -54,8 +53,7 @@ public class MongoGraphToGephi {
 
   public static void main(String[] args) throws UnknownHostException,
       RevisionLogException, IOException,
-      GraphModelException, GraphConnectionFactoryException,
-      DbObjectMarshallerException {
+      GraphModelException, GraphConnectionFactoryException {
     CommandLineParser parser = new PosixParser();
     Options options = new Options();
 

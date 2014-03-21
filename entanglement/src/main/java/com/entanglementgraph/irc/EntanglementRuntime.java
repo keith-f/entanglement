@@ -17,7 +17,6 @@
 
 package com.entanglementgraph.irc;
 
-import com.entanglementgraph.cursor.GraphCursorRegistry;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.irc.data.GraphConnectionDetails;
 import com.entanglementgraph.util.GraphConnection;
@@ -54,8 +53,6 @@ public class EntanglementRuntime {
 
   private final IMap<String, GraphConnectionDetails> graphConnectionDetails;
 
-  private final GraphCursorRegistry cursorRegistry;
-
   private final Map<Class, String> classJsonMappings;
 
 
@@ -77,11 +74,7 @@ public class EntanglementRuntime {
     this.graphConnectionDetails.addEntryListener(new GraphConnectionListenerLogger(
         BotLoggerFactory.createNewLogger(botLogger, GraphConnectionListenerLogger.class.getSimpleName())),
         true);
-//
 
-//    this.graphCursors.addEntryListener(new GraphCursorPositionListenerLogger(bot, channel), true);
-
-    this.cursorRegistry = new GraphCursorRegistry(hzInstance);
     /*
      * This is a Hazelcast listener on graphCursors that gets informed when a GraphCursor is added or updated
      * on local or remote processes.
@@ -153,9 +146,5 @@ public class EntanglementRuntime {
 
   public HazelcastInstance getHzInstance() {
     return hzInstance;
-  }
-
-  public GraphCursorRegistry getCursorRegistry() {
-    return cursorRegistry;
   }
 }

@@ -21,12 +21,10 @@ package com.entanglementgraph.examples.testgraph1;
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.util.UidGenerator;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -40,7 +38,8 @@ public class TestGraph1
 {
   private static final Logger logger = Logger.getLogger(TestGraph1.class.getSimpleName());
 
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException, InterruptedException {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException,
+      GraphConnectionFactoryException, GraphModelException, InterruptedException {
 
     String clusterName = "local";
     String databaseName = "testgraph1";

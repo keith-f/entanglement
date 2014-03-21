@@ -21,14 +21,12 @@ package com.entanglementgraph.examples.biggraph;
 import com.entanglementgraph.graph.*;
 import com.entanglementgraph.graph.commands.EdgeUpdate;
 import com.entanglementgraph.graph.commands.GraphOperation;
-import com.entanglementgraph.graph.commands.MergePolicy;
 import com.entanglementgraph.graph.commands.NodeUpdate;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnection;
 import com.entanglementgraph.graph.couchdb.CouchGraphConnectionFactory;
 import com.entanglementgraph.graph.couchdb.RevisionLogCouchDBImpl;
 import com.entanglementgraph.util.GraphConnection;
 import com.entanglementgraph.util.TxnUtils;
-import com.scalesinformatics.mongodb.dbobject.DbObjectMarshallerException;
 import com.scalesinformatics.util.UidGenerator;
 
 import java.net.UnknownHostException;
@@ -42,7 +40,8 @@ import java.util.*;
 public class BigGraph
 {
 
-  public static void main(String[] args) throws UnknownHostException, RevisionLogException, GraphConnectionFactoryException, DbObjectMarshallerException, GraphModelException {
+  public static void main(String[] args) throws UnknownHostException, RevisionLogException,
+      GraphConnectionFactoryException, GraphModelException {
     String clusterName = "local";
     String databaseName = "biggraph";
     CouchGraphConnectionFactory.registerNamedCluster(clusterName, "http://localhost:5984");

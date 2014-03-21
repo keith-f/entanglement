@@ -21,7 +21,6 @@ import com.entanglementgraph.cursor.GraphCursor;
 import com.entanglementgraph.graph.Content;
 import com.entanglementgraph.graph.Edge;
 import com.entanglementgraph.graph.EntityKeys;
-import com.entanglementgraph.graph.Node;
 import com.scalesinformatics.uibot.IrcFormat;
 import org.jibble.pircbot.Colors;
 
